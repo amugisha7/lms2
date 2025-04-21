@@ -1,11 +1,20 @@
-import logo from './logo.svg';
+import { Box, Button } from '@mui/material';
 import './App.css';
 import Dashboard from './dashboard/Dashboard';
+import { withAuthenticator } from '@aws-amplify/ui-react';
+import '@aws-amplify/ui-react/styles.css';
 
-function App() {
+function App({ signOut, user }) {
   return (
-    <Dashboard />
+    <>
+      <Box display={'flex'} justifyContent={'flex-end'} padding={2}>
+        <h1>Hello {user.username}</h1>
+        <Button onClick={signOut}>Sign out</Button>
+      </Box>
+      <Dashboard />
+      
+    </>
   );
 }
 
-export default App;
+export default withAuthenticator(App);

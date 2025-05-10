@@ -1,0 +1,275 @@
+enum ClientStatus {
+  PROSPECT
+  PENDING_APPROVAL # Onboarding Application Submitted
+  ACTIVE
+  DORMANT
+  EXITED
+  REJECTED # Onboarding Application Rejected
+}
+
+enum LoanApplicationStatus {
+  DRAFT
+  SUBMITTED
+  FIELD_VERIFICATION
+  SCORING_REVIEW
+  BRANCH_MANAGER_APPROVAL # Example Stages – Defined by WorkflowDefinition
+  CREDIT_COMMITTEE_REVIEW
+  HQ_APPROVAL
+  APPROVED
+  REJECTED
+  WITHDRAWN
+  READY_FOR_DISBURSEMENT # Final state before LoanAccount creation
+}
+
+enum LoanAccountStatus {
+  PENDING_DISBURSEMENT # Technically covered by LoanApplicationStatus
+  ACTIVE
+  ACTIVE_IN_ARREARS
+  PAID_OFF
+  RESCHEDULED
+  WRITTEN_OFF
+  LEGAL_ACTION_INITIATED
+}
+
+enum RiskClassification {
+  LOW
+  MEDIUM
+  HIGH
+  WATCH # Example – Configurable Mapping Needed
+  SUBSTANDARD
+  DOUBTFUL
+  LOSS
+}
+
+enum Frequency {
+  DAILY
+  WEEKLY
+  BI_WEEKLY # Every 2 weeks
+  MONTHLY
+  BI_MONTHLY # Every 2 months
+  QUARTERLY
+  SEMI_ANNUALLY
+  ANNUALLY
+  BULLET # End of Term
+}
+
+enum InterestCalculationMethod {
+  FLAT_RATE
+  DECLINING_BALANCE # Assumes standard amortization
+  INTEREST_ONLY
+  DISCOUNTED_UPFRONT
+  ADD_ON
+  RULE_OF_78S
+}
+
+enum DayCountConvention {
+  ACTUAL_365 # Default in most cases
+  ACTUAL_360
+  THIRTY_360
+}
+
+enum FeeCalculationMethod {
+  PERCENTAGE_PRINCIPAL
+  PERCENTAGE_APPROVED_AMOUNT # Could be same as principal – clarify if needed
+  FLAT_AMOUNT
+}
+
+enum FeeCollectionTiming {
+  UPFRONT_DEDUCTED # Deducted from disbursement
+  UPFRONT_ADDED # Added to principal
+  FIRST_INSTALLMENT
+  RECURRING # e.g., Monthly
+}
+
+enum PenaltyType {
+  FLAT_FEE
+  PERCENTAGE_INSTALLMENT_DUE
+  PERCENTAGE_OVERDUE_PRINCIPAL
+  PERCENTAGE_OVERDUE_INTEREST
+  ADDITIONAL_PENALTY_INTEREST_RATE # Applied on Overdue Principal
+}
+
+enum PenaltyCalculationFrequency {
+  ONCE_PER_MISSED_INSTALLMENT
+  DAILY
+  WEEKLY
+  MONTHLY # Applied on outstanding overdue amount
+}
+
+enum MoneyAccountType {
+  CASH
+  BANK
+  MOBILE_MONEY
+  OTHER
+}
+
+enum TransactionType { # For Loan / Savings / Share Transactions
+  DISBURSEMENT
+  REPAYMENT
+  FEE_APPLIED
+  PENALTY_APPLIED
+  INTEREST_ACCRUED # System‑internal
+  INTEREST_PAID # Part of Repayment allocation
+  PRINCIPAL_PAID # Part of Repayment allocation
+  ADJUSTMENT_DEBIT
+  ADJUSTMENT_CREDIT
+  WAIVER_FEE
+  WAIVER_PENALTY
+  WAIVER_INTEREST
+  DEPOSIT # Savings / Shares
+  WITHDRAWAL # Savings / Shares
+  INTEREST_POSTED # Savings
+  MEMBERSHIP_FEE # SACCO
+  WRITE_OFF
+  RECOVERY
+  PAYROLL_DEDUCTION # Loan / Savings / Shares
+  EXPENSE
+  GENERAL_INCOME
+  MONEY_DEPOSIT
+  MONEY_WITHDRAWAL
+  MONEY_TRANSFER
+}
+
+enum GLAccountType {
+  ASSET
+  LIABILITY
+  EQUITY
+  INCOME
+  EXPENSE
+  CONTRA_ASSET # For Provision Allowance
+}
+
+enum Role { # Pre‑defined roles (map to Cognito groups)
+  ADMINISTRATOR # Institution Admin
+  BRANCH_MANAGER
+  LOAN_OFFICER
+  FIELD_OFFICER
+  CREDIT_ANALYST
+  COLLECTIONS_OFFICER
+  ACCOUNTANT
+  TELLER
+  AUDITOR
+  PAYROLL_OFFICER
+  SYSTEM_ADMIN # Super‑admin for managing Institutions
+}
+
+enum SubscriptionTier {
+  PRO
+  TEAM
+  CORPORATE
+  SACCO
+  ENTERPRISE
+  TRIAL
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  TRIAL
+  PAST_DUE
+  CANCELLED
+  PENDING_SETUP
+}
+
+enum ConnectionStatus {
+  ONLINE
+  OFFLINE
+  RECONNECTED
+}
+
+enum ReportType {
+  STANDARD
+  REGULATORY
+  CUSTOM
+  OPERATIONAL
+}
+
+enum ReportCategory {
+  PORTFOLIO
+  CLIENT
+  FINANCIAL
+  COLLECTIONS
+  SACCO
+  OPERATIONAL
+  AUDIT
+  REGULATORY
+}
+
+enum ReportOutputFormat {
+  PDF
+  CSV
+  EXCEL
+  JSON
+}
+
+enum ReportStatus {
+  QUEUED
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum NotificationChannel {
+  IN_APP
+  EMAIL
+  SMS
+}
+
+enum IntegrationType {
+  CREDIT_BUREAU
+  PAYMENT_GATEWAY
+  REGULATORY
+  BANKING_CORE
+  MOBILE_MONEY
+  OTHER
+}
+
+enum StageType {
+  APPROVAL
+  DATA_ENTRY
+  NOTIFICATION
+  SYSTEM_PROCESS
+  EXTERNAL_VERIFICATION
+}
+
+enum ExpenseTransactionStatus {
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+  PAID
+  CANCELLED
+}
+
+enum MoneyTransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  TRANSFER
+  EXPENSE_PAYMENT
+  INCOME_RECEIPT
+  ADJUSTMENT
+}
+
+type Writer @model @auth(rules: [{ allow: public }]) {
+  id: ID!
+  Blog: [Blog] @hasMany(indexName: "byWriter", fields: ["id"])
+  untitledfield: String
+}
+
+type Blog @model {
+  id: ID!
+  name: String!
+  posts: [Post] @hasMany
+  writerID: ID! @index(name: "byWriter")
+}
+
+type Post @model {
+  id: ID!
+  title: String!
+  blog: Blog @belongsTo
+  comments: [Comment] @hasMany
+}
+
+type Comment @model {
+  id: ID!
+  post: Post @belongsTo
+  content: String!
+}

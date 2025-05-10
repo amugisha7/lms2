@@ -1,19 +1,22 @@
 {
   "dev": {
     "awscloudformation": {
-      "AuthRoleName": "amplify-lms2-dev-b78d2-authRole",
-      "UnauthRoleArn": "arn:aws:iam::807453714028:role/amplify-lms2-dev-b78d2-unauthRole",
-      "AuthRoleArn": "arn:aws:iam::807453714028:role/amplify-lms2-dev-b78d2-authRole",
+      "AuthRoleName": "amplify-lms2-dev-b93de-authRole",
+      "UnauthRoleArn": "arn:aws:iam::807453714028:role/amplify-lms2-dev-b93de-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::807453714028:role/amplify-lms2-dev-b93de-authRole",
       "Region": "ap-southeast-1",
-      "DeploymentBucketName": "amplify-lms2-dev-b78d2-deployment",
-      "UnauthRoleName": "amplify-lms2-dev-b78d2-unauthRole",
-      "StackName": "amplify-lms2-dev-b78d2",
-      "StackId": "arn:aws:cloudformation:ap-southeast-1:807453714028:stack/amplify-lms2-dev-b78d2/21f04310-1e7b-11f0-a8df-028c2ce3d8bf",
-      "AmplifyAppId": "db1gs4a9simne"
+      "DeploymentBucketName": "amplify-lms2-dev-b93de-deployment",
+      "UnauthRoleName": "amplify-lms2-dev-b93de-unauthRole",
+      "StackName": "amplify-lms2-dev-b93de",
+      "StackId": "arn:aws:cloudformation:ap-southeast-1:807453714028:stack/amplify-lms2-dev-b93de/924eabb0-2cfe-11f0-b1bd-065e1663a79d",
+      "AmplifyAppId": "d15b1ccdquy1xk"
     },
     "categories": {
+      "api": {
+        "lms2": {}
+      },
       "auth": {
-        "lms26b007cd9": {}
+        "lms2": {}
       }
     }
   }

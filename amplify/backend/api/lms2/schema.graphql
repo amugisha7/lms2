@@ -1,282 +1,24 @@
+# This "input" configures a global authorization rule to enable public access to
+# all models in this schema. Learn more about authorization rules here: https://docs.amplify.aws/cli/graphql/authorization-rules
+input AMPLIFY {
+  globalAuthRule: AuthRule = { allow: public }
+} # FOR TESTING ONLY!
 # schema.graphql — Transformer v2 (Corrected Version)
 
 # ---------- Enums ----------
 
-enum ClientStatus {
-  PROSPECT
-  PENDING_APPROVAL # Onboarding Application Submitted
-  ACTIVE
-  DORMANT
-  EXITED
-  REJECTED # Onboarding Application Rejected
-}
-
-enum LoanApplicationStatus {
-  DRAFT
-  SUBMITTED
-  FIELD_VERIFICATION
-  SCORING_REVIEW
-  BRANCH_MANAGER_APPROVAL # Example Stages – Defined by WorkflowDefinition
-  CREDIT_COMMITTEE_REVIEW
-  HQ_APPROVAL
-  APPROVED
-  REJECTED
-  WITHDRAWN
-  READY_FOR_DISBURSEMENT # Final state before LoanAccount creation
-}
-
-enum LoanAccountStatus {
-  PENDING_DISBURSEMENT # Technically covered by LoanApplicationStatus
-  ACTIVE
-  ACTIVE_IN_ARREARS
-  PAID_OFF
-  RESCHEDULED
-  WRITTEN_OFF
-  LEGAL_ACTION_INITIATED
-}
-
-enum RiskClassification {
-  LOW
-  MEDIUM
-  HIGH
-  WATCH # Example – Configurable Mapping Needed
-  SUBSTANDARD
-  DOUBTFUL
-  LOSS
-}
-
-enum Frequency {
-  DAILY
-  WEEKLY
-  BI_WEEKLY # Every 2 weeks
-  MONTHLY
-  BI_MONTHLY # Every 2 months
-  QUARTERLY
-  SEMI_ANNUALLY
-  ANNUALLY
-  BULLET # End of Term
-}
-
-enum InterestCalculationMethod {
-  FLAT_RATE
-  DECLINING_BALANCE # Assumes standard amortization
-  INTEREST_ONLY
-  DISCOUNTED_UPFRONT
-  ADD_ON
-  RULE_OF_78S
-}
-
-enum DayCountConvention {
-  ACTUAL_365 # Default in most cases
-  ACTUAL_360
-  THIRTY_360
-}
-
-enum FeeCalculationMethod {
-  PERCENTAGE_PRINCIPAL
-  PERCENTAGE_APPROVED_AMOUNT # Could be same as principal – clarify if needed
-  FLAT_AMOUNT
-}
-
-enum FeeCollectionTiming {
-  UPFRONT_DEDUCTED # Deducted from disbursement
-  UPFRONT_ADDED # Added to principal
-  FIRST_INSTALLMENT
-  RECURRING # e.g., Monthly
-}
-
-enum PenaltyType {
-  FLAT_FEE
-  PERCENTAGE_INSTALLMENT_DUE
-  PERCENTAGE_OVERDUE_PRINCIPAL
-  PERCENTAGE_OVERDUE_INTEREST
-  ADDITIONAL_PENALTY_INTEREST_RATE # Applied on Overdue Principal
-}
-
-enum PenaltyCalculationFrequency {
-  ONCE_PER_MISSED_INSTALLMENT
-  DAILY
-  WEEKLY
-  MONTHLY # Applied on outstanding overdue amount
-}
-
-enum MoneyAccountType {
-  CASH
-  BANK
-  MOBILE_MONEY
-  OTHER
-}
-
-enum TransactionType { # For Loan / Savings / Share Transactions
-  DISBURSEMENT
-  REPAYMENT
-  FEE_APPLIED
-  PENALTY_APPLIED
-  INTEREST_ACCRUED # System‑internal
-  INTEREST_PAID # Part of Repayment allocation
-  PRINCIPAL_PAID # Part of Repayment allocation
-  ADJUSTMENT_DEBIT
-  ADJUSTMENT_CREDIT
-  WAIVER_FEE
-  WAIVER_PENALTY
-  WAIVER_INTEREST
-  DEPOSIT # Savings / Shares
-  WITHDRAWAL # Savings / Shares
-  INTEREST_POSTED # Savings
-  MEMBERSHIP_FEE # SACCO
-  WRITE_OFF
-  RECOVERY
-  PAYROLL_DEDUCTION # Loan / Savings / Shares
-  EXPENSE
-  GENERAL_INCOME
-  MONEY_DEPOSIT
-  MONEY_WITHDRAWAL
-  MONEY_TRANSFER
-}
-
-enum GLAccountType {
-  ASSET
-  LIABILITY
-  EQUITY
-  INCOME
-  EXPENSE
-  CONTRA_ASSET # For Provision Allowance
-}
-
-enum Role { # Pre‑defined roles (map to Cognito groups)
-  ADMINISTRATOR # Institution Admin
-  BRANCH_MANAGER
-  LOAN_OFFICER
-  FIELD_OFFICER
-  CREDIT_ANALYST
-  COLLECTIONS_OFFICER
-  ACCOUNTANT
-  TELLER
-  AUDITOR
-  PAYROLL_OFFICER
-  SYSTEM_ADMIN # Super‑admin for managing Institutions
-}
-
-enum SubscriptionTier {
-  PRO
-  TEAM
-  CORPORATE
-  SACCO
-  ENTERPRISE
-  TRIAL
-}
-
-enum SubscriptionStatus {
-  ACTIVE
-  TRIAL
-  PAST_DUE
-  CANCELLED
-  PENDING_SETUP
-}
-
-enum ConnectionStatus {
-  ONLINE
-  OFFLINE
-  RECONNECTED
-}
-
-enum ReportType {
-  STANDARD
-  REGULATORY
-  CUSTOM
-  OPERATIONAL
-}
-
-enum ReportCategory {
-  PORTFOLIO
-  CLIENT
-  FINANCIAL
-  COLLECTIONS
-  SACCO
-  OPERATIONAL
-  AUDIT
-  REGULATORY
-}
-
-enum ReportOutputFormat {
-  PDF
-  CSV
-  EXCEL
-  JSON
-}
-
-enum ReportStatus {
-  QUEUED
-  PROCESSING
-  COMPLETED
-  FAILED
-}
-
-enum NotificationChannel {
-  IN_APP
-  EMAIL
-  SMS
-}
-
-enum IntegrationType {
-  CREDIT_BUREAU
-  PAYMENT_GATEWAY
-  REGULATORY
-  BANKING_CORE
-  MOBILE_MONEY
-  OTHER
-}
-
-enum StageType {
-  APPROVAL
-  DATA_ENTRY
-  NOTIFICATION
-  SYSTEM_PROCESS
-  EXTERNAL_VERIFICATION
-}
-
-enum ExpenseTransactionStatus {
-  PENDING_APPROVAL
-  APPROVED
-  REJECTED
-  PAID
-  CANCELLED
-}
-
-enum MoneyTransactionType {
-  DEPOSIT
-  WITHDRAWAL
-  TRANSFER
-  EXPENSE_PAYMENT
-  INCOME_RECEIPT
-  ADJUSTMENT
-}
-
-# ---------- Models - Institution & Core ----------
-
-type Institution
-  @model
-  @auth(
-    rules: [
-      { allow: custom }
-      {
-        allow: groups
-        groups: ["SYSTEM_ADMIN"]
-        operations: [create, read, update, delete]
-      }
-    ]
-  ) {
+type Institution @model {
   id: ID!
   name: String!
   currencyCode: String!
   subscriptionTier: SubscriptionTier!
-    @index(name: "bySubscriptionTier", queryField: "institutionsByTier")
+
   subscriptionStatus: SubscriptionStatus!
-    @index(name: "bySubscriptionStatus", queryField: "institutionsByStatus")
+
   trialEndDate: AWSDate
   nextBillingDate: AWSDate
-  stripeCustomerID: String @index(name: "byStripeCustomerId")
-  stripeSubscriptionID: String @index(name: "byStripeSubscriptionId")
+  stripeCustomerID: String
+  stripeSubscriptionID: String
 
   # --- Geo / Regulatory settings ---
 
@@ -306,121 +48,62 @@ type Institution
 
   # --- Relationships (⇢ hasMany) ---
 
-  users: [User] @hasMany(indexName: "byInstitution", fields: ["id"])
-  branches: [Branch] @hasMany(indexName: "byInstitution", fields: ["id"])
-  clients: [Client] @hasMany(indexName: "byInstitution", fields: ["id"])
-  clientTypeConfigs: [ClientTypeConfig]
-    @hasMany(indexName: "byInstitution", fields: ["id"])
-  riskLevelConfigs: [RiskLevelConfig]
-    @hasMany(indexName: "byInstitution", fields: ["id"])
-  kycDocTypeConfigs: [KYCDocumentTypeConfig]
-    @hasMany(indexName: "byInstitution", fields: ["id"])
-  kycDocuments: [KYCDocument]
-    @hasMany(indexName: "byInstitution", fields: ["id"])
-  appDocTypeConfigs: [ApplicationDocumentTypeConfig]
-    @hasMany(indexName: "byInstitution", fields: ["id"])
-  collateralTypeConfigs: [CollateralTypeConfig]
-    @hasMany(indexName: "byInstitution", fields: ["id"])
-  loanPurposeConfigs: [LoanPurposeConfig]
-    @hasMany(indexName: "byInstitution", fields: ["id"])
-  feeConfigs: [FeeConfig] @hasMany(indexName: "byInstitution", fields: ["id"])
-  penaltyConfigs: [PenaltyConfig]
-    @hasMany(indexName: "byInstitution", fields: ["id"])
-  loanProducts: [LoanProduct]
-    @hasMany(indexName: "byInstitution", fields: ["id"])
-  workflowDefinitions: [WorkflowDefinition]
-    @hasMany(indexName: "byInstitution", fields: ["id"])
-  scorecards: [Scorecard] @hasMany(indexName: "byInstitution", fields: ["id"])
-  documentTemplates: [DocumentTemplate]
-    @hasMany(indexName: "byInstitution", fields: ["id"])
-  membershipFeeConfigs: [MembershipFeeConfig]
-    @hasMany(indexName: "byInstitution", fields: ["id"])
-  savingsProducts: [SavingsProduct]
-    @hasMany(indexName: "byInstitution", fields: ["id"])
-  moneyAccounts: [MoneyAccount]
-    @hasMany(indexName: "byInstitution", fields: ["id"])
-  notificationTemplates: [NotificationTemplate]
-    @hasMany(indexName: "byInstitution", fields: ["id"])
-  userNotifications: [UserNotification]
-    @hasMany(indexName: "byInstitution", fields: ["id"])
-  reportDefinitions: [ReportDefinition]
-    @hasMany(indexName: "byInstitution", fields: ["id"])
-  businessRules: [BusinessRule]
-    @hasMany(indexName: "byInstitution", fields: ["id"])
-  apiConfigurations: [APIConfiguration]
-    @hasMany(indexName: "byInstitution", fields: ["id"])
-  expenseCategories: [ExpenseCategoryConfig]
-    @hasMany(indexName: "byInstitution", fields: ["id"])
-  incomeCategories: [IncomeCategoryConfig]
-    @hasMany(indexName: "byInstitution", fields: ["id"])
-  budgetPeriods: [BudgetPeriod]
-    @hasMany(indexName: "byInstitution", fields: ["id"])
-  moneyTransactions: [MoneyTransaction]
-    @hasMany(indexName: "byInstitution", fields: ["id"])
-  expenseTransactions: [ExpenseTransaction]
-    @hasMany(indexName: "byInstitution", fields: ["id"])
-  glAccounts: [GLAccount] @hasMany(indexName: "byInstitution", fields: ["id"])
-  glPostings: [GLPosting] @hasMany(indexName: "byInstitution", fields: ["id"])
-  manualJournalEntries: [ManualJournalEntry]
-    @hasMany(indexName: "byInstitution", fields: ["id"])
-  financialReports: [FinancialReport]
-    @hasMany(indexName: "byInstitution", fields: ["id"])
-  auditLogs: [AuditLog] @hasMany(indexName: "byInstitution", fields: ["id"])
-  payrollRuns: [PayrollRun] @hasMany(indexName: "byInstitution", fields: ["id"])
-  loanApplications: [LoanApplication]
-    @hasMany(indexName: "byInstitution", fields: ["id"])
-  loanAccounts: [LoanAccount]
-    @hasMany(indexName: "byInstitution", fields: ["id"])
-  customClientFieldDefinitions: [CustomClientFieldDefinition]
-    @hasMany(indexName: "byInstitution", fields: ["id"])
-  shareAccounts: [ShareAccount]
-    @hasMany(indexName: "byInstitution", fields: ["id"])
-  savingsAccounts: [SavingsAccount]
-    @hasMany(indexName: "byInstitution", fields: ["id"])
-  collaterals: [Collateral] @hasMany(indexName: "byInstitution", fields: ["id"])
-  guarantors: [Guarantor] @hasMany(indexName: "byInstitution", fields: ["id"])
-  applicationDocuments: [ApplicationDocument]
-    @hasMany(indexName: "byInstitution", fields: ["id"])
-  writeOffRecords: [WriteOffRecord]
-    @hasMany(indexName: "byInstitution", fields: ["id"])
-  collectionAssignments: [CollectionAssignment]
-    @hasMany(indexName: "byInstitution", fields: ["id"])
-  collectionActions: [CollectionAction]
-    @hasMany(indexName: "byInstitution", fields: ["id"])
-  promisesToPay: [PromiseToPay]
-    @hasMany(indexName: "byInstitution", fields: ["id"])
-  legalActionRecords: [LegalActionRecord]
-    @hasMany(indexName: "byInstitution", fields: ["id"])
-  repossessionRecords: [RepossessionRecord]
-    @hasMany(indexName: "byInstitution", fields: ["id"])
-  collectionAlerts: [CollectionAlert]
-    @hasMany(indexName: "byInstitution", fields: ["id"])
-  employeePayrollProfiles: [EmployeePayrollProfile]
-    @hasMany(indexName: "byInstitution", fields: ["id"])
-  loanTransactions: [LoanTransaction]
-    @hasMany(indexName: "byInstitution", fields: ["id"])
-  moneyAccountTransactions: [MoneyAccountTransaction]
-    @hasMany(indexName: "byInstitution", fields: ["id"])
-  shareTransactions: [ShareTransaction]
-    @hasMany(indexName: "byInstitution", fields: ["id"])
-  savingsTransactions: [SavingsTransaction]
-    @hasMany(indexName: "byInstitution", fields: ["id"])
-  payrollRunDetails: [PayrollRunDetail]
-    @hasMany(indexName: "byInstitution", fields: ["id"])
+  users: [User] @hasMany
+  branches: [Branch] @hasMany
+  clients: [Client] @hasMany
+  clientTypeConfigs: [ClientTypeConfig] @hasMany
+  riskLevelConfigs: [RiskLevelConfig] @hasMany
+  kycDocTypeConfigs: [KYCDocumentTypeConfig] @hasMany
+  kycDocuments: [KYCDocument] @hasMany
+  appDocTypeConfigs: [ApplicationDocumentTypeConfig] @hasMany
+  collateralTypeConfigs: [CollateralTypeConfig] @hasMany
+  loanPurposeConfigs: [LoanPurposeConfig] @hasMany
+  feeConfigs: [FeeConfig] @hasMany
+  penaltyConfigs: [PenaltyConfig] @hasMany
+  loanProducts: [LoanProduct] @hasMany
+  workflowDefinitions: [WorkflowDefinition] @hasMany
+  scorecards: [Scorecard] @hasMany
+  documentTemplates: [DocumentTemplate] @hasMany
+  membershipFeeConfigs: [MembershipFeeConfig] @hasMany
+  savingsProducts: [SavingsProduct] @hasMany
+  moneyAccounts: [MoneyAccount] @hasMany
+  notificationTemplates: [NotificationTemplate] @hasMany
+  userNotifications: [UserNotification] @hasMany
+  reportDefinitions: [ReportDefinition] @hasMany
+  businessRules: [BusinessRule] @hasMany
+  apiConfigurations: [APIConfiguration] @hasMany
+  incomeCategories: [IncomeCategoryConfig] @hasMany
+  glAccounts: [GLAccount] @hasMany
+  glPostings: [GLPosting] @hasMany
+  payrollRuns: [PayrollRun] @hasMany
+  loanLoanA [LoanApplication] @hasMany
+  loanAccounts: [LoanAccount] @hasMany
+  customClientFieldDefinitions: [CustomClientFieldDefinition] @hasMany
+  shareAccounts: [ShareAccount] @hasMany
+  savingsAccounts: [SavingsAccount] @hasMany
+  collaterals: [Collateral] @hasMany
+  guarantors: [Guarantor] @hasMany
+  applicationDocuments: [ApplicationDocument] @hasMany
+  writeOffRecords: [WriteOffRecord] @hasMany
+  collectionAssignments: [CollectionAssignment] @hasMany
+  collectionActions: [CollectionAction] @hasMany
+  promisesToPay: [PromiseToPay] @hasMany
+  legalActionRecords: [LegalActionRecord] @hasMany
+  repossessionRecords: [RepossessionRecord] @hasMany
+  collectionAlerts: [CollectionAlert] @hasMany
+  employeePayrollProfiles: [EmployeePayrollProfile] @hasMany
+  loanTransactions: [LoanTransaction] @hasMany
+  shareTransactions: [ShareTransaction] @hasMany
+  savingsTransactions: [SavingsTransaction] @hasMany
+  payrollRunDetails: [PayrollRunDetail] @hasMany
   # Add to Institution model
-  membershipFeeCharges: [MembershipFeeCharge]
-    @hasMany(indexName: "byInstitution", fields: ["id"])
-  repaymentScheduleInstallments: [RepaymentScheduleInstallment]
-    @hasMany(indexName: "byInstitution", fields: ["id"])
-  budgetAllocations: [BudgetAllocation]
-    @hasMany(indexName: "byInstitution", fields: ["id"])
-  createdAt: AWSDateTime!
-  updatedAt: AWSDateTime!
+  membershipFeeCharges: [MembershipFeeCharge] @hasMany
+  repaymentScheduleInstallments: [RepaymentScheduleInstallment] @hasMany
 }
 
-type Branch @model @auth(rules: [{ allow: custom }]) {
+type Branch @model {
   id: ID!
-  institutionID: ID! @index(name: "byInstitution", sortKeyFields: ["name"])
+  institutionID: ID!
   institution: Institution @belongsTo(fields: ["institutionID"])
   name: String!
   branchCode: String
@@ -428,110 +111,117 @@ type Branch @model @auth(rules: [{ allow: custom }]) {
 
   # --- Relationships ---
 
-  users: [User] @hasMany(indexName: "byBranch", fields: ["id"])
-  clients: [Client] @hasMany(indexName: "byBranch", fields: ["id"])
-  loanApplications: [LoanApplication]
-    @hasMany(indexName: "byBranch", fields: ["id"])
-  loanAccounts: [LoanAccount] @hasMany(indexName: "byBranch", fields: ["id"])
-  moneyAccounts: [MoneyAccount] @hasMany(indexName: "byBranch", fields: ["id"])
-  moneyTransactions: [MoneyTransaction]
-    @hasMany(indexName: "byBranch", fields: ["id"])
-  expenseTransactions: [ExpenseTransaction]
-    @hasMany(indexName: "byBranch", fields: ["id"])
+  users: [User] @hasMany
+  clients: [Client] @hasMany
+  loanApplications: [LoanApplication] @hasMany
+  loanAccounts: [LoanAccount] @hasMany
+  moneyAccounts: [MoneyAccount] @hasMany
+  financialReports: [FinancialReport] @hasMany
 
-  createdAt: AWSDateTime!
-  updatedAt: AWSDateTime!
 }
 
-type User
-  @model
-  @auth(
-    rules: [
-      { allow: custom }
-      { allow: groups, groupsField: "cognito:groups", operations: [read] }
-      { allow: owner, ownerField: "id", operations: [read, update] }
-    ]
-  ) {
+type User @model {
   id: ID! # Cognito user sub
-  institutionID: ID! @index(name: "byInstitution", sortKeyFields: ["username"])
+  institutionID: ID!
   institution: Institution @belongsTo(fields: ["institutionID"])
 
-  payrollDetails: [PayrollRunDetail]
-    @hasMany(indexName: "byUser", fields: ["id"])
+  payrollDetails: [PayrollRunDetail] @hasMany
 
-  username: String! @index(name: "byUsername", queryField: "userByUsername")
+  username: String!
   email: AWSEmail!
   phoneNumber: AWSPhone
   firstName: String!
   lastName: String!
   jobTitle: String
   status: String! # Active / Inactive
-  branchID: ID! @index(name: "byBranch", sortKeyFields: ["username"])
+  branchID: ID!
   branch: Branch @belongsTo(fields: ["branchID"])
 
   roles: [Role!]!
 
-  supervisorUserID: ID @index(name: "bySupervisor", sortKeyFields: ["username"])
+  supervisorUserID: ID
   supervisor: User @belongsTo(fields: ["supervisorUserID"])
-  supervisees: [User] @hasMany(indexName: "bySupervisor", fields: ["id"])
+  supervisees: [User] @hasMany
 
   # --- Relationships ---
-
+  approvedExpenses: [Expense]
+    @hasMany(indexName: "byApprovedByUserID", fields: ["id"])
+  createdExpenses: [Expense]
+    @hasMany(indexName: "byCreatedByUserID", fields: ["id"])
   payrollProfile: EmployeePayrollProfile @hasOne(fields: ["id"])
-  notificationPreferences: [UserNotificationPreference]
-    @hasMany(indexName: "byUser", fields: ["id"])
-  notifications: [UserNotification]
-    @hasMany(indexName: "byUser", fields: ["id"])
-  reportExecutions: [ReportExecution]
-    @hasMany(indexName: "byUser", fields: ["id"])
-  ownedClients: [Client] @hasMany(indexName: "byOwner", fields: ["id"])
-  assignedLoanApplications: [LoanApplication]
-    @hasMany(indexName: "byLoanOfficer", fields: ["id"])
-  assignedLoanAccounts: [LoanAccount]
-    @hasMany(indexName: "byLoanOfficer", fields: ["id"])
-  assignedCollections: [CollectionAssignment]
-    @hasMany(indexName: "byCollectionOfficer", fields: ["id"])
-  collectionActions: [CollectionAction]
-    @hasMany(indexName: "byCollectionOfficerAction", fields: ["id"])
-  targetedCollectionAlerts: [CollectionAlert]
-    @hasMany(indexName: "byTargetUser", fields: ["id"])
-  acknowledgedCollectionAlerts: [CollectionAlert]
-    @hasMany(indexName: "byAcknowledgedByUser", fields: ["id"])
-  processedPayrollRuns: [PayrollRun]
-    @hasMany(indexName: "byProcessedByUser", fields: ["id"])
-  approvedMoneyTransactions: [MoneyTransaction]
-    @hasMany(indexName: "byApprovedByUser", fields: ["id"])
-  createdMoneyTransactions: [MoneyTransaction]
-    @hasMany(indexName: "byCreatedByUser", fields: ["id"])
-  approvedManualJournalEntries: [ManualJournalEntry]
-    @hasMany(indexName: "byApprovedByUser", fields: ["id"])
-  createdManualJournalEntries: [ManualJournalEntry]
-    @hasMany(indexName: "byCreatedByUser", fields: ["id"])
-  approvedExpenseTransactions: [ExpenseTransaction]
-    @hasMany(indexName: "byApprovedByUser", fields: ["id"])
-  createdExpenseTransactions: [ExpenseTransaction]
-    @hasMany(indexName: "byCreatedByUser", fields: ["id"])
-  generatedFinancialReports: [FinancialReport]
-    @hasMany(indexName: "byGeneratedByUser", fields: ["id"])
-  auditLogs: [AuditLog] @hasMany(indexName: "byUser", fields: ["id"])
-  promisesToPay: [PromiseToPay]
-    @hasMany(indexName: "byCollectionOfficerUser", fields: ["id"])
-  createdBudgetPeriods: [BudgetPeriod]
-    @hasMany(indexName: "byCreatedByUser", fields: ["id"])
+  notificationPreferences: [UserNotificationPreference] @hasMany
+  notifications: [UserNotification] @hasMany
+  reportExecutions: [ReportExecution] @hasMany
+  ownedClients: [Client] @hasMany
+  assignedLoanApplications: [LoanApplication] @hasMany
+  assignedLoanAccounts: [LoanAccount] @hasMany
+  assignedCollections: [CollectionAssignment] @hasMany
+  collectionActions: [CollectionAction] @hasMany
+  targetedCollectionAlerts: [CollectionAlert] @hasMany
+  acknowledgedCollectionAlerts: [CollectionAlert] @hasMany
+  processedPayrollRuns: [PayrollRun] @hasMany
+  approvedMoneyTransactions: [MoneyTransaction] @hasMany
+  createdMoneyTransactions: [MoneyTransaction] @hasMany
+  promisesToPay: [PromiseToPay] @hasMany
 
   lastConnectionCheck: AWSDateTime
   connectionStatus: ConnectionStatus
   deviceInfo: String
 
-  createdAt: AWSDateTime!
-  updatedAt: AWSDateTime!
 }
 
+type Borrower @model {
+  id: ID!
+  firstname: String
+  othername: String
+  businessName: String
+  typeOfBusiness: String
+  uniqueIdNumber: String
+  phoneNumber: String
+  otherPhoneNumber: String
+  email: String
+  gender: String
+  dateOfBirth: String
+  nationality: String
+  nationalIdPicture: String
+  passportPicture: String
+  address: String
+  points: Float
+  borrowerOpeningBalance: Float
+  borrowerClosingBalance: Float
+  borrowerInterestRate: Float
+  city: String
+  state: String
+  zipcode: String
+  employmentStatus: String
+  employerName: String
+  creditScore: String
+  additionalNote1: String
+  additionalNote2: String
+  borrowerDocument1: String
+  borrowerDocument1URL: String
+  borrowerDocument2: String
+  borrowerDocument2URL: String
+  borrowerDocument3: String
+  borrowerDocument3URL: String
+  borrowerDocument4: String
+  borrowerDocument4URL: String
+  borrowerStatus: String
+  borrowertype: String
+  borrowerAttribute1: String
+  borrowerAttribute2: String
+  branch: Branch @belongsTo
+  loans: [Loan] @hasMany
+  guarantors: [Guarantor] @hasMany
+  securities: [Security] @hasMany
+  applications: [Application] @hasMany
+  contracts: [Contract] hasMany
+}
 # ---------- Notification subsystem ----------
 
-type NotificationTemplate @model @auth(rules: [{ allow: custom }]) {
+type NotificationTemplate @model {
   id: ID!
-  institutionID: ID! @index(name: "byInstitution")
+  institutionID: ID!
   institution: Institution @belongsTo(fields: ["institutionID"])
 
   eventType: String!
@@ -539,15 +229,13 @@ type NotificationTemplate @model @auth(rules: [{ allow: custom }]) {
   templateBody: String!
   channels: [NotificationChannel]!
   isActive: Boolean!
-  createdAt: AWSDateTime!
-  updatedAt: AWSDateTime!
 }
 
-type UserNotification @model @auth(rules: [{ allow: custom }]) {
+type UserNotification @model {
   id: ID!
-  userID: ID! @index(name: "byUser", sortKeyFields: ["createdAt"])
+  userID: ID!
   user: User @belongsTo(fields: ["userID"])
-  institutionID: ID! @index(name: "byInstitution", sortKeyFields: ["createdAt"])
+  institutionID: ID!
   institution: Institution @belongsTo(fields: ["institutionID"]) # Added belongsTo Institution
   title: String!
   message: String!
@@ -556,27 +244,23 @@ type UserNotification @model @auth(rules: [{ allow: custom }]) {
   referenceType: String
   isRead: Boolean!
   channel: NotificationChannel!
-  createdAt: AWSDateTime!
-  updatedAt: AWSDateTime!
 }
 
-type UserNotificationPreference @model @auth(rules: [{ allow: custom }]) {
+type UserNotificationPreference @model {
   id: ID!
-  userID: ID! @index(name: "byUser", sortKeyFields: ["eventType"])
+  userID: ID!
   user: User @belongsTo(fields: ["userID"])
   eventType: String!
   channels: [NotificationChannel]!
   isEnabled: Boolean!
-  createdAt: AWSDateTime!
-  updatedAt: AWSDateTime!
 }
 
 # ---------- Reporting System ----------
 
-type ReportDefinition @model @auth(rules: [{ allow: custom }]) {
+type ReportDefinition @model {
   id: ID!
   institutionID: ID!
-    @index(name: "byInstitution", sortKeyFields: ["reportType"])
+
   institution: Institution @belongsTo(fields: ["institutionID"])
 
   name: String!
@@ -587,21 +271,17 @@ type ReportDefinition @model @auth(rules: [{ allow: custom }]) {
   parameters: AWSJSON
   outputFormat: ReportOutputFormat!
   isSystem: Boolean!
-  schedules: [ReportSchedule]
-    @hasMany(indexName: "byReportDefinition", fields: ["id"])
-  executions: [ReportExecution]
-    @hasMany(indexName: "byReportDefinition", fields: ["id"])
+  schedules: [ReportSchedule] @hasMany
+  executions: [ReportExecution] @hasMany
 
   createdByUserID: ID!
   # createdByUser: User @belongsTo(fields: ["createdByUserID"]) # Optional: Add belongsTo user
 
-  createdAt: AWSDateTime!
-  updatedAt: AWSDateTime!
 }
 
-type ReportSchedule @model @auth(rules: [{ allow: custom }]) {
+type ReportSchedule @model {
   id: ID!
-  reportDefinitionID: ID! @index(name: "byReportDefinition")
+  reportDefinitionID: ID!
   reportDefinition: ReportDefinition @belongsTo(fields: ["reportDefinitionID"])
 
   name: String!
@@ -612,23 +292,20 @@ type ReportSchedule @model @auth(rules: [{ allow: custom }]) {
   parameters: AWSJSON
   isActive: Boolean!
   lastRunAt: AWSDateTime
-  executions: [ReportExecution]
-    @hasMany(indexName: "byReportSchedule", fields: ["id"])
+  executions: [ReportExecution] @hasMany
 
   createdByUserID: ID!
   # createdByUser: User @belongsTo(fields: ["createdByUserID"]) # Optional: Add belongsTo user
 
-  createdAt: AWSDateTime!
-  updatedAt: AWSDateTime!
 }
 
-type ReportExecution @model @auth(rules: [{ allow: custom }]) {
+type ReportExecution @model {
   id: ID!
   reportDefinitionID: ID!
-    @index(name: "byReportDefinition", sortKeyFields: ["executionDate"])
+
   reportDefinition: ReportDefinition @belongsTo(fields: ["reportDefinitionID"])
 
-  reportScheduleID: ID @index(name: "byReportSchedule")
+  reportScheduleID: ID
   reportSchedule: ReportSchedule @belongsTo(fields: ["reportScheduleID"])
 
   executionDate: AWSDateTime!
@@ -638,27 +315,23 @@ type ReportExecution @model @auth(rules: [{ allow: custom }]) {
   status: ReportStatus!
   errorMessage: String
 
-  executedByUserID: ID! @index(name: "byUser", sortKeyFields: ["executionDate"])
+  executedByUserID: ID!
   user: User @belongsTo(fields: ["executedByUserID"])
-  createdAt: AWSDateTime!
-  updatedAt: AWSDateTime!
 }
 
 # ---------- Workflow Engine ----------
 
-type WorkflowDefinition @model @auth(rules: [{ allow: custom }]) {
+type WorkflowDefinition @model {
   id: ID!
-  institutionID: ID! @index(name: "byInstitution")
+  institutionID: ID!
   institution: Institution @belongsTo(fields: ["institutionID"])
 
   name: String!
   appliesTo: String!
   entityType: String!
   description: String
-  stages: [WorkflowStage]
-    @hasMany(indexName: "byWorkflowDefinition", fields: ["id"])
-  transitions: [WorkflowTransition]
-    @hasMany(indexName: "byWorkflowDefinition", fields: ["id"])
+  stages: [WorkflowStage] @hasMany
+  transitions: [WorkflowTransition] @hasMany
   initialStageID: ID! # References a stage within stages
   isActive: Boolean
   allowsParallelProcessing: Boolean
@@ -666,16 +339,13 @@ type WorkflowDefinition @model @auth(rules: [{ allow: custom }]) {
 
   # --- Relationships ---
 
-  loanProducts: [LoanProduct]
-    @hasMany(indexName: "byWorkflowDefinition", fields: ["id"])
+  loanProducts: [LoanProduct] @hasMany
 
-  createdAt: AWSDateTime!
-  updatedAt: AWSDateTime!
 }
 
-type WorkflowStage @model @auth(rules: [{ allow: custom }]) {
+type WorkflowStage @model {
   id: ID!
-  workflowDefinitionID: ID! @index(name: "byWorkflowDefinition")
+  workflowDefinitionID: ID!
   workflowDefinition: WorkflowDefinition
     @belongsTo(fields: ["workflowDefinitionID"])
 
@@ -685,46 +355,40 @@ type WorkflowStage @model @auth(rules: [{ allow: custom }]) {
   requiredApprovals: Int
   slaHours: Int
   stageType: StageType
-  businessRuleID: ID @index(name: "byBusinessRule")
+  businessRuleID: ID
   businessRule: BusinessRule @belongsTo(fields: ["businessRuleID"])
   formDefinition: AWSJSON
 
   # --- Relationships ---
 
-  outgoingTransitions: [WorkflowTransition]
-    @hasMany(indexName: "byFromStage", fields: ["id"])
-  incomingTransitions: [WorkflowTransition]
-    @hasMany(indexName: "byToStage", fields: ["id"])
+  outgoingTransitions: [WorkflowTransition] @hasMany
+  incomingTransitions: [WorkflowTransition] @hasMany
 
-  createdAt: AWSDateTime!
-  updatedAt: AWSDateTime!
 }
 
-type WorkflowTransition @model @auth(rules: [{ allow: custom }]) {
+type WorkflowTransition @model {
   id: ID!
   workflowDefinitionID: ID!
-    @index(name: "byWorkflowDefinition", sortKeyFields: ["fromStageID"])
+
   workflowDefinition: WorkflowDefinition
     @belongsTo(fields: ["workflowDefinitionID"])
 
-  fromStageID: ID! @index(name: "byFromStage")
+  fromStageID: ID!
   fromStage: WorkflowStage @belongsTo(fields: ["fromStageID"])
 
-  toStageID: ID! @index(name: "byToStage")
+  toStageID: ID!
   toStage: WorkflowStage @belongsTo(fields: ["toStageID"])
 
   name: String
   conditionLogic: AWSJSON
 
-  createdAt: AWSDateTime!
-  updatedAt: AWSDateTime!
 }
 
 # ---------- Business Rules ----------
 
-type BusinessRule @model @auth(rules: [{ allow: custom }]) {
+type BusinessRule @model {
   id: ID!
-  institutionID: ID! @index(name: "byInstitution")
+  institutionID: ID!
   institution: Institution @belongsTo(fields: ["institutionID"])
 
   name: String!
@@ -738,32 +402,18 @@ type BusinessRule @model @auth(rules: [{ allow: custom }]) {
 
   # --- Relationships ---
 
-  workflowStages: [WorkflowStage]
-    @hasMany(indexName: "byBusinessRule", fields: ["id"])
+  workflowStages: [WorkflowStage] @hasMany
 
   createdByUserID: ID!
   # createdByUser: User @belongsTo(fields: ["createdByUserID"]) # Optional: Add belongsTo user
 
-  createdAt: AWSDateTime!
-  updatedAt: AWSDateTime!
 }
 
 # ---------- API Integration ----------
 
-type APIConfiguration
-  @model
-  @auth(
-    rules: [
-      { allow: custom, operations: [read] }
-      {
-        allow: groups
-        groups: ["ADMINISTRATOR", "SYSTEM_ADMIN"]
-        operations: [create, update, delete]
-      }
-    ]
-  ) {
+type APIConfiguration @model {
   id: ID!
-  institutionID: ID! @index(name: "byInstitution")
+  institutionID: ID!
   institution: Institution @belongsTo(fields: ["institutionID"])
 
   name: String!
@@ -777,91 +427,86 @@ type APIConfiguration
   createdByUserID: ID!
   # createdByUser: User @belongsTo(fields: ["createdByUserID"]) # Optional: Add belongsTo user
 
-  createdAt: AWSDateTime!
-  updatedAt: AWSDateTime!
 }
 
 # ---------- Configurable Lists & Core Client Models ----------
 
 # ---- Config lists (simple look‑ups) ----
 
-type ClientTypeConfig @model @auth(rules: [{ allow: custom }]) {
+type ClientTypeConfig @model {
   id: ID!
-  institutionID: ID! @index(name: "byInstitution")
+  institutionID: ID!
   institution: Institution @belongsTo(fields: ["institutionID"])
   name: String!
   description: String
 
   # --- Relationships ---
 
-  clients: [Client] @hasMany(indexName: "byClientType", fields: ["id"])
+  clients: [Client] @hasMany
 }
 
-type RiskLevelConfig @model @auth(rules: [{ allow: custom }]) {
+type RiskLevelConfig @model {
   id: ID!
-  institutionID: ID! @index(name: "byInstitution")
+  institutionID: ID!
   institution: Institution @belongsTo(fields: ["institutionID"])
   name: String!
   description: String
 
   # --- Relationships ---
 
-  clients: [Client] @hasMany(indexName: "byRiskLevel", fields: ["id"])
+  clients: [Client] @hasMany
 }
 
-type KYCDocumentTypeConfig @model @auth(rules: [{ allow: custom }]) {
+type KYCDocumentTypeConfig @model {
   id: ID!
-  institutionID: ID! @index(name: "byInstitution")
+  institutionID: ID!
   institution: Institution @belongsTo(fields: ["institutionID"])
   name: String!
 
   # --- Relationships ---
 
-  documents: [KYCDocument] @hasMany(indexName: "byDocumentType", fields: ["id"])
+  documents: [KYCDocument] @hasMany
 }
 
-type ApplicationDocumentTypeConfig @model @auth(rules: [{ allow: custom }]) {
+type ApplicationDocumentTypeConfig @model {
   id: ID!
-  institutionID: ID! @index(name: "byInstitution")
+  institutionID: ID!
   institution: Institution @belongsTo(fields: ["institutionID"])
   name: String!
 
   # --- Relationships ---
 
-  documents: [ApplicationDocument]
-    @hasMany(indexName: "byDocumentType", fields: ["id"])
+  documents: [ApplicationDocument] @hasMany
 }
 
-type CollateralTypeConfig @model @auth(rules: [{ allow: custom }]) {
+type CollateralTypeConfig @model {
   id: ID!
-  institutionID: ID! @index(name: "byInstitution")
+  institutionID: ID!
   institution: Institution @belongsTo(fields: ["institutionID"])
   name: String!
 
   # --- Relationships ---
 
-  collaterals: [Collateral]
-    @hasMany(indexName: "byCollateralType", fields: ["id"])
+  collaterals: [Collateral] @hasMany
 }
 
-type LoanPurposeConfig @model @auth(rules: [{ allow: custom }]) {
+type LoanPurposeConfig @model {
   id: ID!
-  institutionID: ID! @index(name: "byInstitution")
+  institutionID: ID!
   institution: Institution @belongsTo(fields: ["institutionID"])
   name: String!
   description: String
 
   # --- Relationships ---
 
-  loanApplications: [LoanApplication]
-    @hasMany(indexName: "byLoanPurpose", fields: ["id"])
+  loanApplications: [LoanApplication] @hasMany
 }
 
 # ---- Fees & Penalties ----
 
-type FeeConfig @model @auth(rules: [{ allow: custom }]) {
+type FeeConfig @model {
   id: ID!
-  institutionID: ID! @index(name: "byInstitution")
+  institutionID: ID!
   institution: Institution @belongsTo(fields: ["institutionID"])
 
   name: String!
@@ -878,9 +523,9 @@ type FeeConfig @model @auth(rules: [{ allow: custom }]) {
   loanProducts: [LoanProduct] @manyToMany(relationName: "LoanProductFee")
 }
 
-type PenaltyConfig @model @auth(rules: [{ allow: custom }]) {
+type PenaltyConfig @model {
   id: ID!
-  institutionID: ID! @index(name: "byInstitution")
+  institutionID: ID!
   institution: Institution @belongsTo(fields: ["institutionID"])
 
   name: String!
@@ -898,9 +543,9 @@ type PenaltyConfig @model @auth(rules: [{ allow: custom }]) {
   loanProducts: [LoanProduct] @manyToMany(relationName: "LoanProductPenalty")
 }
 
-type MembershipFeeConfig @model @auth(rules: [{ allow: custom }]) {
+type MembershipFeeConfig @model {
   id: ID!
-  institutionID: ID! @index(name: "byInstitution")
+  institutionID: ID!
   institution: Institution @belongsTo(fields: ["institutionID"])
 
   name: String!
@@ -913,15 +558,14 @@ type MembershipFeeConfig @model @auth(rules: [{ allow: custom }]) {
 
   # --- Relationships ---
 
-  membershipFeeCharges: [MembershipFeeCharge]
-    @hasMany(indexName: "byMembershipFeeConfig", fields: ["id"])
+  membershipFeeCharges: [MembershipFeeCharge] @hasMany
 }
 
 # ---- Added Missing Loan Product ----
 
-type LoanProduct @model @auth(rules: [{ allow: custom }]) {
+type LoanProduct @model {
   id: ID!
-  institutionID: ID! @index(name: "byInstitution")
+  institutionID: ID!
   institution: Institution @belongsTo(fields: ["institutionID"])
 
   name: String!
@@ -940,26 +584,23 @@ type LoanProduct @model @auth(rules: [{ allow: custom }]) {
   penaltyConfigs: [PenaltyConfig]
     @manyToMany(relationName: "LoanProductPenalty")
 
-  workflowDefinitionID: ID @index(name: "byWorkflowDefinition")
+  workflowDefinitionID: ID
   workflowDefinition: WorkflowDefinition
     @belongsTo(fields: ["workflowDefinitionID"])
 
   # --- Relationships ---
 
-  loanApplications: [LoanApplication]
-    @hasMany(indexName: "byProduct", fields: ["id"])
-  loanAccounts: [LoanAccount] @hasMany(indexName: "byProduct", fields: ["id"])
+  loanApplications: [LoanApplication] @hasMany
+  loanAccounts: [LoanAccount] @hasMany
 
   isActive: Boolean!
-  createdAt: AWSDateTime!
-  updatedAt: AWSDateTime!
 }
 
 # ---- Savings & Templates ----
 
-type SavingsProduct @model @auth(rules: [{ allow: custom }]) {
+type SavingsProduct @model {
   id: ID!
-  institutionID: ID! @index(name: "byInstitution")
+  institutionID: ID!
   institution: Institution @belongsTo(fields: ["institutionID"])
 
   name: String!
@@ -976,13 +617,12 @@ type SavingsProduct @model @auth(rules: [{ allow: custom }]) {
 
   # --- Relationships ---
 
-  savingsAccounts: [SavingsAccount]
-    @hasMany(indexName: "bySavingsProduct", fields: ["id"])
+  savingsAccounts: [SavingsAccount] @hasMany
 }
 
-type DocumentTemplate @model @auth(rules: [{ allow: custom }]) {
+type DocumentTemplate @model {
   id: ID!
-  institutionID: ID! @index(name: "byInstitution")
+  institutionID: ID!
   institution: Institution @belongsTo(fields: ["institutionID"])
 
   name: String!
@@ -990,56 +630,53 @@ type DocumentTemplate @model @auth(rules: [{ allow: custom }]) {
   templateType: String!
   content: String! # HTML / Rich text
   isActive: Boolean
-  createdAt: AWSDateTime! # Added missing createdAt
-  updatedAt: AWSDateTime! # Added missing updatedAt
+  Added missing createdAt
 }
 
 # ---- Scoring ----
 
-type Scorecard @model @auth(rules: [{ allow: custom }]) {
+type Scorecard @model {
   id: ID!
-  institutionID: ID! @index(name: "byInstitution")
+  institutionID: ID!
   institution: Institution @belongsTo(fields: ["institutionID"])
 
   name: String!
   description: String
-  factors: [ScorecardFactor] @hasMany(indexName: "byScorecard", fields: ["id"])
+  factors: [ScorecardFactor] @hasMany
   gradeThresholds: AWSJSON
   isActive: Boolean
-  createdAt: AWSDateTime! # Added missing createdAt
-  updatedAt: AWSDateTime! # Added missing updatedAt
+  Added missing createdAt
 }
 
-type ScorecardFactor @model @auth(rules: [{ allow: custom }]) {
+type ScorecardFactor @model {
   id: ID!
-  scorecardID: ID! @index(name: "byScorecard")
+  scorecardID: ID!
   scorecard: Scorecard @belongsTo(fields: ["scorecardID"])
 
   factorName: String!
   sourceField: String!
   valuePointsMapping: AWSJSON!
-  createdAt: AWSDateTime! # Added missing createdAt
-  updatedAt: AWSDateTime! # Added missing updatedAt
+  Added missing createdAt
 }
 
 # ---- Client & related entities ----
 
-type Client @model @auth(rules: [{ allow: custom }]) {
+type Client @model {
   id: ID!
-  institutionID: ID! @index(name: "byInstitution", sortKeyFields: ["createdAt"])
+  institutionID: ID!
   institution: Institution @belongsTo(fields: ["institutionID"])
 
-  branchID: ID! @index(name: "byBranch", sortKeyFields: ["createdAt"])
+  branchID: ID!
   branch: Branch @belongsTo(fields: ["branchID"])
 
-  systemGeneratedClientID: String! @index(name: "bySystemClientID")
+  systemGeneratedClientID: String!
   firstName: String!
   lastName: String!
   middleName: String
   dateOfBirth: AWSDate!
   gender: String!
-  nationalID: String @index(name: "byNationalID")
-  primaryPhoneNumber: String! @index(name: "byPhoneNumber")
+  nationalID: String
+  primaryPhoneNumber: String!
   secondaryPhoneNumber: String
   email: AWSEmail
   addressLine1: String
@@ -1054,37 +691,30 @@ type Client @model @auth(rules: [{ allow: custom }]) {
   activationDate: AWSDateTime
   notes: String
 
-  clientTypeID: ID! @index(name: "byClientType")
+  clientTypeID: ID!
   clientType: ClientTypeConfig @belongsTo(fields: ["clientTypeID"])
-  riskLevelID: ID! @index(name: "byRiskLevel")
+  riskLevelID: ID!
   riskLevel: RiskLevelConfig @belongsTo(fields: ["riskLevelID"])
 
-  ownerUserId: ID! @index(name: "byOwner", sortKeyFields: ["createdAt"])
+  ownerUserId: ID!
   ownerUser: User @belongsTo(fields: ["ownerUserId"])
 
   # --- Relationships ---
 
-  customFields: [CustomClientFieldValue]
-    @hasMany(indexName: "byClient", fields: ["id"])
-  kycDocuments: [KYCDocument] @hasMany(indexName: "byClient", fields: ["id"])
-  loanApplications: [LoanApplication]
-    @hasMany(indexName: "byClient", fields: ["id"])
-  loanAccounts: [LoanAccount] @hasMany(indexName: "byClient", fields: ["id"])
-  savingsAccounts: [SavingsAccount]
-    @hasMany(indexName: "byClient", fields: ["id"])
+  customFields: [CustomClientFieldValue] @hasMany
+  kycDocuments: [KYCDocument] @hasMany
+  loanApplications: [LoanApplication] @hasMany
+  loanAccounts: [LoanAccount] @hasMany
+  savingsAccounts: [SavingsAccount] @hasMany
   shareAccount: ShareAccount @hasOne(fields: ["id"])
-  membershipFeeCharges: [MembershipFeeCharge]
-    @hasMany(indexName: "byClient", fields: ["id"])
-  guarantorRelationships: [Guarantor]
-    @hasMany(indexName: "byLinkedClient", fields: ["id"])
+  membershipFeeCharges: [MembershipFeeCharge] @hasMany
+  guarantorRelationships: [Guarantor] @hasMany
 
-  createdAt: AWSDateTime!
-  updatedAt: AWSDateTime!
 }
 
-type CustomClientFieldDefinition @model @auth(rules: [{ allow: custom }]) {
+type CustomClientFieldDefinition @model {
   id: ID!
-  institutionID: ID! @index(name: "byInstitution")
+  institutionID: ID!
   institution: Institution @belongsTo(fields: ["institutionID"])
   fieldName: String!
   fieldType: String!
@@ -1093,71 +723,63 @@ type CustomClientFieldDefinition @model @auth(rules: [{ allow: custom }]) {
 
   # --- Relationships ---
 
-  fieldValues: [CustomClientFieldValue]
-    @hasMany(indexName: "byFieldDefinition", fields: ["id"])
+  fieldValues: [CustomClientFieldValue] @hasMany
 
-  createdAt: AWSDateTime! # Added missing createdAt
-  updatedAt: AWSDateTime! # Added missing updatedAt
+  Added missing createdAt
 }
 
-type CustomClientFieldValue @model @auth(rules: [{ allow: custom }]) {
+type CustomClientFieldValue @model {
   id: ID!
-  clientID: ID! @index(name: "byClient", sortKeyFields: ["fieldDefinitionID"])
+  clientID: ID!
   client: Client @belongsTo(fields: ["clientID"])
 
-  fieldDefinitionID: ID! @index(name: "byFieldDefinition")
+  fieldDefinitionID: ID!
   fieldDefinition: CustomClientFieldDefinition
     @belongsTo(fields: ["fieldDefinitionID"])
   value: String!
-  createdAt: AWSDateTime! # Added missing createdAt
-  updatedAt: AWSDateTime! # Added missing updatedAt
+  Added missing createdAt
 }
 
-type KYCDocument @model @auth(rules: [{ allow: custom }]) {
+type KYCDocument @model {
   id: ID!
-  clientID: ID! @index(name: "byClient", sortKeyFields: ["createdAt"])
+  clientID: ID!
   client: Client @belongsTo(fields: ["clientID"])
-  institutionID: ID! @index(name: "byInstitution") # Added institutionID
+  institutionID: ID!
   institution: Institution @belongsTo(fields: ["institutionID"]) # Added belongsTo institution
-  documentTypeID: ID! @index(name: "byDocumentType")
+  documentTypeID: ID!
   documentType: KYCDocumentTypeConfig @belongsTo(fields: ["documentTypeID"])
 
   s3Key: String!
   fileName: String
   fileSize: Int
   contentType: String
-  createdAt: AWSDateTime!
-  updatedAt: AWSDateTime!
 }
 
 # ---------- Share, Savings, and Membership ----------
 
-type ShareAccount @model @auth(rules: [{ allow: custom }]) {
+type ShareAccount @model {
   id: ID!
-  institutionID: ID! @index(name: "byInstitution") # Added index
+  institutionID: ID!
   institution: Institution @belongsTo(fields: ["institutionID"]) # Added belongsTo
-  clientID: ID! @index(name: "byClient") # 1‑to‑1 with Client
+  clientID: ID!
   client: Client @belongsTo(fields: ["clientID"])
 
-  accountNumber: String! @index(name: "byShareAccountNumber")
+  accountNumber: String!
   currentBalance: Float!
   status: String! # Active / Dormant / Closed
   lienAmount: Float
   availableBalance: Float
 
-  transactions: [ShareTransaction]
-    @hasMany(indexName: "byShareAccount", fields: ["id"])
+  transactions: [ShareTransaction] @hasMany
 
-  createdAt: AWSDateTime!
-  updatedAt: AWSDateTime!
 }
 
-type ShareTransaction @model @auth(rules: [{ allow: custom }]) {
+type ShareTransaction @model {
   id: ID!
-  institutionID: ID! @index(name: "byInstitution") # Added institutionID
+  institutionID: ID!
   institution: Institution @belongsTo(fields: ["institutionID"]) # Added belongsTo institution
   shareAccountID: ID!
-    @index(name: "byShareAccount", sortKeyFields: ["transactionDate"])
+
   shareAccount: ShareAccount @belongsTo(fields: ["shareAccountID"])
   transactionType: TransactionType!
   transactionDate: AWSDateTime!
@@ -1167,51 +789,43 @@ type ShareTransaction @model @auth(rules: [{ allow: custom }]) {
   deviceInfo: String
   ipAddress: AWSIPAddress
 
-  glPostingID: ID @index(name: "byGLPosting")
+  glPostingID: ID
   glPosting: GLPosting @belongsTo(fields: ["glPostingID"])
 
-  moneyAccountTransactionID: ID @index(name: "byMoneyAccountTransaction")
-  # This side of the relationship (ShareTransaction having moneyAccountTransaction) is defined on MoneyAccountTransaction.
-
-  payrollRunDetailID: ID @index(name: "byPayrollRunDetail") # Added index
+  payrollRunDetailID: ID
   payrollRunDetail: PayrollRunDetail @belongsTo(fields: ["payrollRunDetailID"]) # Corrected from hasOne to belongsTo
   # Removed redundant and incorrect payrollRunDetails hasMany
 
   createdByUserID: ID!
   # createdByUser: User @belongsTo(fields: ["createdByUserID"]) # Optional: Add belongsTo user
 
-  createdAt: AWSDateTime!
-  updatedAt: AWSDateTime!
 }
 
-type SavingsAccount @model @auth(rules: [{ allow: custom }]) {
+type SavingsAccount @model {
   id: ID!
-  institutionID: ID! @index(name: "byInstitution") # Added index
+  institutionID: ID!
   institution: Institution @belongsTo(fields: ["institutionID"]) # Added belongsTo
-  clientID: ID! @index(name: "byClient", sortKeyFields: ["createdAt"])
+  clientID: ID!
   client: Client @belongsTo(fields: ["clientID"])
 
-  savingsProductID: ID! @index(name: "bySavingsProduct")
+  savingsProductID: ID!
   savingsProduct: SavingsProduct @belongsTo(fields: ["savingsProductID"])
 
-  accountNumber: String! @index(name: "bySavingsAccountNumber")
+  accountNumber: String!
   currentBalance: Float!
   accruedInterest: Float
   status: String!
   lienAmount: Float
   availableBalance: Float
 
-  transactions: [SavingsTransaction]
-    @hasMany(indexName: "bySavingsAccount", fields: ["id"])
+  transactions: [SavingsTransaction] @hasMany
 
-  createdAt: AWSDateTime!
-  updatedAt: AWSDateTime!
 }
 
-type SavingsTransaction @model @auth(rules: [{ allow: custom }]) {
+type SavingsTransaction @model {
   id: ID!
   savingsAccountID: ID!
-    @index(name: "bySavingsAccount", sortKeyFields: ["transactionDate"])
+
   savingsAccount: SavingsAccount @belongsTo(fields: ["savingsAccountID"])
   transactionType: TransactionType!
   transactionDate: AWSDateTime!
@@ -1222,30 +836,26 @@ type SavingsTransaction @model @auth(rules: [{ allow: custom }]) {
   deviceInfo: String
   ipAddress: AWSIPAddress
 
-  glPostingID: ID @index(name: "byGLPosting")
+  glPostingID: ID
   glPosting: GLPosting @belongsTo(fields: ["glPostingID"])
 
-  moneyAccountTransactionID: ID @index(name: "byMoneyAccountTransaction")
   payrollRunDetail: PayrollRunDetail @hasOne
 
   # --- Relationships ---
 
-  membershipFeeCharges: [MembershipFeeCharge]
-    @hasMany(indexName: "bySavingsTransaction", fields: ["id"])
+  membershipFeeCharges: [MembershipFeeCharge] @hasMany
 
   createdByUserID: ID!
-  createdAt: AWSDateTime!
-  updatedAt: AWSDateTime!
 }
 
-type MembershipFeeCharge @model @auth(rules: [{ allow: custom }]) {
+type MembershipFeeCharge @model {
   id: ID!
-  institutionID: ID! @index(name: "byInstitution") # Added index
+  institutionID: ID!
   institution: Institution @belongsTo(fields: ["institutionID"]) # Added belongsTo
-  clientID: ID! @index(name: "byClient", sortKeyFields: ["chargeDate"])
+  clientID: ID!
   client: Client @belongsTo(fields: ["clientID"])
 
-  membershipFeeConfigID: ID! @index(name: "byMembershipFeeConfig")
+  membershipFeeConfigID: ID!
   membershipFeeConfig: MembershipFeeConfig
     @belongsTo(fields: ["membershipFeeConfigID"])
 
@@ -1256,40 +866,39 @@ type MembershipFeeCharge @model @auth(rules: [{ allow: custom }]) {
   paidDate: AWSDate
 
   # savingsTransactionID is the FK on THIS model, linking to SavingsTransaction (N:1 from Charge to Transaction)
-  savingsTransactionID: ID @index(name: "bySavingsTransaction")
+  savingsTransactionID: ID
   savingsTransaction: SavingsTransaction
     @belongsTo(fields: ["savingsTransactionID"])
 
-  glPostingID: ID @index(name: "byGLPosting")
+  glPostingID: ID
   glPosting: GLPosting @belongsTo(fields: ["glPostingID"])
 
-  createdAt: AWSDateTime! # Added missing createdAt
-  updatedAt: AWSDateTime! # Added missing updatedAt
+  Added missing createdAt
 }
 
 # ---------- Loan Origination ----------
 
-type LoanApplication @model @auth(rules: [{ allow: custom }]) {
+type LoanApplication @model {
   id: ID!
-  institutionID: ID! @index(name: "byInstitution", sortKeyFields: ["createdAt"])
+  institutionID: ID!
   institution: Institution @belongsTo(fields: ["institutionID"])
 
-  applicationNumber: String! @index(name: "byApplicationNumber")
+  applicationNumber: String!
 
-  clientID: ID! @index(name: "byClient", sortKeyFields: ["createdAt"])
+  clientID: ID!
   client: Client @belongsTo(fields: ["clientID"])
 
-  branchID: ID! @index(name: "byBranch", sortKeyFields: ["createdAt"])
+  branchID: ID!
   branch: Branch @belongsTo(fields: ["branchID"])
 
-  loanProductID: ID! @index(name: "byProduct", sortKeyFields: ["createdAt"])
+  loanProductID: ID!
   loanProduct: LoanProduct @belongsTo(fields: ["loanProductID"])
 
   loanOfficerUserID: ID!
-    @index(name: "byLoanOfficer", sortKeyFields: ["createdAt"])
+
   loanOfficerUser: User @belongsTo(fields: ["loanOfficerUserID"])
 
-  loanPurposeID: ID! @index(name: "byLoanPurpose")
+  loanPurposeID: ID!
   loanPurpose: LoanPurposeConfig @belongsTo(fields: ["loanPurposeID"])
 
   requestedPrincipalAmount: Float!
@@ -1298,7 +907,7 @@ type LoanApplication @model @auth(rules: [{ allow: custom }]) {
   applicationDate: AWSDateTime!
 
   status: LoanApplicationStatus!
-    @index(name: "byStatus", sortKeyFields: ["createdAt"])
+
   currentWorkflowStageID: ID
   workflowHistory: AWSJSON
 
@@ -1310,37 +919,31 @@ type LoanApplication @model @auth(rules: [{ allow: custom }]) {
 
   loanAccount: LoanAccount @hasOne(fields: ["id"])
   # For LoanApplication model (missing relationship to WriteOffRecord)
-  writeOffRecords: [WriteOffRecord]
-    @hasMany(indexName: "byLoanApplication", fields: ["id"])
+  writeOffRecords: [WriteOffRecord] @hasMany
 
   # --- Relationships ---
 
-  collateral: [Collateral]
-    @hasMany(indexName: "byLoanApplication", fields: ["id"])
-  guarantors: [Guarantor]
-    @hasMany(indexName: "byLoanApplication", fields: ["id"])
-  documents: [ApplicationDocument]
-    @hasMany(indexName: "byLoanApplication", fields: ["id"])
+  collateral: [Collateral] @hasMany
+  guarantors: [Guarantor] @hasMany
+  documents: [ApplicationDocument] @hasMany
 
   deviceInfo: String
   lastModifiedByDeviceInfo: String
 
-  createdAt: AWSDateTime!
-  updatedAt: AWSDateTime!
 }
 
-type Collateral @model @auth(rules: [{ allow: custom }]) {
+type Collateral @model {
   id: ID!
-  institutionID: ID! @index(name: "byInstitution") # Added index
+  institutionID: ID!
   institution: Institution @belongsTo(fields: ["institutionID"]) # Added belongsTo
   loanApplicationID: ID!
-    @index(name: "byLoanApplication", sortKeyFields: ["createdAt"])
+
   loanApplication: LoanApplication @belongsTo(fields: ["loanApplicationID"])
 
-  loanAccountID: ID @index(name: "byLoanAccount", sortKeyFields: ["createdAt"])
+  loanAccountID: ID
   loanAccount: LoanAccount @belongsTo(fields: ["loanAccountID"])
 
-  collateralTypeID: ID! @index(name: "byCollateralType")
+  collateralTypeID: ID!
   collateralType: CollateralTypeConfig @belongsTo(fields: ["collateralTypeID"])
 
   description: String!
@@ -1351,27 +954,24 @@ type Collateral @model @auth(rules: [{ allow: custom }]) {
   status: String! # Pledged / Released
   # --- Relationships ---
 
-  repossessions: [RepossessionRecord]
-    @hasMany(indexName: "byAssetCollateral", fields: ["id"])
+  repossessions: [RepossessionRecord] @hasMany
 
-  createdAt: AWSDateTime!
-  updatedAt: AWSDateTime!
 }
 
-type Guarantor @model @auth(rules: [{ allow: custom }]) {
+type Guarantor @model {
   id: ID!
-  institutionID: ID! @index(name: "byInstitution") # Added index
+  institutionID: ID!
   institution: Institution @belongsTo(fields: ["institutionID"]) # Added belongsTo
   loanApplicationID: ID!
-    @index(name: "byLoanApplication", sortKeyFields: ["createdAt"])
+
   loanApplication: LoanApplication @belongsTo(fields: ["loanApplicationID"])
 
-  loanAccountID: ID @index(name: "byLoanAccount", sortKeyFields: ["createdAt"])
+  loanAccountID: ID
   loanAccount: LoanAccount @belongsTo(fields: ["loanAccountID"])
 
   isExistingClient: Boolean!
   linkedClientID: ID
-    @index(name: "byLinkedClient", sortKeyFields: ["createdAt"])
+
   linkedClient: Client @belongsTo(fields: ["linkedClientID"])
 
   externalFullName: String
@@ -1379,19 +979,17 @@ type Guarantor @model @auth(rules: [{ allow: custom }]) {
   externalAddress: String
   externalNationalID: String
 
-  createdAt: AWSDateTime!
-  updatedAt: AWSDateTime!
 }
 
-type ApplicationDocument @model @auth(rules: [{ allow: custom }]) {
+type ApplicationDocument @model {
   id: ID!
-  institutionID: ID! @index(name: "byInstitution") # Added index
+  institutionID: ID!
   institution: Institution @belongsTo(fields: ["institutionID"]) # Added belongsTo
   loanApplicationID: ID!
-    @index(name: "byLoanApplication", sortKeyFields: ["createdAt"])
+
   loanApplication: LoanApplication @belongsTo(fields: ["loanApplicationID"])
 
-  documentTypeID: ID! @index(name: "byDocumentType")
+  documentTypeID: ID!
   documentType: ApplicationDocumentTypeConfig
     @belongsTo(fields: ["documentTypeID"])
 
@@ -1400,34 +998,32 @@ type ApplicationDocument @model @auth(rules: [{ allow: custom }]) {
   fileSize: Int
   contentType: String
 
-  createdAt: AWSDateTime!
-  updatedAt: AWSDateTime!
 }
 
 # ---------- Loan Accounts & Collections ----------
 
-type LoanAccount @model @auth(rules: [{ allow: custom }]) {
+type LoanAccount @model {
   id: ID!
 
-  institutionID: ID! @index(name: "byInstitution", sortKeyFields: ["createdAt"])
+  institutionID: ID!
   institution: Institution @belongsTo(fields: ["institutionID"])
 
-  accountNumber: String! @index(name: "byLoanAccountNumber")
+  accountNumber: String!
 
-  loanApplicationID: ID! @index(name: "byLoanApplication")
+  loanApplicationID: ID!
   loanApplication: LoanApplication @belongsTo(fields: ["loanApplicationID"])
 
-  clientID: ID! @index(name: "byClient", sortKeyFields: ["createdAt"])
+  clientID: ID!
   client: Client @belongsTo(fields: ["clientID"])
 
-  branchID: ID! @index(name: "byBranch", sortKeyFields: ["createdAt"])
+  branchID: ID!
   branch: Branch @belongsTo(fields: ["branchID"])
 
-  loanProductID: ID! @index(name: "byProduct", sortKeyFields: ["createdAt"])
+  loanProductID: ID!
   loanProduct: LoanProduct @belongsTo(fields: ["loanProductID"])
 
   loanOfficerUserID: ID!
-    @index(name: "byLoanOfficer", sortKeyFields: ["updatedAt"])
+
   loanOfficerUser: User @belongsTo(fields: ["loanOfficerUserID"])
 
   # ---- Core loan terms ----
@@ -1452,13 +1048,13 @@ type LoanAccount @model @auth(rules: [{ allow: custom }]) {
   accruedFeeBalance: Float!
   totalOutstandingBalance: Float!
 
-  nextDueDate: AWSDate @index(name: "byNextDueDate")
+  nextDueDate: AWSDate
   nextInstallmentAmount: Float
 
   # ---- Status & risk ----
 
   status: LoanAccountStatus!
-    @index(name: "byStatus", sortKeyFields: ["updatedAt"])
+
   daysPastDue: Int
   delinquencyBucket: String
   riskClassification: RiskClassification
@@ -1477,35 +1073,27 @@ type LoanAccount @model @auth(rules: [{ allow: custom }]) {
 
   # ---- Collections & collateral ----
 
-  repaymentSchedule: [RepaymentScheduleInstallment]
-    @hasMany(indexName: "byLoanAccount", fields: ["id"])
-  transactions: [LoanTransaction]
-    @hasMany(indexName: "byLoanAccount", fields: ["id"])
-  collectionActions: [CollectionAction]
-    @hasMany(indexName: "byLoanAccount", fields: ["id"])
-  promisesToPay: [PromiseToPay]
-    @hasMany(indexName: "byLoanAccount", fields: ["id"])
-  collateral: [Collateral] @hasMany(indexName: "byLoanAccount", fields: ["id"])
-  guarantors: [Guarantor] @hasMany(indexName: "byLoanAccount", fields: ["id"])
-  collectionAlerts: [CollectionAlert]
-    @hasMany(indexName: "byTriggeringLoanAccount", fields: ["id"])
+  repaymentSchedule: [RepaymentScheduleInstallment] @hasMany
+  transactions: [LoanTransaction] @hasMany
+  collectionActions: [CollectionAction] @hasMany
+  promisesToPay: [PromiseToPay] @hasMany
+  collateral: [Collateral] @hasMany
+  guarantors: [Guarantor] @hasMany
+  collectionAlerts: [CollectionAlert] @hasMany
 
   # ---- Metadata ----
 
   lastModifiedByDeviceInfo: String
-  createdAt: AWSDateTime!
-  updatedAt: AWSDateTime!
 }
 
 # Read‑only view – generated by a Lambda / Function
 
 type RepaymentScheduleInstallment
-  @model(queries: null, mutations: null, subscriptions: null)
-  @auth(rules: [{ allow: custom }]) {
+  @model(queries: null, mutations: null, subscriptions: null) {
   id: ID! # Composite key "loanAccountID‑installmentNo"
-  loanAccountID: ID! @index(name: "byLoanAccount", sortKeyFields: ["dueDate"])
+  loanAccountID: ID!
   loanAccount: LoanAccount @belongsTo(fields: ["loanAccountID"])
-  institutionID: ID! @index(name: "byInstitution") # Added institutionID for access
+  institutionID: ID!
   institution: Institution @belongsTo(fields: ["institutionID"]) # Added belongsTo institution
   installmentNumber: Int!
   dueDate: AWSDate!
@@ -1523,717 +1111,238 @@ type RepaymentScheduleInstallment
   outstandingPrincipalBalanceAfterPayment: Float!
   status: String! # Pending / PartiallyPaid / Paid / Overdue
   paidDate: AWSDate
-  createdAt: AWSDateTime! # Added missing createdAt
-  updatedAt: AWSDateTime! # Added missing updatedAt
+  Added missing createdAt
 }
 
-type LoanTransaction @model @auth(rules: [{ allow: custom }]) {
+type Loan @model {
   id: ID!
-  institutionID: ID! @index(name: "byInstitution") # Added index
-  institution: Institution @belongsTo(fields: ["institutionID"]) # Added belongsTo
-  # Removed redundant payrollRunDetails hasMany
-  loanAccountID: ID!
-    @index(name: "byLoanAccount", sortKeyFields: ["transactionDate"])
-  loanAccount: LoanAccount @belongsTo(fields: ["loanAccountID"])
-
-  transactionType: TransactionType!
-  transactionDate: AWSDateTime!
-  amount: Float!
-  principalAmount: Float
-  interestAmount: Float
-  feeAmount: Float
-  penaltyAmount: Float
-  notes: String
-  deviceInfo: String
-  ipAddress: AWSIPAddress
-
-  glPostingID: ID @index(name: "byGLPosting")
-  glPosting: GLPosting @belongsTo(fields: ["glPostingID"])
-
-  moneyAccountTransactionID: ID @index(name: "byMoneyAccountTransaction")
-  # This side of the relationship (LoanTransaction having moneyAccountTransaction) is defined on MoneyAccountTransaction.
-
-  payrollRunDetailID: ID @index(name: "byPayrollRunDetail") # Added index
-  payrollRunDetail: PayrollRunDetail @belongsTo(fields: ["payrollRunDetailID"])
-
-  createdByUserID: ID!
-  # createdByUser: User @belongsTo(fields: ["createdByUserID"]) # Optional: Add belongsTo user
-
-  isAdjustment: Boolean
-  isWaiver: Boolean
   approvalStatus: String
-  approvedByUserID: ID
-  # approvedByUser: User @belongsTo(fields: ["approvedByUserID"]) # Optional: Add belongsTo user
-  approvedDate: AWSDateTime
-
-  createdAt: AWSDateTime!
-  updatedAt: AWSDateTime!
-}
-
-type WriteOffRecord @model @auth(rules: [{ allow: custom }]) {
-  id: ID!
-  institutionID: ID! @index(name: "byInstitution") # Added index
-  institution: Institution @belongsTo(fields: ["institutionID"]) # Added belongsTo
-  # Corrected loanAccount relationship
-  loanAccountID: ID! @index(name: "byLoanAccount") # Added loanAccountID and index
-  loanAccount: LoanAccount @belongsTo(fields: ["loanAccountID"]) # Corrected from hasOne to belongsTo
-  writeOffDate: AWSDate!
-  principalWrittenOff: Float!
-  interestWrittenOff: Float!
-  feesWrittenOff: Float!
-  penaltiesWrittenOff: Float!
-  reason: String
-
-  glPostingID: ID @index(name: "byGLPosting")
-  glPosting: GLPosting @belongsTo(fields: ["glPostingID"])
-
-  requestedByUserID: ID!
-  # requestedByUser: User @belongsTo(fields: ["requestedByUserID"]) # Optional: Add belongsTo user
-  approvedByUserID: ID!
-  # approvedByUser: User @belongsTo(fields: ["approvedByUserID"]) # Optional: Add belongsTo user
-
-  deviceInfo: String
-  createdAt: AWSDateTime!
-  updatedAt: AWSDateTime!
-}
-
-type CollectionAssignment @model @auth(rules: [{ allow: custom }]) {
-  id: ID!
-  institutionID: ID! @index(name: "byInstitution") # Added index
-  institution: Institution @belongsTo(fields: ["institutionID"]) # Added belongsTo
-  # Corrected loanAccount relationship
-  loanAccountID: ID! @index(name: "byLoanAccount") # Added loanAccountID and index
-  loanAccount: LoanAccount @belongsTo(fields: ["loanAccountID"]) # Corrected from hasOne to belongsTo
-  collectionOfficerUserID: ID!
-    @index(name: "byCollectionOfficer", sortKeyFields: ["assignedAt"])
-  collectionOfficerUser: User @belongsTo(fields: ["collectionOfficerUserID"])
-
-  assignedAt: AWSDateTime!
-  isActive: Boolean
-  createdAt: AWSDateTime! # Added missing createdAt
-  updatedAt: AWSDateTime! # Added missing updatedAt
-}
-
-type CollectionAction @model @auth(rules: [{ allow: custom }]) {
-  id: ID!
-  institutionID: ID!
-
-  loanAccountID: ID!
-    @index(name: "byLoanAccount", sortKeyFields: ["actionDate"])
-  loanAccount: LoanAccount @belongsTo(fields: ["loanAccountID"])
-
-  collectionOfficerUserID: ID!
-    @index(name: "byCollectionOfficerAction", sortKeyFields: ["actionDate"])
-  collectionOfficerUser: User @belongsTo(fields: ["collectionOfficerUserID"])
-
-  actionType: String!
-  actionDate: AWSDateTime!
-  notes: String
-  outcome: String
-
-  promiseToPay: PromiseToPay @hasOne(fields: ["id"])
-  deviceInfo: String
-  locationLat: Float
-  locationLong: Float
-  # For CollectionAction model (missing relationship to PromiseToPay)
-  promisesToPay: [PromiseToPay]
-    @hasMany(indexName: "byCollectionAction", fields: ["id"])
-
-  createdAt: AWSDateTime!
-  updatedAt: AWSDateTime!
-}
-
-type PromiseToPay @model @auth(rules: [{ allow: custom }]) {
-  id: ID!
-  institutionID: ID! @index(name: "byInstitution") # Added index
-  institution: Institution @belongsTo(fields: ["institutionID"]) # Added belongsTo
-  loanAccountID: ID!
-    @index(name: "byLoanAccount", sortKeyFields: ["promisedDate"])
-  loanAccount: LoanAccount @belongsTo(fields: ["loanAccountID"])
-
-  # Corrected collectionAction relationship
-  collectionActionID: ID! @index(name: "byCollectionAction") # Added collectionActionID and index
-  collectionAction: CollectionAction @belongsTo(fields: ["collectionActionID"]) # Corrected from hasOne to belongsTo
-  collectionOfficerUserID: ID!
-  collectionOfficerUser: User @belongsTo(fields: ["collectionOfficerUserID"]) # Added belongsTo collectionOfficerUser
-  promisedAmount: Float!
-  promisedDate: AWSDate!
-  status: String! # Pending / Kept / Broken
-  keptAmount: Float
-  keptDate: AWSDate
-  notes: String
-  deviceInfo: String
-
-  createdAt: AWSDateTime!
-  updatedAt: AWSDateTime!
-}
-
-type LegalActionRecord @model @auth(rules: [{ allow: custom }]) {
-  id: ID!
-  institutionID: ID! @index(name: "byInstitution") # Added index
-  institution: Institution @belongsTo(fields: ["institutionID"]) # Added belongsTo
-  # Corrected loanAccount relationship
-  loanAccountID: ID! @index(name: "byLoanAccount") # Added loanAccountID and index
-  loanAccount: LoanAccount @belongsTo(fields: ["loanAccountID"]) # Corrected from hasOne to belongsTo
-  dateInitiated: AWSDate
-  assignedLawyerOrAgency: String
-  caseReferenceNumber: String
-  status: String
-  notes: AWSJSON
-
-  createdAt: AWSDateTime!
-  updatedAt: AWSDateTime!
-}
-
-type RepossessionRecord @model @auth(rules: [{ allow: custom }]) {
-  id: ID!
-  institutionID: ID! @index(name: "byInstitution") # Added index
-  institution: Institution @belongsTo(fields: ["institutionID"]) # Added belongsTo
-  # Corrected loanAccount relationship
-  loanAccountID: ID! @index(name: "byLoanAccount") # Added loanAccountID and index
-  loanAccount: LoanAccount @belongsTo(fields: ["loanAccountID"]) # Corrected from hasOne to belongsTo
-  assetCollateralID: ID! @index(name: "byAssetCollateral")
-  assetCollateral: Collateral @belongsTo(fields: ["assetCollateralID"])
-
-  dateRepossessionInitiated: AWSDate
-  dateAssetRepossessed: AWSDate
-  dateAssetSold: AWSDate
-  saleProceedsAmount: Float
-  costsIncurred: Float
-  status: String
-  notes: AWSJSON
-  deviceInfo: String
-
-  createdAt: AWSDateTime!
-  updatedAt: AWSDateTime!
-}
-
-type CollectionAlert @model @auth(rules: [{ allow: custom }]) {
-  id: ID!
-  institutionID: ID! @index(name: "byInstitution") # Added index
-  institution: Institution @belongsTo(fields: ["institutionID"]) # Added belongsTo
-  alertType: String!
-  triggeringLoanAccountID: ID! @index(name: "byTriggeringLoanAccount")
-  triggeringLoanAccount: LoanAccount
-    @belongsTo(fields: ["triggeringLoanAccountID"])
-
-  alertDate: AWSDateTime!
-  message: String!
-  targetUserID: ID @index(name: "byTargetUser") # Added index
-  targetUser: User @belongsTo(fields: ["targetUserID"])
-
-  targetRole: Role
-  status: String! # New / Acknowledged / Resolved
-  acknowledgedAt: AWSDateTime
-  acknowledgedByUserID: ID @index(name: "byAcknowledgedByUser") # Added index
-  acknowledgedByUser: User @belongsTo(fields: ["acknowledgedByUserID"])
-
-  createdAt: AWSDateTime!
-  updatedAt: AWSDateTime!
+  approvedDate: AWSDate
+  principal: Float
+  fees: Float
+  interestRate: Float
+  startDate: AWSDate
+  maturityDate: AWSDate
+  stopDate: AWSDate
+  extensionPeriod: Float
+  duration: Float
+  durationInterval: String
+  loanType: String
+  rateInterval: String
+  loanStatus: String
+  loanCurrency: String
+  loanAttribute1: String
+  loanAttribute2: String
+  numberOfPayments: Float
+  paymentFrequency: String
+  borrower: Borrower @belongsTo
+  payments: [Payment] @hasMany
+  penalties: [Penalty] @hasMany
+  loanFees: [LoanFees] @hasMany
+  applications: [Application] @manyToMany(relationName: "LoanApplication")
+  accounts: [Account] @manyToMany(relationName: "LoanAccount")
+  guarantors: [Guarantor] @manyToMany(relationName: "LoanGuarantor")
+  securities: [Security] @manyToMany(relationName: "LoanSecurity")
+  contracts: [Contract] @manyToMany(relationName: "LoanContract")
+  expenses: [Expense] @manyToMany(relationName: "LoanExpense")
+  approvedByUserID: ID @index(name: "byApprovedByUserID")
+  createdByUserID: ID @index(name: "byCreatedByUserID")
 }
 
 # ---------- Payroll ----------
-
-type EmployeePayrollProfile @model @auth(rules: [{ allow: custom }]) {
+type Employee @model {
   id: ID!
-  institutionID: ID! @index(name: "byInstitution") # Added index
-  institution: Institution @belongsTo(fields: ["institutionID"]) # Added belongsTo
-  userID: ID! @index(name: "byUser")
-  user: User @belongsTo(fields: ["userID"])
-
-  grossSalary: Float!
+  firstName: String
+  lastName: String
+  middleName: String
+  dateOfBirth: AWSDate
+  phoneNumber1: String
+  phoneNumber2: String
+  email: String
+  addressLine1: String
+  addressLine2: String
+  city: String
+  stateProvince: String
+  postalCode: String
+  nextOfKinName: String
+  nextOfKinPhoneNumber: String
+  nextOfKinEmail: String
+  nextOfKinRelationship: String
+  nextOfKinAddress: String
+  nationalID: String
+  passportNumber: String
+  nationality: String
+  status: String 
+  employmentType: String 
+  employmentStatus: String 
+  employmentStartDate: AWSDate
+  employmentEndDate: AWSDate
+  employmentPosition: String
+  employmentDepartment: String
+  employmentGrade: String
+  employmentLocation: String
+  grossSalary: Float
   bankAccountNumber: String
   bankName: String
   bankBranchCode: String
-  createdAt: AWSDateTime! # Added missing createdAt
-  updatedAt: AWSDateTime! # Added missing updatedAt
+  socialSecurityNumber: String
+  taxIdentificationNumber: String
+  taxExemptStatus: String
+  branch: Branch @belongsTo
+  relatedUserID: ID @index(name: "byRelatedUserID")
+  relatedBorrowerID: ID @index(name: "byRelatedBorrowerID")
+  payroll: [Payroll] @manyToMany(relationName: "PayrollEmployee")
+  # Supervisor relationship
+  supervisorID: ID @index(name: "bySupervisorID")
+  supervisor: Employee @belongsTo(fields: ["supervisorID"])
+  subordinates: [Employee] @hasMany(indexName: "bySupervisorID", fields: ["id"])
 }
 
-type PayrollRun @model @auth(rules: [{ allow: custom }]) {
+type Investment @model {
   id: ID!
-  institutionID: ID! @index(name: "byInstitution", sortKeyFields: ["payDate"])
-  institution: Institution @belongsTo(fields: ["institutionID"])
+  principal: Float
+  description: String
+  fees: Float
+  interestRate: Float
+  startDate: AWSDate
+  maturityDate: AWSDate
+  stopDate: AWSDate
+  extensionPeriod: Float
+  duration: Float
+  durationInterval: String
+  type: String
+  rateInterval: String
+  investmentStatus: String
+  investmentAttribute1: String
+  investmentAttribute2: String
+  numberOfPayments: Float
+  paymentFrequency: Float
+  investor: Investor @belongsTo
+  accounts: [Account] @manyToMany(relationName: "InvestmentAccount")
+}
 
-  periodStartDate: AWSDate!
-  periodEndDate: AWSDate!
-  payDate: AWSDate!
-  status: String! # Pending / Processing / Completed / Closed
-  processedByUserID: ID! @index(name: "byProcessedByUser") # Added index
-  processedByUser: User @belongsTo(fields: ["processedByUserID"])
+type LoanFees @model {
+  id: ID!
+  amount: Float
+  loanFeesDate: AWSDate
+  loanFeesStatus: String
+  notes: String
+  loanFeesType: String
+  loanFeesDescription: String
+  loanFeesAttribute1: String
+  loanFeesAttribute2: String
+  loan: Loan @belongsTo
+  account: ID @index(name: "byAccountID")
+}
 
+
+type Payroll @model {
+  id: ID!
+  periodStartDate: AWSDate
+  periodEndDate: AWSDate
+  payDate: AWSDate
+  status: String 
+  processedByUserID: String
   totalGrossPay: Float
   totalLoanDeductions: Float
   totalSavingsDeductions: Float
   totalShareDeductions: Float
   totalNetPay: Float
-
-  details: [PayrollRunDetail]
-    @hasMany(indexName: "byPayrollRun", fields: ["id"])
-
-  createdAt: AWSDateTime!
-  updatedAt: AWSDateTime!
+  details: String
+  branch: Branch @belongsTo
+  employees: [Employee] @manyToMany(relationName: "PayrollEmployee")
 }
 
-type PayrollRunDetail @model @auth(rules: [{ allow: custom }]) {
+type Account @model {
   id: ID!
-  payrollRunID: ID! @index(name: "byPayrollRun", sortKeyFields: ["userID"])
-  payrollRun: PayrollRun @belongsTo(fields: ["payrollRunID"])
-
-  userID: ID! @index(name: "byUser", sortKeyFields: ["payrollRunID"])
-  user: User @belongsTo(fields: ["userID"])
-  institutionID: ID! @index(name: "byInstitution") # Added institutionID
-  institution: Institution @belongsTo(fields: ["institutionID"]) # Added belongsTo institution
-  grossSalary: Float!
-  loanRepaymentDeduction: Float
-  savingsDepositDeduction: Float
-  shareContributionDeduction: Float
-  totalDeductions: Float!
-  netPay: Float!
-  loanTransactions: [LoanTransaction]
-    @hasMany(indexName: "byPayrollRunDetail", fields: ["id"])
-  savingsTransactions: [SavingsTransaction]
-    @hasMany(indexName: "byPayrollRunDetail", fields: ["id"])
-  shareTransactions: [ShareTransaction]
-    @hasMany(indexName: "byPayrollRunDetail", fields: ["id"])
-  createdAt: AWSDateTime! # Added missing createdAt
-  updatedAt: AWSDateTime! # Added missing updatedAt
-}
-
-# ---------- Money Accounts & Transactions ----------
-
-type MoneyAccount @model @auth(rules: [{ allow: custom }]) {
-  id: ID!
-  institutionID: ID! @index(name: "byInstitution", sortKeyFields: ["name"])
-  institution: Institution @belongsTo(fields: ["institutionID"])
-
-  name: String!
-  accountType: MoneyAccountType!
-  branchID: ID! @index(name: "byBranch", sortKeyFields: ["name"])
-  branch: Branch @belongsTo(fields: ["branchID"])
-
-  currency: String!
-  currentBalance: Float!
-  glAccountID: ID! @index(name: "byGLAccount")
-  glAccount: GLAccount @belongsTo(fields: ["glAccountID"])
-
-  isActive: Boolean!
-
-  # --- Relationships ---
-
-  transactions: [MoneyAccountTransaction]
-    @hasMany(indexName: "byMoneyAccount", fields: ["id"])
-  moneyTransactions: [MoneyTransaction]
-    @hasMany(indexName: "byMoneyAccount", fields: ["id"])
-  expenseTransactions: [ExpenseTransaction]
-    @hasMany(indexName: "byMoneyAccount", fields: ["id"])
-  counterpartyTransactions: [MoneyTransaction]
-    @hasMany(indexName: "byCounterpartyMoneyAccount", fields: ["id"]) # Added counterparty relationship
-  createdAt: AWSDateTime!
-  updatedAt: AWSDateTime!
-}
-
-# read‑only projection
-type MoneyAccountTransaction
-  @model(queries: null, mutations: null, subscriptions: null)
-  @auth(rules: [{ allow: custom }]) {
-  id: ID!
-  institutionID: ID!
-  moneyAccountID: ID!
-    @index(name: "byMoneyAccount", sortKeyFields: ["transactionDate"])
-  moneyAccount: MoneyAccount @belongsTo(fields: ["moneyAccountID"])
-
-  transactionDate: AWSDateTime!
-  transactionType: TransactionType!
-  debitAmount: Float
-  creditAmount: Float
-  runningBalance: Float!
+  name: String
+  accountType: String
+  accountNumber: String
   description: String
-  deviceInfo: String
-  ipAddress: AWSIPAddress
-
-  # Instead of using @belongsTo, we'll use @hasOne for these relationships
-  # since MoneyAccountTransaction is a projection of these transactions
-  loanTransactions: [LoanTransaction]
-    @hasMany(indexName: "byMoneyAccountTransaction", fields: ["id"])
-  shareTransactions: [ShareTransaction]
-    @hasMany(indexName: "byMoneyAccountTransaction", fields: ["id"])
-  savingsTransactions: [SavingsTransaction]
-    @hasMany(indexName: "byMoneyAccountTransaction", fields: ["id"])
-  manualJournalEntryLines: [ManualJournalEntryLine]
-    @hasMany(indexName: "byMoneyAccountTransaction", fields: ["id"])
-
-  createdAt: AWSDateTime!
+  currency: String
+  currentBalance: Float
+  openingBalance: Float
+  interestRate: Float
+  interestCalculationMethod: String
+  interestPostingFrequency: String
+  interestPostingDate: String
+  interestAccrued: Float
+  interestAccruedDate: AWSDate
+  accountType: String
+  accountStatus: String
+  branch: Branch @belongsTo
+  moneyTransactions: [MoneyTransaction] @hasMany
+  expenses: [Expense] @hasMany
+  loans: [Loan] @manyToMany(relationName: "LoanAccount")
+  investments: [Investment] @manyToMany(relationName: "InvestmentAccount")
+  otherIncomes: [OtherIncome] @manyToMany(relationName: "OtherIncomeAccount")
 }
 
-# ---------- Chart of Accounts & Posting ----------
-
-type GLAccount @model @auth(rules: [{ allow: custom }]) {
+type MoneyTransaction @model {
   id: ID!
-  institutionID: ID! @index(name: "byInstitution")
-  institution: Institution @belongsTo(fields: ["institutionID"])
-
-  accountCode: String!
-  name: String!
-  accountType: GLAccountType!
-  description: String
-  isActive: Boolean
-
-  # --- Relationships ---
-
-  moneyAccounts: [MoneyAccount]
-    @hasMany(indexName: "byGLAccount", fields: ["id"])
-  postings: [GLPosting] @hasMany(indexName: "byGLAccount", fields: ["id"])
-  expenseCategories: [ExpenseCategoryConfig]
-    @hasMany(indexName: "byGLAccount", fields: ["id"])
-  incomeCategories: [IncomeCategoryConfig]
-    @hasMany(indexName: "byGLAccount", fields: ["id"])
-  manualJournalEntryLines: [ManualJournalEntryLine]
-    @hasMany(indexName: "byGLAccount", fields: ["id"])
-  # ManualJournalEntryLines link to GLAccount via GLPosting, no direct hasMany needed here
-
-  createdAt: AWSDateTime!
-  updatedAt: AWSDateTime!
-}
-
-type GLPosting
-  @model(queries: { get: "getGLPosting", list: "listGLPostings" })
-  @auth(rules: [{ allow: custom }]) {
-  id: ID!
-  institutionID: ID! @index(name: "byInstitution")
-  institution: Institution @belongsTo(fields: ["institutionID"])
-
-  postingDate: AWSDateTime!
-  glAccountID: ID! @index(name: "byGLAccount", sortKeyFields: ["postingDate"])
-  glAccount: GLAccount @belongsTo(fields: ["glAccountID"])
-
-  debitAmount: Float
-  creditAmount: Float
-  memo: String!
-  relatedTransactionType: TransactionType!
-  relatedTransactionID: ID!
-  deviceInfo: String
-  createdBy: String!
-  # createdByUser: User @belongsTo(fields: ["createdBy"]) # Optional: Link to User if createdBy is UserID
-
-  # --- Relationships ---
-  # These represent the transactions/events that *resulted* in this posting.
-  # The FK is on the related model (e.g., LoanTransaction has glPostingID).
-  # So GLPosting hasOne/hasMany of the *other* side, linking using its own ID.
-  # The current hasMany definitions here are incorrect.
-  # Re-evaluating, the standard pattern is for the transaction/event to @belongsTo GLPosting,
-  # and GLPosting @hasMany the related transactions/events. The current definitions are correct for this pattern.
-
-  loanTransactions: [LoanTransaction]
-    @hasMany(indexName: "byGLPosting", fields: ["id"])
-  savingsTransactions: [SavingsTransaction]
-    @hasMany(indexName: "byGLPosting", fields: ["id"])
-  shareTransactions: [ShareTransaction]
-    @hasMany(indexName: "byGLPosting", fields: ["id"])
-  moneyTransactions: [MoneyTransaction]
-    @hasMany(indexName: "byGLPosting", fields: ["id"])
-  writeOffRecords: [WriteOffRecord]
-    @hasMany(indexName: "byGLPosting", fields: ["id"])
-  membershipFeeCharges: [MembershipFeeCharge]
-    @hasMany(indexName: "byGLPosting", fields: ["id"])
-  manualJournalEntryLines: [ManualJournalEntryLine]
-    @hasMany(indexName: "byGLPosting", fields: ["id"])
-  expenseTransactions: [ExpenseTransaction]
-    @hasMany(indexName: "byGLPosting", fields: ["id"]) # Added expense transactions
-  financialReports: [FinancialReport]
-    @hasMany(indexName: "byGLPosting", fields: ["id"]) # Assuming financial reports link to specific postings - might need verification based on report structure. Removed for now as reports typically summarize GL balances, not link to individual postings.
-  createdAt: AWSDateTime!
-  updatedAt: AWSDateTime!
-}
-
-type ManualJournalEntry @model @auth(rules: [{ allow: custom }]) {
-  id: ID!
-  institutionID: ID!
-    @index(name: "byInstitution", sortKeyFields: ["journalEntryDate"])
-  institution: Institution @belongsTo(fields: ["institutionID"])
-
-  journalEntryDate: AWSDateTime!
-  description: String!
-  amount: Float! # Total debit/credit amount
-  notes: String
-  referenceNumber: String
-  status: String! # Draft / Submitted / Approved / Posted
-  lines: [ManualJournalEntryLine]
-    @hasMany(indexName: "byManualJournalEntry", fields: ["id"])
-
-  approvedByUserID: ID @index(name: "byApprovedByUser") # Added index
-  approvedByUser: User @belongsTo(fields: ["approvedByUserID"])
-  approvedDate: AWSDateTime
-
-  createdByUserID: ID! @index(name: "byCreatedByUser") # Added index
-  createdByUser: User @belongsTo(fields: ["createdByUserID"])
-
-  createdAt: AWSDateTime!
-  updatedAt: AWSDateTime!
-}
-
-type ManualJournalEntryLine @model @auth(rules: [{ allow: custom }]) {
-  id: ID!
-  manualJournalEntryID: ID!
-    @index(name: "byManualJournalEntry", sortKeyFields: ["glAccountID"])
-  manualJournalEntry: ManualJournalEntry
-    @belongsTo(fields: ["manualJournalEntryID"])
-
-  glAccountID: ID! @index(name: "byGLAccount") # Index here is useful for querying lines by account, not strictly for belongsTo on GLAccount side
-  glAccount: GLAccount @belongsTo(fields: ["glAccountID"])
-
-  debitAmount: Float
-  creditAmount: Float
-  description: String
-
-  glPostingID: ID @index(name: "byGLPosting")
-  glPosting: GLPosting @belongsTo(fields: ["glPostingID"])
-
-  moneyAccountTransactionID: ID @index(name: "byMoneyAccountTransaction")
-  # Removed incorrect hasOne, relation is defined on MoneyAccountTransaction
-
-  createdAt: AWSDateTime! # Added missing createdAt
-  updatedAt: AWSDateTime! # Added missing updatedAt
-}
-
-# ---------- Expense, Income & Budget ----------
-
-type ExpenseCategoryConfig @model @auth(rules: [{ allow: custom }]) {
-  id: ID!
-  institutionID: ID! @index(name: "byInstitution")
-  institution: Institution @belongsTo(fields: ["institutionID"])
-
-  name: String!
-  description: String
-  glAccountID: ID! @index(name: "byGLAccount")
-  glAccount: GLAccount @belongsTo(fields: ["glAccountID"])
-  isActive: Boolean
-  budgetAllocationFrequency: Frequency
-  budgetAllocationAmount: Float
-  parentCategoryID: ID @index(name: "byParentCategory")
-  parentCategory: ExpenseCategoryConfig @belongsTo(fields: ["parentCategoryID"])
-
-  # --- Relationships ---
-
-  subcategories: [ExpenseCategoryConfig]
-    @hasMany(indexName: "byParentCategory", fields: ["id"])
-  transactions: [ExpenseTransaction]
-    @hasMany(indexName: "byCategory", fields: ["id"])
-  budgetAllocations: [BudgetAllocation]
-    @hasMany(indexName: "byExpenseCategory", fields: ["id"])
-
-  createdAt: AWSDateTime!
-  updatedAt: AWSDateTime!
-}
-
-type IncomeCategoryConfig @model @auth(rules: [{ allow: custom }]) {
-  id: ID!
-  institutionID: ID! @index(name: "byInstitution")
-  institution: Institution @belongsTo(fields: ["institutionID"])
-
-  name: String!
-  description: String
-  glAccountID: ID! @index(name: "byGLAccount")
-  glAccount: GLAccount @belongsTo(fields: ["glAccountID"])
-  isActive: Boolean
-  parentCategoryID: ID @index(name: "byParentCategory")
-  parentCategory: IncomeCategoryConfig @belongsTo(fields: ["parentCategoryID"])
-
-  # --- Relationships ---
-
-  subcategories: [IncomeCategoryConfig]
-    @hasMany(indexName: "byParentCategory", fields: ["id"])
-
-  createdAt: AWSDateTime!
-  updatedAt: AWSDateTime!
-}
-
-type MoneyTransaction @model @auth(rules: [{ allow: custom }]) {
-  id: ID!
-  institutionID: ID!
-    @index(name: "byInstitution", sortKeyFields: ["transactionDate"])
-  institution: Institution @belongsTo(fields: ["institutionID"])
-
-  branchID: ID! @index(name: "byBranch", sortKeyFields: ["transactionDate"])
-  branch: Branch @belongsTo(fields: ["branchID"])
-
-  moneyAccountID: ID!
-    @index(name: "byMoneyAccount", sortKeyFields: ["transactionDate"])
-  moneyAccount: MoneyAccount @belongsTo(fields: ["moneyAccountID"])
-
-  counterpartyMoneyAccountID: ID @index(name: "byCounterpartyMoneyAccount")
-  counterpartyMoneyAccount: MoneyAccount
-    @belongsTo(fields: ["counterpartyMoneyAccountID"])
-
-  transactionType: MoneyTransactionType!
-  transactionDate: AWSDateTime!
+  transactionType: String
+  transactionDate: AWSDate
   amount: Float!
-  description: String!
+  description: String
   referenceNumber: String
   relatedEntityType: String
-  relatedEntityID: ID
-
-  glPostingID: ID @index(name: "byGLPosting")
-  glPosting: GLPosting @belongsTo(fields: ["glPostingID"])
-
-  moneyAccountTransactionID: ID @index(name: "byMoneyAccountTransaction")
-  moneyAccountTransaction: MoneyAccountTransaction
-    @hasOne(fields: ["moneyAccountTransactionID"])
-  approvalStatus: String # Pending / Approved / Rejected
-  approvedByUserID: ID
-  approvedByUser: User @belongsTo(fields: ["approvedByUserID"])
-
-  approvedDate: AWSDateTime
-  categoryID: ID
+  approvalStatus: String
+  approvedDate: AWSDate
+  category: String
   notes: String
   paymentMethod: String
   deviceInfo: String
-  ipAddress: AWSIPAddress
-
-  createdByUserID: ID!
-  createdByUser: User @belongsTo(fields: ["createdByUserID"])
-
-  createdAt: AWSDateTime!
-  updatedAt: AWSDateTime!
+  account: Account @belongsTo
+  approvedByUserID: ID @index(name: "byApprovedByUserID")
+  createdByUserID: ID @index(name: "byCreatedByUserID")
 }
 
-type ExpenseTransaction @model @auth(rules: [{ allow: custom }]) {
+type Payment @model {
   id: ID!
-  institutionID: ID!
-    @index(name: "byInstitution", sortKeyFields: ["transactionDate"])
-  institution: Institution @belongsTo(fields: ["institutionID"])
-
-  expenseCategoryID: ID!
-    @index(name: "byCategory", sortKeyFields: ["transactionDate"])
-  expenseCategory: ExpenseCategoryConfig
-    @belongsTo(fields: ["expenseCategoryID"])
-
-  moneyAccountID: ID!
-    @index(name: "byMoneyAccount", sortKeyFields: ["transactionDate"])
-  moneyAccount: MoneyAccount @belongsTo(fields: ["moneyAccountID"])
-
-  branchID: ID! @index(name: "byBranch", sortKeyFields: ["transactionDate"])
-  branch: Branch @belongsTo(fields: ["branchID"])
-
-  transactionDate: AWSDateTime!
+  paymentDate: AWSDate
+  paymentType: String
   amount: Float!
-  description: String!
+  description: String
   referenceNumber: String
-  receiptDocumentID: ID
+  paymentMethod: String
+  status: String
+  notes: String
+  loan: Loan @belongsTo
+  account: ID @index(name: "byAccountID")
+  receivingUser: ID @index(name: "byReceivingUserID")
+  receivingEmployee: ID @index(name: "byReceivingEmployeeID")
+}
+
+type Expense @model {
+  id: ID!
+  transactionDate: AWSDate
+  amount: Float!
+  description: String
+  referenceNumber: String
   receiptDocumentS3Key: String
-  status: ExpenseTransactionStatus!
+  status: String
   notes: String
   payee: String
   paymentMethod: String
   checkNumber: String
-
-  glPostingID: ID @index(name: "byGLPosting")
-  glPosting: GLPosting @belongsTo(fields: ["glPostingID"])
-
-  moneyAccountTransactionID: ID @index(name: "byMoneyAccountTransaction")
-  moneyAccountTransaction: MoneyAccountTransaction
-    @hasOne(fields: ["moneyAccountTransactionID"])
-  approvalWorkflowHistory: AWSJSON
-  approvedByUserID: ID
-  approvedByUser: User @belongsTo(fields: ["approvedByUserID"])
-
-  approvedDate: AWSDateTime
-  deviceInfo: String
-  ipAddress: AWSIPAddress
-
-  createdByUserID: ID!
-  createdByUser: User @belongsTo(fields: ["createdByUserID"])
-
-  createdAt: AWSDateTime!
-  updatedAt: AWSDateTime!
+  approvedDate: AWSDate
+  type: String
+  category: String
+  account: Account @belongsTo
+  loans: [Loan] @manyToMany(relationName: "LoanExpense")
+  approvedByUserID: ID @index(name: "byApprovedByUserID")
+  createdByUserID: ID @index(name: "byCreatedByUserID")
 }
 
-type BudgetPeriod @model @auth(rules: [{ allow: custom }]) {
+type FinancialReport @model {
   id: ID!
-  institutionID: ID! @index(name: "byInstitution", sortKeyFields: ["startDate"])
-  institution: Institution @belongsTo(fields: ["institutionID"])
-
-  name: String!
-  startDate: AWSDate!
-  endDate: AWSDate!
-  status: String! # Draft / Active / Closed
-  totalBudgeted: Float
-  totalActual: Float
-  notes: String
-
-  allocations: [BudgetAllocation]
-    @hasMany(indexName: "byBudgetPeriod", fields: ["id"])
-
-  createdByUserID: ID! @index(name: "byCreatedByUser") # Added index
-  createdByUser: User @belongsTo(fields: ["createdByUserID"])
-
-  createdAt: AWSDateTime!
-  updatedAt: AWSDateTime!
-}
-
-type BudgetAllocation @model @auth(rules: [{ allow: custom }]) {
-  id: ID!
-  budgetPeriodID: ID!
-    @index(name: "byBudgetPeriod", sortKeyFields: ["expenseCategoryID"])
-  budgetPeriod: BudgetPeriod @belongsTo(fields: ["budgetPeriodID"])
-
-  expenseCategoryID: ID!
-    @index(name: "byExpenseCategory", sortKeyFields: ["budgetPeriodID"])
-  expenseCategory: ExpenseCategoryConfig
-    @belongsTo(fields: ["expenseCategoryID"])
-  institutionID: ID! @index(name: "byInstitution") # Added institutionID
-  institution: Institution @belongsTo(fields: ["institutionID"]) # Added belongsTo institution
-  budgetedAmount: Float!
-  actualAmount: Float
-  variance: Float
-  notes: String
-  createdAt: AWSDateTime!
-  updatedAt: AWSDateTime!
-}
-
-# ---------- Reporting & Audit ----------
-
-type FinancialReport @model @auth(rules: [{ allow: custom }]) {
-  id: ID!
-  institutionID: ID!
-    @index(name: "byInstitution", sortKeyFields: ["reportDate"])
-  institution: Institution @belongsTo(fields: ["institutionID"])
-
-  reportType: String!
-  reportDate: AWSDate!
-  startDate: AWSDate!
-  endDate: AWSDate!
-  reportData: AWSJSON!
-
-  generatedByUserID: ID! @index(name: "byGeneratedByUser") # Added index
-  generatedByUser: User @belongsTo(fields: ["generatedByUserID"])
-
-  createdAt: AWSDateTime!
-  updatedAt: AWSDateTime!
-}
-
-type AuditLog @model(mutations: null) @auth(rules: [{ allow: custom }]) {
-  id: ID!
-  institutionID: ID! @index(name: "byInstitution", sortKeyFields: ["timestamp"])
-  institution: Institution @belongsTo(fields: ["institutionID"])
-
-  timestamp: AWSDateTime!
-
-  userID: ID! @index(name: "byUser", sortKeyFields: ["timestamp"])
-  user: User @belongsTo(fields: ["userID"])
-
-  username: String
-  action: String!
-  entityType: String
-    @index(name: "byEntity", sortKeyFields: ["entityID", "timestamp"]) # Added sortKeyFields to index
-  entityID: ID
-  branchID: ID
-  ipAddress: AWSIPAddress
-  deviceInfo: String
-  previousValue: AWSJSON
-  newValue: AWSJSON
-  description: String
-  createdAt: AWSDateTime! # Added missing createdAt
-  updatedAt: AWSDateTime! # Added missing updatedAt
+  reportName: String
+  reportType: String
+  reportDate: AWSDate
+  startDate: AWSDate
+  endDate: AWSDate
+  reportData: AWSJSON
+  branch: Branch @belongsTo
 }
 
 # ---------- End of Schema ----------

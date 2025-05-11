@@ -1,40 +1,46 @@
-# This "input" configures a global authorization rule to enable public access to
-# all models in this schema. Learn more about authorization rules here: https://docs.amplify.aws/cli/graphql/authorization-rules
 input AMPLIFY {
   globalAuthRule: AuthRule = { allow: public }
-} # FOR TESTING ONLY!
-# schema.graphql — Transformer v2 (Corrected Version)
+}
 
-# ---------- Enums ----------
+enum InterestCalculationMethod {
+  SIMPLE
+  COMPOUND
+  FLAT
+}
+
+enum Frequency {
+  DAILY
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+  QUARTERLY
+  SEMIANNUALLY
+  ANNUALLY
+}
 
 type Institution @model {
   id: ID!
-  name: String!
-  currencyCode: String!
-  subscriptionTier: SubscriptionTier!
-
-  subscriptionStatus: SubscriptionStatus!
-
+  name: String
+  currencyCode: String
+  subscriptionTier: String
+  subscriptionStatus: String
   trialEndDate: AWSDate
   nextBillingDate: AWSDate
   stripeCustomerID: String
   stripeSubscriptionID: String
 
   # --- Geo / Regulatory settings ---
-
   defaultDateFormat: String
   defaultCurrencyFormat: String
   defaultLanguage: String
   regulatoryRegion: String
 
   # --- Tier‑based limits ---
-
-  maxUsers: Int!
-  maxBranches: Int!
-  maxStaffPerBranch: Int!
+  maxUsers: Int
+  maxBranches: Int
+  maxStaffPerBranch: Int
 
   # --- Feature flags ---
-
   saccoFeaturesEnabled: Boolean!
   staffManagementEnabled: Boolean!
   payrollEnabled: Boolean!
@@ -43,131 +49,132 @@ type Institution @model {
   advancedReportingEnabled: Boolean!
 
   # --- Integration settings ---
-
   apiIntegrationSettings: AWSJSON
 
   # --- Relationships (⇢ hasMany) ---
-
   users: [User] @hasMany
   branches: [Branch] @hasMany
-  clients: [Client] @hasMany
-  clientTypeConfigs: [ClientTypeConfig] @hasMany
-  riskLevelConfigs: [RiskLevelConfig] @hasMany
-  kycDocTypeConfigs: [KYCDocumentTypeConfig] @hasMany
-  kycDocuments: [KYCDocument] @hasMany
-  appDocTypeConfigs: [ApplicationDocumentTypeConfig] @hasMany
-  collateralTypeConfigs: [CollateralTypeConfig] @hasMany
-  loanPurposeConfigs: [LoanPurposeConfig] @hasMany
-  feeConfigs: [FeeConfig] @hasMany
-  penaltyConfigs: [PenaltyConfig] @hasMany
   loanProducts: [LoanProduct] @hasMany
-  workflowDefinitions: [WorkflowDefinition] @hasMany
-  scorecards: [Scorecard] @hasMany
-  documentTemplates: [DocumentTemplate] @hasMany
-  membershipFeeConfigs: [MembershipFeeConfig] @hasMany
-  savingsProducts: [SavingsProduct] @hasMany
-  moneyAccounts: [MoneyAccount] @hasMany
-  notificationTemplates: [NotificationTemplate] @hasMany
-  userNotifications: [UserNotification] @hasMany
-  reportDefinitions: [ReportDefinition] @hasMany
-  businessRules: [BusinessRule] @hasMany
-  apiConfigurations: [APIConfiguration] @hasMany
-  incomeCategories: [IncomeCategoryConfig] @hasMany
-  glAccounts: [GLAccount] @hasMany
-  glPostings: [GLPosting] @hasMany
-  payrollRuns: [PayrollRun] @hasMany
-  loanLoanA [LoanApplication] @hasMany
-  loanAccounts: [LoanAccount] @hasMany
-  customClientFieldDefinitions: [CustomClientFieldDefinition] @hasMany
-  shareAccounts: [ShareAccount] @hasMany
-  savingsAccounts: [SavingsAccount] @hasMany
-  collaterals: [Collateral] @hasMany
-  guarantors: [Guarantor] @hasMany
-  applicationDocuments: [ApplicationDocument] @hasMany
-  writeOffRecords: [WriteOffRecord] @hasMany
-  collectionAssignments: [CollectionAssignment] @hasMany
-  collectionActions: [CollectionAction] @hasMany
-  promisesToPay: [PromiseToPay] @hasMany
-  legalActionRecords: [LegalActionRecord] @hasMany
-  repossessionRecords: [RepossessionRecord] @hasMany
-  collectionAlerts: [CollectionAlert] @hasMany
-  employeePayrollProfiles: [EmployeePayrollProfile] @hasMany
-  loanTransactions: [LoanTransaction] @hasMany
-  shareTransactions: [ShareTransaction] @hasMany
-  savingsTransactions: [SavingsTransaction] @hasMany
-  payrollRunDetails: [PayrollRunDetail] @hasMany
-  # Add to Institution model
-  membershipFeeCharges: [MembershipFeeCharge] @hasMany
-  repaymentScheduleInstallments: [RepaymentScheduleInstallment] @hasMany
 }
 
 type Branch @model {
   id: ID!
-  institutionID: ID!
-  institution: Institution @belongsTo(fields: ["institutionID"])
-  name: String!
+  name: String
   branchCode: String
   address: String
 
   # --- Relationships ---
-
+  institution: Institution @belongsTo
   users: [User] @hasMany
-  clients: [Client] @hasMany
-  loanApplications: [LoanApplication] @hasMany
-  loanAccounts: [LoanAccount] @hasMany
-  moneyAccounts: [MoneyAccount] @hasMany
+  borrowers: [Borrower] @hasMany
+  employees: [Employee] @hasMany
+  accounts: [Account] @hasMany
+  documents: [Document] @hasMany
+  loanProducts: [LoanProduct] @manyToMany(relationName: "BranchLoanProduct")
+  payrolls: [Payroll] @hasMany
   financialReports: [FinancialReport] @hasMany
-
 }
 
 type User @model {
-  id: ID! # Cognito user sub
-  institutionID: ID!
-  institution: Institution @belongsTo(fields: ["institutionID"])
+  id: ID!
+  firstName: String
+  lastName: String
+  middleName: String
+  dateOfBirth: AWSDate
+  phoneNumber1: String
+  phoneNumber2: String
+  email: String
+  addressLine1: String
+  addressLine2: String
+  city: String
+  stateProvince: String
+  postalCode: String
+  nationalID: String
+  passportNumber: String
+  nationality: String
+  status: String
+  userType: String
+  description: String
+  institution: Institution @belongsTo
+  branch: Branch @belongsTo
+  userNotifications: [UserNotification] @hasMany
+}
 
-  payrollDetails: [PayrollRunDetail] @hasMany
-
-  username: String!
-  email: AWSEmail!
-  phoneNumber: AWSPhone
-  firstName: String!
-  lastName: String!
-  jobTitle: String
-  status: String! # Active / Inactive
-  branchID: ID!
-  branch: Branch @belongsTo(fields: ["branchID"])
-
-  roles: [Role!]!
-
-  supervisorUserID: ID
-  supervisor: User @belongsTo(fields: ["supervisorUserID"])
-  supervisees: [User] @hasMany
-
-  # --- Relationships ---
+type Employee @model {
+  id: ID!
+  firstName: String
+  lastName: String
+  middleName: String
+  dateOfBirth: AWSDate
+  phoneNumber1: String
+  phoneNumber2: String
+  email: String
+  addressLine1: String
+  addressLine2: String
+  city: String
+  stateProvince: String
+  postalCode: String
+  nextOfKinName: String
+  nextOfKinPhoneNumber: String
+  nextOfKinEmail: String
+  nextOfKinRelationship: String
+  nextOfKinAddress: String
+  nationalID: String
+  passportNumber: String
+  nationality: String
+  status: String
+  employmentType: String
+  employmentStatus: String
+  employmentStartDate: AWSDate
+  employmentEndDate: AWSDate
+  employmentPosition: String
+  employmentDepartment: String
+  employmentGrade: String
+  employmentLocation: String
+  grossSalary: Float
+  bankAccountNumber: String
+  bankName: String
+  bankBranchCode: String
+  socialSecurityNumber: String
+  taxIdentificationNumber: String
+  taxExemptStatus: String
+  branch: Branch @belongsTo
+  relatedUserID: ID @index(name: "byRelatedUserID")
+  relatedBorrowerID: ID @index(name: "byRelatedBorrowerID")
+  payroll: [Payroll] @manyToMany(relationName: "PayrollEmployee")
+  approvedLoans: [Loan] @manyToMany(relationName: "LoanApprovedByEmployee")
   approvedExpenses: [Expense]
-    @hasMany(indexName: "byApprovedByUserID", fields: ["id"])
-  createdExpenses: [Expense]
-    @hasMany(indexName: "byCreatedByUserID", fields: ["id"])
-  payrollProfile: EmployeePayrollProfile @hasOne(fields: ["id"])
-  notificationPreferences: [UserNotificationPreference] @hasMany
-  notifications: [UserNotification] @hasMany
-  reportExecutions: [ReportExecution] @hasMany
-  ownedClients: [Client] @hasMany
-  assignedLoanApplications: [LoanApplication] @hasMany
-  assignedLoanAccounts: [LoanAccount] @hasMany
-  assignedCollections: [CollectionAssignment] @hasMany
-  collectionActions: [CollectionAction] @hasMany
-  targetedCollectionAlerts: [CollectionAlert] @hasMany
-  acknowledgedCollectionAlerts: [CollectionAlert] @hasMany
-  processedPayrollRuns: [PayrollRun] @hasMany
-  approvedMoneyTransactions: [MoneyTransaction] @hasMany
-  createdMoneyTransactions: [MoneyTransaction] @hasMany
-  promisesToPay: [PromiseToPay] @hasMany
+    @manyToMany(relationName: "ExpenseApprovedByEmployee")
+  approvedApplications: [Application]
+    @manyToMany(relationName: "ApplicationApprovedByEmployee")
+  approvedCreditScores: [CreditScore]
+    @manyToMany(relationName: "CreditScoreApprovedByEmployee")
+  approvedMoneyTransactions: [MoneyTransaction]
+    @manyToMany(relationName: "MoneyTransactionApprovedByEmployee")
+  approvedPayments: [Payment]
+    @manyToMany(relationName: "PaymentApprovedByEmployee")
 
-  lastConnectionCheck: AWSDateTime
-  connectionStatus: ConnectionStatus
-  deviceInfo: String
+  # Supervisor relationship
+  supervisorID: ID @index(name: "bySupervisorID")
+  supervisor: Employee @belongsTo(fields: ["supervisorID"])
+  subordinates: [Employee] @hasMany(indexName: "bySupervisorID", fields: ["id"])
 
+  # Indexed fields
+  creditScore: [CreditScore]
+    @hasMany(indexName: "byCreatedByEmployeeID", fields: ["id"])
+  applications: [Application]
+    @hasMany(indexName: "byCreatedByEmployeeID", fields: ["id"])
+  documents: [Document]
+    @hasMany(indexName: "byCreatedByEmployeeID", fields: ["id"])
+  expenses: [Expense]
+    @hasMany(indexName: "byCreatedByEmployeeID", fields: ["id"])
+  payments: [Payment]
+    @hasMany(indexName: "byReceivingEmployeeID", fields: ["id"])
+  loans: [Loan] @hasMany(indexName: "byCreatedByEmployeeID", fields: ["id"])
+  moneyTransactions: [MoneyTransaction]
+    @hasMany(indexName: "byCreatedByEmployeeID", fields: ["id"])
+  accounts: [Account]
+    @hasMany(indexName: "byCreatedByEmployeeID", fields: ["id"])
 }
 
 type Borrower @model {
@@ -215,903 +222,161 @@ type Borrower @model {
   guarantors: [Guarantor] @hasMany
   securities: [Security] @hasMany
   applications: [Application] @hasMany
-  contracts: [Contract] hasMany
-}
-# ---------- Notification subsystem ----------
-
-type NotificationTemplate @model {
-  id: ID!
-  institutionID: ID!
-  institution: Institution @belongsTo(fields: ["institutionID"])
-
-  eventType: String!
-  templateTitle: String!
-  templateBody: String!
-  channels: [NotificationChannel]!
-  isActive: Boolean!
-}
-
-type UserNotification @model {
-  id: ID!
-  userID: ID!
-  user: User @belongsTo(fields: ["userID"])
-  institutionID: ID!
-  institution: Institution @belongsTo(fields: ["institutionID"]) # Added belongsTo Institution
-  title: String!
-  message: String!
-  eventType: String!
-  referenceID: ID
-  referenceType: String
-  isRead: Boolean!
-  channel: NotificationChannel!
-}
-
-type UserNotificationPreference @model {
-  id: ID!
-  userID: ID!
-  user: User @belongsTo(fields: ["userID"])
-  eventType: String!
-  channels: [NotificationChannel]!
-  isEnabled: Boolean!
-}
-
-# ---------- Reporting System ----------
-
-type ReportDefinition @model {
-  id: ID!
-  institutionID: ID!
-
-  institution: Institution @belongsTo(fields: ["institutionID"])
-
-  name: String!
-  description: String
-  reportType: ReportType!
-  category: ReportCategory!
-  queryDefinition: AWSJSON!
-  parameters: AWSJSON
-  outputFormat: ReportOutputFormat!
-  isSystem: Boolean!
-  schedules: [ReportSchedule] @hasMany
-  executions: [ReportExecution] @hasMany
-
-  createdByUserID: ID!
-  # createdByUser: User @belongsTo(fields: ["createdByUserID"]) # Optional: Add belongsTo user
-
-}
-
-type ReportSchedule @model {
-  id: ID!
-  reportDefinitionID: ID!
-  reportDefinition: ReportDefinition @belongsTo(fields: ["reportDefinitionID"])
-
-  name: String!
-  frequency: Frequency!
-  nextRunDate: AWSDate
-  recipientUserIDs: [ID]
-  recipientEmails: [AWSEmail]
-  parameters: AWSJSON
-  isActive: Boolean!
-  lastRunAt: AWSDateTime
-  executions: [ReportExecution] @hasMany
-
-  createdByUserID: ID!
-  # createdByUser: User @belongsTo(fields: ["createdByUserID"]) # Optional: Add belongsTo user
-
-}
-
-type ReportExecution @model {
-  id: ID!
-  reportDefinitionID: ID!
-
-  reportDefinition: ReportDefinition @belongsTo(fields: ["reportDefinitionID"])
-
-  reportScheduleID: ID
-  reportSchedule: ReportSchedule @belongsTo(fields: ["reportScheduleID"])
-
-  executionDate: AWSDateTime!
-  parameters: AWSJSON
-  outputFormat: ReportOutputFormat!
-  outputLocation: String
-  status: ReportStatus!
-  errorMessage: String
-
-  executedByUserID: ID!
-  user: User @belongsTo(fields: ["executedByUserID"])
-}
-
-# ---------- Workflow Engine ----------
-
-type WorkflowDefinition @model {
-  id: ID!
-  institutionID: ID!
-  institution: Institution @belongsTo(fields: ["institutionID"])
-
-  name: String!
-  appliesTo: String!
-  entityType: String!
-  description: String
-  stages: [WorkflowStage] @hasMany
-  transitions: [WorkflowTransition] @hasMany
-  initialStageID: ID! # References a stage within stages
-  isActive: Boolean
-  allowsParallelProcessing: Boolean
-  version: Int!
-
-  # --- Relationships ---
-
-  loanProducts: [LoanProduct] @hasMany
-
-}
-
-type WorkflowStage @model {
-  id: ID!
-  workflowDefinitionID: ID!
-  workflowDefinition: WorkflowDefinition
-    @belongsTo(fields: ["workflowDefinitionID"])
-
-  name: String!
-  description: String
-  rolesAllowedToTransition: [Role!]!
-  requiredApprovals: Int
-  slaHours: Int
-  stageType: StageType
-  businessRuleID: ID
-  businessRule: BusinessRule @belongsTo(fields: ["businessRuleID"])
-  formDefinition: AWSJSON
-
-  # --- Relationships ---
-
-  outgoingTransitions: [WorkflowTransition] @hasMany
-  incomingTransitions: [WorkflowTransition] @hasMany
-
-}
-
-type WorkflowTransition @model {
-  id: ID!
-  workflowDefinitionID: ID!
-
-  workflowDefinition: WorkflowDefinition
-    @belongsTo(fields: ["workflowDefinitionID"])
-
-  fromStageID: ID!
-  fromStage: WorkflowStage @belongsTo(fields: ["fromStageID"])
-
-  toStageID: ID!
-  toStage: WorkflowStage @belongsTo(fields: ["toStageID"])
-
-  name: String
-  conditionLogic: AWSJSON
-
-}
-
-# ---------- Business Rules ----------
-
-type BusinessRule @model {
-  id: ID!
-  institutionID: ID!
-  institution: Institution @belongsTo(fields: ["institutionID"])
-
-  name: String!
-  description: String
-  triggerEntity: String!
-  triggerEvent: String!
-  conditionLogic: AWSJSON!
-  actions: AWSJSON!
-  priority: Int!
-  isActive: Boolean!
-
-  # --- Relationships ---
-
-  workflowStages: [WorkflowStage] @hasMany
-
-  createdByUserID: ID!
-  # createdByUser: User @belongsTo(fields: ["createdByUserID"]) # Optional: Add belongsTo user
-
-}
-
-# ---------- API Integration ----------
-
-type APIConfiguration @model {
-  id: ID!
-  institutionID: ID!
-  institution: Institution @belongsTo(fields: ["institutionID"])
-
-  name: String!
-  description: String
-  integrationType: IntegrationType!
-  connectionDetails: AWSJSON!
-  isActive: Boolean!
-  lastTestedAt: AWSDateTime
-  testResult: String
-
-  createdByUserID: ID!
-  # createdByUser: User @belongsTo(fields: ["createdByUserID"]) # Optional: Add belongsTo user
-
-}
-
-# ---------- Configurable Lists & Core Client Models ----------
-
-# ---- Config lists (simple look‑ups) ----
-
-type ClientTypeConfig @model {
-  id: ID!
-  institutionID: ID!
-  institution: Institution @belongsTo(fields: ["institutionID"])
-  name: String!
-  description: String
-
-  # --- Relationships ---
-
-  clients: [Client] @hasMany
-}
-
-type RiskLevelConfig @model {
-  id: ID!
-  institutionID: ID!
-  institution: Institution @belongsTo(fields: ["institutionID"])
-  name: String!
-  description: String
-
-  # --- Relationships ---
-
-  clients: [Client] @hasMany
-}
-
-type KYCDocumentTypeConfig @model {
-  id: ID!
-  institutionID: ID!
-  institution: Institution @belongsTo(fields: ["institutionID"])
-  name: String!
-
-  # --- Relationships ---
-
-  documents: [KYCDocument] @hasMany
-}
-
-type ApplicationDocumentTypeConfig @model {
-  id: ID!
-  institutionID: ID!
-  institution: Institution @belongsTo(fields: ["institutionID"])
-  name: String!
-
-  # --- Relationships ---
-
-  documents: [ApplicationDocument] @hasMany
-}
-
-type CollateralTypeConfig @model {
-  id: ID!
-  institutionID: ID!
-  institution: Institution @belongsTo(fields: ["institutionID"])
-  name: String!
-
-  # --- Relationships ---
-
+  contracts: [Contract] @hasMany
+  documents: [Document] @manyToMany(relationName: "BorrowerDocument")
   collaterals: [Collateral] @hasMany
-}
-
-type LoanPurposeConfig @model {
-  id: ID!
-  institutionID: ID!
-  institution: Institution @belongsTo(fields: ["institutionID"])
-  name: String!
-  description: String
-
-  # --- Relationships ---
-
-  loanApplications: [LoanApplication] @hasMany
-}
-
-# ---- Fees & Penalties ----
-
-type FeeConfig @model {
-  id: ID!
-  institutionID: ID!
-  institution: Institution @belongsTo(fields: ["institutionID"])
-
-  name: String!
-  calculationMethod: FeeCalculationMethod!
-  collectionTiming: FeeCollectionTiming!
-  amountOrPercentage: Float!
-  isActive: Boolean
-
-  feeIncomeGLAccountID: ID!
-  feeReceivableGLAccountID: ID
-
-  # --- Relationships (added) ---
-
-  loanProducts: [LoanProduct] @manyToMany(relationName: "LoanProductFee")
-}
-
-type PenaltyConfig @model {
-  id: ID!
-  institutionID: ID!
-  institution: Institution @belongsTo(fields: ["institutionID"])
-
-  name: String!
-  penaltyType: PenaltyType!
-  calculationFrequency: PenaltyCalculationFrequency!
-  gracePeriodDays: Int
-  amountOrRate: Float!
-  isActive: Boolean
-
-  penaltyIncomeGLAccountID: ID!
-  penaltyReceivableGLAccountID: ID!
-
-  # --- Relationships (added) ---
-
-  loanProducts: [LoanProduct] @manyToMany(relationName: "LoanProductPenalty")
-}
-
-type MembershipFeeConfig @model {
-  id: ID!
-  institutionID: ID!
-  institution: Institution @belongsTo(fields: ["institutionID"])
-
-  name: String!
-  amount: Float!
-  frequency: Frequency!
-  chargeDate: String
-  feeIncomeGLAccountID: ID!
-  feeReceivableGLAccountID: ID!
-  isActive: Boolean
-
-  # --- Relationships ---
-
-  membershipFeeCharges: [MembershipFeeCharge] @hasMany
-}
-
-# ---- Added Missing Loan Product ----
-
-type LoanProduct @model {
-  id: ID!
-  institutionID: ID!
-  institution: Institution @belongsTo(fields: ["institutionID"])
-
-  name: String!
-  description: String
-  interestRateMin: Float!
-  interestRateMax: Float!
-  termMonthsMin: Int!
-  termMonthsMax: Int!
-  principalAmountMin: Float!
-  principalAmountMax: Float!
-  interestCalculationMethod: InterestCalculationMethod!
-  dayCountConvention: DayCountConvention!
-  repaymentFrequencies: [Frequency]!
-
-  feeConfigs: [FeeConfig] @manyToMany(relationName: "LoanProductFee")
-  penaltyConfigs: [PenaltyConfig]
-    @manyToMany(relationName: "LoanProductPenalty")
-
-  workflowDefinitionID: ID
-  workflowDefinition: WorkflowDefinition
-    @belongsTo(fields: ["workflowDefinitionID"])
-
-  # --- Relationships ---
-
-  loanApplications: [LoanApplication] @hasMany
-  loanAccounts: [LoanAccount] @hasMany
-
-  isActive: Boolean!
-}
-
-# ---- Savings & Templates ----
-
-type SavingsProduct @model {
-  id: ID!
-  institutionID: ID!
-  institution: Institution @belongsTo(fields: ["institutionID"])
-
-  name: String!
-  description: String
-  interestRate: Float!
-  interestCalculationMethod: String!
-  interestPostingFrequency: Frequency!
-  minimumBalance: Float
-  allowsOverdraft: Boolean
-  isActive: Boolean
-
-  savingsLiabilityGLAccountID: ID!
-  interestExpenseGLAccountID: ID!
-
-  # --- Relationships ---
-
-  savingsAccounts: [SavingsAccount] @hasMany
-}
-
-type DocumentTemplate @model {
-  id: ID!
-  institutionID: ID!
-  institution: Institution @belongsTo(fields: ["institutionID"])
-
-  name: String!
-  description: String
-  templateType: String!
-  content: String! # HTML / Rich text
-  isActive: Boolean
-  Added missing createdAt
-}
-
-# ---- Scoring ----
-
-type Scorecard @model {
-  id: ID!
-  institutionID: ID!
-  institution: Institution @belongsTo(fields: ["institutionID"])
-
-  name: String!
-  description: String
-  factors: [ScorecardFactor] @hasMany
-  gradeThresholds: AWSJSON
-  isActive: Boolean
-  Added missing createdAt
-}
-
-type ScorecardFactor @model {
-  id: ID!
-  scorecardID: ID!
-  scorecard: Scorecard @belongsTo(fields: ["scorecardID"])
-
-  factorName: String!
-  sourceField: String!
-  valuePointsMapping: AWSJSON!
-  Added missing createdAt
-}
-
-# ---- Client & related entities ----
-
-type Client @model {
-  id: ID!
-  institutionID: ID!
-  institution: Institution @belongsTo(fields: ["institutionID"])
-
-  branchID: ID!
-  branch: Branch @belongsTo(fields: ["branchID"])
-
-  systemGeneratedClientID: String!
-  firstName: String!
-  lastName: String!
-  middleName: String
-  dateOfBirth: AWSDate!
-  gender: String!
-  nationalID: String
-  primaryPhoneNumber: String!
-  secondaryPhoneNumber: String
-  email: AWSEmail
-  addressLine1: String
-  addressLine2: String
-  city: String
-  stateProvince: String
-  postalCode: String
-  country: String
-  status: ClientStatus!
-
-  onboardingDate: AWSDateTime
-  activationDate: AWSDateTime
-  notes: String
-
-  clientTypeID: ID!
-  clientType: ClientTypeConfig @belongsTo(fields: ["clientTypeID"])
-  riskLevelID: ID!
-  riskLevel: RiskLevelConfig @belongsTo(fields: ["riskLevelID"])
-
-  ownerUserId: ID!
-  ownerUser: User @belongsTo(fields: ["ownerUserId"])
-
-  # --- Relationships ---
-
-  customFields: [CustomClientFieldValue] @hasMany
-  kycDocuments: [KYCDocument] @hasMany
-  loanApplications: [LoanApplication] @hasMany
-  loanAccounts: [LoanAccount] @hasMany
-  savingsAccounts: [SavingsAccount] @hasMany
-  shareAccount: ShareAccount @hasOne(fields: ["id"])
-  membershipFeeCharges: [MembershipFeeCharge] @hasMany
-  guarantorRelationships: [Guarantor] @hasMany
-
-}
-
-type CustomClientFieldDefinition @model {
-  id: ID!
-  institutionID: ID!
-  institution: Institution @belongsTo(fields: ["institutionID"])
-  fieldName: String!
-  fieldType: String!
-  isRequired: Boolean
-  isActive: Boolean
-
-  # --- Relationships ---
-
-  fieldValues: [CustomClientFieldValue] @hasMany
-
-  Added missing createdAt
-}
-
-type CustomClientFieldValue @model {
-  id: ID!
-  clientID: ID!
-  client: Client @belongsTo(fields: ["clientID"])
-
-  fieldDefinitionID: ID!
-  fieldDefinition: CustomClientFieldDefinition
-    @belongsTo(fields: ["fieldDefinitionID"])
-  value: String!
-  Added missing createdAt
-}
-
-type KYCDocument @model {
-  id: ID!
-  clientID: ID!
-  client: Client @belongsTo(fields: ["clientID"])
-  institutionID: ID!
-  institution: Institution @belongsTo(fields: ["institutionID"]) # Added belongsTo institution
-  documentTypeID: ID!
-  documentType: KYCDocumentTypeConfig @belongsTo(fields: ["documentTypeID"])
-
-  s3Key: String!
-  fileName: String
-  fileSize: Int
-  contentType: String
-}
-
-# ---------- Share, Savings, and Membership ----------
-
-type ShareAccount @model {
-  id: ID!
-  institutionID: ID!
-  institution: Institution @belongsTo(fields: ["institutionID"]) # Added belongsTo
-  clientID: ID!
-  client: Client @belongsTo(fields: ["clientID"])
-
-  accountNumber: String!
-  currentBalance: Float!
-  status: String! # Active / Dormant / Closed
-  lienAmount: Float
-  availableBalance: Float
-
-  transactions: [ShareTransaction] @hasMany
-
-}
-
-type ShareTransaction @model {
-  id: ID!
-  institutionID: ID!
-  institution: Institution @belongsTo(fields: ["institutionID"]) # Added belongsTo institution
-  shareAccountID: ID!
-
-  shareAccount: ShareAccount @belongsTo(fields: ["shareAccountID"])
-  transactionType: TransactionType!
-  transactionDate: AWSDateTime!
-  amount: Float!
-  runningBalance: Float!
-  notes: String
-  deviceInfo: String
-  ipAddress: AWSIPAddress
-
-  glPostingID: ID
-  glPosting: GLPosting @belongsTo(fields: ["glPostingID"])
-
-  payrollRunDetailID: ID
-  payrollRunDetail: PayrollRunDetail @belongsTo(fields: ["payrollRunDetailID"]) # Corrected from hasOne to belongsTo
-  # Removed redundant and incorrect payrollRunDetails hasMany
-
-  createdByUserID: ID!
-  # createdByUser: User @belongsTo(fields: ["createdByUserID"]) # Optional: Add belongsTo user
-
-}
-
-type SavingsAccount @model {
-  id: ID!
-  institutionID: ID!
-  institution: Institution @belongsTo(fields: ["institutionID"]) # Added belongsTo
-  clientID: ID!
-  client: Client @belongsTo(fields: ["clientID"])
-
-  savingsProductID: ID!
-  savingsProduct: SavingsProduct @belongsTo(fields: ["savingsProductID"])
-
-  accountNumber: String!
-  currentBalance: Float!
-  accruedInterest: Float
-  status: String!
-  lienAmount: Float
-  availableBalance: Float
-
-  transactions: [SavingsTransaction] @hasMany
-
-}
-
-type SavingsTransaction @model {
-  id: ID!
-  savingsAccountID: ID!
-
-  savingsAccount: SavingsAccount @belongsTo(fields: ["savingsAccountID"])
-  transactionType: TransactionType!
-  transactionDate: AWSDateTime!
-  amount: Float!
-  runningBalance: Float!
-
-  notes: String
-  deviceInfo: String
-  ipAddress: AWSIPAddress
-
-  glPostingID: ID
-  glPosting: GLPosting @belongsTo(fields: ["glPostingID"])
-
-  payrollRunDetail: PayrollRunDetail @hasOne
-
-  # --- Relationships ---
-
-  membershipFeeCharges: [MembershipFeeCharge] @hasMany
-
-  createdByUserID: ID!
-}
-
-type MembershipFeeCharge @model {
-  id: ID!
-  institutionID: ID!
-  institution: Institution @belongsTo(fields: ["institutionID"]) # Added belongsTo
-  clientID: ID!
-  client: Client @belongsTo(fields: ["clientID"])
-
-  membershipFeeConfigID: ID!
-  membershipFeeConfig: MembershipFeeConfig
-    @belongsTo(fields: ["membershipFeeConfigID"])
-
-  chargeDate: AWSDate!
-  dueDate: AWSDate!
-  amount: Float!
-  status: String! # Due / Paid / Waived
-  paidDate: AWSDate
-
-  # savingsTransactionID is the FK on THIS model, linking to SavingsTransaction (N:1 from Charge to Transaction)
-  savingsTransactionID: ID
-  savingsTransaction: SavingsTransaction
-    @belongsTo(fields: ["savingsTransactionID"])
-
-  glPostingID: ID
-  glPosting: GLPosting @belongsTo(fields: ["glPostingID"])
-
-  Added missing createdAt
-}
-
-# ---------- Loan Origination ----------
-
-type LoanApplication @model {
-  id: ID!
-  institutionID: ID!
-  institution: Institution @belongsTo(fields: ["institutionID"])
-
-  applicationNumber: String!
-
-  clientID: ID!
-  client: Client @belongsTo(fields: ["clientID"])
-
-  branchID: ID!
-  branch: Branch @belongsTo(fields: ["branchID"])
-
-  loanProductID: ID!
-  loanProduct: LoanProduct @belongsTo(fields: ["loanProductID"])
-
-  loanOfficerUserID: ID!
-
-  loanOfficerUser: User @belongsTo(fields: ["loanOfficerUserID"])
-
-  loanPurposeID: ID!
-  loanPurpose: LoanPurposeConfig @belongsTo(fields: ["loanPurposeID"])
-
-  requestedPrincipalAmount: Float!
-  requestedTermMonths: Int!
-  requestedFrequency: Frequency!
-  applicationDate: AWSDateTime!
-
-  status: LoanApplicationStatus!
-
-  currentWorkflowStageID: ID
-  workflowHistory: AWSJSON
-
-  externalCreditReportAttached: Boolean
-  manualCreditScore: Int
-  manualCreditNarrative: String
-  calculatedScore: Int
-  calculatedGrade: String
-
-  loanAccount: LoanAccount @hasOne(fields: ["id"])
-  # For LoanApplication model (missing relationship to WriteOffRecord)
-  writeOffRecords: [WriteOffRecord] @hasMany
-
-  # --- Relationships ---
-
-  collateral: [Collateral] @hasMany
-  guarantors: [Guarantor] @hasMany
-  documents: [ApplicationDocument] @hasMany
-
-  deviceInfo: String
-  lastModifiedByDeviceInfo: String
-
-}
-
-type Collateral @model {
-  id: ID!
-  institutionID: ID!
-  institution: Institution @belongsTo(fields: ["institutionID"]) # Added belongsTo
-  loanApplicationID: ID!
-
-  loanApplication: LoanApplication @belongsTo(fields: ["loanApplicationID"])
-
-  loanAccountID: ID
-  loanAccount: LoanAccount @belongsTo(fields: ["loanAccountID"])
-
-  collateralTypeID: ID!
-  collateralType: CollateralTypeConfig @belongsTo(fields: ["collateralTypeID"])
-
-  description: String!
-  estimatedValue: Float!
-  location: String
-  serialNumber: String
-  notes: String
-  status: String! # Pledged / Released
-  # --- Relationships ---
-
-  repossessions: [RepossessionRecord] @hasMany
-
+  # Indexed fields
+  creditScores: [CreditScore]
+    @hasMany(indexName: "byBorrowerID", fields: ["id"])
 }
 
 type Guarantor @model {
   id: ID!
-  institutionID: ID!
-  institution: Institution @belongsTo(fields: ["institutionID"]) # Added belongsTo
-  loanApplicationID: ID!
-
-  loanApplication: LoanApplication @belongsTo(fields: ["loanApplicationID"])
-
-  loanAccountID: ID
-  loanAccount: LoanAccount @belongsTo(fields: ["loanAccountID"])
-
-  isExistingClient: Boolean!
-  linkedClientID: ID
-
-  linkedClient: Client @belongsTo(fields: ["linkedClientID"])
-
-  externalFullName: String
-  externalPhoneNumber: String
-  externalAddress: String
-  externalNationalID: String
-
+  name: String
+  relationship: String
+  phoneNumber: String
+  email: String
+  address: String
+  borrower: Borrower @belongsTo
+  loans: [Loan] @manyToMany(relationName: "LoanGuarantor")
+  applications: [Application] @manyToMany(relationName: "ApplicationGuarantor")
 }
 
-type ApplicationDocument @model {
+type Security @model {
   id: ID!
-  institutionID: ID!
-  institution: Institution @belongsTo(fields: ["institutionID"]) # Added belongsTo
-  loanApplicationID: ID!
+  name: String
+  type: String
+  description: String
+  value: Float
+  borrower: Borrower @belongsTo
+}
 
-  loanApplication: LoanApplication @belongsTo(fields: ["loanApplicationID"])
+type UserNotification @model {
+  id: ID!
+  eventType: String
+  name: String
+  description: String
+  reference: String
+  message: String
+  status: String
+  user: User @belongsTo
+}
 
-  documentTypeID: ID!
-  documentType: ApplicationDocumentTypeConfig
-    @belongsTo(fields: ["documentTypeID"])
+type LoanProduct @model {
+  id: ID!
+  name: String
+  description: String
+  interestRateMin: Float
+  interestRateMax: Float
+  termMonthsMin: Int
+  termMonthsMax: Int
+  principalAmountMin: Float
+  principalAmountMax: Float
+  interestCalculationMethod: InterestCalculationMethod
+  repaymentFrequencies: String
+  institution: Institution @belongsTo
+  branches: [Branch] @manyToMany(relationName: "BranchLoanProduct")
+  loanFees: [LoanFees] @manyToMany(relationName: "LoanProductLoanFees")
+  loanPenalties: [Penalty] @manyToMany(relationName: "LoanProductPenalty")
+  applications: [Application]
+    @hasMany(indexName: "byLoanProductID", fields: ["id"])
+  loans: [Loan] @hasMany(indexName: "byLoanProductID", fields: ["id"])
+}
 
-  s3Key: String!
+type CreditScore @model {
+  id: ID!
+  name: String
+  description: String
+  score: Float
+  scoreDate: AWSDate
+  scoreSource: String
+  scoreStatus: String
+  approvedByEmployees: [Employee]
+    @manyToMany(relationName: "CreditScoreApprovedByEmployee")
+  borrowerID: ID @index(name: "byBorrowerID")
+  borrower: Borrower @belongsTo(fields: ["borrowerID"])
+  createdByEmployeeID: ID @index(name: "byCreatedByEmployeeID")
+  createdByEmployee: Employee @belongsTo(fields: ["createdByEmployeeID"])
+}
+
+type Document @model {
+  id: ID!
+  documentType: String
+  documentName: String
+  documentDescription: String
+  serialNumber: String
+  documentDate: AWSDate
+  s3Key: String
   fileName: String
-  fileSize: Int
   contentType: String
-
+  branch: Branch @belongsTo
+  borrowers: [Borrower] @manyToMany(relationName: "BorrowerDocument")
+  loans: [Loan] @manyToMany(relationName: "LoanDocument")
+  applications: [Application] @manyToMany(relationName: "ApplicationDocument")
+  contracts: [Contract] @manyToMany(relationName: "ContractDocument")
+  expenses: [Expense] @manyToMany(relationName: "ExpenseDocument")
+  payments: [Payment] @manyToMany(relationName: "PaymentDocument")
+  createdByEmployeeID: ID @index(name: "byCreatedByEmployeeID")
+  createdByEmployee: Employee @belongsTo(fields: ["createdByEmployeeID"])
 }
 
-# ---------- Loan Accounts & Collections ----------
-
-type LoanAccount @model {
+type Contract @model {
   id: ID!
-
-  institutionID: ID!
-  institution: Institution @belongsTo(fields: ["institutionID"])
-
-  accountNumber: String!
-
-  loanApplicationID: ID!
-  loanApplication: LoanApplication @belongsTo(fields: ["loanApplicationID"])
-
-  clientID: ID!
-  client: Client @belongsTo(fields: ["clientID"])
-
-  branchID: ID!
-  branch: Branch @belongsTo(fields: ["branchID"])
-
-  loanProductID: ID!
-  loanProduct: LoanProduct @belongsTo(fields: ["loanProductID"])
-
-  loanOfficerUserID: ID!
-
-  loanOfficerUser: User @belongsTo(fields: ["loanOfficerUserID"])
-
-  # ---- Core loan terms ----
-
-  originalPrincipalAmount: Float!
-  disbursedPrincipalAmount: Float!
-  interestRate: Float!
-  loanTermMonths: Int!
-  repaymentFrequency: Frequency!
-  interestCalculationMethod: InterestCalculationMethod!
-  dayCountConvention: DayCountConvention
-
-  disbursementDate: AWSDate!
-  firstRepaymentDate: AWSDate!
-  maturityDate: AWSDate!
-
-  # ---- Balances ----
-
-  outstandingPrincipalBalance: Float!
-  accruedInterestBalance: Float!
-  accruedPenaltyBalance: Float!
-  accruedFeeBalance: Float!
-  totalOutstandingBalance: Float!
-
-  nextDueDate: AWSDate
-  nextInstallmentAmount: Float
-
-  # ---- Status & risk ----
-
-  status: LoanAccountStatus!
-
-  daysPastDue: Int
-  delinquencyBucket: String
-  riskClassification: RiskClassification
-
-  lastPaymentDate: AWSDate
-  lastPaymentAmount: Float
-  rescheduleHistory: AWSJSON
-  closedDate: AWSDateTime
-
-  # ---- One-to-one related records (parent side) ----
-
-  writeOffRecord: WriteOffRecord @hasOne(fields: ["id"])
-  legalActionRecord: LegalActionRecord @hasOne(fields: ["id"])
-  repossessionRecord: RepossessionRecord @hasOne(fields: ["id"])
-  collectionAssignment: CollectionAssignment @hasOne(fields: ["id"])
-
-  # ---- Collections & collateral ----
-
-  repaymentSchedule: [RepaymentScheduleInstallment] @hasMany
-  transactions: [LoanTransaction] @hasMany
-  collectionActions: [CollectionAction] @hasMany
-  promisesToPay: [PromiseToPay] @hasMany
-  collateral: [Collateral] @hasMany
-  guarantors: [Guarantor] @hasMany
-  collectionAlerts: [CollectionAlert] @hasMany
-
-  # ---- Metadata ----
-
-  lastModifiedByDeviceInfo: String
+  contractNumber: String
+  contractType: String
+  contractDate: AWSDate
+  contractStatus: String
+  contractRecord: AWSJSON
+  borrower: Borrower @belongsTo
+  applications: [Application] @manyToMany(relationName: "ApplicationContract")
+  collaterals: [Collateral] @manyToMany(relationName: "CollateralContract")
+  documents: [Document] @manyToMany(relationName: "ContractDocument")
+  loans: [Loan] @manyToMany(relationName: "LoanContract")
 }
 
-# Read‑only view – generated by a Lambda / Function
+type Application @model {
+  id: ID!
+  name: String
+  description: String
+  applicationNumber: String
+  requestedPrincipalAmount: Float
+  requestedTermMonths: Int
+  requestedFrequency: Frequency
+  applicationDate: AWSDate
+  status: String
+  applicationRecord: AWSJSON
+  borrower: Borrower @belongsTo
+  guarantors: [Guarantor] @manyToMany(relationName: "ApplicationGuarantor")
+  collateral: [Collateral] @manyToMany(relationName: "ApplicationCollateral")
+  contracts: [Contract] @manyToMany(relationName: "ApplicationContract")
+  expenses: [Expense] @manyToMany(relationName: "ApplicationExpense")
+  loans: [Loan] @manyToMany(relationName: "LoanApplication")
+  approvedByEmployees: [Employee]
+    @manyToMany(relationName: "ApplicationApprovedByEmployee")
+  documents: [Document] @manyToMany(relationName: "ApplicationDocument")
+  loanProductID: ID @index(name: "byLoanProductID")
+  loanProduct: LoanProduct @belongsTo(fields: ["loanProductID"])
+  createdByEmployeeID: ID @index(name: "byCreatedByEmployeeID")
+  createdByEmployee: Employee @belongsTo(fields: ["createdByEmployeeID"])
+}
 
-type RepaymentScheduleInstallment
-  @model(queries: null, mutations: null, subscriptions: null) {
-  id: ID! # Composite key "loanAccountID‑installmentNo"
-  loanAccountID: ID!
-  loanAccount: LoanAccount @belongsTo(fields: ["loanAccountID"])
-  institutionID: ID!
-  institution: Institution @belongsTo(fields: ["institutionID"]) # Added belongsTo institution
-  installmentNumber: Int!
-  dueDate: AWSDate!
-  principalDue: Float!
-  interestDue: Float!
-  feeDue: Float!
-  totalDue: Float!
-
-  principalPaid: Float
-  interestPaid: Float
-  feePaid: Float
-  penaltyPaid: Float
-  totalPaid: Float
-
-  outstandingPrincipalBalanceAfterPayment: Float!
-  status: String! # Pending / PartiallyPaid / Paid / Overdue
-  paidDate: AWSDate
-  Added missing createdAt
+type Collateral @model {
+  id: ID!
+  name: String
+  type: String
+  description: String
+  location: String
+  value: Float
+  serialNumber: String
+  registrationNumber: String
+  insuranceDetails: String
+  insuranceExpiryDate: AWSDate
+  insuranceCompany: String
+  storedAt: String
+  borrower: Borrower @belongsTo
+  loans: [Loan] @manyToMany(relationName: "LoanCollateral")
+  applications: [Application] @manyToMany(relationName: "ApplicationCollateral")
+  contracts: [Contract] @manyToMany(relationName: "CollateralContract")
 }
 
 type Loan @model {
@@ -1131,71 +396,29 @@ type Loan @model {
   rateInterval: String
   loanStatus: String
   loanCurrency: String
+  loanPurpose: String
+  loanComputationRecord: AWSJSON
   loanAttribute1: String
   loanAttribute2: String
   numberOfPayments: Float
   paymentFrequency: String
   borrower: Borrower @belongsTo
   payments: [Payment] @hasMany
-  penalties: [Penalty] @hasMany
   loanFees: [LoanFees] @hasMany
+  penalties: [Penalty] @hasMany
   applications: [Application] @manyToMany(relationName: "LoanApplication")
   accounts: [Account] @manyToMany(relationName: "LoanAccount")
   guarantors: [Guarantor] @manyToMany(relationName: "LoanGuarantor")
-  securities: [Security] @manyToMany(relationName: "LoanSecurity")
+  collateral: [Collateral] @manyToMany(relationName: "LoanCollateral")
   contracts: [Contract] @manyToMany(relationName: "LoanContract")
   expenses: [Expense] @manyToMany(relationName: "LoanExpense")
-  approvedByUserID: ID @index(name: "byApprovedByUserID")
-  createdByUserID: ID @index(name: "byCreatedByUserID")
-}
-
-# ---------- Payroll ----------
-type Employee @model {
-  id: ID!
-  firstName: String
-  lastName: String
-  middleName: String
-  dateOfBirth: AWSDate
-  phoneNumber1: String
-  phoneNumber2: String
-  email: String
-  addressLine1: String
-  addressLine2: String
-  city: String
-  stateProvince: String
-  postalCode: String
-  nextOfKinName: String
-  nextOfKinPhoneNumber: String
-  nextOfKinEmail: String
-  nextOfKinRelationship: String
-  nextOfKinAddress: String
-  nationalID: String
-  passportNumber: String
-  nationality: String
-  status: String 
-  employmentType: String 
-  employmentStatus: String 
-  employmentStartDate: AWSDate
-  employmentEndDate: AWSDate
-  employmentPosition: String
-  employmentDepartment: String
-  employmentGrade: String
-  employmentLocation: String
-  grossSalary: Float
-  bankAccountNumber: String
-  bankName: String
-  bankBranchCode: String
-  socialSecurityNumber: String
-  taxIdentificationNumber: String
-  taxExemptStatus: String
-  branch: Branch @belongsTo
-  relatedUserID: ID @index(name: "byRelatedUserID")
-  relatedBorrowerID: ID @index(name: "byRelatedBorrowerID")
-  payroll: [Payroll] @manyToMany(relationName: "PayrollEmployee")
-  # Supervisor relationship
-  supervisorID: ID @index(name: "bySupervisorID")
-  supervisor: Employee @belongsTo(fields: ["supervisorID"])
-  subordinates: [Employee] @hasMany(indexName: "bySupervisorID", fields: ["id"])
+  approvedByEmployees: [Employee]
+    @manyToMany(relationName: "LoanApprovedByEmployee")
+  documents: [Document] @manyToMany(relationName: "LoanDocument")
+  loanProductID: ID @index(name: "byLoanProductID")
+  loanProduct: LoanProduct @belongsTo(fields: ["loanProductID"])
+  createdByEmployeeID: ID @index(name: "byCreatedByEmployeeID")
+  createdByEmployee: Employee @belongsTo(fields: ["createdByEmployeeID"])
 }
 
 type Investment @model {
@@ -1217,13 +440,16 @@ type Investment @model {
   investmentAttribute2: String
   numberOfPayments: Float
   paymentFrequency: Float
-  investor: Investor @belongsTo
   accounts: [Account] @manyToMany(relationName: "InvestmentAccount")
 }
 
 type LoanFees @model {
   id: ID!
   amount: Float
+  loanFeesName: String
+  loanFeesCategory: String
+  loanFeesCalculationMethod: String
+  loanFeesRate: Float
   loanFeesDate: AWSDate
   loanFeesStatus: String
   notes: String
@@ -1232,16 +458,37 @@ type LoanFees @model {
   loanFeesAttribute1: String
   loanFeesAttribute2: String
   loan: Loan @belongsTo
-  account: ID @index(name: "byAccountID")
+  loanProducts: [LoanProduct] @manyToMany(relationName: "LoanProductLoanFees")
+  accountID: ID @index(name: "byAccountID")
+  account: Account @belongsTo(fields: ["accountID"])
 }
 
+type Penalty @model {
+  id: ID!
+  amount: Float
+  penaltyName: String
+  penaltyCategory: String
+  penaltyCalculationMethod: String
+  penaltyRate: Float
+  penaltyDate: AWSDate
+  penaltyStatus: String
+  notes: String
+  penaltyType: String
+  penaltyDescription: String
+  penaltyAttribute1: String
+  penaltyAttribute2: String
+  loan: Loan @belongsTo
+  loanProducts: [LoanProduct] @manyToMany(relationName: "LoanProductPenalty")
+  accountID: ID @index(name: "byAccountID")
+  account: Account @belongsTo(fields: ["accountID"])
+}
 
 type Payroll @model {
   id: ID!
   periodStartDate: AWSDate
   periodEndDate: AWSDate
   payDate: AWSDate
-  status: String 
+  status: String
   processedByUserID: String
   totalGrossPay: Float
   totalLoanDeductions: Float
@@ -1268,7 +515,6 @@ type Account @model {
   interestPostingDate: String
   interestAccrued: Float
   interestAccruedDate: AWSDate
-  accountType: String
   accountStatus: String
   branch: Branch @belongsTo
   moneyTransactions: [MoneyTransaction] @hasMany
@@ -1276,6 +522,11 @@ type Account @model {
   loans: [Loan] @manyToMany(relationName: "LoanAccount")
   investments: [Investment] @manyToMany(relationName: "InvestmentAccount")
   otherIncomes: [OtherIncome] @manyToMany(relationName: "OtherIncomeAccount")
+  loanFees: [LoanFees] @hasMany(indexName: "byAccountID", fields: ["id"])
+  payments: [Payment] @hasMany(indexName: "byAccountID", fields: ["id"])
+  penalties: [Penalty] @hasMany(indexName: "byAccountID", fields: ["id"])
+  createdByEmployeeID: ID @index(name: "byCreatedByEmployeeID")
+  createdByEmployee: Employee @belongsTo(fields: ["createdByEmployeeID"])
 }
 
 type MoneyTransaction @model {
@@ -1293,8 +544,10 @@ type MoneyTransaction @model {
   paymentMethod: String
   deviceInfo: String
   account: Account @belongsTo
-  approvedByUserID: ID @index(name: "byApprovedByUserID")
-  createdByUserID: ID @index(name: "byCreatedByUserID")
+  approvedByEmployees: [Employee]
+    @manyToMany(relationName: "MoneyTransactionApprovedByEmployee")
+  createdByEmployeeID: ID @index(name: "byCreatedByEmployeeID")
+  createdByEmployee: Employee @belongsTo(fields: ["createdByEmployeeID"])
 }
 
 type Payment @model {
@@ -1308,9 +561,13 @@ type Payment @model {
   status: String
   notes: String
   loan: Loan @belongsTo
-  account: ID @index(name: "byAccountID")
-  receivingUser: ID @index(name: "byReceivingUserID")
-  receivingEmployee: ID @index(name: "byReceivingEmployeeID")
+  accountID: ID @index(name: "byAccountID")
+  account: Account @belongsTo(fields: ["accountID"])
+  receivingEmployeeID: ID @index(name: "byReceivingEmployeeID")
+  receivingEmployee: Employee @belongsTo(fields: ["receivingEmployeeID"])
+  approvedByEmployees: [Employee]
+    @manyToMany(relationName: "PaymentApprovedByEmployee")
+  documents: [Document] @manyToMany(relationName: "PaymentDocument")
 }
 
 type Expense @model {
@@ -1330,8 +587,22 @@ type Expense @model {
   category: String
   account: Account @belongsTo
   loans: [Loan] @manyToMany(relationName: "LoanExpense")
-  approvedByUserID: ID @index(name: "byApprovedByUserID")
-  createdByUserID: ID @index(name: "byCreatedByUserID")
+  applications: [Application] @manyToMany(relationName: "ApplicationExpense")
+  approvedByEmployees: [Employee]
+    @manyToMany(relationName: "ExpenseApprovedByEmployee")
+  documents: [Document] @manyToMany(relationName: "ExpenseDocument")
+  createdByEmployeeID: ID @index(name: "byCreatedByEmployeeID")
+  createdByEmployee: Employee @belongsTo(fields: ["createdByEmployeeID"])
+}
+
+type OtherIncome @model {
+  id: ID!
+  name: String
+  description: String
+  amount: Float
+  incomeDate: AWSDate
+  incomeType: String
+  accounts: [Account] @manyToMany(relationName: "OtherIncomeAccount")
 }
 
 type FinancialReport @model {

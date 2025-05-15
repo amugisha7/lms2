@@ -1,6 +1,6 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "LoanTabs",
+  "name": "LoanTabs Loan Management Software for Money Lenders and Microfinances",
   "icons": [
     {
       "src": "favicon.ico",

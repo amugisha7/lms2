@@ -1,4 +1,9 @@
 import * as React from 'react';
+import { useLocation } from 'react-router-dom';
+import { useNotification } from '../../ComponentAssets/NotificationContext';
+import IconButton from '@mui/material/IconButton';
+import MenuIcon from '@mui/icons-material/Menu';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 
 import { alpha } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -22,13 +27,51 @@ const xThemeComponents = {
   ...datePickersCustomizations,
   ...treeViewCustomizations,
 };
-
+ 
 export default function Dashboard(props) {
+  const location = useLocation();
+  const { showNotification } = useNotification();
+  const [sideMenuOpen, setSideMenuOpen] = React.useState(true);
+
+  React.useEffect(() => {
+    if (location.state?.notification) {
+      showNotification(location.state.notification.message, location.state.notification.color);
+      // Clear the notification from history so it doesn't show again on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state, showNotification]);
+
+  // Toggle sidebar only on desktop
+  const handleShowMenu = () => setSideMenuOpen(true);
+  const handleHideMenu = () => setSideMenuOpen(false);
+
   return (
     <AppTheme {...props} themeComponents={xThemeComponents}>
       <CssBaseline enableColorScheme />
       <Box sx={{ display: 'flex' }}>
-        <SideMenu />
+        {/* Show IconButton only on desktop */}
+        {!sideMenuOpen && (
+        <IconButton
+          aria-label="Show menu"
+          sx={{
+              ml: 3,
+              mt: 1,
+              display: { xs: 'none', sm: 'none', md: 'inline-flex' },
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              zIndex: 1300,
+              background: '#fff',
+              boxShadow: 1,
+            }}
+          onClick={handleShowMenu}
+        >
+          <MenuIcon />
+        </IconButton>
+        )}
+        {sideMenuOpen && (
+          <SideMenu onHideMenu={handleHideMenu} />
+        )}
         <AppNavbar />
         {/* Main content */}
         <Box
@@ -50,7 +93,7 @@ export default function Dashboard(props) {
               mt: { xs: 8, md: 0 },
             }}
           >
-            <Header />
+            <Header breadcrumbsMain="Dashboard" breadcrumbsCurrent="Data" />
             <MainGrid />
           </Stack>
         </Box>

@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useContext } from 'react';
+import { UserContext } from '../../App'
 import {
   Box,
   Button,
   MenuItem,
   Select,
+  Stack,
   TextField,
   Typography,
   FormControl,
@@ -15,11 +17,21 @@ import { countries } from '../../Resources/listOfCountries';
 import { getGMTOffset, timezonesList } from '../../Resources/timezones';
 import TwoRadialButtons from '../../ComponentAssets/TwoRadialButtons';
 import myLogo from '../../Resources/loantabs_logo.png'
+import { generateClient } from 'aws-amplify/api';
+import { useNotification } from '../../ComponentAssets/NotificationContext';
+import { useNavigate } from 'react-router-dom';
+import { useSnackbar } from '../../ComponentAssets/SnackbarContext';
+
+const client = generateClient();
 
 const currencies = Object.keys(currenciesObj);
 const dateFormats = ['dd-mmm-yyyy', 'mmm-dd-yyyy', 'yyyy-mm-dd'];
 
 const AccountSettingsForm = () => {
+  const navigate = useNavigate();
+  const { showNotification } = useNotification();
+  const { showSnackbar } = useSnackbar();
+  const { user } = useContext(UserContext); 
   const [formData, setFormData] = React.useState({
     businessName: '',
     country: 'Kenya',
@@ -30,12 +42,16 @@ const AccountSettingsForm = () => {
   const [decimalPoints, setDecimalPoints] = React.useState(0);
   const [companyOption, setCompanyOption] = React.useState('Set up a new Business on LoanTabs');
   const [businessID, setBusinessID] = React.useState('');
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [isJoining, setIsJoining] = React.useState(false);
 
   // State to track touched fields
   const [touchedFields, setTouchedFields] = React.useState({});
 
   React.useEffect(() => {
     setDecimalPoints(currenciesObj[formData.currency]?.decimal_digits || 0);
+    console.log("user::: ", user.signInDetails.loginId);
+    console.log("new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()::: ", new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString());
   }, [formData.currency]);
 
   const handleChange = (field) => (event) => {
@@ -43,15 +59,11 @@ const AccountSettingsForm = () => {
       ...prev,
       [field]: event.target.value,
     }));
-    // Optionally, mark as touched on change too, if desired
-    // setTouchedFields((prev) => ({ ...prev, [field]: true }));
   };
 
   const handleBusinessIDChange = (event) => {
     const value = event.target.value;
     setBusinessID(value);
-    // Optionally, mark as touched on change
-    // setTouchedFields((prev) => ({ ...prev, businessID: true }));
   };
 
   // Handler for the onBlur event
@@ -62,37 +74,123 @@ const AccountSettingsForm = () => {
     }));
   };
 
-  const handleSubmit = (event) => {
-    event.preventDefault(); // Prevent page reload
-    // Mark all fields as touched on submit, to show errors if not filled
-    const allFormFields = {
-      businessName: true,
-      // Add other required fields here if needed for this form
-    };
-    setTouchedFields(prev => ({...prev, ...allFormFields}));
+  // Create new Institution, Branch, and User
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setTouchedFields(prev => ({ ...prev, businessName: true }));
+    setIsSubmitting(true);
+    try {
+      // 1. Create Institution
+      const institutionInput = {
+        name: formData.businessName,
+        currencyCode: formData.currency,
+        defaultDateFormat: formData.dateFormat,
+        regulatoryRegion: formData.country,
+        subscriptionTier: 'Free',
+        trialEndDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        saccoFeaturesEnabled: false,
+        staffManagementEnabled: false,
+        payrollEnabled: false,
+        collectionsModuleEnabled: false,
+        customWorkflowsEnabled: false,
+        advancedReportingEnabled: false,
+      };
 
-    // Basic validation check before logging
-    if (!formData.businessName.trim()) {
-      console.log('Business name is required to submit.');
-      return; // Prevent submission
+      const institutionRes = await client.graphql({
+        query: `mutation CreateInstitution($input: CreateInstitutionInput!) {
+          createInstitution(input: $input) { id }
+        }`,
+        variables: { input: institutionInput }
+      });
+
+      const institutionId = institutionRes.data.createInstitution.id;
+
+      // 2. Create Branch under Institution
+      const branchInput = {
+        name: "Branch #01",
+        institutionBranchesId: institutionId,
+      };
+
+      const branchRes = await client.graphql({
+        query: `mutation CreateBranch($input: CreateBranchInput!) {
+          createBranch(input: $input) { id }
+        }`,
+        variables: { input: branchInput }
+      });
+
+      const branchId = branchRes.data.createBranch.id;
+
+      // 3. Create User linked to Institution and Branch
+      const userInput = {
+        id: user.userId, 
+        branchUsersId: branchId, 
+        institutionUsersId: institutionId,
+        email: user.signInDetails.loginId,
+        userType: 'Admin',
+        status: 'active',
+      };
+
+      await client.graphql({
+        query: `mutation CreateUser($input: CreateUserInput!) {
+          createUser(input: $input) { id }
+        }`,
+        variables: { input: userInput }
+      });
+
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Error creating institution/branch/user:', error);
+      showNotification('Failed to create business.', 'red');
+      console.log('Notification should show now');
+    } finally {
+      setIsSubmitting(false);
     }
-
-    console.log("formData::: ", formData);
-    console.log('Decimal digits:', decimalPoints);
-    console.log("getGMTOffset::: ", getGMTOffset(formData.timezone));
   };
 
-  const handleJoinBusiness = (event) => {
-    event.preventDefault(); // Prevent page reload
-    // Mark businessID as touched on attempt to join
-    setTouchedFields(prev => ({...prev, businessID: true}));
+  // Join existing Institution by creating User
+  const handleJoinBusiness = async (event) => {
+    event.preventDefault();
+    setTouchedFields(prev => ({ ...prev, businessID: true }));
+    setIsJoining(true);
+    try {
+      // 1. Check if Institution exists
+      const checkRes = await client.graphql({
+        query: `query GetInstitution($id: ID!) {
+          getInstitution(id: $id) { id }
+        }`,
+        variables: { id: businessID }
+      });
 
-    if (!businessID.trim()) {
-      console.log('Business ID is required to join.');
-      return; // Prevent action
+      if (!checkRes.data.getInstitution) {
+        showNotification('Invalid ID. Please contact your Admin', 'red');
+        return;
+      }
+
+      // 2. Create User if Institution exists
+      const userInput = {
+        id: user.userId,
+        institutionUsersId: businessID,
+        userType: 'User',
+        email: user.signInDetails.loginId,
+        status: 'pending',
+      };
+
+      await client.graphql({
+        query: `mutation CreateUser($input: CreateUserInput!) {
+          createUser(input: $input) { id }
+        }`,
+        variables: { input: userInput }
+      });
+
+      navigate('/dashboard', { state: { notification: { message: 'Request to join sent to Admin', color: 'blue' } } });
+    } catch (error) {
+      console.error('Error joining business:', error);
+      showNotification('Failed to join business.', 'red');
+    } finally {
+      setIsJoining(false);
     }
-    console.log("Join Business ID::: ", businessID);
   };
+
 
   // Calculate error states based on touched and validation
   const businessNameError = touchedFields.businessName && !formData.businessName.trim();
@@ -245,10 +343,10 @@ const AccountSettingsForm = () => {
             variant="contained"
             color="primary"
             type="submit" // Make button type submit for the form
-            disabled={!formData.businessName.trim()} // Keep existing disabled logic
+            disabled={!formData.businessName.trim() || isSubmitting} // Keep existing disabled logic
             // onClick={handleSubmit} // No longer needed if type="submit" and Box is a form
           >
-            Submit
+            {isSubmitting ? "Please wait..." : "Submit"}
           </Button>
         </Box>
       )}
@@ -292,13 +390,14 @@ const AccountSettingsForm = () => {
             variant="contained"
             color="primary"
             type="submit"
-            disabled={!businessID.trim()}
+            disabled={!businessID.trim() || isJoining}
             // onClick={handleJoinBusiness}
           >
-            Join Business
+            {isJoining ? "Please wait..." : "Join Business"}
           </Button>
         </Box>
       )}
+      
     </Box>
   );
 };

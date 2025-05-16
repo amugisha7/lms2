@@ -11,6 +11,7 @@ import NotificationsRoundedIcon from '@mui/icons-material/NotificationsRounded';
 import MenuButton from './MenuButton';
 import MenuContent from './MenuContent';
 import CardAlert from './CardAlert';
+import SelectContent from './SelectContent';
 
 function SideMenuMobile({ open, toggleDrawer }) {
   return (
@@ -62,6 +63,7 @@ function SideMenuMobile({ open, toggleDrawer }) {
             Logout
           </Button>
         </Stack>
+        <SelectContent />
       </Stack>
     </Drawer>
   );

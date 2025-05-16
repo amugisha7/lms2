@@ -65,16 +65,11 @@ export default function SideMenu() {
           borderTop: '1px solid',
           borderColor: 'divider',
         }}
-      >
-        <Avatar
-          sizes="small"
-          alt="Riley Carter"
-          src="/static/images/avatar/7.jpg"
-          sx={{ width: 36, height: 36 }}
-        />
+      > 
+        
         <Box sx={{ mr: 'auto' }}>
           <Typography variant="body2" sx={{ fontWeight: 500, lineHeight: '16px' }}>
-            Riley Carter
+            Andrew Mugisha
           </Typography>
           <Typography variant="caption" sx={{ color: 'text.secondary' }}>
             riley@email.com

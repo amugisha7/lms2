@@ -6,6 +6,7 @@ import ListItemText from '@mui/material/ListItemText';
 import ListSubheader from '@mui/material/ListSubheader';
 import Select, { selectClasses } from '@mui/material/Select';
 import { styled } from '@mui/material/styles';
+import { useNavigate } from 'react-router-dom';
 
 const Avatar = styled(MuiAvatar)(({ theme }) => ({
   width: 28,
@@ -22,21 +23,18 @@ const ListItemAvatar = styled(MuiListItemAvatar)({
 
 export default function MegaMenu({ heading = "Production", items = [] }) {
   const [open, setOpen] = React.useState(false);
+  const navigate = useNavigate();
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
-  // Prevent changing the selected value
-  const handleMenuItemClick = (event) => {
-    event.preventDefault();
-    setOpen(false);
-  };
-
+  // Always use an empty string as value to suppress the warning,
+  // since we don't want to select any of the options
   return (
     <Select
       labelId="company-select"
       id="company-simple-select"
-      value="production"
+      value=""
       open={open}
       onOpen={handleOpen}
       onClose={handleClose}
@@ -62,7 +60,15 @@ export default function MegaMenu({ heading = "Production", items = [] }) {
     >
       <ListSubheader sx={{ pt: 0 }}>{heading}</ListSubheader>
       {items.map((item) => (
-        <MenuItem key={item.value} value={item.value} onClick={handleMenuItemClick}>
+        <MenuItem
+          key={item.value}
+          value={item.value}
+          onClick={(e) => {
+            e.preventDefault();
+            setOpen(false);
+            navigate(item.value);
+          }}
+        >
           <ListItemAvatar>
             <Avatar alt={item.avatarAlt}>
               {item.icon}

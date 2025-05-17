@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Outlet } from 'react-router-dom';
 import { useNotification } from '../../ComponentAssets/NotificationContext';
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
@@ -93,8 +93,8 @@ export default function Dashboard(props) {
               mt: { xs: 8, md: 0 },
             }}
           >
-            <Header breadcrumbsMain="Dashboard" breadcrumbsCurrent="Data" />
-            <MainGrid />
+            <Header />
+            <Outlet /> {/* This will render the matched child route */}
           </Stack>
         </Box>
       </Box>

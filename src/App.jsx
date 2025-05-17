@@ -8,7 +8,9 @@ import { NotificationProvider } from './ComponentAssets/NotificationContext';
 import { BrowserRouter as Router, Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import { SnackbarProvider } from './ComponentAssets/SnackbarContext';
 import { generateClient } from 'aws-amplify/api';
-import myLogo from './Resources/loantabs_logo.png'; // Add this import at the top
+import MainGrid from './muiTemplates/dashboard/components/MainGrid';
+import myLogo from './Resources/loantabs_logo.png';
+import CreateBorrowerForm from './muiTemplates/checkout/CreateBorrowerForm';
 
 function App({ signOut, user }) {
   const [checking, setChecking] = useState(true);
@@ -113,14 +115,20 @@ function App({ signOut, user }) {
         <NotificationProvider>
           <Router>
             <Routes>
-              <Route path="/" element={userExists ? <Navigate to="/dashboard" replace /> : <Onboarding />} />
-              <Route path="/dashboard" element={userExists ? <Dashboard /> : <Navigate to="/" replace />} />
+              <Route path="/" element={userExists ? <Navigate to="lms" replace /> : <Onboarding />} />
+              <Route path="lms" element={userExists ? <Dashboard /> : <Navigate to="/" replace />}>
+                <Route index element={<MainGrid />} /> {/* Default dashboard content */}
+                <Route path="reports" element={<MainGrid />} />
+                <Route path="settings" element={<Onboarding />} />
+                <Route path="addBorrower" element={<CreateBorrowerForm />} />
+                {/* Add more routes as needed */}
+              </Route>
             </Routes>
           </Router>
         </NotificationProvider>
       </SnackbarProvider>
     </UserContext.Provider>
-  );
+  ); 
 }
 export const UserContext = createContext();
 

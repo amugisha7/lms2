@@ -26,6 +26,8 @@ export default function AddressForm() {
           autoComplete="first name"
           required
           size="small"
+          variant="outlined"
+          sx={{ border: '1px solid #708090' }}
         />
       </FormGrid>
       <FormGrid size={{ xs: 12, md: 6 }}>
@@ -40,6 +42,7 @@ export default function AddressForm() {
           autoComplete="last name"
           required
           size="small"
+          sx={{ border: '1px solid #708090' }}
         />
       </FormGrid>
       <FormGrid size={{ xs: 12 }}>
@@ -54,6 +57,7 @@ export default function AddressForm() {
           autoComplete="shipping address-line1"
           required
           size="small"
+          sx={{ border: '1px solid #708090' }}
         />
       </FormGrid>
       <FormGrid size={{ xs: 12 }}>
@@ -66,6 +70,7 @@ export default function AddressForm() {
           autoComplete="shipping address-line2"
           required
           size="small"
+          sx={{ border: '1px solid #708090' }}
         />
       </FormGrid>
       <FormGrid size={{ xs: 6 }}>
@@ -80,6 +85,7 @@ export default function AddressForm() {
           autoComplete="City"
           required
           size="small"
+          sx={{ border: '1px solid #708090' }}
         />
       </FormGrid>
       <FormGrid size={{ xs: 6 }}>
@@ -94,6 +100,7 @@ export default function AddressForm() {
           autoComplete="State"
           required
           size="small"
+          sx={{ border: '1px solid #708090' }}
         />
       </FormGrid>
       <FormGrid size={{ xs: 6 }}>
@@ -108,6 +115,7 @@ export default function AddressForm() {
           autoComplete="shipping postal-code"
           required
           size="small"
+          sx={{ border: '1px solid #708090' }}
         />
       </FormGrid>
       <FormGrid size={{ xs: 6 }}>
@@ -122,6 +130,7 @@ export default function AddressForm() {
           autoComplete="shipping country"
           required
           size="small"
+          sx={{ border: '1px solid #708090' }}
         />
       </FormGrid>
       <FormGrid size={{ xs: 12 }}>

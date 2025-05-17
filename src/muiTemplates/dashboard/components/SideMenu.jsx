@@ -17,6 +17,11 @@ import DevicesRoundedIcon from '@mui/icons-material/DevicesRounded';
 import SmartphoneRoundedIcon from '@mui/icons-material/SmartphoneRounded';
 import PersonAddAltRoundedIcon from '@mui/icons-material/PersonAddAltRounded';
 import PeopleAltRoundedIcon from '@mui/icons-material/PeopleAltRounded';
+import DashboardRoundedIcon from '@mui/icons-material/DashboardRounded';
+import Button from '@mui/material/Button';
+import { useNavigate } from 'react-router-dom';
+import SideMenuButton from './SideMenuButton';
+import CustomIcon from '../../../ComponentAssets/CustomIcon';
 
 const drawerWidth = 240;
 
@@ -33,6 +38,7 @@ const Drawer = styled(MuiDrawer)({
 
 export default function SideMenu({ onHideMenu }) {
   const { user, userDetails } = useContext(UserContext);
+  const navigate = useNavigate();
 
   // Define heading and menu items to pass to MegaMenu
   const megaMenuHeading = "Production";
@@ -92,12 +98,13 @@ export default function SideMenu({ onHideMenu }) {
         sx={{
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'flex-end',
+          justifyContent: 'space-between',
           p: 1,
           borderBottom: '1px solid',
           borderColor: 'divider',
         }}
       >
+        <CustomIcon />
         <IconButton aria-label="Hide menu" onClick={onHideMenu}>
           <ChevronLeftIcon />
         </IconButton>
@@ -111,6 +118,13 @@ export default function SideMenu({ onHideMenu }) {
           p: 1.5,
         }}
       >
+        {/* Dashboard Menu Button */}
+        <SideMenuButton
+          startIcon={<DashboardRoundedIcon />}
+          onClick={() => navigate('/lms')}
+        >
+          Dashboard
+        </SideMenuButton>
         <MegaMenu heading={"Borrowers"} items={borrowerItems} />
         <MegaMenu heading={megaMenuHeading} items={megaMenuItems} />
         <MegaMenu heading={megaMenuHeading} items={megaMenuItems} />

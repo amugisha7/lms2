@@ -1,5 +1,5 @@
 import * as React from 'react';
-import AppTheme from '../shared-theme/AppTheme';
+import AppTheme from '../../muiTemplates/shared-theme/AppTheme';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Checkbox from '@mui/material/Checkbox';

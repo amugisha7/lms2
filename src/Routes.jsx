@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Onboarding from './Screens/Onboarding/Onboarding';
 import Dashboard from './muiTemplates/dashboard/Dashboard';
 import MainGrid from './muiTemplates/dashboard/components/MainGrid';
-import CreateBorrowerForm from './Screens/Borrowers/CreateBorrowerForm';
+import CreateBorrowerForm from './Screens/Borrowers/CreateBorrower';
 
 export default function AppRoutes({ userExists }) {
 
@@ -19,6 +19,7 @@ export default function AppRoutes({ userExists }) {
               <Route path="reports" element={<MainGrid />} />
               <Route path="settings" element={<Onboarding />} />
               <Route path="addBorrower" element={<CreateBorrowerForm />} />
+              <Route path="manageBorrowers" element={<CreateBorrowerForm />} />
               {/* Add more routes as needed */}
             </>
           )}

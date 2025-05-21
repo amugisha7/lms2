@@ -26,10 +26,9 @@ function App({ signOut, user }) {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  }, []);
+  }, [online]);
 
   useEffect(() => {
-    if (!online) return;
     const checkUser = async () => {
       try {
         const client = generateClient();
@@ -57,7 +56,7 @@ function App({ signOut, user }) {
       }
     };
     checkUser();
-  }, [user, online]);
+  }, []);
 
   if (!online) {
     return <NoInternet />;
@@ -73,7 +72,7 @@ function App({ signOut, user }) {
               : <AppRoutes userExists={userExists} />}
           </NotificationProvider>
         </SnackbarProvider>
-      }
+     }
     </UserContext.Provider>
   );
 }

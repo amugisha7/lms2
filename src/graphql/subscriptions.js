@@ -41,6 +41,10 @@ export const onCreateInstitution = /* GraphQL */ `
         nextToken
         __typename
       }
+      customFormFields {
+        nextToken
+        __typename
+      }
       createdAt
       updatedAt
       __typename
@@ -87,6 +91,10 @@ export const onUpdateInstitution = /* GraphQL */ `
         nextToken
         __typename
       }
+      customFormFields {
+        nextToken
+        __typename
+      }
       createdAt
       updatedAt
       __typename
@@ -130,6 +138,10 @@ export const onDeleteInstitution = /* GraphQL */ `
         __typename
       }
       loanProducts {
+        nextToken
+        __typename
+      }
+      customFormFields {
         nextToken
         __typename
       }
@@ -203,6 +215,10 @@ export const onCreateBranch = /* GraphQL */ `
         __typename
       }
       financialReports {
+        nextToken
+        __typename
+      }
+      customFormFields {
         nextToken
         __typename
       }
@@ -280,6 +296,10 @@ export const onUpdateBranch = /* GraphQL */ `
         nextToken
         __typename
       }
+      customFormFields {
+        nextToken
+        __typename
+      }
       createdAt
       updatedAt
       institutionBranchesId
@@ -351,6 +371,10 @@ export const onDeleteBranch = /* GraphQL */ `
         __typename
       }
       financialReports {
+        nextToken
+        __typename
+      }
+      customFormFields {
         nextToken
         __typename
       }
@@ -657,6 +681,10 @@ export const onCreateEmployee = /* GraphQL */ `
         nextToken
         __typename
       }
+      borrowers {
+        nextToken
+        __typename
+      }
       supervisorID
       supervisor {
         id
@@ -824,6 +852,10 @@ export const onUpdateEmployee = /* GraphQL */ `
         __typename
       }
       approvedPayments {
+        nextToken
+        __typename
+      }
+      borrowers {
         nextToken
         __typename
       }
@@ -997,6 +1029,10 @@ export const onDeleteEmployee = /* GraphQL */ `
         nextToken
         __typename
       }
+      borrowers {
+        nextToken
+        __typename
+      }
       supervisorID
       supervisor {
         id
@@ -1163,6 +1199,10 @@ export const onCreateBorrower = /* GraphQL */ `
         nextToken
         __typename
       }
+      employees {
+        nextToken
+        __typename
+      }
       collaterals {
         nextToken
         __typename
@@ -1254,6 +1294,10 @@ export const onUpdateBorrower = /* GraphQL */ `
         nextToken
         __typename
       }
+      employees {
+        nextToken
+        __typename
+      }
       collaterals {
         nextToken
         __typename
@@ -1342,6 +1386,10 @@ export const onDeleteBorrower = /* GraphQL */ `
         __typename
       }
       documents {
+        nextToken
+        __typename
+      }
+      employees {
         nextToken
         __typename
       }
@@ -6439,6 +6487,183 @@ export const onDeleteFinancialReport = /* GraphQL */ `
     }
   }
 `;
+export const onCreateCustomFormField = /* GraphQL */ `
+  subscription OnCreateCustomFormField(
+    $filter: ModelSubscriptionCustomFormFieldFilterInput
+  ) {
+    onCreateCustomFormField(filter: $filter) {
+      id
+      formKey
+      label
+      fieldType
+      options
+      required
+      order
+      createdBy
+      branch {
+        id
+        name
+        branchCode
+        address
+        createdAt
+        updatedAt
+        institutionBranchesId
+        __typename
+      }
+      institution {
+        id
+        name
+        currencyCode
+        subscriptionTier
+        subscriptionStatus
+        trialEndDate
+        nextBillingDate
+        stripeCustomerID
+        stripeSubscriptionID
+        defaultDateFormat
+        defaultCurrencyFormat
+        defaultLanguage
+        regulatoryRegion
+        maxUsers
+        maxBranches
+        maxStaffPerBranch
+        saccoFeaturesEnabled
+        staffManagementEnabled
+        payrollEnabled
+        collectionsModuleEnabled
+        customWorkflowsEnabled
+        advancedReportingEnabled
+        apiIntegrationSettings
+        createdAt
+        updatedAt
+        __typename
+      }
+      createdAt
+      updatedAt
+      institutionCustomFormFieldsId
+      branchCustomFormFieldsId
+      __typename
+    }
+  }
+`;
+export const onUpdateCustomFormField = /* GraphQL */ `
+  subscription OnUpdateCustomFormField(
+    $filter: ModelSubscriptionCustomFormFieldFilterInput
+  ) {
+    onUpdateCustomFormField(filter: $filter) {
+      id
+      formKey
+      label
+      fieldType
+      options
+      required
+      order
+      createdBy
+      branch {
+        id
+        name
+        branchCode
+        address
+        createdAt
+        updatedAt
+        institutionBranchesId
+        __typename
+      }
+      institution {
+        id
+        name
+        currencyCode
+        subscriptionTier
+        subscriptionStatus
+        trialEndDate
+        nextBillingDate
+        stripeCustomerID
+        stripeSubscriptionID
+        defaultDateFormat
+        defaultCurrencyFormat
+        defaultLanguage
+        regulatoryRegion
+        maxUsers
+        maxBranches
+        maxStaffPerBranch
+        saccoFeaturesEnabled
+        staffManagementEnabled
+        payrollEnabled
+        collectionsModuleEnabled
+        customWorkflowsEnabled
+        advancedReportingEnabled
+        apiIntegrationSettings
+        createdAt
+        updatedAt
+        __typename
+      }
+      createdAt
+      updatedAt
+      institutionCustomFormFieldsId
+      branchCustomFormFieldsId
+      __typename
+    }
+  }
+`;
+export const onDeleteCustomFormField = /* GraphQL */ `
+  subscription OnDeleteCustomFormField(
+    $filter: ModelSubscriptionCustomFormFieldFilterInput
+  ) {
+    onDeleteCustomFormField(filter: $filter) {
+      id
+      formKey
+      label
+      fieldType
+      options
+      required
+      order
+      createdBy
+      branch {
+        id
+        name
+        branchCode
+        address
+        createdAt
+        updatedAt
+        institutionBranchesId
+        __typename
+      }
+      institution {
+        id
+        name
+        currencyCode
+        subscriptionTier
+        subscriptionStatus
+        trialEndDate
+        nextBillingDate
+        stripeCustomerID
+        stripeSubscriptionID
+        defaultDateFormat
+        defaultCurrencyFormat
+        defaultLanguage
+        regulatoryRegion
+        maxUsers
+        maxBranches
+        maxStaffPerBranch
+        saccoFeaturesEnabled
+        staffManagementEnabled
+        payrollEnabled
+        collectionsModuleEnabled
+        customWorkflowsEnabled
+        advancedReportingEnabled
+        apiIntegrationSettings
+        createdAt
+        updatedAt
+        __typename
+      }
+      createdAt
+      updatedAt
+      institutionCustomFormFieldsId
+      branchCustomFormFieldsId
+      __typename
+    }
+  }
+`;
 export const onCreateBranchLoanProduct = /* GraphQL */ `
   subscription OnCreateBranchLoanProduct(
     $filter: ModelSubscriptionBranchLoanProductFilterInput
@@ -8228,6 +8453,321 @@ export const onDeletePaymentApprovedByEmployee = /* GraphQL */ `
         createdAt
         updatedAt
         loanPaymentsId
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onCreateBorrowerLoanOfficer = /* GraphQL */ `
+  subscription OnCreateBorrowerLoanOfficer(
+    $filter: ModelSubscriptionBorrowerLoanOfficerFilterInput
+  ) {
+    onCreateBorrowerLoanOfficer(filter: $filter) {
+      id
+      employeeId
+      borrowerId
+      employee {
+        id
+        firstName
+        lastName
+        middleName
+        dateOfBirth
+        phoneNumber1
+        phoneNumber2
+        email
+        addressLine1
+        addressLine2
+        city
+        stateProvince
+        postalCode
+        nextOfKinName
+        nextOfKinPhoneNumber
+        nextOfKinEmail
+        nextOfKinRelationship
+        nextOfKinAddress
+        nationalID
+        passportNumber
+        nationality
+        status
+        employmentType
+        employmentStatus
+        employmentStartDate
+        employmentEndDate
+        employmentPosition
+        employmentDepartment
+        employmentGrade
+        employmentLocation
+        grossSalary
+        bankAccountNumber
+        bankName
+        bankBranchCode
+        socialSecurityNumber
+        taxIdentificationNumber
+        taxExemptStatus
+        relatedUserID
+        relatedBorrowerID
+        supervisorID
+        createdAt
+        updatedAt
+        branchEmployeesId
+        __typename
+      }
+      borrower {
+        id
+        firstname
+        othername
+        businessName
+        typeOfBusiness
+        uniqueIdNumber
+        phoneNumber
+        otherPhoneNumber
+        email
+        gender
+        dateOfBirth
+        nationality
+        nationalIdPicture
+        passportPicture
+        address
+        points
+        borrowerOpeningBalance
+        borrowerClosingBalance
+        borrowerInterestRate
+        city
+        state
+        zipcode
+        employmentStatus
+        employerName
+        creditScore
+        additionalNote1
+        additionalNote2
+        borrowerDocument1
+        borrowerDocument1URL
+        borrowerDocument2
+        borrowerDocument2URL
+        borrowerDocument3
+        borrowerDocument3URL
+        borrowerDocument4
+        borrowerDocument4URL
+        borrowerStatus
+        borrowertype
+        borrowerAttribute1
+        borrowerAttribute2
+        createdAt
+        updatedAt
+        branchBorrowersId
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onUpdateBorrowerLoanOfficer = /* GraphQL */ `
+  subscription OnUpdateBorrowerLoanOfficer(
+    $filter: ModelSubscriptionBorrowerLoanOfficerFilterInput
+  ) {
+    onUpdateBorrowerLoanOfficer(filter: $filter) {
+      id
+      employeeId
+      borrowerId
+      employee {
+        id
+        firstName
+        lastName
+        middleName
+        dateOfBirth
+        phoneNumber1
+        phoneNumber2
+        email
+        addressLine1
+        addressLine2
+        city
+        stateProvince
+        postalCode
+        nextOfKinName
+        nextOfKinPhoneNumber
+        nextOfKinEmail
+        nextOfKinRelationship
+        nextOfKinAddress
+        nationalID
+        passportNumber
+        nationality
+        status
+        employmentType
+        employmentStatus
+        employmentStartDate
+        employmentEndDate
+        employmentPosition
+        employmentDepartment
+        employmentGrade
+        employmentLocation
+        grossSalary
+        bankAccountNumber
+        bankName
+        bankBranchCode
+        socialSecurityNumber
+        taxIdentificationNumber
+        taxExemptStatus
+        relatedUserID
+        relatedBorrowerID
+        supervisorID
+        createdAt
+        updatedAt
+        branchEmployeesId
+        __typename
+      }
+      borrower {
+        id
+        firstname
+        othername
+        businessName
+        typeOfBusiness
+        uniqueIdNumber
+        phoneNumber
+        otherPhoneNumber
+        email
+        gender
+        dateOfBirth
+        nationality
+        nationalIdPicture
+        passportPicture
+        address
+        points
+        borrowerOpeningBalance
+        borrowerClosingBalance
+        borrowerInterestRate
+        city
+        state
+        zipcode
+        employmentStatus
+        employerName
+        creditScore
+        additionalNote1
+        additionalNote2
+        borrowerDocument1
+        borrowerDocument1URL
+        borrowerDocument2
+        borrowerDocument2URL
+        borrowerDocument3
+        borrowerDocument3URL
+        borrowerDocument4
+        borrowerDocument4URL
+        borrowerStatus
+        borrowertype
+        borrowerAttribute1
+        borrowerAttribute2
+        createdAt
+        updatedAt
+        branchBorrowersId
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onDeleteBorrowerLoanOfficer = /* GraphQL */ `
+  subscription OnDeleteBorrowerLoanOfficer(
+    $filter: ModelSubscriptionBorrowerLoanOfficerFilterInput
+  ) {
+    onDeleteBorrowerLoanOfficer(filter: $filter) {
+      id
+      employeeId
+      borrowerId
+      employee {
+        id
+        firstName
+        lastName
+        middleName
+        dateOfBirth
+        phoneNumber1
+        phoneNumber2
+        email
+        addressLine1
+        addressLine2
+        city
+        stateProvince
+        postalCode
+        nextOfKinName
+        nextOfKinPhoneNumber
+        nextOfKinEmail
+        nextOfKinRelationship
+        nextOfKinAddress
+        nationalID
+        passportNumber
+        nationality
+        status
+        employmentType
+        employmentStatus
+        employmentStartDate
+        employmentEndDate
+        employmentPosition
+        employmentDepartment
+        employmentGrade
+        employmentLocation
+        grossSalary
+        bankAccountNumber
+        bankName
+        bankBranchCode
+        socialSecurityNumber
+        taxIdentificationNumber
+        taxExemptStatus
+        relatedUserID
+        relatedBorrowerID
+        supervisorID
+        createdAt
+        updatedAt
+        branchEmployeesId
+        __typename
+      }
+      borrower {
+        id
+        firstname
+        othername
+        businessName
+        typeOfBusiness
+        uniqueIdNumber
+        phoneNumber
+        otherPhoneNumber
+        email
+        gender
+        dateOfBirth
+        nationality
+        nationalIdPicture
+        passportPicture
+        address
+        points
+        borrowerOpeningBalance
+        borrowerClosingBalance
+        borrowerInterestRate
+        city
+        state
+        zipcode
+        employmentStatus
+        employerName
+        creditScore
+        additionalNote1
+        additionalNote2
+        borrowerDocument1
+        borrowerDocument1URL
+        borrowerDocument2
+        borrowerDocument2URL
+        borrowerDocument3
+        borrowerDocument3URL
+        borrowerDocument4
+        borrowerDocument4URL
+        borrowerStatus
+        borrowertype
+        borrowerAttribute1
+        borrowerAttribute2
+        createdAt
+        updatedAt
+        branchBorrowersId
         __typename
       }
       createdAt

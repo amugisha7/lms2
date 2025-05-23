@@ -55,6 +55,7 @@ type Institution @model {
   users: [User] @hasMany
   branches: [Branch] @hasMany
   loanProducts: [LoanProduct] @hasMany
+  customFormFields: [CustomFormField] @hasMany
 }
 
 type Branch @model {
@@ -73,6 +74,7 @@ type Branch @model {
   loanProducts: [LoanProduct] @manyToMany(relationName: "BranchLoanProduct")
   payrolls: [Payroll] @hasMany
   financialReports: [FinancialReport] @hasMany
+  customFormFields: [CustomFormField] @hasMany
 }
 
 type User @model {
@@ -138,6 +140,7 @@ type Employee @model {
   socialSecurityNumber: String
   taxIdentificationNumber: String
   taxExemptStatus: String
+  customFieldsData: AWSJSON
   branch: Branch @belongsTo
   relatedUserID: ID @index(name: "byRelatedUserID")
   relatedBorrowerID: ID @index(name: "byRelatedBorrowerID")
@@ -153,6 +156,7 @@ type Employee @model {
     @manyToMany(relationName: "MoneyTransactionApprovedByEmployee")
   approvedPayments: [Payment]
     @manyToMany(relationName: "PaymentApprovedByEmployee")
+  borrowers: [Borrower] @manyToMany(relationName: "BorrowerLoanOfficer")
 
   # Supervisor relationship
   supervisorID: ID @index(name: "bySupervisorID")
@@ -217,6 +221,7 @@ type Borrower @model {
   borrowertype: String
   borrowerAttribute1: String
   borrowerAttribute2: String
+  customFieldsData: AWSJSON
   branch: Branch @belongsTo
   loans: [Loan] @hasMany
   guarantors: [Guarantor] @hasMany
@@ -224,6 +229,7 @@ type Borrower @model {
   applications: [Application] @hasMany
   contracts: [Contract] @hasMany
   documents: [Document] @manyToMany(relationName: "BorrowerDocument")
+  employees: [Employee] @manyToMany(relationName: "BorrowerLoanOfficer")
   collaterals: [Collateral] @hasMany
   # Indexed fields
   creditScores: [CreditScore]
@@ -237,6 +243,7 @@ type Guarantor @model {
   phoneNumber: String
   email: String
   address: String
+  customFieldsData: AWSJSON
   borrower: Borrower @belongsTo
   loans: [Loan] @manyToMany(relationName: "LoanGuarantor")
   applications: [Application] @manyToMany(relationName: "ApplicationGuarantor")
@@ -358,6 +365,7 @@ type Application @model {
   loanProduct: LoanProduct @belongsTo(fields: ["loanProductID"])
   createdByEmployeeID: ID @index(name: "byCreatedByEmployeeID")
   createdByEmployee: Employee @belongsTo(fields: ["createdByEmployeeID"])
+  customFieldsData: AWSJSON
 }
 
 type Collateral @model {
@@ -373,6 +381,7 @@ type Collateral @model {
   insuranceExpiryDate: AWSDate
   insuranceCompany: String
   storedAt: String
+  customFieldsData: AWSJSON
   borrower: Borrower @belongsTo
   loans: [Loan] @manyToMany(relationName: "LoanCollateral")
   applications: [Application] @manyToMany(relationName: "ApplicationCollateral")
@@ -402,6 +411,7 @@ type Loan @model {
   loanAttribute2: String
   numberOfPayments: Float
   paymentFrequency: String
+  customFieldsData: AWSJSON
   borrower: Borrower @belongsTo
   payments: [Payment] @hasMany
   loanFees: [LoanFees] @hasMany
@@ -614,6 +624,19 @@ type FinancialReport @model {
   endDate: AWSDate
   reportData: AWSJSON
   branch: Branch @belongsTo
+}
+
+type CustomFormField @model {
+  id: ID!
+  formKey: String # e.g. "CreateBorrowerForm"
+  label: String
+  fieldType: String # e.g. "text", "number", "select"
+  options: AWSJSON # for dropdowns, radios, etc.
+  required: Boolean
+  order: Int
+  createdBy: String
+  branch: Branch @belongsTo
+  institution: Institution @belongsTo
 }
 
 # ---------- End of Schema ----------

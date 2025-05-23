@@ -18,6 +18,8 @@ export { default as ContractCreateForm } from "./ContractCreateForm";
 export { default as ContractUpdateForm } from "./ContractUpdateForm";
 export { default as CreditScoreCreateForm } from "./CreditScoreCreateForm";
 export { default as CreditScoreUpdateForm } from "./CreditScoreUpdateForm";
+export { default as CustomFormFieldCreateForm } from "./CustomFormFieldCreateForm";
+export { default as CustomFormFieldUpdateForm } from "./CustomFormFieldUpdateForm";
 export { default as DocumentCreateForm } from "./DocumentCreateForm";
 export { default as DocumentUpdateForm } from "./DocumentUpdateForm";
 export { default as EmployeeCreateForm } from "./EmployeeCreateForm";

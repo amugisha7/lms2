@@ -39,6 +39,10 @@ export const getInstitution = /* GraphQL */ `
         nextToken
         __typename
       }
+      customFormFields {
+        nextToken
+        __typename
+      }
       createdAt
       updatedAt
       __typename
@@ -149,6 +153,10 @@ export const getBranch = /* GraphQL */ `
         __typename
       }
       financialReports {
+        nextToken
+        __typename
+      }
+      customFormFields {
         nextToken
         __typename
       }
@@ -368,6 +376,10 @@ export const getEmployee = /* GraphQL */ `
         __typename
       }
       approvedPayments {
+        nextToken
+        __typename
+      }
+      borrowers {
         nextToken
         __typename
       }
@@ -592,6 +604,10 @@ export const getBorrower = /* GraphQL */ `
         __typename
       }
       documents {
+        nextToken
+        __typename
+      }
+      employees {
         nextToken
         __typename
       }
@@ -2938,6 +2954,94 @@ export const listFinancialReports = /* GraphQL */ `
     }
   }
 `;
+export const getCustomFormField = /* GraphQL */ `
+  query GetCustomFormField($id: ID!) {
+    getCustomFormField(id: $id) {
+      id
+      formKey
+      label
+      fieldType
+      options
+      required
+      order
+      createdBy
+      branch {
+        id
+        name
+        branchCode
+        address
+        createdAt
+        updatedAt
+        institutionBranchesId
+        __typename
+      }
+      institution {
+        id
+        name
+        currencyCode
+        subscriptionTier
+        subscriptionStatus
+        trialEndDate
+        nextBillingDate
+        stripeCustomerID
+        stripeSubscriptionID
+        defaultDateFormat
+        defaultCurrencyFormat
+        defaultLanguage
+        regulatoryRegion
+        maxUsers
+        maxBranches
+        maxStaffPerBranch
+        saccoFeaturesEnabled
+        staffManagementEnabled
+        payrollEnabled
+        collectionsModuleEnabled
+        customWorkflowsEnabled
+        advancedReportingEnabled
+        apiIntegrationSettings
+        createdAt
+        updatedAt
+        __typename
+      }
+      createdAt
+      updatedAt
+      institutionCustomFormFieldsId
+      branchCustomFormFieldsId
+      __typename
+    }
+  }
+`;
+export const listCustomFormFields = /* GraphQL */ `
+  query ListCustomFormFields(
+    $filter: ModelCustomFormFieldFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listCustomFormFields(
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        formKey
+        label
+        fieldType
+        options
+        required
+        order
+        createdBy
+        createdAt
+        updatedAt
+        institutionCustomFormFieldsId
+        branchCustomFormFieldsId
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
 export const getBranchLoanProduct = /* GraphQL */ `
   query GetBranchLoanProduct($id: ID!) {
     getBranchLoanProduct(id: $id) {
@@ -3704,6 +3808,133 @@ export const listPaymentApprovedByEmployees = /* GraphQL */ `
         id
         employeeId
         paymentId
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const getBorrowerLoanOfficer = /* GraphQL */ `
+  query GetBorrowerLoanOfficer($id: ID!) {
+    getBorrowerLoanOfficer(id: $id) {
+      id
+      employeeId
+      borrowerId
+      employee {
+        id
+        firstName
+        lastName
+        middleName
+        dateOfBirth
+        phoneNumber1
+        phoneNumber2
+        email
+        addressLine1
+        addressLine2
+        city
+        stateProvince
+        postalCode
+        nextOfKinName
+        nextOfKinPhoneNumber
+        nextOfKinEmail
+        nextOfKinRelationship
+        nextOfKinAddress
+        nationalID
+        passportNumber
+        nationality
+        status
+        employmentType
+        employmentStatus
+        employmentStartDate
+        employmentEndDate
+        employmentPosition
+        employmentDepartment
+        employmentGrade
+        employmentLocation
+        grossSalary
+        bankAccountNumber
+        bankName
+        bankBranchCode
+        socialSecurityNumber
+        taxIdentificationNumber
+        taxExemptStatus
+        relatedUserID
+        relatedBorrowerID
+        supervisorID
+        createdAt
+        updatedAt
+        branchEmployeesId
+        __typename
+      }
+      borrower {
+        id
+        firstname
+        othername
+        businessName
+        typeOfBusiness
+        uniqueIdNumber
+        phoneNumber
+        otherPhoneNumber
+        email
+        gender
+        dateOfBirth
+        nationality
+        nationalIdPicture
+        passportPicture
+        address
+        points
+        borrowerOpeningBalance
+        borrowerClosingBalance
+        borrowerInterestRate
+        city
+        state
+        zipcode
+        employmentStatus
+        employerName
+        creditScore
+        additionalNote1
+        additionalNote2
+        borrowerDocument1
+        borrowerDocument1URL
+        borrowerDocument2
+        borrowerDocument2URL
+        borrowerDocument3
+        borrowerDocument3URL
+        borrowerDocument4
+        borrowerDocument4URL
+        borrowerStatus
+        borrowertype
+        borrowerAttribute1
+        borrowerAttribute2
+        createdAt
+        updatedAt
+        branchBorrowersId
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const listBorrowerLoanOfficers = /* GraphQL */ `
+  query ListBorrowerLoanOfficers(
+    $filter: ModelBorrowerLoanOfficerFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listBorrowerLoanOfficers(
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        employeeId
+        borrowerId
         createdAt
         updatedAt
         __typename
@@ -6478,6 +6709,62 @@ export const paymentApprovedByEmployeesByPaymentId = /* GraphQL */ `
         id
         employeeId
         paymentId
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const borrowerLoanOfficersByEmployeeId = /* GraphQL */ `
+  query BorrowerLoanOfficersByEmployeeId(
+    $employeeId: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelBorrowerLoanOfficerFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    borrowerLoanOfficersByEmployeeId(
+      employeeId: $employeeId
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        employeeId
+        borrowerId
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const borrowerLoanOfficersByBorrowerId = /* GraphQL */ `
+  query BorrowerLoanOfficersByBorrowerId(
+    $borrowerId: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelBorrowerLoanOfficerFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    borrowerLoanOfficersByBorrowerId(
+      borrowerId: $borrowerId
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        employeeId
+        borrowerId
         createdAt
         updatedAt
         __typename

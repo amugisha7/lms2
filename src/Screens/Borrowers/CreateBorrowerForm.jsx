@@ -13,6 +13,8 @@ import { generateClient } from 'aws-amplify/api';
 import DropDownInputs from '../../ComponentAssets/DropDownInputs';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
+import { useContext } from 'react';
+import { UserContext } from '../../App'; // adjust path if needed
 
 const FormGrid = styled(Grid)(() => ({
   display: 'flex',
@@ -36,7 +38,8 @@ const today = dayjs();
 const defaultDob = today.subtract(20, 'year').format('YYYY-MM-DD');
 const maxDob = today.subtract(1, 'day').format('YYYY-MM-DD');
 
-const validationSchema = Yup.object().shape({
+// Base validation schema for static fields
+const baseValidationSchema = Yup.object().shape({
   firstname: Yup.string(),
   businessName: Yup.string(),
   mobile: Yup.string()
@@ -47,91 +50,189 @@ const validationSchema = Yup.object().shape({
     .max(20, 'Too long'),
   email: Yup.string()
     .email('Invalid email address'),
-  // Custom test for at least one of firstname or businessName
-}).test(
-  'name-or-business-required',
-  'First Name or Business Name is required',
-  values => !!(values.firstname && values.firstname.trim()) || !!(values.businessName && values.businessName.trim())
-);
+  // Add other static validations here if needed
+});
 
 export default function CreateBorrowerForm(props) {
+  const { userDetails } = useContext(UserContext);
   const [showDobInput, setShowDobInput] = React.useState(false);
   const [submitError, setSubmitError] = React.useState('');
   const [submitSuccess, setSubmitSuccess] = React.useState('');
+  const [customFields, setCustomFields] = React.useState([]);
+
+  // State for dynamic initial values and validation schema
+  const [dynamicInitialValues, setDynamicInitialValues] = React.useState({
+    firstname: '',
+    othername: '',
+    businessName: '',
+    typeOfBusiness: '',
+    uniqueNumber: '',
+    mobile: '',
+    altPhone: '',
+    email: '',
+    gender: '',
+    title: '',
+    country: '',
+    workingStatus: '',
+    creditScore: '',
+    dob: '',
+    address: '',
+    city: '',
+    province: '',
+    zipcode: '',
+    employerName: '',
+  });
+
+  const [dynamicValidationSchema, setDynamicValidationSchema] = React.useState(baseValidationSchema);
+
+  const client = generateClient();
+  const branchId = userDetails?.branchUsersId;
+
+  React.useEffect(() => {
+    const fetchCustomFields = async () => {
+      if (!branchId) return;
+
+      try {
+        const res = await client.graphql({
+          query: `
+            query ListCustomFormFields($filter: ModelCustomFormFieldFilterInput) {
+              listCustomFormFields(filter: $filter) {
+                items {
+                  id
+                  formKey
+                  label
+                  fieldType
+                  fieldName
+                  placeholder
+                  options
+                  required
+                  order
+                }
+              }
+            }
+          `,
+          variables: {
+            filter: {
+              branchCustomFormFieldsId: { eq: branchId },
+              formKey: { eq: "CreateBorrowerForm" }
+            }
+          }
+        });
+        let fetchedFields = [];
+        if(res.data.listCustomFormFields.items.length > 0) {
+            fetchedFields = res.data.listCustomFormFields.items.sort((a, b) => a.order - b.order);
+            setCustomFields(fetchedFields);
+        }
+
+        // Dynamically build initial values and validation schema based on fetched fields
+        const newInitialValues = { ...dynamicInitialValues }; 
+        let currentValidationSchema = baseValidationSchema;
+
+        fetchedFields.forEach(field => {
+          newInitialValues[field.fieldName] = ''; // Add custom field to initial values
+          let fieldSchema = Yup.string(); // Default to string
+
+          // Add validation rules based on field properties
+          if (field.required) {
+            fieldSchema = fieldSchema.required(`${field.label} is required`);
+          }
+          if (field.fieldType === 'number') {
+            fieldSchema = fieldSchema.matches(/^[0-9]*$/, `${field.label} must be a number`);
+          }
+          // Add more validation types (e.g., email, date) based on field.fieldType if needed
+
+          currentValidationSchema = currentValidationSchema.shape({
+            [field.fieldName]: fieldSchema,
+          });
+        });
+
+        currentValidationSchema = currentValidationSchema.test(
+          'name-or-business-required',
+          'First Name or Business Name is required',
+          values => !!(values.firstname && values.firstname.trim()) || !!(values.businessName && values.businessName.trim())
+        );
+
+        setDynamicInitialValues(newInitialValues);
+        setDynamicValidationSchema(currentValidationSchema);
+
+      } catch (error) {
+        console.error("Error fetching custom fields:", error);
+      }
+    };
+    fetchCustomFields();
+  }, []); // Add required dependencies
 
   const formik = useFormik({
-    initialValues: {
-      firstname: '',
-      othername: '',
-      businessName: '',
-      typeOfBusiness: '',
-      uniqueNumber: '',
-      mobile: '',
-      altPhone: '',
-      email: '',
-      gender: '',
-      title: '',
-      country: '',
-      workingStatus: '',
-      creditScore: '',
-      dob: '',
-      address: '',
-      city: '',
-      province: '',
-      zipcode: '',
-      employerName: '',
-    },
-    validationSchema,
+    initialValues: dynamicInitialValues, // Use dynamic initial values
+    validationSchema: dynamicValidationSchema, // Use dynamic validation schema
+    enableReinitialize: true, // Crucial for updating formik when initialValues/schema change
     onSubmit: async (values, { setSubmitting, resetForm }) => {
       setSubmitError('');
       setSubmitSuccess('');
       setSubmitting(true);
       try {
-        const client = generateClient();
-        await client.graphql({
-          query: `
-            mutation CreateBorrower($input: CreateBorrowerInput!) {
-              createBorrower(input: $input) {
-                id
-                firstname
-                businessName
-              }
-            }
-          `,
-          variables: {
-            input: {
-              firstname: values.firstname.trim() || null,
-              othername: values.othername.trim() || null,
-              businessName: values.businessName.trim() || null,
-              typeOfBusiness: values.typeOfBusiness.trim() || null,
-              uniqueIdNumber: values.uniqueNumber.trim() || null,
-              phoneNumber: values.mobile.trim() || null,
-              otherPhoneNumber: values.altPhone.trim() || null,
-              email: values.email.trim() || null,
-              gender: values.gender || null,
-              dateOfBirth: values.dob || null,
-              nationality: values.country || null,
-              address: values.address.trim() || null,
-              city: values.city.trim() || null,
-              state: values.province.trim() || null,
-              zipcode: values.zipcode.trim() || null,
-              employmentStatus: values.workingStatus || null,
-              employerName: values.employerName.trim() || null,
-              creditScore: values.creditScore.trim() || null,
-            }
-          }
+        // Create the base input object with standard fields
+        const input = {
+          firstname: values.firstname.trim() || null,
+          othername: values.othername.trim() || null,
+          businessName: values.businessName.trim() || null,
+          typeOfBusiness: values.typeOfBusiness.trim() || null,
+          uniqueIdNumber: values.uniqueNumber.trim() || null,
+          phoneNumber: values.mobile.trim() || null,
+          otherPhoneNumber: values.altPhone.trim() || null,
+          email: values.email.trim() || null,
+          gender: values.gender || null,
+          dateOfBirth: values.dob || null,
+          nationality: values.country || null,
+          address: values.address.trim() || null,
+          city: values.city.trim() || null,
+          state: values.province.trim() || null,
+          zipcode: values.zipcode.trim() || null,
+          employmentStatus: values.workingStatus || null,
+          employerName: values.employerName.trim() || null,
+          creditScore: values.creditScore.trim() || null,
+        };
+
+        // Create a separate object for custom fields
+        const customFieldsData = {};
+        customFields.forEach(field => {
+          // Trim string values, convert to null if empty
+          customFieldsData[field.fieldName] = typeof values[field.fieldName] === 'string'
+            ? values[field.fieldName].trim() || null
+            : values[field.fieldName] || null;
         });
+
+        // Add the customFieldsData to the input object as AWSJSON
+        if (Object.keys(customFieldsData).length > 0) {
+          input.customFieldsData = JSON.stringify(customFieldsData);
+        }
+        console.log("input::: ", input);
+
+        // await client.graphql({
+        //   query: `
+        //     mutation CreateBorrower($input: CreateBorrowerInput!) {
+        //       createBorrower(input: $input) {
+        //         id
+        //         firstname
+        //         businessName
+        //         customFieldsData
+        //       }
+        //     }
+        //   `,
+        //   variables: { input }
+        // });
         setSubmitSuccess('Borrower created successfully!');
         setSubmitting(false);
         resetForm();
       } catch (err) {
+        console.error("Error creating borrower:", err);
         setSubmitError('Failed to create borrower. Please try again.');
         setSubmitting(false);
       }
     }
   });
 
-  // Dropdown configs
+  // Dropdown configs (using the formik instance to get values/set field values)
   const genderDropdownConfig = {
     label: 'Gender',
     id: 'gender',
@@ -211,6 +312,10 @@ export default function CreateBorrowerForm(props) {
             {formik.touched.firstname && formik.errors.firstname && (
               <Typography color="error" variant="caption">{formik.errors.firstname}</Typography>
             )}
+            {/* Display general validation error if both name fields are empty */}
+            {formik.errors['name-or-business-required'] && (!formik.values.firstname && !formik.values.businessName) && (
+              <Typography color="error" variant="caption">{formik.errors['name-or-business-required']}</Typography>
+            )}
           </FormGrid>
           <FormGrid size={{ xs: 12, md: 6 }}>
             <FormLabel htmlFor="middle-last-name">Middle / Last Name</FormLabel>
@@ -246,6 +351,10 @@ export default function CreateBorrowerForm(props) {
             {formik.touched.businessName && formik.errors.businessName && (
               <Typography color="error" variant="caption">{formik.errors.businessName}</Typography>
             )}
+            {/* Display general validation error if both name fields are empty */}
+            {formik.errors['name-or-business-required'] && (!formik.values.firstname && !formik.values.businessName) && (
+              <Typography color="error" variant="caption">{formik.errors['name-or-business-required']}</Typography>
+            )}
           </FormGrid>
           <FormGrid size={{ xs: 12, md: 6 }}>
             <FormLabel htmlFor="mobile">Mobile Number</FormLabel>
@@ -256,8 +365,7 @@ export default function CreateBorrowerForm(props) {
               size="small"
               value={formik.values.mobile}
               onChange={e => {
-                // Only allow digits
-                const val = e.target.value.replace(/\D/g, '');
+                const val = e.target.value.replace(/\D/g, ''); // Only allow digits
                 formik.setFieldValue('mobile', val);
               }}
               error={formik.touched.mobile && Boolean(formik.errors.mobile)}
@@ -288,6 +396,7 @@ export default function CreateBorrowerForm(props) {
               <Typography color="error" variant="caption">{formik.errors.altPhone}</Typography>
             )}
           </FormGrid>
+          {/* Reverted this Typography back to its original placement/styling */}
           <Typography variant="caption" sx={{ mt: -1 }}>
             Do not put country code, spaces, or characters in the mobile field otherwise you won't be able to send SMS to the mobile.
           </Typography>
@@ -405,7 +514,7 @@ export default function CreateBorrowerForm(props) {
                 sx={{
                   justifyContent: 'flex-start',
                   color: formik.values.dob ? 'inherit' : '#888',
-                  border: '1px solid #708090',
+                  border: '1px solid #708090', // Reverted border styling
                   fontSize: '1rem',
                   textTransform: 'none',
                   height: 40,
@@ -420,14 +529,14 @@ export default function CreateBorrowerForm(props) {
                 id="dob"
                 name="dob"
                 type="date"
-                value={formik.values.dob || defaultDob}
+                value={formik.values.dob || defaultDob} // Reverted default value
                 onChange={formik.handleChange}
                 inputProps={{
                   max: maxDob,
                 }}
                 size="small"
                 autoFocus
-                onBlur={() => { if (!formik.values.dob) setShowDobInput(false); }}
+                onBlur={() => { if (!formik.values.dob) setShowDobInput(false); }} // Reverted onBlur logic
                 error={formik.touched.dob && Boolean(formik.errors.dob)}
               />
             )}
@@ -436,6 +545,22 @@ export default function CreateBorrowerForm(props) {
             )}
           </FormGrid>
           <DropDownInputs dropdowns={[workingStatusDropdownConfig]} />
+          <FormGrid size={{ xs: 12, md: 6 }}>
+            <FormLabel htmlFor="employer-name">Employer Name</FormLabel>
+            <StyledOutlinedInput
+              id="employer-name"
+              name="employerName"
+              placeholder="Employer Name"
+              size="small"
+              value={formik.values.employerName}
+              onChange={formik.handleChange}
+              error={formik.touched.employerName && Boolean(formik.errors.employerName)}
+              onBlur={formik.handleBlur}
+            />
+            {formik.touched.employerName && formik.errors.employerName && (
+              <Typography color="error" variant="caption">{formik.errors.employerName}</Typography>
+            )}
+          </FormGrid>
           <FormGrid size={{ xs: 12, md: 6 }}>
             <FormLabel htmlFor="credit-score">Credit Score</FormLabel>
             <StyledOutlinedInput
@@ -452,6 +577,57 @@ export default function CreateBorrowerForm(props) {
               <Typography color="error" variant="caption">{formik.errors.creditScore}</Typography>
             )}
           </FormGrid>
+
+          {/* Render custom fields dynamically */}
+          {(customFields.length) > 0 && customFields.map(field => {
+            // Determine the input type based on field.fieldType
+            const commonProps = {
+              id: field.fieldName,
+              name: field.fieldName, 
+              placeholder: field.placeholder,
+              size: "small",
+              value: formik.values[field.fieldName] || '', // Ensure controlled component
+              onChange: formik.handleChange,
+              onBlur: formik.handleBlur,
+              error: formik.touched[field.fieldName] && Boolean(formik.errors[field.fieldName]),
+              required: field.required,
+            };
+
+            // Handle different field types, e.g., select/dropdowns
+            if (field.fieldType === 'select' && field.options) {
+                // Ensure options are an array, splitting if a comma-separated string
+                const optionsArray = Array.isArray(field.options) ? field.options : field.options.split(',').map(s => s.trim());
+                const dropdownConfig = {
+                    label: field.label,
+                    id: field.fieldName,
+                    value: formik.values[field.fieldName] || '',
+                    onChange: e => formik.setFieldValue(field.fieldName, e.target.value),
+                    options: optionsArray.map(opt => ({ value: opt, label: opt })),
+                    placeholder: field.placeholder,
+                    gridSize: { xs: 12, md: 6 }, // Passed for DropDownInputs internal Grid item
+                };
+                return (
+                    // DropDownInputs handles its own Grid item wrapper
+                    <DropDownInputs key={field.id} dropdowns={[dropdownConfig]} />
+                );
+            }
+
+            // Default to StyledOutlinedInput for text, number, etc.
+            return (
+              <FormGrid key={field.id} size={{ xs: 12, md: 6 }}> {/* Reverted to size prop */}
+                <FormLabel htmlFor={field.fieldName}>
+                    {field.label} {/* Removed `field.required` indicator */}
+                </FormLabel>
+                <StyledOutlinedInput
+                  {...commonProps}
+                  type={field.fieldType === 'number' ? 'number' : 'text'}
+                />
+                {formik.touched[field.fieldName] && formik.errors[field.fieldName] && (
+                  <Typography color="error" variant="caption">{formik.errors[field.fieldName]}</Typography>
+                )}
+              </FormGrid>
+            );
+          })}
         </Grid>
         {/* Submission Button and Feedback */}
         <Box sx={{ mt: 4, display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>

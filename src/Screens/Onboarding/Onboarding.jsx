@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect } from 'react';
 import { UserContext } from '../../App'
 import {
   Box,
@@ -19,7 +19,7 @@ import TwoRadialButtons from '../../ComponentAssets/TwoRadialButtons';
 import myLogo from '../../Resources/loantabs_logo.png'
 import { generateClient } from 'aws-amplify/api';
 import { useNotification } from '../../ComponentAssets/NotificationContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useSnackbar } from '../../ComponentAssets/SnackbarContext';
 
 const client = generateClient();
@@ -29,9 +29,10 @@ const dateFormats = ['dd-mmm-yyyy', 'mmm-dd-yyyy', 'yyyy-mm-dd'];
 
 const AccountSettingsForm = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { showNotification } = useNotification();
   const { showSnackbar } = useSnackbar();
-  const { user } = useContext(UserContext); 
+  const { user, setUserDetails } = useContext(UserContext); 
   const [formData, setFormData] = React.useState({
     businessName: '',
     country: 'Kenya',
@@ -120,28 +121,40 @@ const AccountSettingsForm = () => {
 
       const branchId = branchRes.data.createBranch.id;
 
-      // 3. Create User linked to Institution and Branch
+      // 3. Create User with more details
       const userInput = {
-        id: user.userId, 
-        branchUsersId: branchId, 
+        id: user.userId,
+        branchUsersId: branchId,
         institutionUsersId: institutionId,
         email: user.signInDetails.loginId,
         userType: 'Admin',
         status: 'active',
       };
 
-      await client.graphql({
+      const userRes = await client.graphql({
         query: `mutation CreateUser($input: CreateUserInput!) {
-          createUser(input: $input) { id }
+          createUser(input: $input) { 
+            id
+            userType
+            status
+            institutionUsersId
+            branchUsersId
+          }
         }`,
         variables: { input: userInput }
       });
 
-      navigate('/dashboard');
+      // Update user context with new details
+      if (setUserDetails) {
+        setUserDetails(userRes.data.createUser);
+      }
+
+      // Force reload to trigger App.jsx user check
+      window.location.href = '/dashboard';
+      
     } catch (error) {
       console.error('Error creating institution/branch/user:', error);
       showNotification('Failed to create business.', 'red');
-      console.log('Notification should show now');
     } finally {
       setIsSubmitting(false);
     }
@@ -175,14 +188,27 @@ const AccountSettingsForm = () => {
         status: 'pending',
       };
 
-      await client.graphql({
+      const userRes = await client.graphql({
         query: `mutation CreateUser($input: CreateUserInput!) {
-          createUser(input: $input) { id }
+          createUser(input: $input) { 
+            id
+            userType
+            status
+            institutionUsersId
+            branchUsersId
+          }
         }`,
         variables: { input: userInput }
       });
 
-      navigate('/dashboard', { state: { notification: { message: 'Request to join sent to Admin', color: 'blue' } } });
+      // Update user context with new details
+      if (setUserDetails) {
+        setUserDetails(userRes.data.createUser);
+      }
+
+      // Force reload to trigger App.jsx user check
+      window.location.href = '/dashboard';
+
     } catch (error) {
       console.error('Error joining business:', error);
       showNotification('Failed to join business.', 'red');

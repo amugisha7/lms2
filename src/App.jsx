@@ -63,7 +63,7 @@ function App({ signOut, user }) {
   }
 
   return (
-    <UserContext.Provider value={{ signOut, user, userDetails }}>
+    <UserContext.Provider value={{ signOut, user, userDetails, setUserDetails }}>
       {checking ? <LoadingScreen /> :
         <SnackbarProvider>
           <NotificationProvider>

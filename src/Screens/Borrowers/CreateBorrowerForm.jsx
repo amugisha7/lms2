@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { useContext } from 'react';
 import AppTheme from '../../muiTemplates/shared-theme/AppTheme';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -13,8 +13,16 @@ import { generateClient } from 'aws-amplify/api';
 import DropDownInputs from '../../ComponentAssets/DropDownInputs';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import { useContext } from 'react';
 import { UserContext } from '../../App'; // adjust path if needed
+import Link from '@mui/material/Link';
+import {
+  FormControl,
+  InputLabel,
+  Select,
+  TextField,
+  MenuItem,
+  FormHelperText,
+} from '@mui/material';
 
 const FormGrid = styled(Grid)(() => ({
   display: 'flex',
@@ -55,6 +63,8 @@ const baseValidationSchema = Yup.object().shape({
 
 export default function CreateBorrowerForm(props) {
   const { userDetails } = useContext(UserContext);
+  const institutionId = userDetails?.institutionUsersId;
+  const branchId = userDetails?.branchUsersId;
   const [showDobInput, setShowDobInput] = React.useState(false);
   const [submitError, setSubmitError] = React.useState('');
   const [submitSuccess, setSubmitSuccess] = React.useState('');
@@ -86,81 +96,118 @@ export default function CreateBorrowerForm(props) {
   const [dynamicValidationSchema, setDynamicValidationSchema] = React.useState(baseValidationSchema);
 
   const client = generateClient();
-  const branchId = userDetails?.branchUsersId;
 
   React.useEffect(() => {
     const fetchCustomFields = async () => {
-      if (!branchId) return;
+      if (!institutionId || !branchId) return;
 
       try {
         const res = await client.graphql({
           query: `
-            query ListCustomFormFields($filter: ModelCustomFormFieldFilterInput) {
-              listCustomFormFields(filter: $filter) {
+            query ListCustomFormFields(
+              $filter: ModelCustomFormFieldFilterInput
+              $limit: Int
+              $nextToken: String
+            ) {
+              listCustomFormFields(filter: $filter, limit: $limit, nextToken: $nextToken) {
                 items {
                   id
                   formKey
                   label
                   fieldType
-                  fieldName
-                  placeholder
                   options
                   required
                   order
+                  institutionCustomFormFieldsId
+                  branchCustomFormFieldsId
                 }
               }
             }
           `,
           variables: {
             filter: {
-              branchCustomFormFieldsId: { eq: branchId },
-              formKey: { eq: "CreateBorrowerForm" }
+              or: [
+                {
+                  and: [
+                    { formKey: { eq: "CreateBorrowerForm" } },
+                    { institutionCustomFormFieldsId: { eq: institutionId } }
+                  ]
+                },
+                {
+                  and: [
+                    { formKey: { eq: "CreateBorrowerForm" } },
+                    { branchCustomFormFieldsId: { eq: branchId } }
+                  ]
+                }
+              ]
             }
           }
         });
-        let fetchedFields = [];
-        if(res.data.listCustomFormFields.items.length > 0) {
-            fetchedFields = res.data.listCustomFormFields.items.sort((a, b) => a.order - b.order);
-            setCustomFields(fetchedFields);
-        }
 
-        // Dynamically build initial values and validation schema based on fetched fields
-        const newInitialValues = { ...dynamicInitialValues }; 
-        let currentValidationSchema = baseValidationSchema;
+        if (res.data.listCustomFormFields.items.length > 0) {
+          // Sort fields by order
+          const sortedFields = res.data.listCustomFormFields.items
+            .sort((a, b) => (a.order || 0) - (b.order || 0));
 
-        fetchedFields.forEach(field => {
-          newInitialValues[field.fieldName] = ''; // Add custom field to initial values
-          let fieldSchema = Yup.string(); // Default to string
+          // Parse JSON options for each field
+          const fieldsWithParsedOptions = sortedFields.map(field => ({
+            ...field,
+            options: field.options ? field.options.split('^^^') : null
+          }));
 
-          // Add validation rules based on field properties
-          if (field.required) {
-            fieldSchema = fieldSchema.required(`${field.label} is required`);
-          }
-          if (field.fieldType === 'number') {
-            fieldSchema = fieldSchema.matches(/^[0-9]*$/, `${field.label} must be a number`);
-          }
-          // Add more validation types (e.g., email, date) based on field.fieldType if needed
+          setCustomFields(fieldsWithParsedOptions);
 
-          currentValidationSchema = currentValidationSchema.shape({
-            [field.fieldName]: fieldSchema,
+          // Update validation schema with custom fields
+          let newValidationSchema = baseValidationSchema;
+          fieldsWithParsedOptions.forEach(field => {
+            let fieldSchema = Yup.string();
+            
+            if (field.required) {
+              fieldSchema = fieldSchema.required(`${field.label} is required`);
+            }
+
+            // Add type-specific validation
+            switch (field.fieldType) {
+              case 'number':
+                fieldSchema = Yup.number()
+                  .typeError('Must be a number')
+                  .nullable();
+                if (field.required) {
+                  fieldSchema = fieldSchema.required(`${field.label} is required`);
+                }
+                break;
+              case 'email':
+                fieldSchema = Yup.string()
+                  .email('Invalid email format')
+                  .nullable();
+                if (field.required) {
+                  fieldSchema = fieldSchema.required(`${field.label} is required`);
+                }
+                break;
+              // Add more field types as needed
+            }
+
+            newValidationSchema = newValidationSchema.shape({
+              [field.fieldName]: fieldSchema
+            });
           });
-        });
 
-        currentValidationSchema = currentValidationSchema.test(
-          'name-or-business-required',
-          'First Name or Business Name is required',
-          values => !!(values.firstname && values.firstname.trim()) || !!(values.businessName && values.businessName.trim())
-        );
+          setDynamicValidationSchema(newValidationSchema);
 
-        setDynamicInitialValues(newInitialValues);
-        setDynamicValidationSchema(currentValidationSchema);
-
+          // Update form initial values
+          const newInitialValues = { ...dynamicInitialValues };
+          fieldsWithParsedOptions.forEach(field => {
+            newInitialValues[field.fieldName] = '';
+          });
+          setDynamicInitialValues(newInitialValues);
+        }
       } catch (error) {
         console.error("Error fetching custom fields:", error);
       }
     };
+
     fetchCustomFields();
-  }, []); // Add required dependencies
+  }, [institutionId, branchId]); // Add dependencies
 
   const formik = useFormik({
     initialValues: dynamicInitialValues, // Use dynamic initial values
@@ -275,6 +322,63 @@ export default function CreateBorrowerForm(props) {
     options: workingStatuses.filter(s => s).map(s => ({ value: s, label: s })),
     placeholder: 'Select Working Status',
     gridSize: { xs: 12, md: 6 },
+  };
+
+  // Render custom fields in the form
+  const renderCustomField = (field) => {
+    const commonProps = {
+      id: field.fieldName,
+      name: field.fieldName,
+      label: field.label,
+      required: field.required,
+      value: formik.values[field.fieldName] || '',
+      onChange: formik.handleChange,
+      onBlur: formik.handleBlur,
+      error: formik.touched[field.fieldName] && Boolean(formik.errors[field.fieldName]),
+      helperText: formik.touched[field.fieldName] && formik.errors[field.fieldName]
+    };
+
+    switch (field.fieldType) {
+      case 'select':
+        return (
+          <FormControl 
+            fullWidth 
+            error={commonProps.error}
+            required={field.required}
+          >
+            <InputLabel>{field.label}</InputLabel>
+            <Select {...commonProps}>
+              {field.options?.map((option, index) => (
+                <MenuItem key={index} value={option}>
+                  {option}
+                </MenuItem>
+              ))}
+            </Select>
+            {commonProps.helperText && (
+              <FormHelperText>{commonProps.helperText}</FormHelperText>
+            )}
+          </FormControl>
+        );
+
+      case 'number':
+        return (
+          <TextField
+            {...commonProps}
+            type="number"
+            fullWidth
+          />
+        );
+
+      // Add more field types as needed
+
+      default:
+        return (
+          <TextField
+            {...commonProps}
+            fullWidth
+          />
+        );
+    }
   };
 
   return (
@@ -595,19 +699,18 @@ export default function CreateBorrowerForm(props) {
 
             // Handle different field types, e.g., select/dropdowns
             if (field.fieldType === 'select' && field.options) {
-                // Ensure options are an array, splitting if a comma-separated string
-                const optionsArray = Array.isArray(field.options) ? field.options : field.options.split(',').map(s => s.trim());
+                // Remove any array checking since we know options will be an array
+                const optionsArray = field.options;
                 const dropdownConfig = {
                     label: field.label,
                     id: field.fieldName,
                     value: formik.values[field.fieldName] || '',
                     onChange: e => formik.setFieldValue(field.fieldName, e.target.value),
                     options: optionsArray.map(opt => ({ value: opt, label: opt })),
-                    placeholder: field.placeholder,
-                    gridSize: { xs: 12, md: 6 }, // Passed for DropDownInputs internal Grid item
+                    placeholder: `Select ${field.label}`,
+                    gridSize: { xs: 12, md: 6 },
                 };
                 return (
-                    // DropDownInputs handles its own Grid item wrapper
                     <DropDownInputs key={field.id} dropdowns={[dropdownConfig]} />
                 );
             }
@@ -642,13 +745,32 @@ export default function CreateBorrowerForm(props) {
             </Typography>
           )}
           <Button
-            type="submit" sx={{mb:4}}
+            type="submit"
+            sx={{ mb: 4 }}
             variant="contained"
             color="secondary"
             disabled={!formik.isValid || formik.isSubmitting}
           >
             {formik.isSubmitting ? 'Submitting...' : 'Create Borrower'}
           </Button>
+          
+          {/* Add this new section */}
+          <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', mb: 2 }}>
+            <Link
+              href="customFields"
+              sx={{
+                color: 'text.secondary',
+                textDecoration: 'none',
+                '&:hover': {
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              <Typography variant="body2">
+                Need to add custom fields? Click here to manage custom fields
+              </Typography>
+            </Link>
+          </Box>
         </Box>
       </Box>
     </AppTheme>

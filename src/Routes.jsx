@@ -3,6 +3,7 @@ import Onboarding from './Screens/Onboarding/Onboarding';
 import Dashboard from './muiTemplates/dashboard/Dashboard';
 import MainGrid from './muiTemplates/dashboard/components/MainGrid';
 import CreateBorrowerForm from './Screens/Borrowers/CreateBorrower';
+import CustomFieldsManager from './Screens/AdminScreens/CustomFields/CustomFieldsManager';
 
 export default function AppRoutes({ userExists }) {
 
@@ -20,6 +21,7 @@ export default function AppRoutes({ userExists }) {
               <Route path="settings" element={<Onboarding />} />
               <Route path="addBorrower" element={<CreateBorrowerForm />} />
               <Route path="manageBorrowers" element={<CreateBorrowerForm />} />
+              <Route path="customFields" element={<CustomFieldsManager />} />
               {/* Add more routes as needed */}
             </>
           )}

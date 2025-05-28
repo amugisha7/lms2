@@ -5,7 +5,7 @@
  **************************************************************************/
 
 import * as React from "react";
-import { GridProps, TextFieldProps } from "@aws-amplify/ui-react";
+import { GridProps, TextAreaFieldProps, TextFieldProps } from "@aws-amplify/ui-react";
 export declare type EscapeHatchProps = {
     [elementHierarchy: string]: Record<string, unknown>;
 } | null;
@@ -27,6 +27,7 @@ export declare type GuarantorCreateFormInputValues = {
     phoneNumber?: string;
     email?: string;
     address?: string;
+    customFieldsData?: string;
 };
 export declare type GuarantorCreateFormValidationValues = {
     name?: ValidationFunction<string>;
@@ -34,6 +35,7 @@ export declare type GuarantorCreateFormValidationValues = {
     phoneNumber?: ValidationFunction<string>;
     email?: ValidationFunction<string>;
     address?: ValidationFunction<string>;
+    customFieldsData?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type GuarantorCreateFormOverridesProps = {
@@ -43,6 +45,7 @@ export declare type GuarantorCreateFormOverridesProps = {
     phoneNumber?: PrimitiveOverrideProps<TextFieldProps>;
     email?: PrimitiveOverrideProps<TextFieldProps>;
     address?: PrimitiveOverrideProps<TextFieldProps>;
+    customFieldsData?: PrimitiveOverrideProps<TextAreaFieldProps>;
 } & EscapeHatchProps;
 export declare type GuarantorCreateFormProps = React.PropsWithChildren<{
     overrides?: GuarantorCreateFormOverridesProps | undefined | null;

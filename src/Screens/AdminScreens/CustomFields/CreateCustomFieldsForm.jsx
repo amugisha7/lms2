@@ -47,7 +47,8 @@ const fieldTypeDescriptions = {
   text: 'This will allow you to type text into a field',
   number: 'If you want to restrict numbers only in a field',
   select: 'This will allow you to select options from a dropdown box',
-  date: 'This will allow you to select a date from the calendar'
+  date: 'This will allow you to select a date from the calendar',
+  textarea: 'This will create a multi-line text input field'
 };
 
 export default function CreateCustomFieldsForm(props) {
@@ -92,11 +93,13 @@ export default function CreateCustomFieldsForm(props) {
           formKey: values.formKey,
           label: values.label.trim(),
           fieldType: values.fieldType,
-          options: values.fieldType === 'select' ? optionsList.join('^^^') : null,
+          options: values.fieldType === 'select' ? 
+            JSON.stringify(optionsList) : null, 
           required: values.required,
           branchCustomFormFieldsId: branchId,
           institutionCustomFormFieldsId: userDetails?.institutionUsersId || null,
         };
+        // console.log("input::: ", input);
 
         await client.graphql({
           query: `
@@ -237,6 +240,7 @@ export default function CreateCustomFieldsForm(props) {
                 <MenuItem value="number">Number</MenuItem>
                 <MenuItem value="select">Dropdown</MenuItem>
                 <MenuItem value="date">Date</MenuItem>
+                <MenuItem value="textarea">Textarea</MenuItem>
               </StyledSelect>
               {formik.touched.fieldType && formik.errors.fieldType && (
                 <Typography color="error" variant="caption">{formik.errors.fieldType}</Typography>

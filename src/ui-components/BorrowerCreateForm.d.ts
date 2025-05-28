@@ -5,7 +5,7 @@
  **************************************************************************/
 
 import * as React from "react";
-import { GridProps, TextFieldProps } from "@aws-amplify/ui-react";
+import { GridProps, TextAreaFieldProps, TextFieldProps } from "@aws-amplify/ui-react";
 export declare type EscapeHatchProps = {
     [elementHierarchy: string]: Record<string, unknown>;
 } | null;
@@ -60,6 +60,7 @@ export declare type BorrowerCreateFormInputValues = {
     borrowertype?: string;
     borrowerAttribute1?: string;
     borrowerAttribute2?: string;
+    customFieldsData?: string;
 };
 export declare type BorrowerCreateFormValidationValues = {
     firstname?: ValidationFunction<string>;
@@ -100,6 +101,7 @@ export declare type BorrowerCreateFormValidationValues = {
     borrowertype?: ValidationFunction<string>;
     borrowerAttribute1?: ValidationFunction<string>;
     borrowerAttribute2?: ValidationFunction<string>;
+    customFieldsData?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type BorrowerCreateFormOverridesProps = {
@@ -142,6 +144,7 @@ export declare type BorrowerCreateFormOverridesProps = {
     borrowertype?: PrimitiveOverrideProps<TextFieldProps>;
     borrowerAttribute1?: PrimitiveOverrideProps<TextFieldProps>;
     borrowerAttribute2?: PrimitiveOverrideProps<TextFieldProps>;
+    customFieldsData?: PrimitiveOverrideProps<TextAreaFieldProps>;
 } & EscapeHatchProps;
 export declare type BorrowerCreateFormProps = React.PropsWithChildren<{
     overrides?: BorrowerCreateFormOverridesProps | undefined | null;

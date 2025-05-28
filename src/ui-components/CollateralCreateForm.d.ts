@@ -5,7 +5,7 @@
  **************************************************************************/
 
 import * as React from "react";
-import { GridProps, TextFieldProps } from "@aws-amplify/ui-react";
+import { GridProps, TextAreaFieldProps, TextFieldProps } from "@aws-amplify/ui-react";
 export declare type EscapeHatchProps = {
     [elementHierarchy: string]: Record<string, unknown>;
 } | null;
@@ -33,6 +33,7 @@ export declare type CollateralCreateFormInputValues = {
     insuranceExpiryDate?: string;
     insuranceCompany?: string;
     storedAt?: string;
+    customFieldsData?: string;
 };
 export declare type CollateralCreateFormValidationValues = {
     name?: ValidationFunction<string>;
@@ -46,6 +47,7 @@ export declare type CollateralCreateFormValidationValues = {
     insuranceExpiryDate?: ValidationFunction<string>;
     insuranceCompany?: ValidationFunction<string>;
     storedAt?: ValidationFunction<string>;
+    customFieldsData?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type CollateralCreateFormOverridesProps = {
@@ -61,6 +63,7 @@ export declare type CollateralCreateFormOverridesProps = {
     insuranceExpiryDate?: PrimitiveOverrideProps<TextFieldProps>;
     insuranceCompany?: PrimitiveOverrideProps<TextFieldProps>;
     storedAt?: PrimitiveOverrideProps<TextFieldProps>;
+    customFieldsData?: PrimitiveOverrideProps<TextAreaFieldProps>;
 } & EscapeHatchProps;
 export declare type CollateralCreateFormProps = React.PropsWithChildren<{
     overrides?: CollateralCreateFormOverridesProps | undefined | null;

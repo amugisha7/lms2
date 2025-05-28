@@ -6,7 +6,13 @@
 
 /* eslint-disable */
 import * as React from "react";
-import { Button, Flex, Grid, TextField } from "@aws-amplify/ui-react";
+import {
+  Button,
+  Flex,
+  Grid,
+  TextAreaField,
+  TextField,
+} from "@aws-amplify/ui-react";
 import { fetchByPath, getOverrideProps, validateField } from "./utils";
 import { generateClient } from "aws-amplify/api";
 import { createCollateral } from "../graphql/mutations";
@@ -34,6 +40,7 @@ export default function CollateralCreateForm(props) {
     insuranceExpiryDate: "",
     insuranceCompany: "",
     storedAt: "",
+    customFieldsData: "",
   };
   const [name, setName] = React.useState(initialValues.name);
   const [type, setType] = React.useState(initialValues.type);
@@ -58,6 +65,9 @@ export default function CollateralCreateForm(props) {
     initialValues.insuranceCompany
   );
   const [storedAt, setStoredAt] = React.useState(initialValues.storedAt);
+  const [customFieldsData, setCustomFieldsData] = React.useState(
+    initialValues.customFieldsData
+  );
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     setName(initialValues.name);
@@ -71,6 +81,7 @@ export default function CollateralCreateForm(props) {
     setInsuranceExpiryDate(initialValues.insuranceExpiryDate);
     setInsuranceCompany(initialValues.insuranceCompany);
     setStoredAt(initialValues.storedAt);
+    setCustomFieldsData(initialValues.customFieldsData);
     setErrors({});
   };
   const validations = {
@@ -85,6 +96,7 @@ export default function CollateralCreateForm(props) {
     insuranceExpiryDate: [],
     insuranceCompany: [],
     storedAt: [],
+    customFieldsData: [{ type: "JSON" }],
   };
   const runValidationTasks = async (
     fieldName,
@@ -123,6 +135,7 @@ export default function CollateralCreateForm(props) {
           insuranceExpiryDate,
           insuranceCompany,
           storedAt,
+          customFieldsData,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -196,6 +209,7 @@ export default function CollateralCreateForm(props) {
               insuranceExpiryDate,
               insuranceCompany,
               storedAt,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.name ?? value;
@@ -230,6 +244,7 @@ export default function CollateralCreateForm(props) {
               insuranceExpiryDate,
               insuranceCompany,
               storedAt,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.type ?? value;
@@ -264,6 +279,7 @@ export default function CollateralCreateForm(props) {
               insuranceExpiryDate,
               insuranceCompany,
               storedAt,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.description ?? value;
@@ -298,6 +314,7 @@ export default function CollateralCreateForm(props) {
               insuranceExpiryDate,
               insuranceCompany,
               storedAt,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.location ?? value;
@@ -336,6 +353,7 @@ export default function CollateralCreateForm(props) {
               insuranceExpiryDate,
               insuranceCompany,
               storedAt,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.value ?? value;
@@ -370,6 +388,7 @@ export default function CollateralCreateForm(props) {
               insuranceExpiryDate,
               insuranceCompany,
               storedAt,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.serialNumber ?? value;
@@ -404,6 +423,7 @@ export default function CollateralCreateForm(props) {
               insuranceExpiryDate,
               insuranceCompany,
               storedAt,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.registrationNumber ?? value;
@@ -440,6 +460,7 @@ export default function CollateralCreateForm(props) {
               insuranceExpiryDate,
               insuranceCompany,
               storedAt,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.insuranceDetails ?? value;
@@ -475,6 +496,7 @@ export default function CollateralCreateForm(props) {
               insuranceExpiryDate: value,
               insuranceCompany,
               storedAt,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.insuranceExpiryDate ?? value;
@@ -511,6 +533,7 @@ export default function CollateralCreateForm(props) {
               insuranceExpiryDate,
               insuranceCompany: value,
               storedAt,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.insuranceCompany ?? value;
@@ -545,6 +568,7 @@ export default function CollateralCreateForm(props) {
               insuranceExpiryDate,
               insuranceCompany,
               storedAt: value,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.storedAt ?? value;
@@ -559,6 +583,40 @@ export default function CollateralCreateForm(props) {
         hasError={errors.storedAt?.hasError}
         {...getOverrideProps(overrides, "storedAt")}
       ></TextField>
+      <TextAreaField
+        label="Custom fields data"
+        isRequired={false}
+        isReadOnly={false}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              name,
+              type,
+              description,
+              location,
+              value,
+              serialNumber,
+              registrationNumber,
+              insuranceDetails,
+              insuranceExpiryDate,
+              insuranceCompany,
+              storedAt,
+              customFieldsData: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.customFieldsData ?? value;
+          }
+          if (errors.customFieldsData?.hasError) {
+            runValidationTasks("customFieldsData", value);
+          }
+          setCustomFieldsData(value);
+        }}
+        onBlur={() => runValidationTasks("customFieldsData", customFieldsData)}
+        errorMessage={errors.customFieldsData?.errorMessage}
+        hasError={errors.customFieldsData?.hasError}
+        {...getOverrideProps(overrides, "customFieldsData")}
+      ></TextAreaField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}

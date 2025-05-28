@@ -39,6 +39,7 @@ export default function ApplicationCreateForm(props) {
     applicationDate: "",
     status: "",
     applicationRecord: "",
+    customFieldsData: "",
   };
   const [name, setName] = React.useState(initialValues.name);
   const [description, setDescription] = React.useState(
@@ -62,6 +63,9 @@ export default function ApplicationCreateForm(props) {
   const [applicationRecord, setApplicationRecord] = React.useState(
     initialValues.applicationRecord
   );
+  const [customFieldsData, setCustomFieldsData] = React.useState(
+    initialValues.customFieldsData
+  );
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     setName(initialValues.name);
@@ -73,6 +77,7 @@ export default function ApplicationCreateForm(props) {
     setApplicationDate(initialValues.applicationDate);
     setStatus(initialValues.status);
     setApplicationRecord(initialValues.applicationRecord);
+    setCustomFieldsData(initialValues.customFieldsData);
     setErrors({});
   };
   const validations = {
@@ -85,6 +90,7 @@ export default function ApplicationCreateForm(props) {
     applicationDate: [],
     status: [],
     applicationRecord: [{ type: "JSON" }],
+    customFieldsData: [{ type: "JSON" }],
   };
   const runValidationTasks = async (
     fieldName,
@@ -121,6 +127,7 @@ export default function ApplicationCreateForm(props) {
           applicationDate,
           status,
           applicationRecord,
+          customFieldsData,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -192,6 +199,7 @@ export default function ApplicationCreateForm(props) {
               applicationDate,
               status,
               applicationRecord,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.name ?? value;
@@ -224,6 +232,7 @@ export default function ApplicationCreateForm(props) {
               applicationDate,
               status,
               applicationRecord,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.description ?? value;
@@ -256,6 +265,7 @@ export default function ApplicationCreateForm(props) {
               applicationDate,
               status,
               applicationRecord,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.applicationNumber ?? value;
@@ -294,6 +304,7 @@ export default function ApplicationCreateForm(props) {
               applicationDate,
               status,
               applicationRecord,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.requestedPrincipalAmount ?? value;
@@ -335,6 +346,7 @@ export default function ApplicationCreateForm(props) {
               applicationDate,
               status,
               applicationRecord,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.requestedTermMonths ?? value;
@@ -369,6 +381,7 @@ export default function ApplicationCreateForm(props) {
               applicationDate,
               status,
               applicationRecord,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.requestedFrequency ?? value;
@@ -440,6 +453,7 @@ export default function ApplicationCreateForm(props) {
               applicationDate: value,
               status,
               applicationRecord,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.applicationDate ?? value;
@@ -472,6 +486,7 @@ export default function ApplicationCreateForm(props) {
               applicationDate,
               status: value,
               applicationRecord,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.status ?? value;
@@ -503,6 +518,7 @@ export default function ApplicationCreateForm(props) {
               applicationDate,
               status,
               applicationRecord: value,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.applicationRecord ?? value;
@@ -518,6 +534,38 @@ export default function ApplicationCreateForm(props) {
         errorMessage={errors.applicationRecord?.errorMessage}
         hasError={errors.applicationRecord?.hasError}
         {...getOverrideProps(overrides, "applicationRecord")}
+      ></TextAreaField>
+      <TextAreaField
+        label="Custom fields data"
+        isRequired={false}
+        isReadOnly={false}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              name,
+              description,
+              applicationNumber,
+              requestedPrincipalAmount,
+              requestedTermMonths,
+              requestedFrequency,
+              applicationDate,
+              status,
+              applicationRecord,
+              customFieldsData: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.customFieldsData ?? value;
+          }
+          if (errors.customFieldsData?.hasError) {
+            runValidationTasks("customFieldsData", value);
+          }
+          setCustomFieldsData(value);
+        }}
+        onBlur={() => runValidationTasks("customFieldsData", customFieldsData)}
+        errorMessage={errors.customFieldsData?.errorMessage}
+        hasError={errors.customFieldsData?.hasError}
+        {...getOverrideProps(overrides, "customFieldsData")}
       ></TextAreaField>
       <Flex
         justifyContent="space-between"

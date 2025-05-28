@@ -50,6 +50,7 @@ export default function LoanCreateForm(props) {
     loanAttribute2: "",
     numberOfPayments: "",
     paymentFrequency: "",
+    customFieldsData: "",
   };
   const [approvalStatus, setApprovalStatus] = React.useState(
     initialValues.approvalStatus
@@ -100,6 +101,9 @@ export default function LoanCreateForm(props) {
   const [paymentFrequency, setPaymentFrequency] = React.useState(
     initialValues.paymentFrequency
   );
+  const [customFieldsData, setCustomFieldsData] = React.useState(
+    initialValues.customFieldsData
+  );
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     setApprovalStatus(initialValues.approvalStatus);
@@ -123,6 +127,7 @@ export default function LoanCreateForm(props) {
     setLoanAttribute2(initialValues.loanAttribute2);
     setNumberOfPayments(initialValues.numberOfPayments);
     setPaymentFrequency(initialValues.paymentFrequency);
+    setCustomFieldsData(initialValues.customFieldsData);
     setErrors({});
   };
   const validations = {
@@ -147,6 +152,7 @@ export default function LoanCreateForm(props) {
     loanAttribute2: [],
     numberOfPayments: [],
     paymentFrequency: [],
+    customFieldsData: [{ type: "JSON" }],
   };
   const runValidationTasks = async (
     fieldName,
@@ -195,6 +201,7 @@ export default function LoanCreateForm(props) {
           loanAttribute2,
           numberOfPayments,
           paymentFrequency,
+          customFieldsData,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -278,6 +285,7 @@ export default function LoanCreateForm(props) {
               loanAttribute2,
               numberOfPayments,
               paymentFrequency,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.approvalStatus ?? value;
@@ -323,6 +331,7 @@ export default function LoanCreateForm(props) {
               loanAttribute2,
               numberOfPayments,
               paymentFrequency,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.approvedDate ?? value;
@@ -371,6 +380,7 @@ export default function LoanCreateForm(props) {
               loanAttribute2,
               numberOfPayments,
               paymentFrequency,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.principal ?? value;
@@ -419,6 +429,7 @@ export default function LoanCreateForm(props) {
               loanAttribute2,
               numberOfPayments,
               paymentFrequency,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.fees ?? value;
@@ -467,6 +478,7 @@ export default function LoanCreateForm(props) {
               loanAttribute2,
               numberOfPayments,
               paymentFrequency,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.interestRate ?? value;
@@ -512,6 +524,7 @@ export default function LoanCreateForm(props) {
               loanAttribute2,
               numberOfPayments,
               paymentFrequency,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.startDate ?? value;
@@ -557,6 +570,7 @@ export default function LoanCreateForm(props) {
               loanAttribute2,
               numberOfPayments,
               paymentFrequency,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.maturityDate ?? value;
@@ -602,6 +616,7 @@ export default function LoanCreateForm(props) {
               loanAttribute2,
               numberOfPayments,
               paymentFrequency,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.stopDate ?? value;
@@ -650,6 +665,7 @@ export default function LoanCreateForm(props) {
               loanAttribute2,
               numberOfPayments,
               paymentFrequency,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.extensionPeriod ?? value;
@@ -698,6 +714,7 @@ export default function LoanCreateForm(props) {
               loanAttribute2,
               numberOfPayments,
               paymentFrequency,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.duration ?? value;
@@ -742,6 +759,7 @@ export default function LoanCreateForm(props) {
               loanAttribute2,
               numberOfPayments,
               paymentFrequency,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.durationInterval ?? value;
@@ -786,6 +804,7 @@ export default function LoanCreateForm(props) {
               loanAttribute2,
               numberOfPayments,
               paymentFrequency,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.loanType ?? value;
@@ -830,6 +849,7 @@ export default function LoanCreateForm(props) {
               loanAttribute2,
               numberOfPayments,
               paymentFrequency,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.rateInterval ?? value;
@@ -874,6 +894,7 @@ export default function LoanCreateForm(props) {
               loanAttribute2,
               numberOfPayments,
               paymentFrequency,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.loanStatus ?? value;
@@ -918,6 +939,7 @@ export default function LoanCreateForm(props) {
               loanAttribute2,
               numberOfPayments,
               paymentFrequency,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.loanCurrency ?? value;
@@ -962,6 +984,7 @@ export default function LoanCreateForm(props) {
               loanAttribute2,
               numberOfPayments,
               paymentFrequency,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.loanPurpose ?? value;
@@ -1005,6 +1028,7 @@ export default function LoanCreateForm(props) {
               loanAttribute2,
               numberOfPayments,
               paymentFrequency,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.loanComputationRecord ?? value;
@@ -1051,6 +1075,7 @@ export default function LoanCreateForm(props) {
               loanAttribute2,
               numberOfPayments,
               paymentFrequency,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.loanAttribute1 ?? value;
@@ -1095,6 +1120,7 @@ export default function LoanCreateForm(props) {
               loanAttribute2: value,
               numberOfPayments,
               paymentFrequency,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.loanAttribute2 ?? value;
@@ -1143,6 +1169,7 @@ export default function LoanCreateForm(props) {
               loanAttribute2,
               numberOfPayments: value,
               paymentFrequency,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.numberOfPayments ?? value;
@@ -1187,6 +1214,7 @@ export default function LoanCreateForm(props) {
               loanAttribute2,
               numberOfPayments,
               paymentFrequency: value,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.paymentFrequency ?? value;
@@ -1201,6 +1229,50 @@ export default function LoanCreateForm(props) {
         hasError={errors.paymentFrequency?.hasError}
         {...getOverrideProps(overrides, "paymentFrequency")}
       ></TextField>
+      <TextAreaField
+        label="Custom fields data"
+        isRequired={false}
+        isReadOnly={false}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              approvalStatus,
+              approvedDate,
+              principal,
+              fees,
+              interestRate,
+              startDate,
+              maturityDate,
+              stopDate,
+              extensionPeriod,
+              duration,
+              durationInterval,
+              loanType,
+              rateInterval,
+              loanStatus,
+              loanCurrency,
+              loanPurpose,
+              loanComputationRecord,
+              loanAttribute1,
+              loanAttribute2,
+              numberOfPayments,
+              paymentFrequency,
+              customFieldsData: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.customFieldsData ?? value;
+          }
+          if (errors.customFieldsData?.hasError) {
+            runValidationTasks("customFieldsData", value);
+          }
+          setCustomFieldsData(value);
+        }}
+        onBlur={() => runValidationTasks("customFieldsData", customFieldsData)}
+        errorMessage={errors.customFieldsData?.errorMessage}
+        hasError={errors.customFieldsData?.hasError}
+        {...getOverrideProps(overrides, "customFieldsData")}
+      ></TextAreaField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}

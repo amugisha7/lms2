@@ -6,7 +6,13 @@
 
 /* eslint-disable */
 import * as React from "react";
-import { Button, Flex, Grid, TextField } from "@aws-amplify/ui-react";
+import {
+  Button,
+  Flex,
+  Grid,
+  TextAreaField,
+  TextField,
+} from "@aws-amplify/ui-react";
 import { fetchByPath, getOverrideProps, validateField } from "./utils";
 import { generateClient } from "aws-amplify/api";
 import { createGuarantor } from "../graphql/mutations";
@@ -28,6 +34,7 @@ export default function GuarantorCreateForm(props) {
     phoneNumber: "",
     email: "",
     address: "",
+    customFieldsData: "",
   };
   const [name, setName] = React.useState(initialValues.name);
   const [relationship, setRelationship] = React.useState(
@@ -38,6 +45,9 @@ export default function GuarantorCreateForm(props) {
   );
   const [email, setEmail] = React.useState(initialValues.email);
   const [address, setAddress] = React.useState(initialValues.address);
+  const [customFieldsData, setCustomFieldsData] = React.useState(
+    initialValues.customFieldsData
+  );
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     setName(initialValues.name);
@@ -45,6 +55,7 @@ export default function GuarantorCreateForm(props) {
     setPhoneNumber(initialValues.phoneNumber);
     setEmail(initialValues.email);
     setAddress(initialValues.address);
+    setCustomFieldsData(initialValues.customFieldsData);
     setErrors({});
   };
   const validations = {
@@ -53,6 +64,7 @@ export default function GuarantorCreateForm(props) {
     phoneNumber: [],
     email: [],
     address: [],
+    customFieldsData: [{ type: "JSON" }],
   };
   const runValidationTasks = async (
     fieldName,
@@ -85,6 +97,7 @@ export default function GuarantorCreateForm(props) {
           phoneNumber,
           email,
           address,
+          customFieldsData,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -152,6 +165,7 @@ export default function GuarantorCreateForm(props) {
               phoneNumber,
               email,
               address,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.name ?? value;
@@ -180,6 +194,7 @@ export default function GuarantorCreateForm(props) {
               phoneNumber,
               email,
               address,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.relationship ?? value;
@@ -208,6 +223,7 @@ export default function GuarantorCreateForm(props) {
               phoneNumber: value,
               email,
               address,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.phoneNumber ?? value;
@@ -236,6 +252,7 @@ export default function GuarantorCreateForm(props) {
               phoneNumber,
               email: value,
               address,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.email ?? value;
@@ -264,6 +281,7 @@ export default function GuarantorCreateForm(props) {
               phoneNumber,
               email,
               address: value,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.address ?? value;
@@ -278,6 +296,34 @@ export default function GuarantorCreateForm(props) {
         hasError={errors.address?.hasError}
         {...getOverrideProps(overrides, "address")}
       ></TextField>
+      <TextAreaField
+        label="Custom fields data"
+        isRequired={false}
+        isReadOnly={false}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              name,
+              relationship,
+              phoneNumber,
+              email,
+              address,
+              customFieldsData: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.customFieldsData ?? value;
+          }
+          if (errors.customFieldsData?.hasError) {
+            runValidationTasks("customFieldsData", value);
+          }
+          setCustomFieldsData(value);
+        }}
+        onBlur={() => runValidationTasks("customFieldsData", customFieldsData)}
+        errorMessage={errors.customFieldsData?.errorMessage}
+        hasError={errors.customFieldsData?.hasError}
+        {...getOverrideProps(overrides, "customFieldsData")}
+      ></TextAreaField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}

@@ -5,7 +5,7 @@
  **************************************************************************/
 
 import * as React from "react";
-import { GridProps, TextFieldProps } from "@aws-amplify/ui-react";
+import { GridProps, TextAreaFieldProps, TextFieldProps } from "@aws-amplify/ui-react";
 export declare type EscapeHatchProps = {
     [elementHierarchy: string]: Record<string, unknown>;
 } | null;
@@ -58,6 +58,7 @@ export declare type EmployeeUpdateFormInputValues = {
     socialSecurityNumber?: string;
     taxIdentificationNumber?: string;
     taxExemptStatus?: string;
+    customFieldsData?: string;
     relatedUserID?: string;
     relatedBorrowerID?: string;
 };
@@ -98,6 +99,7 @@ export declare type EmployeeUpdateFormValidationValues = {
     socialSecurityNumber?: ValidationFunction<string>;
     taxIdentificationNumber?: ValidationFunction<string>;
     taxExemptStatus?: ValidationFunction<string>;
+    customFieldsData?: ValidationFunction<string>;
     relatedUserID?: ValidationFunction<string>;
     relatedBorrowerID?: ValidationFunction<string>;
 };
@@ -140,6 +142,7 @@ export declare type EmployeeUpdateFormOverridesProps = {
     socialSecurityNumber?: PrimitiveOverrideProps<TextFieldProps>;
     taxIdentificationNumber?: PrimitiveOverrideProps<TextFieldProps>;
     taxExemptStatus?: PrimitiveOverrideProps<TextFieldProps>;
+    customFieldsData?: PrimitiveOverrideProps<TextAreaFieldProps>;
     relatedUserID?: PrimitiveOverrideProps<TextFieldProps>;
     relatedBorrowerID?: PrimitiveOverrideProps<TextFieldProps>;
 } & EscapeHatchProps;

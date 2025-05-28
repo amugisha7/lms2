@@ -31,6 +31,7 @@ export declare type ApplicationCreateFormInputValues = {
     applicationDate?: string;
     status?: string;
     applicationRecord?: string;
+    customFieldsData?: string;
 };
 export declare type ApplicationCreateFormValidationValues = {
     name?: ValidationFunction<string>;
@@ -42,6 +43,7 @@ export declare type ApplicationCreateFormValidationValues = {
     applicationDate?: ValidationFunction<string>;
     status?: ValidationFunction<string>;
     applicationRecord?: ValidationFunction<string>;
+    customFieldsData?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type ApplicationCreateFormOverridesProps = {
@@ -55,6 +57,7 @@ export declare type ApplicationCreateFormOverridesProps = {
     applicationDate?: PrimitiveOverrideProps<TextFieldProps>;
     status?: PrimitiveOverrideProps<TextFieldProps>;
     applicationRecord?: PrimitiveOverrideProps<TextAreaFieldProps>;
+    customFieldsData?: PrimitiveOverrideProps<TextAreaFieldProps>;
 } & EscapeHatchProps;
 export declare type ApplicationCreateFormProps = React.PropsWithChildren<{
     overrides?: ApplicationCreateFormOverridesProps | undefined | null;

@@ -665,6 +665,7 @@ export const createEmployee = /* GraphQL */ `
       socialSecurityNumber
       taxIdentificationNumber
       taxExemptStatus
+      customFieldsData
       branch {
         id
         name
@@ -748,6 +749,7 @@ export const createEmployee = /* GraphQL */ `
         socialSecurityNumber
         taxIdentificationNumber
         taxExemptStatus
+        customFieldsData
         relatedUserID
         relatedBorrowerID
         supervisorID
@@ -842,6 +844,7 @@ export const updateEmployee = /* GraphQL */ `
       socialSecurityNumber
       taxIdentificationNumber
       taxExemptStatus
+      customFieldsData
       branch {
         id
         name
@@ -925,6 +928,7 @@ export const updateEmployee = /* GraphQL */ `
         socialSecurityNumber
         taxIdentificationNumber
         taxExemptStatus
+        customFieldsData
         relatedUserID
         relatedBorrowerID
         supervisorID
@@ -1019,6 +1023,7 @@ export const deleteEmployee = /* GraphQL */ `
       socialSecurityNumber
       taxIdentificationNumber
       taxExemptStatus
+      customFieldsData
       branch {
         id
         name
@@ -1102,6 +1107,7 @@ export const deleteEmployee = /* GraphQL */ `
         socialSecurityNumber
         taxIdentificationNumber
         taxExemptStatus
+        customFieldsData
         relatedUserID
         relatedBorrowerID
         supervisorID
@@ -1198,6 +1204,7 @@ export const createBorrower = /* GraphQL */ `
       borrowertype
       borrowerAttribute1
       borrowerAttribute2
+      customFieldsData
       branch {
         id
         name
@@ -1296,6 +1303,7 @@ export const updateBorrower = /* GraphQL */ `
       borrowertype
       borrowerAttribute1
       borrowerAttribute2
+      customFieldsData
       branch {
         id
         name
@@ -1394,6 +1402,7 @@ export const deleteBorrower = /* GraphQL */ `
       borrowertype
       borrowerAttribute1
       borrowerAttribute2
+      customFieldsData
       branch {
         id
         name
@@ -1459,6 +1468,7 @@ export const createGuarantor = /* GraphQL */ `
       phoneNumber
       email
       address
+      customFieldsData
       borrower {
         id
         firstname
@@ -1499,6 +1509,7 @@ export const createGuarantor = /* GraphQL */ `
         borrowertype
         borrowerAttribute1
         borrowerAttribute2
+        customFieldsData
         createdAt
         updatedAt
         branchBorrowersId
@@ -1531,6 +1542,7 @@ export const updateGuarantor = /* GraphQL */ `
       phoneNumber
       email
       address
+      customFieldsData
       borrower {
         id
         firstname
@@ -1571,6 +1583,7 @@ export const updateGuarantor = /* GraphQL */ `
         borrowertype
         borrowerAttribute1
         borrowerAttribute2
+        customFieldsData
         createdAt
         updatedAt
         branchBorrowersId
@@ -1603,6 +1616,7 @@ export const deleteGuarantor = /* GraphQL */ `
       phoneNumber
       email
       address
+      customFieldsData
       borrower {
         id
         firstname
@@ -1643,6 +1657,7 @@ export const deleteGuarantor = /* GraphQL */ `
         borrowertype
         borrowerAttribute1
         borrowerAttribute2
+        customFieldsData
         createdAt
         updatedAt
         branchBorrowersId
@@ -1714,6 +1729,7 @@ export const createSecurity = /* GraphQL */ `
         borrowertype
         borrowerAttribute1
         borrowerAttribute2
+        customFieldsData
         createdAt
         updatedAt
         branchBorrowersId
@@ -1777,6 +1793,7 @@ export const updateSecurity = /* GraphQL */ `
         borrowertype
         borrowerAttribute1
         borrowerAttribute2
+        customFieldsData
         createdAt
         updatedAt
         branchBorrowersId
@@ -1840,6 +1857,7 @@ export const deleteSecurity = /* GraphQL */ `
         borrowertype
         borrowerAttribute1
         borrowerAttribute2
+        customFieldsData
         createdAt
         updatedAt
         branchBorrowersId
@@ -2264,6 +2282,7 @@ export const createCreditScore = /* GraphQL */ `
         borrowertype
         borrowerAttribute1
         borrowerAttribute2
+        customFieldsData
         createdAt
         updatedAt
         branchBorrowersId
@@ -2308,6 +2327,7 @@ export const createCreditScore = /* GraphQL */ `
         socialSecurityNumber
         taxIdentificationNumber
         taxExemptStatus
+        customFieldsData
         relatedUserID
         relatedBorrowerID
         supervisorID
@@ -2380,6 +2400,7 @@ export const updateCreditScore = /* GraphQL */ `
         borrowertype
         borrowerAttribute1
         borrowerAttribute2
+        customFieldsData
         createdAt
         updatedAt
         branchBorrowersId
@@ -2424,6 +2445,7 @@ export const updateCreditScore = /* GraphQL */ `
         socialSecurityNumber
         taxIdentificationNumber
         taxExemptStatus
+        customFieldsData
         relatedUserID
         relatedBorrowerID
         supervisorID
@@ -2496,6 +2518,7 @@ export const deleteCreditScore = /* GraphQL */ `
         borrowertype
         borrowerAttribute1
         borrowerAttribute2
+        customFieldsData
         createdAt
         updatedAt
         branchBorrowersId
@@ -2540,6 +2563,7 @@ export const deleteCreditScore = /* GraphQL */ `
         socialSecurityNumber
         taxIdentificationNumber
         taxExemptStatus
+        customFieldsData
         relatedUserID
         relatedBorrowerID
         supervisorID
@@ -2642,6 +2666,7 @@ export const createDocument = /* GraphQL */ `
         socialSecurityNumber
         taxIdentificationNumber
         taxExemptStatus
+        customFieldsData
         relatedUserID
         relatedBorrowerID
         supervisorID
@@ -2745,6 +2770,7 @@ export const updateDocument = /* GraphQL */ `
         socialSecurityNumber
         taxIdentificationNumber
         taxExemptStatus
+        customFieldsData
         relatedUserID
         relatedBorrowerID
         supervisorID
@@ -2848,6 +2874,7 @@ export const deleteDocument = /* GraphQL */ `
         socialSecurityNumber
         taxIdentificationNumber
         taxExemptStatus
+        customFieldsData
         relatedUserID
         relatedBorrowerID
         supervisorID
@@ -2915,6 +2942,7 @@ export const createContract = /* GraphQL */ `
         borrowertype
         borrowerAttribute1
         borrowerAttribute2
+        customFieldsData
         createdAt
         updatedAt
         branchBorrowersId
@@ -2995,6 +3023,7 @@ export const updateContract = /* GraphQL */ `
         borrowertype
         borrowerAttribute1
         borrowerAttribute2
+        customFieldsData
         createdAt
         updatedAt
         branchBorrowersId
@@ -3075,6 +3104,7 @@ export const deleteContract = /* GraphQL */ `
         borrowertype
         borrowerAttribute1
         borrowerAttribute2
+        customFieldsData
         createdAt
         updatedAt
         branchBorrowersId
@@ -3159,6 +3189,7 @@ export const createApplication = /* GraphQL */ `
         borrowertype
         borrowerAttribute1
         borrowerAttribute2
+        customFieldsData
         createdAt
         updatedAt
         branchBorrowersId
@@ -3249,6 +3280,7 @@ export const createApplication = /* GraphQL */ `
         socialSecurityNumber
         taxIdentificationNumber
         taxExemptStatus
+        customFieldsData
         relatedUserID
         relatedBorrowerID
         supervisorID
@@ -3257,6 +3289,7 @@ export const createApplication = /* GraphQL */ `
         branchEmployeesId
         __typename
       }
+      customFieldsData
       createdAt
       updatedAt
       borrowerApplicationsId
@@ -3320,6 +3353,7 @@ export const updateApplication = /* GraphQL */ `
         borrowertype
         borrowerAttribute1
         borrowerAttribute2
+        customFieldsData
         createdAt
         updatedAt
         branchBorrowersId
@@ -3410,6 +3444,7 @@ export const updateApplication = /* GraphQL */ `
         socialSecurityNumber
         taxIdentificationNumber
         taxExemptStatus
+        customFieldsData
         relatedUserID
         relatedBorrowerID
         supervisorID
@@ -3418,6 +3453,7 @@ export const updateApplication = /* GraphQL */ `
         branchEmployeesId
         __typename
       }
+      customFieldsData
       createdAt
       updatedAt
       borrowerApplicationsId
@@ -3481,6 +3517,7 @@ export const deleteApplication = /* GraphQL */ `
         borrowertype
         borrowerAttribute1
         borrowerAttribute2
+        customFieldsData
         createdAt
         updatedAt
         branchBorrowersId
@@ -3571,6 +3608,7 @@ export const deleteApplication = /* GraphQL */ `
         socialSecurityNumber
         taxIdentificationNumber
         taxExemptStatus
+        customFieldsData
         relatedUserID
         relatedBorrowerID
         supervisorID
@@ -3579,6 +3617,7 @@ export const deleteApplication = /* GraphQL */ `
         branchEmployeesId
         __typename
       }
+      customFieldsData
       createdAt
       updatedAt
       borrowerApplicationsId
@@ -3604,6 +3643,7 @@ export const createCollateral = /* GraphQL */ `
       insuranceExpiryDate
       insuranceCompany
       storedAt
+      customFieldsData
       borrower {
         id
         firstname
@@ -3644,6 +3684,7 @@ export const createCollateral = /* GraphQL */ `
         borrowertype
         borrowerAttribute1
         borrowerAttribute2
+        customFieldsData
         createdAt
         updatedAt
         branchBorrowersId
@@ -3686,6 +3727,7 @@ export const updateCollateral = /* GraphQL */ `
       insuranceExpiryDate
       insuranceCompany
       storedAt
+      customFieldsData
       borrower {
         id
         firstname
@@ -3726,6 +3768,7 @@ export const updateCollateral = /* GraphQL */ `
         borrowertype
         borrowerAttribute1
         borrowerAttribute2
+        customFieldsData
         createdAt
         updatedAt
         branchBorrowersId
@@ -3768,6 +3811,7 @@ export const deleteCollateral = /* GraphQL */ `
       insuranceExpiryDate
       insuranceCompany
       storedAt
+      customFieldsData
       borrower {
         id
         firstname
@@ -3808,6 +3852,7 @@ export const deleteCollateral = /* GraphQL */ `
         borrowertype
         borrowerAttribute1
         borrowerAttribute2
+        customFieldsData
         createdAt
         updatedAt
         branchBorrowersId
@@ -3860,6 +3905,7 @@ export const createLoan = /* GraphQL */ `
       loanAttribute2
       numberOfPayments
       paymentFrequency
+      customFieldsData
       borrower {
         id
         firstname
@@ -3900,6 +3946,7 @@ export const createLoan = /* GraphQL */ `
         borrowertype
         borrowerAttribute1
         borrowerAttribute2
+        customFieldsData
         createdAt
         updatedAt
         branchBorrowersId
@@ -4006,6 +4053,7 @@ export const createLoan = /* GraphQL */ `
         socialSecurityNumber
         taxIdentificationNumber
         taxExemptStatus
+        customFieldsData
         relatedUserID
         relatedBorrowerID
         supervisorID
@@ -4049,6 +4097,7 @@ export const updateLoan = /* GraphQL */ `
       loanAttribute2
       numberOfPayments
       paymentFrequency
+      customFieldsData
       borrower {
         id
         firstname
@@ -4089,6 +4138,7 @@ export const updateLoan = /* GraphQL */ `
         borrowertype
         borrowerAttribute1
         borrowerAttribute2
+        customFieldsData
         createdAt
         updatedAt
         branchBorrowersId
@@ -4195,6 +4245,7 @@ export const updateLoan = /* GraphQL */ `
         socialSecurityNumber
         taxIdentificationNumber
         taxExemptStatus
+        customFieldsData
         relatedUserID
         relatedBorrowerID
         supervisorID
@@ -4238,6 +4289,7 @@ export const deleteLoan = /* GraphQL */ `
       loanAttribute2
       numberOfPayments
       paymentFrequency
+      customFieldsData
       borrower {
         id
         firstname
@@ -4278,6 +4330,7 @@ export const deleteLoan = /* GraphQL */ `
         borrowertype
         borrowerAttribute1
         borrowerAttribute2
+        customFieldsData
         createdAt
         updatedAt
         branchBorrowersId
@@ -4384,6 +4437,7 @@ export const deleteLoan = /* GraphQL */ `
         socialSecurityNumber
         taxIdentificationNumber
         taxExemptStatus
+        customFieldsData
         relatedUserID
         relatedBorrowerID
         supervisorID
@@ -4543,6 +4597,7 @@ export const createLoanFees = /* GraphQL */ `
         loanAttribute2
         numberOfPayments
         paymentFrequency
+        customFieldsData
         loanProductID
         createdByEmployeeID
         createdAt
@@ -4626,6 +4681,7 @@ export const updateLoanFees = /* GraphQL */ `
         loanAttribute2
         numberOfPayments
         paymentFrequency
+        customFieldsData
         loanProductID
         createdByEmployeeID
         createdAt
@@ -4709,6 +4765,7 @@ export const deleteLoanFees = /* GraphQL */ `
         loanAttribute2
         numberOfPayments
         paymentFrequency
+        customFieldsData
         loanProductID
         createdByEmployeeID
         createdAt
@@ -4792,6 +4849,7 @@ export const createPenalty = /* GraphQL */ `
         loanAttribute2
         numberOfPayments
         paymentFrequency
+        customFieldsData
         loanProductID
         createdByEmployeeID
         createdAt
@@ -4875,6 +4933,7 @@ export const updatePenalty = /* GraphQL */ `
         loanAttribute2
         numberOfPayments
         paymentFrequency
+        customFieldsData
         loanProductID
         createdByEmployeeID
         createdAt
@@ -4958,6 +5017,7 @@ export const deletePenalty = /* GraphQL */ `
         loanAttribute2
         numberOfPayments
         paymentFrequency
+        customFieldsData
         loanProductID
         createdByEmployeeID
         createdAt
@@ -5218,6 +5278,7 @@ export const createAccount = /* GraphQL */ `
         socialSecurityNumber
         taxIdentificationNumber
         taxExemptStatus
+        customFieldsData
         relatedUserID
         relatedBorrowerID
         supervisorID
@@ -5335,6 +5396,7 @@ export const updateAccount = /* GraphQL */ `
         socialSecurityNumber
         taxIdentificationNumber
         taxExemptStatus
+        customFieldsData
         relatedUserID
         relatedBorrowerID
         supervisorID
@@ -5452,6 +5514,7 @@ export const deleteAccount = /* GraphQL */ `
         socialSecurityNumber
         taxIdentificationNumber
         taxExemptStatus
+        customFieldsData
         relatedUserID
         relatedBorrowerID
         supervisorID
@@ -5551,6 +5614,7 @@ export const createMoneyTransaction = /* GraphQL */ `
         socialSecurityNumber
         taxIdentificationNumber
         taxExemptStatus
+        customFieldsData
         relatedUserID
         relatedBorrowerID
         supervisorID
@@ -5650,6 +5714,7 @@ export const updateMoneyTransaction = /* GraphQL */ `
         socialSecurityNumber
         taxIdentificationNumber
         taxExemptStatus
+        customFieldsData
         relatedUserID
         relatedBorrowerID
         supervisorID
@@ -5749,6 +5814,7 @@ export const deleteMoneyTransaction = /* GraphQL */ `
         socialSecurityNumber
         taxIdentificationNumber
         taxExemptStatus
+        customFieldsData
         relatedUserID
         relatedBorrowerID
         supervisorID
@@ -5802,6 +5868,7 @@ export const createPayment = /* GraphQL */ `
         loanAttribute2
         numberOfPayments
         paymentFrequency
+        customFieldsData
         loanProductID
         createdByEmployeeID
         createdAt
@@ -5871,6 +5938,7 @@ export const createPayment = /* GraphQL */ `
         socialSecurityNumber
         taxIdentificationNumber
         taxExemptStatus
+        customFieldsData
         relatedUserID
         relatedBorrowerID
         supervisorID
@@ -5932,6 +6000,7 @@ export const updatePayment = /* GraphQL */ `
         loanAttribute2
         numberOfPayments
         paymentFrequency
+        customFieldsData
         loanProductID
         createdByEmployeeID
         createdAt
@@ -6001,6 +6070,7 @@ export const updatePayment = /* GraphQL */ `
         socialSecurityNumber
         taxIdentificationNumber
         taxExemptStatus
+        customFieldsData
         relatedUserID
         relatedBorrowerID
         supervisorID
@@ -6062,6 +6132,7 @@ export const deletePayment = /* GraphQL */ `
         loanAttribute2
         numberOfPayments
         paymentFrequency
+        customFieldsData
         loanProductID
         createdByEmployeeID
         createdAt
@@ -6131,6 +6202,7 @@ export const deletePayment = /* GraphQL */ `
         socialSecurityNumber
         taxIdentificationNumber
         taxExemptStatus
+        customFieldsData
         relatedUserID
         relatedBorrowerID
         supervisorID
@@ -6251,6 +6323,7 @@ export const createExpense = /* GraphQL */ `
         socialSecurityNumber
         taxIdentificationNumber
         taxExemptStatus
+        customFieldsData
         relatedUserID
         relatedBorrowerID
         supervisorID
@@ -6363,6 +6436,7 @@ export const updateExpense = /* GraphQL */ `
         socialSecurityNumber
         taxIdentificationNumber
         taxExemptStatus
+        customFieldsData
         relatedUserID
         relatedBorrowerID
         supervisorID
@@ -6475,6 +6549,7 @@ export const deleteExpense = /* GraphQL */ `
         socialSecurityNumber
         taxIdentificationNumber
         taxExemptStatus
+        customFieldsData
         relatedUserID
         relatedBorrowerID
         supervisorID
@@ -6999,6 +7074,7 @@ export const createPayrollEmployee = /* GraphQL */ `
         socialSecurityNumber
         taxIdentificationNumber
         taxExemptStatus
+        customFieldsData
         relatedUserID
         relatedBorrowerID
         supervisorID
@@ -7078,6 +7154,7 @@ export const updatePayrollEmployee = /* GraphQL */ `
         socialSecurityNumber
         taxIdentificationNumber
         taxExemptStatus
+        customFieldsData
         relatedUserID
         relatedBorrowerID
         supervisorID
@@ -7157,6 +7234,7 @@ export const deletePayrollEmployee = /* GraphQL */ `
         socialSecurityNumber
         taxIdentificationNumber
         taxExemptStatus
+        customFieldsData
         relatedUserID
         relatedBorrowerID
         supervisorID
@@ -7236,6 +7314,7 @@ export const createLoanApprovedByEmployee = /* GraphQL */ `
         socialSecurityNumber
         taxIdentificationNumber
         taxExemptStatus
+        customFieldsData
         relatedUserID
         relatedBorrowerID
         supervisorID
@@ -7267,6 +7346,7 @@ export const createLoanApprovedByEmployee = /* GraphQL */ `
         loanAttribute2
         numberOfPayments
         paymentFrequency
+        customFieldsData
         loanProductID
         createdByEmployeeID
         createdAt
@@ -7327,6 +7407,7 @@ export const updateLoanApprovedByEmployee = /* GraphQL */ `
         socialSecurityNumber
         taxIdentificationNumber
         taxExemptStatus
+        customFieldsData
         relatedUserID
         relatedBorrowerID
         supervisorID
@@ -7358,6 +7439,7 @@ export const updateLoanApprovedByEmployee = /* GraphQL */ `
         loanAttribute2
         numberOfPayments
         paymentFrequency
+        customFieldsData
         loanProductID
         createdByEmployeeID
         createdAt
@@ -7418,6 +7500,7 @@ export const deleteLoanApprovedByEmployee = /* GraphQL */ `
         socialSecurityNumber
         taxIdentificationNumber
         taxExemptStatus
+        customFieldsData
         relatedUserID
         relatedBorrowerID
         supervisorID
@@ -7449,6 +7532,7 @@ export const deleteLoanApprovedByEmployee = /* GraphQL */ `
         loanAttribute2
         numberOfPayments
         paymentFrequency
+        customFieldsData
         loanProductID
         createdByEmployeeID
         createdAt
@@ -7509,6 +7593,7 @@ export const createExpenseApprovedByEmployee = /* GraphQL */ `
         socialSecurityNumber
         taxIdentificationNumber
         taxExemptStatus
+        customFieldsData
         relatedUserID
         relatedBorrowerID
         supervisorID
@@ -7591,6 +7676,7 @@ export const updateExpenseApprovedByEmployee = /* GraphQL */ `
         socialSecurityNumber
         taxIdentificationNumber
         taxExemptStatus
+        customFieldsData
         relatedUserID
         relatedBorrowerID
         supervisorID
@@ -7673,6 +7759,7 @@ export const deleteExpenseApprovedByEmployee = /* GraphQL */ `
         socialSecurityNumber
         taxIdentificationNumber
         taxExemptStatus
+        customFieldsData
         relatedUserID
         relatedBorrowerID
         supervisorID
@@ -7755,6 +7842,7 @@ export const createApplicationApprovedByEmployee = /* GraphQL */ `
         socialSecurityNumber
         taxIdentificationNumber
         taxExemptStatus
+        customFieldsData
         relatedUserID
         relatedBorrowerID
         supervisorID
@@ -7776,6 +7864,7 @@ export const createApplicationApprovedByEmployee = /* GraphQL */ `
         applicationRecord
         loanProductID
         createdByEmployeeID
+        customFieldsData
         createdAt
         updatedAt
         borrowerApplicationsId
@@ -7834,6 +7923,7 @@ export const updateApplicationApprovedByEmployee = /* GraphQL */ `
         socialSecurityNumber
         taxIdentificationNumber
         taxExemptStatus
+        customFieldsData
         relatedUserID
         relatedBorrowerID
         supervisorID
@@ -7855,6 +7945,7 @@ export const updateApplicationApprovedByEmployee = /* GraphQL */ `
         applicationRecord
         loanProductID
         createdByEmployeeID
+        customFieldsData
         createdAt
         updatedAt
         borrowerApplicationsId
@@ -7913,6 +8004,7 @@ export const deleteApplicationApprovedByEmployee = /* GraphQL */ `
         socialSecurityNumber
         taxIdentificationNumber
         taxExemptStatus
+        customFieldsData
         relatedUserID
         relatedBorrowerID
         supervisorID
@@ -7934,6 +8026,7 @@ export const deleteApplicationApprovedByEmployee = /* GraphQL */ `
         applicationRecord
         loanProductID
         createdByEmployeeID
+        customFieldsData
         createdAt
         updatedAt
         borrowerApplicationsId
@@ -7992,6 +8085,7 @@ export const createCreditScoreApprovedByEmployee = /* GraphQL */ `
         socialSecurityNumber
         taxIdentificationNumber
         taxExemptStatus
+        customFieldsData
         relatedUserID
         relatedBorrowerID
         supervisorID
@@ -8067,6 +8161,7 @@ export const updateCreditScoreApprovedByEmployee = /* GraphQL */ `
         socialSecurityNumber
         taxIdentificationNumber
         taxExemptStatus
+        customFieldsData
         relatedUserID
         relatedBorrowerID
         supervisorID
@@ -8142,6 +8237,7 @@ export const deleteCreditScoreApprovedByEmployee = /* GraphQL */ `
         socialSecurityNumber
         taxIdentificationNumber
         taxExemptStatus
+        customFieldsData
         relatedUserID
         relatedBorrowerID
         supervisorID
@@ -8220,6 +8316,7 @@ export const createMoneyTransactionApprovedByEmployee = /* GraphQL */ `
         socialSecurityNumber
         taxIdentificationNumber
         taxExemptStatus
+        customFieldsData
         relatedUserID
         relatedBorrowerID
         supervisorID
@@ -8304,6 +8401,7 @@ export const updateMoneyTransactionApprovedByEmployee = /* GraphQL */ `
         socialSecurityNumber
         taxIdentificationNumber
         taxExemptStatus
+        customFieldsData
         relatedUserID
         relatedBorrowerID
         supervisorID
@@ -8388,6 +8486,7 @@ export const deleteMoneyTransactionApprovedByEmployee = /* GraphQL */ `
         socialSecurityNumber
         taxIdentificationNumber
         taxExemptStatus
+        customFieldsData
         relatedUserID
         relatedBorrowerID
         supervisorID
@@ -8469,6 +8568,7 @@ export const createPaymentApprovedByEmployee = /* GraphQL */ `
         socialSecurityNumber
         taxIdentificationNumber
         taxExemptStatus
+        customFieldsData
         relatedUserID
         relatedBorrowerID
         supervisorID
@@ -8547,6 +8647,7 @@ export const updatePaymentApprovedByEmployee = /* GraphQL */ `
         socialSecurityNumber
         taxIdentificationNumber
         taxExemptStatus
+        customFieldsData
         relatedUserID
         relatedBorrowerID
         supervisorID
@@ -8625,6 +8726,7 @@ export const deletePaymentApprovedByEmployee = /* GraphQL */ `
         socialSecurityNumber
         taxIdentificationNumber
         taxExemptStatus
+        customFieldsData
         relatedUserID
         relatedBorrowerID
         supervisorID
@@ -8703,6 +8805,7 @@ export const createBorrowerLoanOfficer = /* GraphQL */ `
         socialSecurityNumber
         taxIdentificationNumber
         taxExemptStatus
+        customFieldsData
         relatedUserID
         relatedBorrowerID
         supervisorID
@@ -8751,6 +8854,7 @@ export const createBorrowerLoanOfficer = /* GraphQL */ `
         borrowertype
         borrowerAttribute1
         borrowerAttribute2
+        customFieldsData
         createdAt
         updatedAt
         branchBorrowersId
@@ -8809,6 +8913,7 @@ export const updateBorrowerLoanOfficer = /* GraphQL */ `
         socialSecurityNumber
         taxIdentificationNumber
         taxExemptStatus
+        customFieldsData
         relatedUserID
         relatedBorrowerID
         supervisorID
@@ -8857,6 +8962,7 @@ export const updateBorrowerLoanOfficer = /* GraphQL */ `
         borrowertype
         borrowerAttribute1
         borrowerAttribute2
+        customFieldsData
         createdAt
         updatedAt
         branchBorrowersId
@@ -8915,6 +9021,7 @@ export const deleteBorrowerLoanOfficer = /* GraphQL */ `
         socialSecurityNumber
         taxIdentificationNumber
         taxExemptStatus
+        customFieldsData
         relatedUserID
         relatedBorrowerID
         supervisorID
@@ -8963,6 +9070,7 @@ export const deleteBorrowerLoanOfficer = /* GraphQL */ `
         borrowertype
         borrowerAttribute1
         borrowerAttribute2
+        customFieldsData
         createdAt
         updatedAt
         branchBorrowersId
@@ -9023,6 +9131,7 @@ export const createBorrowerDocument = /* GraphQL */ `
         borrowertype
         borrowerAttribute1
         borrowerAttribute2
+        customFieldsData
         createdAt
         updatedAt
         branchBorrowersId
@@ -9099,6 +9208,7 @@ export const updateBorrowerDocument = /* GraphQL */ `
         borrowertype
         borrowerAttribute1
         borrowerAttribute2
+        customFieldsData
         createdAt
         updatedAt
         branchBorrowersId
@@ -9175,6 +9285,7 @@ export const deleteBorrowerDocument = /* GraphQL */ `
         borrowertype
         borrowerAttribute1
         borrowerAttribute2
+        customFieldsData
         createdAt
         updatedAt
         branchBorrowersId
@@ -9218,6 +9329,7 @@ export const createLoanGuarantor = /* GraphQL */ `
         phoneNumber
         email
         address
+        customFieldsData
         createdAt
         updatedAt
         borrowerGuarantorsId
@@ -9246,6 +9358,7 @@ export const createLoanGuarantor = /* GraphQL */ `
         loanAttribute2
         numberOfPayments
         paymentFrequency
+        customFieldsData
         loanProductID
         createdByEmployeeID
         createdAt
@@ -9275,6 +9388,7 @@ export const updateLoanGuarantor = /* GraphQL */ `
         phoneNumber
         email
         address
+        customFieldsData
         createdAt
         updatedAt
         borrowerGuarantorsId
@@ -9303,6 +9417,7 @@ export const updateLoanGuarantor = /* GraphQL */ `
         loanAttribute2
         numberOfPayments
         paymentFrequency
+        customFieldsData
         loanProductID
         createdByEmployeeID
         createdAt
@@ -9332,6 +9447,7 @@ export const deleteLoanGuarantor = /* GraphQL */ `
         phoneNumber
         email
         address
+        customFieldsData
         createdAt
         updatedAt
         borrowerGuarantorsId
@@ -9360,6 +9476,7 @@ export const deleteLoanGuarantor = /* GraphQL */ `
         loanAttribute2
         numberOfPayments
         paymentFrequency
+        customFieldsData
         loanProductID
         createdByEmployeeID
         createdAt
@@ -9389,6 +9506,7 @@ export const createApplicationGuarantor = /* GraphQL */ `
         phoneNumber
         email
         address
+        customFieldsData
         createdAt
         updatedAt
         borrowerGuarantorsId
@@ -9407,6 +9525,7 @@ export const createApplicationGuarantor = /* GraphQL */ `
         applicationRecord
         loanProductID
         createdByEmployeeID
+        customFieldsData
         createdAt
         updatedAt
         borrowerApplicationsId
@@ -9434,6 +9553,7 @@ export const updateApplicationGuarantor = /* GraphQL */ `
         phoneNumber
         email
         address
+        customFieldsData
         createdAt
         updatedAt
         borrowerGuarantorsId
@@ -9452,6 +9572,7 @@ export const updateApplicationGuarantor = /* GraphQL */ `
         applicationRecord
         loanProductID
         createdByEmployeeID
+        customFieldsData
         createdAt
         updatedAt
         borrowerApplicationsId
@@ -9479,6 +9600,7 @@ export const deleteApplicationGuarantor = /* GraphQL */ `
         phoneNumber
         email
         address
+        customFieldsData
         createdAt
         updatedAt
         borrowerGuarantorsId
@@ -9497,6 +9619,7 @@ export const deleteApplicationGuarantor = /* GraphQL */ `
         applicationRecord
         loanProductID
         createdByEmployeeID
+        customFieldsData
         createdAt
         updatedAt
         borrowerApplicationsId
@@ -9868,6 +9991,7 @@ export const createLoanDocument = /* GraphQL */ `
         loanAttribute2
         numberOfPayments
         paymentFrequency
+        customFieldsData
         loanProductID
         createdByEmployeeID
         createdAt
@@ -9929,6 +10053,7 @@ export const updateLoanDocument = /* GraphQL */ `
         loanAttribute2
         numberOfPayments
         paymentFrequency
+        customFieldsData
         loanProductID
         createdByEmployeeID
         createdAt
@@ -9990,6 +10115,7 @@ export const deleteLoanDocument = /* GraphQL */ `
         loanAttribute2
         numberOfPayments
         paymentFrequency
+        customFieldsData
         loanProductID
         createdByEmployeeID
         createdAt
@@ -10041,6 +10167,7 @@ export const createApplicationDocument = /* GraphQL */ `
         applicationRecord
         loanProductID
         createdByEmployeeID
+        customFieldsData
         createdAt
         updatedAt
         borrowerApplicationsId
@@ -10090,6 +10217,7 @@ export const updateApplicationDocument = /* GraphQL */ `
         applicationRecord
         loanProductID
         createdByEmployeeID
+        customFieldsData
         createdAt
         updatedAt
         borrowerApplicationsId
@@ -10139,6 +10267,7 @@ export const deleteApplicationDocument = /* GraphQL */ `
         applicationRecord
         loanProductID
         createdByEmployeeID
+        customFieldsData
         createdAt
         updatedAt
         borrowerApplicationsId
@@ -10613,6 +10742,7 @@ export const createApplicationContract = /* GraphQL */ `
         applicationRecord
         loanProductID
         createdByEmployeeID
+        customFieldsData
         createdAt
         updatedAt
         borrowerApplicationsId
@@ -10658,6 +10788,7 @@ export const updateApplicationContract = /* GraphQL */ `
         applicationRecord
         loanProductID
         createdByEmployeeID
+        customFieldsData
         createdAt
         updatedAt
         borrowerApplicationsId
@@ -10703,6 +10834,7 @@ export const deleteApplicationContract = /* GraphQL */ `
         applicationRecord
         loanProductID
         createdByEmployeeID
+        customFieldsData
         createdAt
         updatedAt
         borrowerApplicationsId
@@ -10748,6 +10880,7 @@ export const createCollateralContract = /* GraphQL */ `
         insuranceExpiryDate
         insuranceCompany
         storedAt
+        customFieldsData
         createdAt
         updatedAt
         borrowerCollateralsId
@@ -10793,6 +10926,7 @@ export const updateCollateralContract = /* GraphQL */ `
         insuranceExpiryDate
         insuranceCompany
         storedAt
+        customFieldsData
         createdAt
         updatedAt
         borrowerCollateralsId
@@ -10838,6 +10972,7 @@ export const deleteCollateralContract = /* GraphQL */ `
         insuranceExpiryDate
         insuranceCompany
         storedAt
+        customFieldsData
         createdAt
         updatedAt
         borrowerCollateralsId
@@ -10893,6 +11028,7 @@ export const createLoanContract = /* GraphQL */ `
         loanAttribute2
         numberOfPayments
         paymentFrequency
+        customFieldsData
         loanProductID
         createdByEmployeeID
         createdAt
@@ -10950,6 +11086,7 @@ export const updateLoanContract = /* GraphQL */ `
         loanAttribute2
         numberOfPayments
         paymentFrequency
+        customFieldsData
         loanProductID
         createdByEmployeeID
         createdAt
@@ -11007,6 +11144,7 @@ export const deleteLoanContract = /* GraphQL */ `
         loanAttribute2
         numberOfPayments
         paymentFrequency
+        customFieldsData
         loanProductID
         createdByEmployeeID
         createdAt
@@ -11042,6 +11180,7 @@ export const createApplicationCollateral = /* GraphQL */ `
         applicationRecord
         loanProductID
         createdByEmployeeID
+        customFieldsData
         createdAt
         updatedAt
         borrowerApplicationsId
@@ -11060,6 +11199,7 @@ export const createApplicationCollateral = /* GraphQL */ `
         insuranceExpiryDate
         insuranceCompany
         storedAt
+        customFieldsData
         createdAt
         updatedAt
         borrowerCollateralsId
@@ -11093,6 +11233,7 @@ export const updateApplicationCollateral = /* GraphQL */ `
         applicationRecord
         loanProductID
         createdByEmployeeID
+        customFieldsData
         createdAt
         updatedAt
         borrowerApplicationsId
@@ -11111,6 +11252,7 @@ export const updateApplicationCollateral = /* GraphQL */ `
         insuranceExpiryDate
         insuranceCompany
         storedAt
+        customFieldsData
         createdAt
         updatedAt
         borrowerCollateralsId
@@ -11144,6 +11286,7 @@ export const deleteApplicationCollateral = /* GraphQL */ `
         applicationRecord
         loanProductID
         createdByEmployeeID
+        customFieldsData
         createdAt
         updatedAt
         borrowerApplicationsId
@@ -11162,6 +11305,7 @@ export const deleteApplicationCollateral = /* GraphQL */ `
         insuranceExpiryDate
         insuranceCompany
         storedAt
+        customFieldsData
         createdAt
         updatedAt
         borrowerCollateralsId
@@ -11195,6 +11339,7 @@ export const createApplicationExpense = /* GraphQL */ `
         applicationRecord
         loanProductID
         createdByEmployeeID
+        customFieldsData
         createdAt
         updatedAt
         borrowerApplicationsId
@@ -11249,6 +11394,7 @@ export const updateApplicationExpense = /* GraphQL */ `
         applicationRecord
         loanProductID
         createdByEmployeeID
+        customFieldsData
         createdAt
         updatedAt
         borrowerApplicationsId
@@ -11303,6 +11449,7 @@ export const deleteApplicationExpense = /* GraphQL */ `
         applicationRecord
         loanProductID
         createdByEmployeeID
+        customFieldsData
         createdAt
         updatedAt
         borrowerApplicationsId
@@ -11357,6 +11504,7 @@ export const createLoanApplication = /* GraphQL */ `
         applicationRecord
         loanProductID
         createdByEmployeeID
+        customFieldsData
         createdAt
         updatedAt
         borrowerApplicationsId
@@ -11385,6 +11533,7 @@ export const createLoanApplication = /* GraphQL */ `
         loanAttribute2
         numberOfPayments
         paymentFrequency
+        customFieldsData
         loanProductID
         createdByEmployeeID
         createdAt
@@ -11420,6 +11569,7 @@ export const updateLoanApplication = /* GraphQL */ `
         applicationRecord
         loanProductID
         createdByEmployeeID
+        customFieldsData
         createdAt
         updatedAt
         borrowerApplicationsId
@@ -11448,6 +11598,7 @@ export const updateLoanApplication = /* GraphQL */ `
         loanAttribute2
         numberOfPayments
         paymentFrequency
+        customFieldsData
         loanProductID
         createdByEmployeeID
         createdAt
@@ -11483,6 +11634,7 @@ export const deleteLoanApplication = /* GraphQL */ `
         applicationRecord
         loanProductID
         createdByEmployeeID
+        customFieldsData
         createdAt
         updatedAt
         borrowerApplicationsId
@@ -11511,6 +11663,7 @@ export const deleteLoanApplication = /* GraphQL */ `
         loanAttribute2
         numberOfPayments
         paymentFrequency
+        customFieldsData
         loanProductID
         createdByEmployeeID
         createdAt
@@ -11546,6 +11699,7 @@ export const createLoanCollateral = /* GraphQL */ `
         insuranceExpiryDate
         insuranceCompany
         storedAt
+        customFieldsData
         createdAt
         updatedAt
         borrowerCollateralsId
@@ -11574,6 +11728,7 @@ export const createLoanCollateral = /* GraphQL */ `
         loanAttribute2
         numberOfPayments
         paymentFrequency
+        customFieldsData
         loanProductID
         createdByEmployeeID
         createdAt
@@ -11609,6 +11764,7 @@ export const updateLoanCollateral = /* GraphQL */ `
         insuranceExpiryDate
         insuranceCompany
         storedAt
+        customFieldsData
         createdAt
         updatedAt
         borrowerCollateralsId
@@ -11637,6 +11793,7 @@ export const updateLoanCollateral = /* GraphQL */ `
         loanAttribute2
         numberOfPayments
         paymentFrequency
+        customFieldsData
         loanProductID
         createdByEmployeeID
         createdAt
@@ -11672,6 +11829,7 @@ export const deleteLoanCollateral = /* GraphQL */ `
         insuranceExpiryDate
         insuranceCompany
         storedAt
+        customFieldsData
         createdAt
         updatedAt
         borrowerCollateralsId
@@ -11700,6 +11858,7 @@ export const deleteLoanCollateral = /* GraphQL */ `
         loanAttribute2
         numberOfPayments
         paymentFrequency
+        customFieldsData
         loanProductID
         createdByEmployeeID
         createdAt
@@ -11745,6 +11904,7 @@ export const createLoanAccount = /* GraphQL */ `
         loanAttribute2
         numberOfPayments
         paymentFrequency
+        customFieldsData
         loanProductID
         createdByEmployeeID
         createdAt
@@ -11812,6 +11972,7 @@ export const updateLoanAccount = /* GraphQL */ `
         loanAttribute2
         numberOfPayments
         paymentFrequency
+        customFieldsData
         loanProductID
         createdByEmployeeID
         createdAt
@@ -11879,6 +12040,7 @@ export const deleteLoanAccount = /* GraphQL */ `
         loanAttribute2
         numberOfPayments
         paymentFrequency
+        customFieldsData
         loanProductID
         createdByEmployeeID
         createdAt
@@ -11946,6 +12108,7 @@ export const createLoanExpense = /* GraphQL */ `
         loanAttribute2
         numberOfPayments
         paymentFrequency
+        customFieldsData
         loanProductID
         createdByEmployeeID
         createdAt
@@ -12012,6 +12175,7 @@ export const updateLoanExpense = /* GraphQL */ `
         loanAttribute2
         numberOfPayments
         paymentFrequency
+        customFieldsData
         loanProductID
         createdByEmployeeID
         createdAt
@@ -12078,6 +12242,7 @@ export const deleteLoanExpense = /* GraphQL */ `
         loanAttribute2
         numberOfPayments
         paymentFrequency
+        customFieldsData
         loanProductID
         createdByEmployeeID
         createdAt

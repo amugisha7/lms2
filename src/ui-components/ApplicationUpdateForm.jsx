@@ -41,6 +41,7 @@ export default function ApplicationUpdateForm(props) {
     applicationDate: "",
     status: "",
     applicationRecord: "",
+    customFieldsData: "",
   };
   const [name, setName] = React.useState(initialValues.name);
   const [description, setDescription] = React.useState(
@@ -64,6 +65,9 @@ export default function ApplicationUpdateForm(props) {
   const [applicationRecord, setApplicationRecord] = React.useState(
     initialValues.applicationRecord
   );
+  const [customFieldsData, setCustomFieldsData] = React.useState(
+    initialValues.customFieldsData
+  );
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     const cleanValues = applicationRecord
@@ -82,6 +86,12 @@ export default function ApplicationUpdateForm(props) {
         cleanValues.applicationRecord === null
         ? cleanValues.applicationRecord
         : JSON.stringify(cleanValues.applicationRecord)
+    );
+    setCustomFieldsData(
+      typeof cleanValues.customFieldsData === "string" ||
+        cleanValues.customFieldsData === null
+        ? cleanValues.customFieldsData
+        : JSON.stringify(cleanValues.customFieldsData)
     );
     setErrors({});
   };
@@ -112,6 +122,7 @@ export default function ApplicationUpdateForm(props) {
     applicationDate: [],
     status: [],
     applicationRecord: [{ type: "JSON" }],
+    customFieldsData: [{ type: "JSON" }],
   };
   const runValidationTasks = async (
     fieldName,
@@ -148,6 +159,7 @@ export default function ApplicationUpdateForm(props) {
           applicationDate: applicationDate ?? null,
           status: status ?? null,
           applicationRecord: applicationRecord ?? null,
+          customFieldsData: customFieldsData ?? null,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -217,6 +229,7 @@ export default function ApplicationUpdateForm(props) {
               applicationDate,
               status,
               applicationRecord,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.name ?? value;
@@ -249,6 +262,7 @@ export default function ApplicationUpdateForm(props) {
               applicationDate,
               status,
               applicationRecord,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.description ?? value;
@@ -281,6 +295,7 @@ export default function ApplicationUpdateForm(props) {
               applicationDate,
               status,
               applicationRecord,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.applicationNumber ?? value;
@@ -319,6 +334,7 @@ export default function ApplicationUpdateForm(props) {
               applicationDate,
               status,
               applicationRecord,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.requestedPrincipalAmount ?? value;
@@ -360,6 +376,7 @@ export default function ApplicationUpdateForm(props) {
               applicationDate,
               status,
               applicationRecord,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.requestedTermMonths ?? value;
@@ -394,6 +411,7 @@ export default function ApplicationUpdateForm(props) {
               applicationDate,
               status,
               applicationRecord,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.requestedFrequency ?? value;
@@ -465,6 +483,7 @@ export default function ApplicationUpdateForm(props) {
               applicationDate: value,
               status,
               applicationRecord,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.applicationDate ?? value;
@@ -497,6 +516,7 @@ export default function ApplicationUpdateForm(props) {
               applicationDate,
               status: value,
               applicationRecord,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.status ?? value;
@@ -529,6 +549,7 @@ export default function ApplicationUpdateForm(props) {
               applicationDate,
               status,
               applicationRecord: value,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.applicationRecord ?? value;
@@ -544,6 +565,39 @@ export default function ApplicationUpdateForm(props) {
         errorMessage={errors.applicationRecord?.errorMessage}
         hasError={errors.applicationRecord?.hasError}
         {...getOverrideProps(overrides, "applicationRecord")}
+      ></TextAreaField>
+      <TextAreaField
+        label="Custom fields data"
+        isRequired={false}
+        isReadOnly={false}
+        value={customFieldsData}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              name,
+              description,
+              applicationNumber,
+              requestedPrincipalAmount,
+              requestedTermMonths,
+              requestedFrequency,
+              applicationDate,
+              status,
+              applicationRecord,
+              customFieldsData: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.customFieldsData ?? value;
+          }
+          if (errors.customFieldsData?.hasError) {
+            runValidationTasks("customFieldsData", value);
+          }
+          setCustomFieldsData(value);
+        }}
+        onBlur={() => runValidationTasks("customFieldsData", customFieldsData)}
+        errorMessage={errors.customFieldsData?.errorMessage}
+        hasError={errors.customFieldsData?.hasError}
+        {...getOverrideProps(overrides, "customFieldsData")}
       ></TextAreaField>
       <Flex
         justifyContent="space-between"

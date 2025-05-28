@@ -6,7 +6,13 @@
 
 /* eslint-disable */
 import * as React from "react";
-import { Button, Flex, Grid, TextField } from "@aws-amplify/ui-react";
+import {
+  Button,
+  Flex,
+  Grid,
+  TextAreaField,
+  TextField,
+} from "@aws-amplify/ui-react";
 import { fetchByPath, getOverrideProps, validateField } from "./utils";
 import { generateClient } from "aws-amplify/api";
 import { getBorrower } from "../graphql/queries";
@@ -63,6 +69,7 @@ export default function BorrowerUpdateForm(props) {
     borrowertype: "",
     borrowerAttribute1: "",
     borrowerAttribute2: "",
+    customFieldsData: "",
   };
   const [firstname, setFirstname] = React.useState(initialValues.firstname);
   const [othername, setOthername] = React.useState(initialValues.othername);
@@ -160,6 +167,9 @@ export default function BorrowerUpdateForm(props) {
   const [borrowerAttribute2, setBorrowerAttribute2] = React.useState(
     initialValues.borrowerAttribute2
   );
+  const [customFieldsData, setCustomFieldsData] = React.useState(
+    initialValues.customFieldsData
+  );
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     const cleanValues = borrowerRecord
@@ -203,6 +213,12 @@ export default function BorrowerUpdateForm(props) {
     setBorrowertype(cleanValues.borrowertype);
     setBorrowerAttribute1(cleanValues.borrowerAttribute1);
     setBorrowerAttribute2(cleanValues.borrowerAttribute2);
+    setCustomFieldsData(
+      typeof cleanValues.customFieldsData === "string" ||
+        cleanValues.customFieldsData === null
+        ? cleanValues.customFieldsData
+        : JSON.stringify(cleanValues.customFieldsData)
+    );
     setErrors({});
   };
   const [borrowerRecord, setBorrowerRecord] = React.useState(borrowerModelProp);
@@ -260,6 +276,7 @@ export default function BorrowerUpdateForm(props) {
     borrowertype: [],
     borrowerAttribute1: [],
     borrowerAttribute2: [],
+    customFieldsData: [{ type: "JSON" }],
   };
   const runValidationTasks = async (
     fieldName,
@@ -325,6 +342,7 @@ export default function BorrowerUpdateForm(props) {
           borrowertype: borrowertype ?? null,
           borrowerAttribute1: borrowerAttribute1 ?? null,
           borrowerAttribute2: borrowerAttribute2 ?? null,
+          customFieldsData: customFieldsData ?? null,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -423,6 +441,7 @@ export default function BorrowerUpdateForm(props) {
               borrowertype,
               borrowerAttribute1,
               borrowerAttribute2,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.firstname ?? value;
@@ -484,6 +503,7 @@ export default function BorrowerUpdateForm(props) {
               borrowertype,
               borrowerAttribute1,
               borrowerAttribute2,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.othername ?? value;
@@ -545,6 +565,7 @@ export default function BorrowerUpdateForm(props) {
               borrowertype,
               borrowerAttribute1,
               borrowerAttribute2,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.businessName ?? value;
@@ -606,6 +627,7 @@ export default function BorrowerUpdateForm(props) {
               borrowertype,
               borrowerAttribute1,
               borrowerAttribute2,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.typeOfBusiness ?? value;
@@ -667,6 +689,7 @@ export default function BorrowerUpdateForm(props) {
               borrowertype,
               borrowerAttribute1,
               borrowerAttribute2,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.uniqueIdNumber ?? value;
@@ -728,6 +751,7 @@ export default function BorrowerUpdateForm(props) {
               borrowertype,
               borrowerAttribute1,
               borrowerAttribute2,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.phoneNumber ?? value;
@@ -789,6 +813,7 @@ export default function BorrowerUpdateForm(props) {
               borrowertype,
               borrowerAttribute1,
               borrowerAttribute2,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.otherPhoneNumber ?? value;
@@ -850,6 +875,7 @@ export default function BorrowerUpdateForm(props) {
               borrowertype,
               borrowerAttribute1,
               borrowerAttribute2,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.email ?? value;
@@ -911,6 +937,7 @@ export default function BorrowerUpdateForm(props) {
               borrowertype,
               borrowerAttribute1,
               borrowerAttribute2,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.gender ?? value;
@@ -972,6 +999,7 @@ export default function BorrowerUpdateForm(props) {
               borrowertype,
               borrowerAttribute1,
               borrowerAttribute2,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.dateOfBirth ?? value;
@@ -1033,6 +1061,7 @@ export default function BorrowerUpdateForm(props) {
               borrowertype,
               borrowerAttribute1,
               borrowerAttribute2,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.nationality ?? value;
@@ -1094,6 +1123,7 @@ export default function BorrowerUpdateForm(props) {
               borrowertype,
               borrowerAttribute1,
               borrowerAttribute2,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.nationalIdPicture ?? value;
@@ -1157,6 +1187,7 @@ export default function BorrowerUpdateForm(props) {
               borrowertype,
               borrowerAttribute1,
               borrowerAttribute2,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.passportPicture ?? value;
@@ -1218,6 +1249,7 @@ export default function BorrowerUpdateForm(props) {
               borrowertype,
               borrowerAttribute1,
               borrowerAttribute2,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.address ?? value;
@@ -1283,6 +1315,7 @@ export default function BorrowerUpdateForm(props) {
               borrowertype,
               borrowerAttribute1,
               borrowerAttribute2,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.points ?? value;
@@ -1348,6 +1381,7 @@ export default function BorrowerUpdateForm(props) {
               borrowertype,
               borrowerAttribute1,
               borrowerAttribute2,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.borrowerOpeningBalance ?? value;
@@ -1415,6 +1449,7 @@ export default function BorrowerUpdateForm(props) {
               borrowertype,
               borrowerAttribute1,
               borrowerAttribute2,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.borrowerClosingBalance ?? value;
@@ -1482,6 +1517,7 @@ export default function BorrowerUpdateForm(props) {
               borrowertype,
               borrowerAttribute1,
               borrowerAttribute2,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.borrowerInterestRate ?? value;
@@ -1545,6 +1581,7 @@ export default function BorrowerUpdateForm(props) {
               borrowertype,
               borrowerAttribute1,
               borrowerAttribute2,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.city ?? value;
@@ -1606,6 +1643,7 @@ export default function BorrowerUpdateForm(props) {
               borrowertype,
               borrowerAttribute1,
               borrowerAttribute2,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.state ?? value;
@@ -1667,6 +1705,7 @@ export default function BorrowerUpdateForm(props) {
               borrowertype,
               borrowerAttribute1,
               borrowerAttribute2,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.zipcode ?? value;
@@ -1728,6 +1767,7 @@ export default function BorrowerUpdateForm(props) {
               borrowertype,
               borrowerAttribute1,
               borrowerAttribute2,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.employmentStatus ?? value;
@@ -1789,6 +1829,7 @@ export default function BorrowerUpdateForm(props) {
               borrowertype,
               borrowerAttribute1,
               borrowerAttribute2,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.employerName ?? value;
@@ -1850,6 +1891,7 @@ export default function BorrowerUpdateForm(props) {
               borrowertype,
               borrowerAttribute1,
               borrowerAttribute2,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.creditScore ?? value;
@@ -1911,6 +1953,7 @@ export default function BorrowerUpdateForm(props) {
               borrowertype,
               borrowerAttribute1,
               borrowerAttribute2,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.additionalNote1 ?? value;
@@ -1972,6 +2015,7 @@ export default function BorrowerUpdateForm(props) {
               borrowertype,
               borrowerAttribute1,
               borrowerAttribute2,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.additionalNote2 ?? value;
@@ -2033,6 +2077,7 @@ export default function BorrowerUpdateForm(props) {
               borrowertype,
               borrowerAttribute1,
               borrowerAttribute2,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.borrowerDocument1 ?? value;
@@ -2096,6 +2141,7 @@ export default function BorrowerUpdateForm(props) {
               borrowertype,
               borrowerAttribute1,
               borrowerAttribute2,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.borrowerDocument1URL ?? value;
@@ -2159,6 +2205,7 @@ export default function BorrowerUpdateForm(props) {
               borrowertype,
               borrowerAttribute1,
               borrowerAttribute2,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.borrowerDocument2 ?? value;
@@ -2222,6 +2269,7 @@ export default function BorrowerUpdateForm(props) {
               borrowertype,
               borrowerAttribute1,
               borrowerAttribute2,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.borrowerDocument2URL ?? value;
@@ -2285,6 +2333,7 @@ export default function BorrowerUpdateForm(props) {
               borrowertype,
               borrowerAttribute1,
               borrowerAttribute2,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.borrowerDocument3 ?? value;
@@ -2348,6 +2397,7 @@ export default function BorrowerUpdateForm(props) {
               borrowertype,
               borrowerAttribute1,
               borrowerAttribute2,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.borrowerDocument3URL ?? value;
@@ -2411,6 +2461,7 @@ export default function BorrowerUpdateForm(props) {
               borrowertype,
               borrowerAttribute1,
               borrowerAttribute2,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.borrowerDocument4 ?? value;
@@ -2474,6 +2525,7 @@ export default function BorrowerUpdateForm(props) {
               borrowertype,
               borrowerAttribute1,
               borrowerAttribute2,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.borrowerDocument4URL ?? value;
@@ -2537,6 +2589,7 @@ export default function BorrowerUpdateForm(props) {
               borrowertype,
               borrowerAttribute1,
               borrowerAttribute2,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.borrowerStatus ?? value;
@@ -2598,6 +2651,7 @@ export default function BorrowerUpdateForm(props) {
               borrowertype: value,
               borrowerAttribute1,
               borrowerAttribute2,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.borrowertype ?? value;
@@ -2659,6 +2713,7 @@ export default function BorrowerUpdateForm(props) {
               borrowertype,
               borrowerAttribute1: value,
               borrowerAttribute2,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.borrowerAttribute1 ?? value;
@@ -2722,6 +2777,7 @@ export default function BorrowerUpdateForm(props) {
               borrowertype,
               borrowerAttribute1,
               borrowerAttribute2: value,
+              customFieldsData,
             };
             const result = onChange(modelFields);
             value = result?.borrowerAttribute2 ?? value;
@@ -2738,6 +2794,68 @@ export default function BorrowerUpdateForm(props) {
         hasError={errors.borrowerAttribute2?.hasError}
         {...getOverrideProps(overrides, "borrowerAttribute2")}
       ></TextField>
+      <TextAreaField
+        label="Custom fields data"
+        isRequired={false}
+        isReadOnly={false}
+        value={customFieldsData}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              firstname,
+              othername,
+              businessName,
+              typeOfBusiness,
+              uniqueIdNumber,
+              phoneNumber,
+              otherPhoneNumber,
+              email,
+              gender,
+              dateOfBirth,
+              nationality,
+              nationalIdPicture,
+              passportPicture,
+              address,
+              points,
+              borrowerOpeningBalance,
+              borrowerClosingBalance,
+              borrowerInterestRate,
+              city,
+              state,
+              zipcode,
+              employmentStatus,
+              employerName,
+              creditScore,
+              additionalNote1,
+              additionalNote2,
+              borrowerDocument1,
+              borrowerDocument1URL,
+              borrowerDocument2,
+              borrowerDocument2URL,
+              borrowerDocument3,
+              borrowerDocument3URL,
+              borrowerDocument4,
+              borrowerDocument4URL,
+              borrowerStatus,
+              borrowertype,
+              borrowerAttribute1,
+              borrowerAttribute2,
+              customFieldsData: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.customFieldsData ?? value;
+          }
+          if (errors.customFieldsData?.hasError) {
+            runValidationTasks("customFieldsData", value);
+          }
+          setCustomFieldsData(value);
+        }}
+        onBlur={() => runValidationTasks("customFieldsData", customFieldsData)}
+        errorMessage={errors.customFieldsData?.errorMessage}
+        hasError={errors.customFieldsData?.hasError}
+        {...getOverrideProps(overrides, "customFieldsData")}
+      ></TextAreaField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}

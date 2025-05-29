@@ -52,9 +52,9 @@ export default function SideMenu({ onHideMenu }) {
       avatarAlt: "Add a new borrower",
     },
     {
-      value: "manageBorrowers",
-      label: "Manage",
-      secondary: "Manage existing borrowers",
+      value: "allBorrowers",
+      label: "View/Manage",
+      secondary: "View/edit borrowers",
       icon: <PeopleAltRoundedIcon sx={{ fontSize: '1rem' }} />,
       avatarAlt: "Manage existing borrowers",
     },

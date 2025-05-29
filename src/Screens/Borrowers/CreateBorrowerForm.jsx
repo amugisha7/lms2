@@ -116,6 +116,12 @@ export default function CreateBorrowerForm(props) {
       setSubmitting(true);
       
       try {
+        // Check if branchUsersId exists
+        if (!userDetails?.branchUsersId) {
+          setSubmitError('Error: Please try refreshing the page.');
+          return;
+        }
+
         // Create the base input object with standard fields
         const input = {
           firstname: values.firstname.trim() || null,
@@ -155,9 +161,6 @@ export default function CreateBorrowerForm(props) {
           input.customFieldsData = JSON.stringify(customFieldsData);
         }
 
-        console.log("input::: ", input);
-
-        // Uncomment when ready to submit
         await client.graphql({
           query: `
             mutation CreateBorrower($input: CreateBorrowerInput!) {
@@ -168,12 +171,18 @@ export default function CreateBorrowerForm(props) {
                 phoneNumber
                 email
                 customFieldsData
+                branchBorrowersId
                 createdAt
                 updatedAt
               }
             }
           `,
-          variables: { input }
+          variables: { 
+            input: {
+              ...input,
+              branchBorrowersId: userDetails.branchUsersId // Add branch ID from context
+            }
+          }
         });
 
         setSubmitSuccess('Borrower created successfully!');

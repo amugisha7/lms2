@@ -106,12 +106,20 @@ const CustomFields = ({
           fieldsWithParsedOptions.forEach(field => {
             let fieldSchema = Yup.string().nullable();
             
-            if (field.required) {
-              fieldSchema = fieldSchema.required(`${field.label} is required`);
-            }
-
             // Add type-specific validation
             switch (field.fieldType) {
+              case 'text':
+              case 'textarea':
+                fieldSchema = Yup.string()
+                  .nullable()
+                  .matches(
+                    /^[^,"'!{}]+$/, 
+                    'Invalid characters found. Cannot use , " \' ! { }'
+                  );
+                if (field.required) {
+                  fieldSchema = fieldSchema.required(`${field.label} is required`);
+                }
+                break;
               case 'number':
                 fieldSchema = Yup.number()
                   .typeError('Must be a number')
@@ -296,21 +304,6 @@ const CustomFields = ({
     }
   };
 
-  // Helper function to get custom fields data for form submission
-  const getCustomFieldsData = (formValues) => {
-    const customFieldsData = {};
-    customFields.forEach(field => {
-      const value = formValues[field.fieldName];
-      customFieldsData[field.id] = {
-        fieldId: field.id,
-        label: field.label,
-        fieldType: field.fieldType,
-        value: typeof value === 'string' ? value.trim() || null : value || null
-      };
-    });
-    return customFieldsData;
-  };
-
   if (loading) {
     return (
       <Typography variant="body2" sx={{ textAlign: 'center', py: 2 }}>
@@ -326,7 +319,7 @@ const CustomFields = ({
   return (
     <>
       {/* Custom Fields Section Header */}
-      <Grid item xs={12}>
+      <Grid size={{xs:12}}>
         <Typography variant="h6" sx={{ mt: 2, mb: 1, fontWeight: 'bold' }}>
           Additional Information
         </Typography>

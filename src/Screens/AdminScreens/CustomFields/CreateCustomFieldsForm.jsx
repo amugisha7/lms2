@@ -38,7 +38,9 @@ const StyledSelect = styled(Select)(({ error }) => ({
 // Update the validation schema to include fieldType validation
 const validationSchema = Yup.object().shape({
   formKey: Yup.string().required('Form key is required'),
-  label: Yup.string().required('Label is required'),
+  label: Yup.string()
+    .matches(/^[^,"'!{}]+$/, 'Invalid characters found. Cannot use , " \' ! { }')
+    .required('Label is required'),
   fieldType: Yup.string().required('Field type is required'),
   // Remove options from Yup schema as we'll handle it in validate function
 });
@@ -153,20 +155,29 @@ export default function CreateCustomFieldsForm(props) {
 
   const handleAddOption = () => {
     const trimmedOption = currentOption.trim();
+    
+    // Check for invalid characters
+    const invalidCharsRegex = /[,"'!{}]/;
+    if (invalidCharsRegex.test(trimmedOption)) {
+      formik.setFieldError('options', 'Invalid characters found. Cannot use , " \' ! { }');
+      return;
+    }
+
     if (trimmedOption) {
       const isDuplicate = optionsList.some(
         option => option.toLowerCase() === trimmedOption.toLowerCase()
       );
       
       if (isDuplicate) {
+        formik.setFieldError('options', 'This option already exists');
         return;
       }
 
       setOptionsList([...optionsList, trimmedOption]);
       setCurrentOption('');
 
-      if (formik.errors.options === 'This option already exists') {
-          formik.setFieldError('options', undefined); // Clear the error for 'options'
+      if (formik.errors.options) {
+        formik.setFieldError('options', undefined); // Clear any existing errors
       }
     }
   };
@@ -271,7 +282,19 @@ export default function CreateCustomFieldsForm(props) {
                     placeholder="Enter an option"
                     size="small"
                     value={currentOption}
-                    onChange={(e) => setCurrentOption(e.target.value)}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      // Clear previous errors
+                      if (formik.errors.options) {
+                        formik.setFieldError('options', undefined);
+                      }
+                      // Check for invalid characters as user types
+                      if (/[,"'!{}]/.test(value)) {
+                        formik.setFieldError('options', 'Invalid characters found. Cannot use , " \' ! { }');
+                      }
+                      setCurrentOption(value);
+                    }}
+                    error={Boolean(formik.errors.options)}
                     sx={{ flex: 1 }}
                   />
                   <Button 

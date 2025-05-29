@@ -30,33 +30,44 @@ function App({ signOut, user }) {
 
   useEffect(() => {
     const checkUser = async () => {
-      try {
-        const client = generateClient();
-        const res = await client.graphql({
-          query: `query GetUser($id: ID!) { 
-            getUser(id: $id) { 
-              id 
-              userType 
-              status 
-              institutionUsersId 
-              branchUsersId 
-            } 
-          }`,
-          variables: { id: user.userId }
-        });
-        const userData = res.data.getUser;
-        setUserDetails(userData || null);
-        setError(false);
-        if (userData.id) {
-          setUserExists(true);
-          setChecking(false);
+      let retries = 3;
+      while (retries > 0) {
+        try {
+          const client = generateClient();
+          const res = await client.graphql({
+            query: `query GetUser($id: ID!) { 
+              getUser(id: $id) { 
+                id 
+                userType 
+                status 
+                institutionUsersId 
+                branchUsersId 
+              } 
+            }`,
+            variables: { id: user.userId }
+          });
+          const userData = res.data.getUser;
+          setUserDetails(userData || null);
+          setError(false);
+          if (userData?.id) {
+            setUserExists(true);
+            setChecking(false);
+          }
+          return; // Success - exit the retry loop
+        } catch (err) {
+          console.log('Error fetching user:', err);
+          retries--;
+          if (retries === 0) {
+            setError(true);
+            setChecking(false);
+          }
+          // Wait 1 second before retrying
+          await new Promise(resolve => setTimeout(resolve, 1000));
         }
-      } catch (err) {
-        setError(true);
       }
     };
     checkUser();
-  }, []);
+  }, [user?.userId]); // Add user.userId as dependency
 
   if (!online) {
     return <NoInternet />;

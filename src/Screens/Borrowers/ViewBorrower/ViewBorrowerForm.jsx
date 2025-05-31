@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import AppTheme from '../../../muiTemplates/shared-theme/AppTheme';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -69,7 +69,16 @@ const baseValidationSchema = Yup.object().shape({
     .matches(/^[^,"'!{}]+$/, 'Invalid characters found. Cannot use , " \' ! { }'),
 });
 
-export default function ViewBorrowerForm({ borrower, editing, ...props }) {
+  const StyledOutlinedInput = styled(OutlinedInput)(({ error, theme }) => ({
+    border: error ? '1.5px solid #d32f2f' : '1px solid #708090',
+    fontSize: '1rem',
+    color: 'blue !important'
+    
+    // color: resolvedMode === 'dark' ? '#90caf9' : '#0d2357', // Light blue on dark, dark blue on light
+  }));
+
+
+export default function ViewBorrowerForm({ borrower, editing, setEditing, formSubmitRef, ...props }) {
   const { userDetails } = useContext(UserContext);
   const [showDobInput, setShowDobInput] = useState(false);
   const [submitError, setSubmitError] = useState('');
@@ -80,16 +89,27 @@ export default function ViewBorrowerForm({ borrower, editing, ...props }) {
   const resolvedMode = systemMode || mode;
 
 
-  const StyledOutlinedInput = styled(OutlinedInput)(({ error, theme }) => ({
-    border: error ? '1.5px solid #d32f2f' : '1px solid #708090',
-    fontSize: '1rem',
-    color: 'blue !important'
-    
-    // color: resolvedMode === 'dark' ? '#90caf9' : '#0d2357', // Light blue on dark, dark blue on light
-  }));
+
+  // Helper to flatten customFieldsData for Formik
+  function flattenCustomFieldsData(customFieldsData) {
+    if (!customFieldsData) return {};
+    let parsed;
+    try {
+      parsed = typeof customFieldsData === 'string'
+        ? JSON.parse(customFieldsData)
+        : customFieldsData;
+    } catch {
+      return {};
+    }
+    const flat = {};
+    Object.entries(parsed).forEach(([fieldId, fieldObj]) => {
+      flat[`custom_${fieldId}`] = fieldObj?.value ?? '';
+    });
+    return flat;
+  }
 
   // Base initial values for the form
-  const baseInitialValues = {
+  const memoizedBaseInitialValues = useMemo(() => ({
     firstname: borrower?.firstname || '',
     othername: borrower?.othername || '',
     businessName: borrower?.businessName || '',
@@ -110,14 +130,76 @@ export default function ViewBorrowerForm({ borrower, editing, ...props }) {
     zipcode: borrower?.zipcode || '',
     employerName: borrower?.employerName || '',
     // Add any custom fields from customFieldsData
-    ...(borrower?.customFieldsData ? JSON.parse(borrower.customFieldsData) : {})
-  };
+    ...flattenCustomFieldsData(borrower?.customFieldsData)
+  }), [borrower]);
 
-  const [initialValues, setInitialValues] = useState(baseInitialValues);
+    // Use a ref to track if custom field initial values have been applied for the current borrower
+  const customFieldsAppliedRef = useRef(false);
+
+  // 1. Define the initial values for Formik as a state.
+  // This state will be updated when the borrower changes or when custom fields load their initial defaults.
+  const [formikInitialValues, setFormikInitialValues] = useState(() => {
+    // Initial computation (runs once on mount)
+    // Combine base borrower data with existing custom fields from the borrower.
+    return {
+      firstname: borrower?.firstname || '',
+      othername: borrower?.othername || '',
+      businessName: borrower?.businessName || '',
+      typeOfBusiness: borrower?.typeOfBusiness || '',
+      uniqueNumber: borrower?.uniqueIdNumber || '',
+      mobile: borrower?.phoneNumber || '',
+      altPhone: borrower?.otherPhoneNumber || '',
+      email: borrower?.email || '',
+      gender: borrower?.gender || '',
+      title: borrower?.title || '',
+      country: borrower?.nationality || '',
+      workingStatus: borrower?.employmentStatus || '',
+      creditScore: borrower?.creditScore || '',
+      dob: borrower?.dateOfBirth || '',
+      address: borrower?.address || '',
+      city: borrower?.city || '',
+      province: borrower?.state || '',
+      zipcode: borrower?.zipcode || '',
+      employerName: borrower?.employerName || '',
+      // Existing custom fields from borrower, overriding any potential defaults
+      ...flattenCustomFieldsData(borrower?.customFieldsData)
+    };
+  });
+
+    // 2. Effect to update `formikInitialValues` when the `borrower` prop changes.
+  // This ensures that when a different borrower is viewed/edited, the form resets.
+  useEffect(() => {
+    setFormikInitialValues({
+      firstname: borrower?.firstname || '',
+      othername: borrower?.othername || '',
+      businessName: borrower?.businessName || '',
+      typeOfBusiness: borrower?.typeOfBusiness || '',
+      uniqueNumber: borrower?.uniqueIdNumber || '',
+      mobile: borrower?.phoneNumber || '',
+      altPhone: borrower?.otherPhoneNumber || '',
+      email: borrower?.email || '',
+      gender: borrower?.gender || '',
+      title: borrower?.title || '',
+      country: borrower?.nationality || '',
+      workingStatus: borrower?.employmentStatus || '',
+      creditScore: borrower?.creditScore || '',
+      dob: borrower?.dateOfBirth || '',
+      address: borrower?.address || '',
+      city: borrower?.city || '',
+      province: borrower?.state || '',
+      zipcode: borrower?.zipcode || '',
+      employerName: borrower?.employerName || '',
+      // Existing custom fields from borrower, overriding any potential defaults
+      ...flattenCustomFieldsData(borrower?.customFieldsData)
+    });
+    // Reset the ref flag so custom fields defaults can be applied again for the new borrower
+    customFieldsAppliedRef.current = false;
+  }, [borrower]); // Dependency on borrower prop
+
   const client = generateClient();
 
   const formik = useFormik({
-    initialValues: initialValues,
+    initialValues: formikInitialValues,
     validationSchema: dynamicValidationSchema,
     enableReinitialize: true,
     onSubmit: async (values, { setSubmitting }) => {
@@ -194,21 +276,54 @@ export default function ViewBorrowerForm({ borrower, editing, ...props }) {
         setSubmitError('Failed to update borrower. Please try again.');
       } finally {
         setSubmitting(false);
+        setEditing(false); // Exit editing mode after submission
       }
     }
   });
 
+  // Expose submit function to parent via ref
+  useEffect(() => {
+    if (formSubmitRef) {
+      formSubmitRef.current = formik.submitForm;
+    }
+  }, [formSubmitRef, formik]);
+
   // Handle custom fields loading
-  const handleCustomFieldsLoaded = (customFieldsInitialValues) => {
-    const newInitialValues = { ...baseInitialValues, ...customFieldsInitialValues };
-    setInitialValues(newInitialValues);
-  };
+    // 3. Callback for when CustomFields loads its configuration (including default values).
+  // This should only run once for a given borrower, after the initial load.
+  const handleCustomFieldsLoaded = useCallback((customFieldsDefaults) => {
+    if (!customFieldsAppliedRef.current) {
+        setFormikInitialValues(prev => {
+            const newInitialValues = { ...prev };
+            let changed = false;
+
+            // Iterate through the defaults provided by CustomFields
+            Object.keys(customFieldsDefaults).forEach(key => {
+                // Apply the default if the field is not already present in prev (from borrower data)
+                // or if it's explicitly an empty string, and the default is not empty.
+                // This ensures existing borrower data is prioritized over CustomField defaults.
+                if (newInitialValues[key] === undefined || newInitialValues[key] === '') {
+                    if (newInitialValues[key] !== customFieldsDefaults[key]) { // Only update if value is different
+                        newInitialValues[key] = customFieldsDefaults[key];
+                        changed = true;
+                    }
+                }
+            });
+
+            if (changed) {
+                return newInitialValues; // Return a new object reference to trigger Formik re-initialization
+            }
+            return prev; // Return the same object reference if no changes, to prevent unnecessary re-renders
+        });
+        customFieldsAppliedRef.current = true; // Mark custom fields as applied for this borrower
+    }
+  }, []); // No dependencies that change often; relies on `customFieldsAppliedRef` and state updater form.
 
   // Handle validation schema changes from custom fields
-  const handleValidationSchemaChange = (customFieldsValidation) => {
-    const newValidationSchema = baseValidationSchema.shape(customFieldsValidation);
-    setDynamicValidationSchema(newValidationSchema);
-  };
+  const handleValidationSchemaChange = useCallback((customFieldsValidation) => {
+     const newValidationSchema = baseValidationSchema.shape(customFieldsValidation);
+     setDynamicValidationSchema(newValidationSchema);
+  }, []);
 
   // Dropdown configurations
   const genderDropdownConfig = {
@@ -269,7 +384,6 @@ export default function ViewBorrowerForm({ borrower, editing, ...props }) {
           flexDirection: 'column',
         }}
       >
-        
         <Grid container spacing={3}>
           {/* Standard Form Fields */}
           <FormGrid size={{ xs: 12, md: 6 }}>
@@ -645,7 +759,7 @@ export default function ViewBorrowerForm({ borrower, editing, ...props }) {
           </FormGrid>
 
           {/* Custom Fields Component */}
-          <FormGrid size={{ xs: 12,}}>
+          <FormGrid size={{ xs: 12 }}>
             <CustomFields
               formKey="CreateBorrowerForm"
               formik={formik}
@@ -655,42 +769,6 @@ export default function ViewBorrowerForm({ borrower, editing, ...props }) {
             />
           </FormGrid>
         </Grid>
-
-        {/* Submission Button and Feedback - show only when editing */}
-        {editing && (
-          <Box sx={{ mt: 4, display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-            {submitError && (
-              <Typography color="error" sx={{ mb: 1 }}>
-                {submitError}
-              </Typography>
-            )}
-            {submitSuccess && (
-              <Typography color="primary" sx={{ mb: 1 }}>
-                {submitSuccess}
-              </Typography>
-            )}
-            <Button
-              type="submit"
-              variant="contained"
-              color="primary"
-              disabled={
-                formik.isSubmitting ||
-                (!formik.values.firstname.trim() && !formik.values.businessName.trim())
-              }
-              sx={{
-                mb: 2,
-                minWidth: 120,
-                '&.Mui-disabled': {
-                  backgroundColor: '#ccc',
-                  color: '#666'
-                }
-              }}
-            >
-              {formik.isSubmitting ? 'Saving...' : 'Save Changes'}
-            </Button>
-          </Box>
-        )}
       </Box>
     </AppTheme>
-  );
-}
+  );}

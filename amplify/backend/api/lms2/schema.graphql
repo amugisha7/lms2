@@ -111,6 +111,7 @@ type Employee @model {
   phoneNumber1: String
   phoneNumber2: String
   email: String
+  title: String
   addressLine1: String
   addressLine2: String
   city: String
@@ -203,6 +204,7 @@ type Borrower @model {
   borrowerInterestRate: Float
   city: String
   state: String
+  title: String
   zipcode: String
   employmentStatus: String
   employerName: String

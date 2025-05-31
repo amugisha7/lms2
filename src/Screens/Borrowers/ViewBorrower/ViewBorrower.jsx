@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import Tabs from '@mui/material/Tabs';
@@ -15,6 +15,8 @@ export default function ViewBorrower() {
   const [editing, setEditing] = useState(false);
   const [borrower, setBorrower] = useState(null);
   const [loading, setLoading] = useState(true);
+  const formRef = useRef();
+  const [formSubmitting, setFormSubmitting] = useState(false); // Add this state
 
   useEffect(() => {
     const fetchBorrower = async () => {
@@ -56,6 +58,7 @@ export default function ViewBorrower() {
         });
 
         setBorrower(response.data.getBorrower);
+       console.log(" response.data.getBorrower.customFieldsData::: ",  response.data.getBorrower.customFieldsData);
       } catch (error) {
         console.error('Error fetching borrower:', error);
       } finally {
@@ -84,7 +87,6 @@ export default function ViewBorrower() {
         maxWidth: { xs: '100%', md: 800 },
         mx: 'auto',
         width: '100%',
-
       }}
     >
       <Typography variant="h3" sx={{ mb: 2, fontWeight: 600 }}>
@@ -97,10 +99,36 @@ export default function ViewBorrower() {
           checked={editing}
           onChange={() => setEditing((prev) => !prev)}
           color="primary"
+          disabled={formSubmitting}
         />
         <Typography sx={{ ml: 1 }}>
           {editing ? "Editing Enabled" : "Editing Disabled"}
         </Typography>
+        {/* Save Changes button next to toggle, only when editing */}
+        {editing && (
+          <Button
+            variant="contained"
+            // color="primary"
+            sx={{
+              ml: 2,
+              minWidth: 120,
+              '&.Mui-disabled': {
+                backgroundColor: '#ccc',
+                color: '#666'
+              }
+            }}
+            disabled={formSubmitting}
+            onClick={async () => {
+              if (formRef.current) {
+                setFormSubmitting(true);
+                await formRef.current();
+                setFormSubmitting(false);
+              }
+            }}
+          >
+            Save Changes
+          </Button>
+        )}
       </Box>
       <Tabs
         value={tab}
@@ -109,13 +137,10 @@ export default function ViewBorrower() {
         indicatorColor="primary"
         variant='scrollable'
         scrollButtons="auto"
-
         sx={{
           borderBottom: 1,
           borderColor: 'divider',
           mb: 2,
-          // '& .MuiTab-root': { color: '#fff' },
-          // '& .Mui-selected': { color: '#1de9b6' }
         }}
       >
         <Tab sx={{mx: 1}} label="BORROWER DETAILS" />
@@ -123,7 +148,15 @@ export default function ViewBorrower() {
         <Tab sx={{mx: 1}} label="LOANS" />
       </Tabs>
       <Box sx={{ mt: 0 }}>
-        {tab === 0 && <ViewBorrowerForm editing={editing} borrower={borrower} />}
+        {tab === 0 && (
+          <ViewBorrowerForm
+            editing={editing}
+            borrower={borrower}
+            formSubmitRef={formRef}
+            setEditing={setEditing}
+            setFormSubmitting={setFormSubmitting} // Pass down for completeness if needed
+          />
+        )}
         {tab === 1 && (
           <Button variant="contained" onClick={handleBackToDetails}>
             You must first create the borrower

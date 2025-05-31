@@ -10,6 +10,9 @@ import LoadingScreen from './Resources/LoadingScreen';
 import ErrorLoadingWorkspace from './Resources/ErrorLoadingWorkspace';
 import NoInternet from './Resources/NoInternet';
 
+// Create UserContext once at the top level
+export const UserContext = createContext();
+
 function App({ signOut, user }) {
   const [checking, setChecking] = useState(true);
   const [userExists, setUserExists] = useState(null);
@@ -26,7 +29,7 @@ function App({ signOut, user }) {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  }, [online]);
+  }, []);
 
   useEffect(() => {
     const checkUser = async () => {
@@ -47,27 +50,27 @@ function App({ signOut, user }) {
             variables: { id: user.userId }
           });
           const userData = res.data.getUser;
+
           setUserDetails(userData || null);
           setError(false);
-          if (userData?.id) {
-            setUserExists(true);
-            setChecking(false);
-          }
+          setUserExists(!!userData?.id);
+          setChecking(false);
           return; // Success - exit the retry loop
+
         } catch (err) {
           console.log('Error fetching user:', err);
           retries--;
           if (retries === 0) {
             setError(true);
             setChecking(false);
+            setUserExists(false); // Make sure to set userExists to false on error
           }
-          // Wait 1 second before retrying
           await new Promise(resolve => setTimeout(resolve, 1000));
         }
       }
     };
     checkUser();
-  }, [user?.userId]); // Add user.userId as dependency
+  }, [user?.userId]);
 
   if (!online) {
     return <NoInternet />;
@@ -75,7 +78,8 @@ function App({ signOut, user }) {
 
   return (
     <UserContext.Provider value={{ signOut, user, userDetails, setUserDetails }}>
-      {checking ? <LoadingScreen /> :
+      {checking && <LoadingScreen onSignOut={signOut} />}
+      {!checking &&
         <SnackbarProvider>
           <NotificationProvider>
             {error
@@ -83,10 +87,9 @@ function App({ signOut, user }) {
               : <AppRoutes userExists={userExists} />}
           </NotificationProvider>
         </SnackbarProvider>
-     }
+      }
     </UserContext.Provider>
   );
 }
-export const UserContext = createContext();
 
 export default withAuthenticator(App);

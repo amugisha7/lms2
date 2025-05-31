@@ -1,14 +1,17 @@
-import { Box, Typography } from '@mui/material'
+import { Box, Typography, IconButton } from '@mui/material'
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState, useContext } from 'react'
+import { generateClient } from 'aws-amplify/api'
+import { UserContext } from '../../App'
+import CustomToolbar from '../../ComponentAssets/CustomToolbar'
 import { 
   DataGrid, 
   ExportCsv, 
   QuickFilter
 } from '@mui/x-data-grid'
-import React, { useEffect, useState, useContext } from 'react'
-import { generateClient } from 'aws-amplify/api'
-import { UserContext } from '../../App'
-import CustomToolbar from '../../ComponentAssets/CustomToolbar'
 import DownloadIcon from '@mui/icons-material/Download';
+import Button from '@mui/material/Button';
 
 function myToolbar() {
   return (
@@ -41,6 +44,7 @@ function myToolbar() {
 }
 
 function AllBorrowers() {
+  const navigate = useNavigate();
   const [borrowers, setBorrowers] = useState([]);
   const [loading, setLoading] = useState(true);
   const { userDetails } = useContext(UserContext);
@@ -49,7 +53,7 @@ function AllBorrowers() {
     { 
       field: 'combinedName', 
       headerName: 'Full Name / Business Name', 
-      width: 300,
+      width: 280,
     },
     { 
       field: 'phoneNumber', 
@@ -69,18 +73,36 @@ function AllBorrowers() {
     { 
       field: 'borrowerStatus', 
       headerName: 'Status', 
-      width: 120 
+      width: 100 
+    },
+    { 
+      field: 'actions',
+      headerName: 'View',
+      width: 50,
+      sortable: false,
+      renderCell: (params) => (
+        <IconButton
+          onClick={() => navigate(`/viewBorrower/${params.row.id}`)}
+          size="small"
+        >
+          <VisibilityIcon sx={{ fontSize: 20 }} />
+        </IconButton>
+      ),
     }
   ];
 
   useEffect(() => {
-    const fetchBorrowers = async () => {
+    const fetchBorrowersPage = async (nextToken = null, accumulator = []) => {
       try {
         const client = generateClient();
         const response = await client.graphql({
           query: `
-            query ListBorrowers($branchId: ID!) {
-              listBorrowers(filter: { branchBorrowersId: { eq: $branchId } }) {
+            query ListBorrowers($branchId: ID!, $nextToken: String, $limit: Int) {
+              listBorrowers(
+                filter: { branchBorrowersId: { eq: $branchId } }
+                nextToken: $nextToken
+                limit: $limit
+              ) {
                 items {
                   id
                   firstname
@@ -91,55 +113,93 @@ function AllBorrowers() {
                   email
                   borrowerStatus
                 }
+                nextToken
               }
             }
           `,
           variables: {
-            branchId: userDetails.branchUsersId
+            branchId: userDetails.branchUsersId,
+            nextToken,
+            limit: 100
           }
         });
-        const fetchedBorrowers = response.data?.listBorrowers?.items || [];
-        const processedBorrowers = fetchedBorrowers.map(borrower => ({
+
+        const newBorrowers = response.data?.listBorrowers?.items || [];
+        const updatedResults = [...accumulator, ...newBorrowers];
+        
+        if (response.data?.listBorrowers?.nextToken) {
+          return fetchBorrowersPage(response.data.listBorrowers.nextToken, updatedResults);
+        }
+
+        return updatedResults;
+      } catch (error) {
+        console.error('Error fetching borrowers:', error);
+        return accumulator;
+      }
+    };
+
+    const initiateFetch = async () => {
+      try {
+        setLoading(true);
+        const allBorrowers = await fetchBorrowersPage();
+        const processedBorrowers = allBorrowers.map(borrower => ({
           ...borrower,
           combinedName: (borrower.firstname || borrower.othername)
             ? `${[borrower.firstname, borrower.othername].filter(Boolean).join(' ')}${borrower.businessName ? ` / ${borrower.businessName}` : ''}`
             : borrower.businessName || ''
         }));
-        
         setBorrowers(processedBorrowers);
       } catch (error) {
-        console.error('Error fetching borrowers:', error);
+        console.error('Error processing borrowers:', error);
       } finally {
         setLoading(false);
       }
     };
 
     if (userDetails?.branchUsersId) {
-      fetchBorrowers();
+      initiateFetch();
     }
   }, [userDetails]);
 
   return (
     <Box sx={{width: '100%', maxWidth: { sm: '100%', md: '1200px' } }}>
-        <Typography variant="h3" sx={{ mb: 2, fontWeight: 600 }}>
-           View/Manage Borrowers
-        </Typography>
-        {borrowers.length > 0 && (
-          <DataGrid
-            rows={borrowers}
-            columns={columns}
-            initialState={{
-              pagination: {
-                paginationModel: {
-                  pageSize: 25,
-                },
+      <Typography variant="h3" sx={{ mb: 2, fontWeight: 600 }}>
+        View/Manage Borrowers
+      </Typography>
+      {loading ? (
+        <Typography sx={{ mt: 4 }}>Loading borrowers...</Typography>
+      ) : borrowers.length > 0 ? (
+        <DataGrid
+          rows={borrowers}
+          columns={columns}
+          initialState={{
+            pagination: {
+              paginationModel: {
+                pageSize: 25,
               },
-            }}
-            pageSizeOptions={[25, 50, 100]}
-            slots={{ toolbar: myToolbar }}
-            showToolbar
-          />
-        )}
+            },
+          }}
+          pageSizeOptions={[25, 50, 100]}
+          slots={{ toolbar: myToolbar }}
+          showToolbar
+          onRowClick={(params) => navigate(`/viewBorrower/${params.row.id}`)}
+          sx={{
+            cursor: 'pointer' // Changes cursor to pointer when hovering over rows
+          }}
+        />
+      ) : (
+        <Box sx={{ mt: 4, textAlign: 'center' }}>
+          <Typography>No borrowers found for this branch.</Typography>
+          <Button
+            variant="contained"
+            color="primary"
+            sx={{ mt: 2 }}
+            onClick={() => navigate('/addBorrower')}
+          >
+            Add New Borrower
+          </Button>
+        </Box>
+      )}
     </Box>
   )
 }

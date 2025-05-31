@@ -32,7 +32,8 @@ const CustomFields = ({
   formKey, 
   formik,
   onFieldsLoaded, // Callback to update parent validation schema and initial values
-  onValidationSchemaChange 
+  onValidationSchemaChange,
+  editing = true
 }) => {
   const { userDetails } = useContext(UserContext);
   const institutionId = userDetails?.institutionUsersId;
@@ -191,7 +192,8 @@ const CustomFields = ({
       error: hasError,
       required: field.required,
       fullWidth: true,
-      size: "small"
+      size: "small",
+      disabled: !editing
     };
 
     switch (field.fieldType) {
@@ -202,6 +204,7 @@ const CustomFields = ({
             error={hasError}
             required={field.required}
             size="small"
+            disabled={!editing}
           >
             <Select
               {...commonProps}
@@ -255,7 +258,7 @@ const CustomFields = ({
             {!showDateInputs[fieldName] ? (
               <Button
                 variant="outlined"
-                onClick={() => toggleDateInput(fieldName)}
+                onClick={() => editing && toggleDateInput(fieldName)}
                 sx={{
                   justifyContent: 'flex-start',
                   color: formik.values[fieldName] ? 'inherit' : '#888',
@@ -266,6 +269,7 @@ const CustomFields = ({
                   pl: 2,
                 }}
                 fullWidth
+                disabled={!editing}
               >
                 {formik.values[fieldName] ? formik.values[fieldName] : `Select ${field.label}`}
               </Button>

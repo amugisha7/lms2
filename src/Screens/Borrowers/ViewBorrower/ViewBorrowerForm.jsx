@@ -1,31 +1,26 @@
 import React, { useContext, useState } from 'react';
-import AppTheme from '../../muiTemplates/shared-theme/AppTheme';
+import AppTheme from '../../../muiTemplates/shared-theme/AppTheme';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import FormLabel from '@mui/material/FormLabel';
 import Grid from '@mui/material/Grid';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import { styled } from '@mui/material/styles';
-import { countries } from '../../Resources/listOfCountries';
+import { countries } from '../../../Resources/listOfCountries';
 import dayjs from 'dayjs';
 import Button from '@mui/material/Button';
 import { generateClient } from 'aws-amplify/api';
-import DropDownInputs from '../../ComponentAssets/DropDownInputs';
+import DropDownInputs from '../../../ComponentAssets/DropDownInputs';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import { UserContext } from '../../App';
-import Link from '@mui/material/Link';
-import CustomFields from '../AdminScreens/CustomFields/CustomFields';
-import { useNavigate } from 'react-router-dom';
+import { UserContext } from '../../../App';
+import CustomFields from '../../AdminScreens/CustomFields/CustomFields';
+import { useColorScheme } from '@mui/material/styles';
+
 
 const FormGrid = styled(Grid)(() => ({
   display: 'flex',
   flexDirection: 'column',
-}));
-
-const StyledOutlinedInput = styled(OutlinedInput)(({ error }) => ({
-  border: error ? '1.5px solid #d32f2f' : '1px solid #708090',
-  fontSize: '1rem',
 }));
 
 const titles = [
@@ -74,35 +69,48 @@ const baseValidationSchema = Yup.object().shape({
     .matches(/^[^,"'!{}]+$/, 'Invalid characters found. Cannot use , " \' ! { }'),
 });
 
-export default function CreateBorrowerForm(props) {
+export default function ViewBorrowerForm({ borrower, editing, ...props }) {
   const { userDetails } = useContext(UserContext);
   const [showDobInput, setShowDobInput] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [submitSuccess, setSubmitSuccess] = useState('');
   const [dynamicValidationSchema, setDynamicValidationSchema] = useState(baseValidationSchema);
-  const navigate = useNavigate();
+
+  const { mode, systemMode } = useColorScheme();
+  const resolvedMode = systemMode || mode;
+
+
+  const StyledOutlinedInput = styled(OutlinedInput)(({ error, theme }) => ({
+    border: error ? '1.5px solid #d32f2f' : '1px solid #708090',
+    fontSize: '1rem',
+    color: 'blue !important'
+    
+    // color: resolvedMode === 'dark' ? '#90caf9' : '#0d2357', // Light blue on dark, dark blue on light
+  }));
 
   // Base initial values for the form
   const baseInitialValues = {
-    firstname: '',
-    othername: '',
-    businessName: '',
-    typeOfBusiness: '',
-    uniqueNumber: '',
-    mobile: '',
-    altPhone: '',
-    email: '',
-    gender: '',
-    title: '',
-    country: '',
-    workingStatus: '',
-    creditScore: '',
-    dob: '',
-    address: '',
-    city: '',
-    province: '',
-    zipcode: '',
-    employerName: '',
+    firstname: borrower?.firstname || '',
+    othername: borrower?.othername || '',
+    businessName: borrower?.businessName || '',
+    typeOfBusiness: borrower?.typeOfBusiness || '',
+    uniqueNumber: borrower?.uniqueIdNumber || '',
+    mobile: borrower?.phoneNumber || '',
+    altPhone: borrower?.otherPhoneNumber || '',
+    email: borrower?.email || '',
+    gender: borrower?.gender || '',
+    title: borrower?.title || '',
+    country: borrower?.nationality || '',
+    workingStatus: borrower?.employmentStatus || '',
+    creditScore: borrower?.creditScore || '',
+    dob: borrower?.dateOfBirth || '',
+    address: borrower?.address || '',
+    city: borrower?.city || '',
+    province: borrower?.state || '',
+    zipcode: borrower?.zipcode || '',
+    employerName: borrower?.employerName || '',
+    // Add any custom fields from customFieldsData
+    ...(borrower?.customFieldsData ? JSON.parse(borrower.customFieldsData) : {})
   };
 
   const [initialValues, setInitialValues] = useState(baseInitialValues);
@@ -112,13 +120,12 @@ export default function CreateBorrowerForm(props) {
     initialValues: initialValues,
     validationSchema: dynamicValidationSchema,
     enableReinitialize: true,
-    onSubmit: async (values, { setSubmitting, resetForm }) => {
+    onSubmit: async (values, { setSubmitting }) => {
       setSubmitError('');
       setSubmitSuccess('');
       setSubmitting(true);
       
       try {
-        // Check if branchUsersId exists
         if (!userDetails?.branchUsersId) {
           setSubmitError('Error: Please try refreshing the page.');
           return;
@@ -126,6 +133,7 @@ export default function CreateBorrowerForm(props) {
 
         // Create the base input object with standard fields
         const input = {
+          id: borrower.id, // Include the ID for update
           firstname: values.firstname.trim() || null,
           othername: values.othername.trim() || null,
           businessName: values.businessName.trim() || null,
@@ -163,41 +171,27 @@ export default function CreateBorrowerForm(props) {
           input.customFieldsData = JSON.stringify(customFieldsData);
         }
 
-        const result = await client.graphql({
+        await client.graphql({
           query: `
-            mutation CreateBorrower($input: CreateBorrowerInput!) {
-              createBorrower(input: $input) {
+            mutation UpdateBorrower($input: UpdateBorrowerInput!) {
+              updateBorrower(input: $input) {
                 id
                 firstname
                 businessName
                 phoneNumber
                 email
                 customFieldsData
-                branchBorrowersId
-                createdAt
                 updatedAt
               }
             }
           `,
-          variables: { 
-            input: {
-              ...input,
-              branchBorrowersId: userDetails.branchUsersId // Add branch ID from context
-            }
-          }
+          variables: { input }
         });
 
-        const newBorrowerId = result?.data?.createBorrower?.id;
-        setSubmitSuccess('Borrower created successfully!');
-        resetForm();
-
-        // Navigate to ViewBorrower page
-        if (newBorrowerId) {
-          navigate(`/viewBorrower/${newBorrowerId}`);
-        }
+        setSubmitSuccess('Borrower updated successfully!');
       } catch (err) {
-        console.error("Error creating borrower:", err);
-        setSubmitError('Failed to create borrower. Please try again.');
+        console.error("Error updating borrower:", err);
+        setSubmitError('Failed to update borrower. Please try again.');
       } finally {
         setSubmitting(false);
       }
@@ -275,9 +269,6 @@ export default function CreateBorrowerForm(props) {
           flexDirection: 'column',
         }}
       >
-        <Typography variant="caption" sx={{ my: 2 }}>
-          All fields are optional but you must provide at least First Name or Business Name.
-        </Typography>
         
         <Grid container spacing={3}>
           {/* Standard Form Fields */}
@@ -286,14 +277,20 @@ export default function CreateBorrowerForm(props) {
             <StyledOutlinedInput
               id="first-name"
               name="firstname"
+              disabled={!editing}
               required={formik.values.businessName.trim() === ''}
-              placeholder="Enter First Name Only"
               autoComplete="given-name"
               size="small"
               value={formik.values.firstname}
               onChange={formik.handleChange}
               error={formik.touched.firstname && Boolean(formik.errors.firstname)}
               onBlur={formik.handleBlur}
+              sx={{
+                "& .MuiOutlinedInput-input.Mui-disabled": {
+                  color: "#196496",
+                  WebkitTextFillColor: "#196496", // For Safari support
+                }
+              }}
             />
             {formik.touched.firstname && formik.errors.firstname && (
               <Typography color="error" variant="caption">{formik.errors.firstname}</Typography>
@@ -305,13 +302,19 @@ export default function CreateBorrowerForm(props) {
             <StyledOutlinedInput
               id="middle-last-name"
               name="othername"
-              placeholder="Middle and Last Name"
+              disabled={!editing}
               autoComplete="family-name"
               size="small"
               value={formik.values.othername}
               onChange={formik.handleChange}
               error={formik.touched.othername && Boolean(formik.errors.othername)}
               onBlur={formik.handleBlur}
+              sx={{
+                "& .MuiOutlinedInput-input.Mui-disabled": {
+                  color: "#196496",
+                  WebkitTextFillColor: "#196496", // For Safari support
+                }
+              }}
             />
             {formik.touched.othername && formik.errors.othername && (
               <Typography color="error" variant="caption">{formik.errors.othername}</Typography>
@@ -323,14 +326,20 @@ export default function CreateBorrowerForm(props) {
             <StyledOutlinedInput
               id="business-name"
               name="businessName"
+              disabled={!editing}
               required={formik.values.firstname.trim() === ''}
-              placeholder="Business Name"
               autoComplete="organization"
               size="small"
               value={formik.values.businessName}
               onChange={formik.handleChange}
               error={formik.touched.businessName && Boolean(formik.errors.businessName)}
               onBlur={formik.handleBlur}
+              sx={{
+                "& .MuiOutlinedInput-input.Mui-disabled": {
+                  color: "#196496",
+                  WebkitTextFillColor: "#196496", // For Safari support
+                }
+              }}
             />
             {formik.touched.businessName && formik.errors.businessName && (
               <Typography color="error" variant="caption">{formik.errors.businessName}</Typography>
@@ -342,7 +351,7 @@ export default function CreateBorrowerForm(props) {
             <StyledOutlinedInput
               id="mobile"
               name="mobile"
-              placeholder="Numbers Only"
+              disabled={!editing}
               size="small"
               value={formik.values.mobile}
               onChange={e => {
@@ -352,6 +361,12 @@ export default function CreateBorrowerForm(props) {
               error={formik.touched.mobile && Boolean(formik.errors.mobile)}
               onBlur={formik.handleBlur}
               inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
+              sx={{
+                "& .MuiOutlinedInput-input.Mui-disabled": {
+                  color: "#196496",
+                  WebkitTextFillColor: "#196496", // For Safari support
+                }
+              }}
             />
             {formik.touched.mobile && formik.errors.mobile && (
               <Typography color="error" variant="caption">{formik.errors.mobile}</Typography>
@@ -363,7 +378,7 @@ export default function CreateBorrowerForm(props) {
             <StyledOutlinedInput
               id="alternative-phone"
               name="altPhone"
-              placeholder="Numbers Only"
+              disabled={!editing}
               size="small"
               value={formik.values.altPhone}
               onChange={e => {
@@ -373,6 +388,12 @@ export default function CreateBorrowerForm(props) {
               error={formik.touched.altPhone && Boolean(formik.errors.altPhone)}
               onBlur={formik.handleBlur}
               inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
+              sx={{
+                "& .MuiOutlinedInput-input.Mui-disabled": {
+                  color: "#196496",
+                  WebkitTextFillColor: "#196496", // For Safari support
+                }
+              }}
             />
             {formik.touched.altPhone && formik.errors.altPhone && (
               <Typography color="error" variant="caption">{formik.errors.altPhone}</Typography>
@@ -388,12 +409,18 @@ export default function CreateBorrowerForm(props) {
             <StyledOutlinedInput
               id="unique-number"
               name="uniqueNumber"
-              placeholder="Unique Number"
+              disabled={!editing}
               size="small"
               value={formik.values.uniqueNumber}
               onChange={formik.handleChange}
               error={formik.touched.uniqueNumber && Boolean(formik.errors.uniqueNumber)}
               onBlur={formik.handleBlur}
+              sx={{
+                "& .MuiOutlinedInput-input.Mui-disabled": {
+                  color: "#196496",
+                  WebkitTextFillColor: "#196496", // For Safari support
+                }
+              }}
             />
             <Typography variant="caption" sx={{ mt: 1 }}>
               Enter a unique identifier for the borrower (e.g National ID, Social Security ID, License No., Registration No.)
@@ -408,7 +435,7 @@ export default function CreateBorrowerForm(props) {
             <StyledOutlinedInput
               id="email"
               name="email"
-              placeholder="Email"
+              disabled={!editing}
               autoComplete="email"
               size="small"
               value={formik.values.email}
@@ -416,6 +443,12 @@ export default function CreateBorrowerForm(props) {
               error={formik.touched.email && Boolean(formik.errors.email)}
               onBlur={formik.handleBlur}
               type="email"
+              sx={{
+                "& .MuiOutlinedInput-input.Mui-disabled": {
+                  color: "#196496",
+                  WebkitTextFillColor: "#196496", // For Safari support
+                }
+              }}
             />
             {formik.touched.email && formik.errors.email && (
               <Typography color="error" variant="caption">{formik.errors.email}</Typography>
@@ -423,21 +456,27 @@ export default function CreateBorrowerForm(props) {
           </FormGrid>
 
           {/* Dropdown fields */}
-          <DropDownInputs dropdowns={[genderDropdownConfig]} />
-          <DropDownInputs dropdowns={[titleDropdownConfig]} />
-          <DropDownInputs dropdowns={[countryDropdownConfig]} />
+          <DropDownInputs dropdowns={[genderDropdownConfig]} editing={editing} />
+          <DropDownInputs dropdowns={[titleDropdownConfig]} editing={editing} />
+          <DropDownInputs dropdowns={[countryDropdownConfig]} editing={editing} />
 
           <FormGrid size={{ xs: 12, md: 6 }}>
             <FormLabel htmlFor="address">Address</FormLabel>
             <StyledOutlinedInput
               id="address"
               name="address"
-              placeholder="Address"
+              disabled={!editing}
               size="small"
               value={formik.values.address}
               onChange={formik.handleChange}
               error={formik.touched.address && Boolean(formik.errors.address)}
               onBlur={formik.handleBlur}
+              sx={{
+                "& .MuiOutlinedInput-input.Mui-disabled": {
+                  color: "#196496",
+                  WebkitTextFillColor: "#196496", // For Safari support
+                }
+              }}
             />
             {formik.touched.address && formik.errors.address && (
               <Typography color="error" variant="caption">{formik.errors.address}</Typography>
@@ -449,12 +488,18 @@ export default function CreateBorrowerForm(props) {
             <StyledOutlinedInput
               id="city"
               name="city"
-              placeholder="City"
+              disabled={!editing}
               size="small"
               value={formik.values.city}
               onChange={formik.handleChange}
               error={formik.touched.city && Boolean(formik.errors.city)}
               onBlur={formik.handleBlur}
+              sx={{
+                "& .MuiOutlinedInput-input.Mui-disabled": {
+                  color: "#196496",
+                  WebkitTextFillColor: "#196496", // For Safari support
+                }
+              }}
             />
             {formik.touched.city && formik.errors.city && (
               <Typography color="error" variant="caption">{formik.errors.city}</Typography>
@@ -466,12 +511,18 @@ export default function CreateBorrowerForm(props) {
             <StyledOutlinedInput
               id="province"
               name="province"
-              placeholder="Province or State"
+              disabled={!editing}
               size="small"
               value={formik.values.province}
               onChange={formik.handleChange}
               error={formik.touched.province && Boolean(formik.errors.province)}
               onBlur={formik.handleBlur}
+              sx={{
+                "& .MuiOutlinedInput-input.Mui-disabled": {
+                  color: "#196496",
+                  WebkitTextFillColor: "#196496", // For Safari support
+                }
+              }}
             />
             {formik.touched.province && formik.errors.province && (
               <Typography color="error" variant="caption">{formik.errors.province}</Typography>
@@ -483,12 +534,18 @@ export default function CreateBorrowerForm(props) {
             <StyledOutlinedInput
               id="zipcode"
               name="zipcode"
-              placeholder="Zipcode"
+              disabled={!editing}
               size="small"
               value={formik.values.zipcode}
               onChange={formik.handleChange}
               error={formik.touched.zipcode && Boolean(formik.errors.zipcode)}
               onBlur={formik.handleBlur}
+              sx={{
+                "& .MuiOutlinedInput-input.Mui-disabled": {
+                  color: "#196496",
+                  WebkitTextFillColor: "#196496", // For Safari support
+                }
+              }}
             />
             {formik.touched.zipcode && formik.errors.zipcode && (
               <Typography color="error" variant="caption">{formik.errors.zipcode}</Typography>
@@ -526,6 +583,12 @@ export default function CreateBorrowerForm(props) {
                 autoFocus
                 onBlur={() => { if (!formik.values.dob) setShowDobInput(false); }}
                 error={formik.touched.dob && Boolean(formik.errors.dob)}
+                sx={{
+                  "& .MuiOutlinedInput-input.Mui-disabled": {
+                    color: "#196496",
+                    WebkitTextFillColor: "#196496", // For Safari support
+                  }
+                }}
               />
             )}
             {formik.touched.dob && formik.errors.dob && (
@@ -533,19 +596,25 @@ export default function CreateBorrowerForm(props) {
             )}
           </FormGrid>
 
-          <DropDownInputs dropdowns={[workingStatusDropdownConfig]} />
+          <DropDownInputs dropdowns={[workingStatusDropdownConfig]} editing={editing} />
 
           <FormGrid size={{ xs: 12, md: 6 }}>
             <FormLabel htmlFor="employer-name">Employer Name</FormLabel>
             <StyledOutlinedInput
               id="employer-name"
               name="employerName"
-              placeholder="Employer Name"
+              disabled={!editing}
               size="small"
               value={formik.values.employerName}
               onChange={formik.handleChange}
               error={formik.touched.employerName && Boolean(formik.errors.employerName)}
               onBlur={formik.handleBlur}
+              sx={{
+                "& .MuiOutlinedInput-input.Mui-disabled": {
+                  color: "#196496",
+                  WebkitTextFillColor: "#196496", // For Safari support
+                }
+              }}
             />
             {formik.touched.employerName && formik.errors.employerName && (
               <Typography color="error" variant="caption">{formik.errors.employerName}</Typography>
@@ -557,12 +626,18 @@ export default function CreateBorrowerForm(props) {
             <StyledOutlinedInput
               id="credit-score"
               name="creditScore"
-              placeholder="Credit Score"
+              disabled={!editing}
               size="small"
               value={formik.values.creditScore}
               onChange={formik.handleChange}
               error={formik.touched.creditScore && Boolean(formik.errors.creditScore)}
               onBlur={formik.handleBlur}
+              sx={{
+                "& .MuiOutlinedInput-input.Mui-disabled": {
+                  color: "#196496",
+                  WebkitTextFillColor: "#196496", // For Safari support
+                }
+              }}
             />
             {formik.touched.creditScore && formik.errors.creditScore && (
               <Typography color="error" variant="caption">{formik.errors.creditScore}</Typography>
@@ -576,49 +651,45 @@ export default function CreateBorrowerForm(props) {
               formik={formik}
               onFieldsLoaded={handleCustomFieldsLoaded}
               onValidationSchemaChange={handleValidationSchemaChange}
+              editing={editing}
             />
           </FormGrid>
         </Grid>
 
-        {/* Submission Button and Feedback */}
-        <Box sx={{ mt: 4, display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-          {submitError && (
-            <Typography color="error" sx={{ mb: 1 }}>
-              {submitError}
-            </Typography>
-          )}
-          {submitSuccess && (
-            <Typography color="primary" sx={{ mb: 1 }}>
-              {submitSuccess}
-            </Typography>
-          )}
-          <Button
-            type="submit"
-            sx={{ mb: 4 }}
-            variant="contained"
-            color="secondary"
-            disabled={!formik.isValid || formik.isSubmitting}
-          >
-            {formik.isSubmitting ? 'Submitting...' : 'Create Borrower'}
-          </Button>
-          
-          <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', mb: 2 }}>
-            <Link
-              href="customFields"
+        {/* Submission Button and Feedback - show only when editing */}
+        {editing && (
+          <Box sx={{ mt: 4, display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+            {submitError && (
+              <Typography color="error" sx={{ mb: 1 }}>
+                {submitError}
+              </Typography>
+            )}
+            {submitSuccess && (
+              <Typography color="primary" sx={{ mb: 1 }}>
+                {submitSuccess}
+              </Typography>
+            )}
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              disabled={
+                formik.isSubmitting ||
+                (!formik.values.firstname.trim() && !formik.values.businessName.trim())
+              }
               sx={{
-                color: 'text.secondary',
-                textDecoration: 'none',
-                '&:hover': {
-                  textDecoration: 'underline',
-                },
+                mb: 2,
+                minWidth: 120,
+                '&.Mui-disabled': {
+                  backgroundColor: '#ccc',
+                  color: '#666'
+                }
               }}
             >
-              <Typography variant="body2">
-                Need to add custom fields? Click here to manage custom fields
-              </Typography>
-            </Link>
+              {formik.isSubmitting ? 'Saving...' : 'Save Changes'}
+            </Button>
           </Box>
-        </Box>
+        )}
       </Box>
     </AppTheme>
   );

@@ -29,7 +29,7 @@ const StyledOutlinedInput = styled(OutlinedInput)({
  *     gridSize: object (optional, default { xs:12, md:6 })
  *   }
  */
-export default function DropDownInputs({ dropdowns }) {
+export default function DropDownInputs({ dropdowns, editing = true }) {
   return (
     <>
       {dropdowns.map((dropdown) => (
@@ -49,6 +49,7 @@ export default function DropDownInputs({ dropdowns }) {
             displayEmpty
             input={<StyledOutlinedInput label={dropdown.label} />}
             MenuProps={{ PaperProps: { style: { maxHeight: 300 } } }}
+            disabled={!editing}
           >
             <MenuItem value="">
               <em>{dropdown.placeholder || `Select ${dropdown.label}`}</em>

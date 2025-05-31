@@ -4,6 +4,7 @@ import Dashboard from './muiTemplates/dashboard/Dashboard';
 import MainGrid from './muiTemplates/dashboard/components/MainGrid';
 import CreateBorrower from './Screens/Borrowers/CreateBorrower';
 import AllBorrowers from './Screens/Borrowers/AllBorrowers';
+import ViewBorrower from './Screens/Borrowers/ViewBorrower/ViewBorrower';
 import CustomFieldsManager from './Screens/AdminScreens/CustomFields/CustomFieldsManager';
 
 export default function AppRoutes({ userExists }) {
@@ -24,6 +25,7 @@ export default function AppRoutes({ userExists }) {
               // Borrowers routes
               <Route path="allBorrowers" element={<AllBorrowers />} />
               <Route path="addBorrower" element={<CreateBorrower />} />
+              <Route path="viewBorrower/:borrowerId" element={<ViewBorrower />} />
               <Route path="customFields" element={<CustomFieldsManager />} />
               {/* Add more routes as needed */}
             </>

@@ -11,6 +11,7 @@ import {
   FormControl,
   InputLabel,
 } from '@mui/material';
+import * as Yup from 'yup';
 
 import { currenciesObj } from '../../Resources/currenciesObj';
 import { countries } from '../../Resources/listOfCountries';
@@ -27,12 +28,16 @@ const client = generateClient();
 const currencies = Object.keys(currenciesObj);
 const dateFormats = ['dd-mmm-yyyy', 'mmm-dd-yyyy', 'yyyy-mm-dd'];
 
+const businessNameSchema = Yup.string()
+  .required('Business name is required')
+  .matches(/^[^,"'!{}]+$/, 'Invalid characters found. Cannot use , " \' ! { }');
+
 const AccountSettingsForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { showNotification } = useNotification();
   const { showSnackbar } = useSnackbar();
-  const { user, setUserDetails } = useContext(UserContext); 
+  const { user, setUserDetails, signOut } = useContext(UserContext); // <-- add signOut here
   const [formData, setFormData] = React.useState({
     businessName: '',
     country: 'Kenya',
@@ -48,6 +53,7 @@ const AccountSettingsForm = () => {
 
   // State to track touched fields
   const [touchedFields, setTouchedFields] = React.useState({});
+  const [businessNameErrorText, setBusinessNameErrorText] = React.useState('');
 
   React.useEffect(() => {
     setDecimalPoints(currenciesObj[formData.currency]?.decimal_digits || 0);
@@ -68,11 +74,19 @@ const AccountSettingsForm = () => {
   };
 
   // Handler for the onBlur event
-  const handleBlur = (field) => () => {
+  const handleBlur = (field) => async () => {
     setTouchedFields((prev) => ({
       ...prev,
       [field]: true,
     }));
+    if (field === 'businessName') {
+      try {
+        await businessNameSchema.validate(formData.businessName);
+        setBusinessNameErrorText('');
+      } catch (err) {
+        setBusinessNameErrorText(err.message);
+      }
+    }
   };
 
   // Create new Institution, Branch, and User
@@ -80,6 +94,16 @@ const AccountSettingsForm = () => {
     event.preventDefault();
     setTouchedFields(prev => ({ ...prev, businessName: true }));
     setIsSubmitting(true);
+
+    // Validate business name with Yup
+    try {
+      await businessNameSchema.validate(formData.businessName);
+    } catch (validationError) {
+      showNotification(validationError.message, 'red');
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       // 1. Create Institution
       const institutionInput = {
@@ -219,7 +243,7 @@ const AccountSettingsForm = () => {
 
 
   // Calculate error states based on touched and validation
-  const businessNameError = touchedFields.businessName && !formData.businessName.trim();
+  const businessNameError = touchedFields.businessName && !!businessNameErrorText;
   const businessIDError = touchedFields.businessID && !businessID.trim();
 
   return (
@@ -228,6 +252,7 @@ const AccountSettingsForm = () => {
         display: 'flex',
         flexDirection: 'column',
         gap: 1,
+        minHeight: '100vh', // Ensure full height for sticky footer
       }}
     >
       <Box
@@ -294,14 +319,14 @@ const AccountSettingsForm = () => {
           </Typography>
           <TextField
             fullWidth
-            required // HTML5 required, but MUI handles validation display
+            required
             label="Business Name"
             placeholder="Business Name"
             value={formData.businessName}
             onChange={handleChange('businessName')}
-            onBlur={handleBlur('businessName')} // Add onBlur handler
-            error={businessNameError} // Use calculated error state
-            helperText={businessNameError ? 'Business name is required' : ''} // Show helper text based on error
+            onBlur={handleBlur('businessName')}
+            error={businessNameError}
+            helperText={businessNameErrorText}
           />
           {/* ... other form fields ... */}
           <FormControl fullWidth>
@@ -424,6 +449,20 @@ const AccountSettingsForm = () => {
         </Box>
       )}
       
+      <Box sx={{ flexGrow: 1 }} /> {/* Pushes the button to the bottom */}
+
+      <Box sx={{ mt: 1, mb: 6, display: 'flex', justifyContent: 'center' , flexDirection: 'column', alignItems: 'center' }}>
+        <Typography variant="body2" color="text.secondary" sx={{ mr: 2 }}>
+          Continue later? You can always come back to set up your Business. 
+        </Typography>
+        <Button
+          // variant="outlined"
+          color="secondary"
+          onClick={signOut}
+        >
+          Sign Out
+        </Button>
+      </Box>
     </Box>
   );
 };

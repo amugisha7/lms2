@@ -1,7 +1,22 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import myLogo from './loantabs_logo.png';
 
-export default function LoadingScreen() {
+export default function LoadingScreen({ onSignOut }) {
+  const [showTimeout, setShowTimeout] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowTimeout(true);
+    }, 20000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleSignOut = () => {
+    window.location.href = '/';
+    onSignOut();
+  };
+
   return (
     <div style={{
       display: 'flex',
@@ -34,6 +49,36 @@ export default function LoadingScreen() {
           borderColor: '#1976d2 transparent transparent transparent'
         }} />
       </div>
+      
+      {showTimeout && (
+        <div style={{ 
+          marginTop: 24, 
+          textAlign: 'center',
+          maxWidth: 400
+        }}>
+          <p style={{ 
+            color: '#666', 
+            marginBottom: 16 
+          }}>
+            This is taking longer than usual. You may want to try signing out and back in.
+          </p>
+          <button
+            onClick={handleSignOut}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: '#1976d2',
+              color: 'white',
+              border: 'none',
+              borderRadius: 4,
+              cursor: 'pointer',
+              fontSize: 14
+            }}
+          >
+            Sign Out
+          </button>
+        </div>
+      )}
+      
       <style>
         {`
           @keyframes lds-ring {

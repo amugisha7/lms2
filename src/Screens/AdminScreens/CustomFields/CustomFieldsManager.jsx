@@ -5,16 +5,13 @@ import Tab from '@mui/material/Tab';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import CreateCustomFieldsForm from './CreateCustomFieldsForm';
+import ModifyCustomFields from './ModifyCustomFields';
 
 export default function CreateBorrower() {
-  const [tab, setTab] = useState(0); 
+  const [tab, setTab] = useState(0);
 
   const handleTabChange = (event, newValue) => {
     setTab(newValue);
-  };
-
-  const handleBackToDetails = () => {
-    setTab(0);
   };
 
   return (
@@ -23,7 +20,6 @@ export default function CreateBorrower() {
         maxWidth: { xs: '100%', md: 800 },
         mx: 'auto',
         width: '100%',
-
       }}
     >
       <Typography variant="h3" sx={{ mb: 2, fontWeight: 600 }}>
@@ -49,12 +45,12 @@ export default function CreateBorrower() {
         <Tab sx={{mx: 1}} label="MODIFY" />
       </Tabs>
       <Box sx={{ mt: 0 }}>
-        {tab === 0 && <CreateCustomFieldsForm />}
-        {tab === 1 && (
-          <Button variant="contained" onClick={handleBackToDetails}>
-            You must first create the borrower
-          </Button>
-        )}
+        <Box sx={{ display: tab === 0 ? 'block' : 'none' }}>
+          <CreateCustomFieldsForm />
+        </Box>
+        <Box sx={{ display: tab === 1 ? 'block' : 'none' }}>
+          <ModifyCustomFields />
+        </Box>
       </Box>
     </Box>
   );

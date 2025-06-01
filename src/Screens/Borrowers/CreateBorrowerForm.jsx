@@ -14,9 +14,11 @@ import DropDownInputs from '../../ComponentAssets/DropDownInputs';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { UserContext } from '../../App';
-import Link from '@mui/material/Link';
 import CustomFields from '../AdminScreens/CustomFields/CustomFields';
 import { useNavigate } from 'react-router-dom';
+import SnackbarNotification from '../../ComponentAssets/SnackbarNotification';
+import { Link as RouterLink } from 'react-router-dom';
+import Link from '@mui/material/Link';
 
 const FormGrid = styled(Grid)(() => ({
   display: 'flex',
@@ -26,6 +28,7 @@ const FormGrid = styled(Grid)(() => ({
 const StyledOutlinedInput = styled(OutlinedInput)(({ error }) => ({
   border: error ? '1.5px solid #d32f2f' : '1px solid #708090',
   fontSize: '1rem',
+  color: 'blue !important'
 }));
 
 const titles = [
@@ -191,9 +194,11 @@ export default function CreateBorrowerForm(props) {
         setSubmitSuccess('Borrower created successfully!');
         resetForm();
 
-        // Navigate to ViewBorrower page
+        // Navigate to ViewBorrower page after 1 second delay
         if (newBorrowerId) {
-          navigate(`/viewBorrower/${newBorrowerId}`);
+          setTimeout(() => {
+            navigate(`/viewBorrower/${newBorrowerId}`);
+          }, 1000);
         }
       } catch (err) {
         console.error("Error creating borrower:", err);
@@ -263,6 +268,10 @@ export default function CreateBorrowerForm(props) {
 
   return (
     <AppTheme {...props}>
+      <SnackbarNotification
+        message={submitSuccess}
+        color="green"
+      />
       <Box
         component="form"
         onSubmit={formik.handleSubmit}
@@ -604,7 +613,8 @@ export default function CreateBorrowerForm(props) {
           
           <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', mb: 2 }}>
             <Link
-              href="customFields"
+              component={RouterLink}
+              to="/customFields"
               sx={{
                 color: 'text.secondary',
                 textDecoration: 'none',

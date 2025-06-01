@@ -25,6 +25,11 @@ const StyledTextField = styled(TextField)(({ error }) => ({
   '& .MuiOutlinedInput-root': {
     border: error ? '1.5px solid #d32f2f' : '1px solid #708090',
     fontSize: '1rem',
+    color: 'blue !important'
+  },
+  "& .MuiOutlinedInput-input.Mui-disabled": {
+    color: "#196496",
+    WebkitTextFillColor: "#196496", // For Safari support
   },
 }));
 
@@ -212,6 +217,12 @@ const CustomFields = ({
               sx={{
                 border: hasError ? '1.5px solid #d32f2f' : '1px solid #708090',
                 fontSize: '1rem',
+                "& .MuiOutlinedInput-input.Mui-disabled": {
+                  color: "#196496",
+                  WebkitTextFillColor: "#196496", // For Safari support
+                },
+                    color: 'blue !important'
+
               }}
             >
               <MenuItem value="">
@@ -242,7 +253,9 @@ const CustomFields = ({
               sx={{
                 '& .MuiInputBase-root': {
                   resize: field.fieldType === 'textarea' ? 'vertical' : 'none',
-                  minHeight: field.fieldType === 'textarea' ? '100px' : 'auto'
+                  minHeight: field.fieldType === 'textarea' ? '100px' : 'auto',
+                      color: 'blue !important'
+
                 }
               }}
             />
@@ -255,7 +268,7 @@ const CustomFields = ({
       case 'date':
         return (
           <div>
-            {!showDateInputs[fieldName] ? (
+            {(!showDateInputs[fieldName] && !editing) ? (
               <Button
                 variant="outlined"
                 onClick={() => editing && toggleDateInput(fieldName)}
@@ -277,7 +290,7 @@ const CustomFields = ({
               <StyledTextField
                 {...commonProps}
                 type="date"
-                autoFocus
+                color="blue"
                 onBlur={(e) => {
                   formik.handleBlur(e);
                   if (!formik.values[fieldName]) {

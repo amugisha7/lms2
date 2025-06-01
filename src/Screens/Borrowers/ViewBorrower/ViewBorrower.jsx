@@ -8,6 +8,7 @@ import Button from '@mui/material/Button';
 import ViewBorrowerForm from './ViewBorrowerForm';
 import { generateClient } from 'aws-amplify/api';
 import Switch from '@mui/material/Switch';
+import { Checkbox } from '@mui/material';
 
 export default function ViewBorrower() {
   const { borrowerId } = useParams();
@@ -58,7 +59,6 @@ export default function ViewBorrower() {
         });
 
         setBorrower(response.data.getBorrower);
-       console.log(" response.data.getBorrower.customFieldsData::: ",  response.data.getBorrower.customFieldsData);
       } catch (error) {
         console.error('Error fetching borrower:', error);
       } finally {
@@ -95,41 +95,42 @@ export default function ViewBorrower() {
           : borrower?.businessName || 'View Borrower'}
       </Typography>
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-        <Switch
+        <Checkbox
           checked={editing}
           onChange={() => setEditing((prev) => !prev)}
           color="primary"
+          sx={{backgroundColor:'lightblue', border: '1px solid lightgrey !important'}}
           disabled={formSubmitting}
         />
-        <Typography sx={{ ml: 1 }}>
-          {editing ? "Editing Enabled" : "Editing Disabled"}
-        </Typography>
-        {/* Save Changes button next to toggle, only when editing */}
-        {editing && (
-          <Button
-            variant="contained"
-            // color="primary"
-            sx={{
-              ml: 2,
-              minWidth: 120,
-              '&.Mui-disabled': {
-                backgroundColor: '#ccc',
-                color: '#666'
-              }
-            }}
-            disabled={formSubmitting}
-            onClick={async () => {
-              if (formRef.current) {
-                setFormSubmitting(true);
-                await formRef.current();
-                setFormSubmitting(false);
-              }
-            }}
-          >
-            Save Changes
-          </Button>
-        )}
+        {editing ? <Typography color='blue'>Editing Enabled</Typography> 
+          : <Typography>Enable Editing</Typography>}
       </Box>
+      {/* Floating Save Changes button */}
+      {editing && (
+        <Button
+          variant="contained"
+          color="secondary"
+          sx={{
+            position: 'fixed',
+            bottom: 32,
+            right: 32, // changed from left: 32 to right: 32
+            minWidth: 140,
+            zIndex: 1300,
+            boxShadow: 4,
+            // backgroundColor: 'green !important', color: '#FFF'
+          }}
+          disabled={formSubmitting}
+          onClick={async () => {
+            if (formRef.current) {
+              setFormSubmitting(true);
+              await formRef.current();
+              setFormSubmitting(false);
+            }
+          }}
+        >
+          Save Changes
+        </Button>
+      )}
       <Tabs
         value={tab}
         onChange={handleTabChange}

@@ -16,6 +16,9 @@ import * as Yup from 'yup';
 import { UserContext } from '../../../App';
 import CustomFields from '../../AdminScreens/CustomFields/CustomFields';
 import { useColorScheme } from '@mui/material/styles';
+import SnackbarNotification from '../../../ComponentAssets/SnackbarNotification';
+import Link from '@mui/material/Link';
+import { Link as RouterLink } from 'react-router-dom';
 
 
 const FormGrid = styled(Grid)(() => ({
@@ -206,7 +209,6 @@ export default function ViewBorrowerForm({ borrower, editing, setEditing, formSu
       setSubmitError('');
       setSubmitSuccess('');
       setSubmitting(true);
-      
       try {
         if (!userDetails?.branchUsersId) {
           setSubmitError('Error: Please try refreshing the page.');
@@ -372,6 +374,10 @@ export default function ViewBorrowerForm({ borrower, editing, setEditing, formSu
 
   return (
     <AppTheme {...props}>
+      <SnackbarNotification
+        message={submitSuccess}
+        color="green"
+      />
       <Box
         component="form"
         onSubmit={formik.handleSubmit}
@@ -668,18 +674,24 @@ export default function ViewBorrowerForm({ borrower, editing, setEditing, formSu
 
           <FormGrid size={{ xs: 12, md: 6 }}>
             <FormLabel htmlFor="dob">Date of Birth</FormLabel>
-            {!showDobInput ? (
+            {(!showDobInput && !editing) ? (
               <Button
                 variant="outlined"
                 onClick={() => setShowDobInput(true)}
+                disabled={!editing}
                 sx={{
                   justifyContent: 'flex-start',
-                  color: formik.values.dob ? 'inherit' : '#888',
+                  // color: formik.values.dob ? 'inherit' : '#888',
+                  color: 'blue',
                   border: '1px solid #708090',
                   fontSize: '1rem',
                   textTransform: 'none',
                   height: 40,
                   pl: 2,
+                  "& .MuiOutlinedInput-input.Mui-disabled": {
+                    color: "#196496",
+                    WebkitTextFillColor: "#196496", // For Safari support
+                  }
                 }}
                 fullWidth
               >
@@ -694,7 +706,6 @@ export default function ViewBorrowerForm({ borrower, editing, setEditing, formSu
                 onChange={formik.handleChange}
                 inputProps={{ max: maxDob }}
                 size="small"
-                autoFocus
                 onBlur={() => { if (!formik.values.dob) setShowDobInput(false); }}
                 error={formik.touched.dob && Boolean(formik.errors.dob)}
                 sx={{
@@ -769,6 +780,23 @@ export default function ViewBorrowerForm({ borrower, editing, setEditing, formSu
             />
           </FormGrid>
         </Grid>
+        <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', mb: 4, mt:4 }}>
+            <Link
+              component={RouterLink}
+              to="/customFields"
+              sx={{
+                color: 'text.secondary',
+                textDecoration: 'none',
+                '&:hover': {
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              <Typography variant="body2">
+                Click here to manage custom fields
+              </Typography>
+            </Link>
+          </Box>
       </Box>
     </AppTheme>
   );}

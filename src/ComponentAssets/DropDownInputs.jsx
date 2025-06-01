@@ -41,7 +41,16 @@ export default function DropDownInputs({ dropdowns, editing = true }) {
             {dropdown.label}
           </FormLabel>
           <Select
+            sx={{
+                "& .MuiOutlinedInput-input.Mui-disabled": {
+                  color: "#196496",
+                  WebkitTextFillColor: "#196496", // For Safari support
+                },
+                    color: 'blue !important'
+
+              }}
             id={dropdown.id}
+            
             name={dropdown.id}
             value={dropdown.value}
             onChange={dropdown.onChange}

@@ -39,7 +39,7 @@ const SnackbarNotification = ({ message, color = 'blue', link }) => {
       open={open}
       onClose={handleClose}
       anchorOrigin={{ vertical: 'bottom', horizontal: isMobile ? 'center' : 'right' }}
-      autoHideDuration={10000}
+      autoHideDuration={8000}
     >
       <Alert
         severity={colorMap[color] || 'info'}

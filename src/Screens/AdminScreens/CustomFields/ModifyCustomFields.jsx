@@ -17,6 +17,7 @@ import { useFormik } from 'formik';
 import { useContext } from 'react';
 import { generateClient } from 'aws-amplify/api';
 import { UserContext } from '../../../App';
+import CustomFieldsDataGrid from './CustomFieldsDataGrid';
 
 const FormGrid = styled(Grid)(() => ({
   display: 'flex',
@@ -43,6 +44,8 @@ export default function ModifyCustomFields(props) {
   const [fields, setFields] = React.useState([]);
   const [dropdownFields, setDropdownFields] = React.useState([]);
   const [loading, setLoading] = React.useState(false);
+  const [rows, setRows] = React.useState([]);
+  const [hasFetched, setHasFetched] = React.useState(false);
 
   // Dummy data for demonstration
   const demoFields = [
@@ -51,61 +54,56 @@ export default function ModifyCustomFields(props) {
   ];
 
   const formik = useFormik({
-    });
+    // Add your formik config here if needed
+  });
 
   const client = generateClient();
 
   // Load fields handler (replace with real fetch)
   const handleLoadFields = async (formKey) => {
-  setLoading(true); // Disable the button and change text to "Loading..."
-  try {
-    const res = await client.graphql({
-      query: `
-        query ListCustomFormFields(
-          $filter: ModelCustomFormFieldFilterInput
-          $limit: Int
-          $nextToken: String
-        ) {
-          listCustomFormFields(filter: $filter, limit: $limit, nextToken: $nextToken) {
-            items {
-              id
-              formKey
-              label
-              fieldType
-              options
-              required
-              createdAt
+    setLoading(true);
+    setHasFetched(true);
+    try {
+      const res = await client.graphql({
+        query: `
+          query ListCustomFormFields(
+            $filter: ModelCustomFormFieldFilterInput
+            $limit: Int
+            $nextToken: String
+          ) {
+            listCustomFormFields(filter: $filter, limit: $limit, nextToken: $nextToken) {
+              items {
+                id
+                formKey
+                label
+                fieldType
+                required
+              }
             }
           }
+        `,
+        variables: {
+          filter: {
+            and: [
+              { formKey: { eq: formKey } },
+              { institutionCustomFormFieldsId: { eq: institutionId } },
+              { branchCustomFormFieldsId: { eq: branchId } }
+            ]
+          }
         }
-      `,
-      variables: {
-        filter: {
-          and: [
-            { formKey: { eq: formKey } },
-            {
-              or: [
-                { institutionCustomFormFieldsId: { eq: institutionId } },
-                { branchCustomFormFieldsId: { eq: branchId } }
-              ]
-            }
-          ]
-        }
-      }
-    });
-
-    const fieldsWithParsedOptions = res.data.listCustomFormFields.items.map(field => ({
-      ...field,
-      options: field.options ? JSON.parse(field.options) : null
-    }));
-
-    console.log('Custom fields for', formKey, fieldsWithParsedOptions);
-  } catch (error) {
-    console.error("Error fetching custom fields:", error);
-  } finally {
-    setLoading(false); // Re-enable the button and reset text
-  }
-};
+      });
+      const fieldsWithParsedOptions = res.data.listCustomFormFields.items.map(field => ({
+        ...field,
+        options: field.options ? JSON.parse(field.options) : null
+      }));
+      setRows(fieldsWithParsedOptions);
+      console.log('Custom fields for', formKey, fieldsWithParsedOptions);
+    } catch (error) {
+      console.error("Error fetching custom fields:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // DataGrid columns
   const columns = [
@@ -118,43 +116,8 @@ export default function ModifyCustomFields(props) {
       renderCell: (params) => (
         <Checkbox checked={params.value} disabled />
       ),
-    },
-    {
-      field: 'delete',
-      headerName: 'Delete',
-      flex: 1,
-      renderCell: (params) => (
-        <IconButton color="error">
-          <DeleteIcon />
-        </IconButton>
-      ),
       sortable: false,
       filterable: false,
-    },
-  ];
-
-  // Dropdown fields columns
-  const dropdownColumns = [
-    { field: 'label', headerName: 'Label', flex: 2 },
-    {
-      field: 'options',
-      headerName: 'Options',
-      flex: 3,
-      renderCell: (params) => (
-        <Box>
-          {params.value?.map((opt, idx) => (
-            <Typography variant="body2" key={idx}>{idx + 1}. {opt}</Typography>
-          ))}
-        </Box>
-      ),
-    },
-    {
-      field: 'required',
-      headerName: 'Is Required?',
-      flex: 1,
-      renderCell: (params) => (
-        <Checkbox checked={params.value} disabled />
-      ),
     },
     {
       field: 'delete',
@@ -177,43 +140,49 @@ export default function ModifyCustomFields(props) {
         onSubmit={formik.handleSubmit}
         sx={{
           mx: { xs: 0, sm: 'auto' },
-          mt: { xs: 2, sm: 2 },
+          mt: { xs: 0, sm: 0 },
           p: { xs: 0, sm: 0 },
           borderRadius: 1,
           display: 'flex',
           flexDirection: 'column',
         }}
-      >  
-
+      >
         <Grid container spacing={3}>
           <FormGrid size={{ xs: 12, md: 6 }}>
-            <FormLabel htmlFor="formKey">Select a form to Modify it's Custom Fields</FormLabel>
+            <FormLabel htmlFor="formKey">Select a form to Modify its Custom Fields</FormLabel>
             <StyledSelect
               id="formKey"
               name="formKey"
               size="small"
               value={formKey}
               onChange={(e) => setFormKey(e.target.value)}
+              fullWidth
             >
               <MenuItem value="CreateBorrowerForm">Borrower Form</MenuItem>
               <MenuItem value="CreateLoanForm">Loan Form</MenuItem>
               <MenuItem value="CreateCollateralForm">Collateral Form</MenuItem>
             </StyledSelect>
           </FormGrid>
-
-          <FormGrid>
+          <FormGrid item xs={12} md={6}>
             <Button
-                variant="contained"
-                color="secondary"
-                sx={{ mt: 3 }}
-                disabled={!formKey || loading} // Disable when loading or no formKey
-                onClick={() => handleLoadFields(formKey)}
+              variant="contained"
+              color="secondary"
+              sx={{ mt: { xs: 0, md: 3 } }}
+              disabled={!formKey || loading}
+              onClick={() => handleLoadFields(formKey)}
+              fullWidth
             >
-                {loading ? "Loading..." : "Load Custom Fields"}
+              {loading ? "Loading..." : "Load Custom Fields"}
             </Button>
           </FormGrid>
-
         </Grid>
+        <Box sx={{ height: 400, width: '100%', mt: 3 }}>
+          <CustomFieldsDataGrid
+            rows={rows}
+            loading={loading}
+            hasFetched={hasFetched}
+          />
+        </Box>
       </Box>
     </AppTheme>
   );

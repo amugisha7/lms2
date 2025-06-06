@@ -9,6 +9,9 @@ import AppRoutes from './Routes';
 import LoadingScreen from './Resources/LoadingScreen';
 import ErrorLoadingWorkspace from './Resources/ErrorLoadingWorkspace';
 import NoInternet from './Resources/NoInternet';
+import { ColorModeContext, useMode } from "./theme";
+import { ThemeProvider } from '@mui/material';
+
 
 // Create UserContext once at the top level
 export const UserContext = createContext();
@@ -19,6 +22,9 @@ function App({ signOut, user }) {
   const [userDetails, setUserDetails] = useState(null);
   const [error, setError] = useState(false);
   const [online, setOnline] = useState(window.navigator.onLine);
+
+  const[theme, colorMode] = useMode()
+
 
   useEffect(() => {
     const handleOnline = () => setOnline(true);
@@ -45,6 +51,9 @@ function App({ signOut, user }) {
                 status 
                 institutionUsersId 
                 branchUsersId 
+                institution {
+                  name
+                }
               } 
             }`,
             variables: { id: user.userId }
@@ -77,18 +86,23 @@ function App({ signOut, user }) {
   }
 
   return (
-    <UserContext.Provider value={{ signOut, user, userDetails, setUserDetails }}>
-      {checking && <LoadingScreen onSignOut={signOut} />}
-      {!checking &&
-        <SnackbarProvider>
-          <NotificationProvider>
-            {error
-              ? <ErrorLoadingWorkspace onSignOut={signOut} />
-              : <AppRoutes userExists={userExists} />}
-          </NotificationProvider>
-        </SnackbarProvider>
-      }
-    </UserContext.Provider>
+    <ColorModeContext.Provider value={colorMode}>
+      <ThemeProvider theme={theme}>
+        <UserContext.Provider value={{ signOut, user, userDetails, setUserDetails }}>
+          {checking && <LoadingScreen onSignOut={signOut} />}
+          {!checking &&
+            <SnackbarProvider>
+              <NotificationProvider>
+                {error
+                  ? <ErrorLoadingWorkspace onSignOut={signOut} />
+                  : <AppRoutes userExists={userExists} />}
+              </NotificationProvider>
+            </SnackbarProvider>
+          }
+        </UserContext.Provider>
+      </ThemeProvider>
+    </ColorModeContext.Provider>
+
   );
 }
 

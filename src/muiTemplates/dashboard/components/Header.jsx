@@ -5,6 +5,7 @@ import CustomDatePicker from './CustomDatePicker';
 import MenuButton from './MenuButton';
 import ColorModeIconDropdown from '../../shared-theme/ColorModeIconDropdown';
 import Search from './Search';
+import ColorModeToggle from '../../../ComponentAssets/ColorModeToggle';
 
 export default function Header() {
   return (
@@ -27,7 +28,8 @@ export default function Header() {
         <MenuButton showBadge aria-label="Open notifications">
           <NotificationsRoundedIcon />
         </MenuButton>
-        <ColorModeIconDropdown />
+        <ColorModeToggle />
+
       </Stack>
     </Stack>
   );

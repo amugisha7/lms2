@@ -6,6 +6,7 @@ import CreateBorrower from './Screens/Borrowers/CreateBorrower';
 import AllBorrowers from './Screens/Borrowers/AllBorrowers';
 import ViewBorrower from './Screens/Borrowers/ViewBorrower/ViewBorrower';
 import CustomFieldsManager from './Screens/AdminScreens/CustomFields/CustomFieldsManager';
+import Home from './Screens/Home';
 
 export default function AppRoutes({ userExists }) {
 
@@ -14,7 +15,7 @@ export default function AppRoutes({ userExists }) {
       <Routes>
         <Route
           path="/"
-          element={userExists ? <Dashboard /> : <Onboarding />}
+          element={userExists ? <Home /> : <Onboarding />}
         >
           {userExists && (
             <>

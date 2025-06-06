@@ -22,7 +22,7 @@ export default function CreateBorrower() {
         width: '100%',
       }}
     >
-      <Typography variant="h3" sx={{ mb: 2, fontWeight: 600 }}>
+      <Typography variant="h3" sx={{ my: 2, fontWeight: 600 }}>
         Custom Fields Manager
       </Typography>
       <Tabs

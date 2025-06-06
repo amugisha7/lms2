@@ -19,6 +19,8 @@ import { useNavigate } from 'react-router-dom';
 import SnackbarNotification from '../../ComponentAssets/SnackbarNotification';
 import { Link as RouterLink } from 'react-router-dom';
 import Link from '@mui/material/Link';
+import { useTheme } from "@mui/material";
+import { tokens } from "../../theme";
 
 const FormGrid = styled(Grid)(() => ({
   display: 'flex',
@@ -84,6 +86,9 @@ export default function CreateBorrowerForm(props) {
   const [submitSuccess, setSubmitSuccess] = useState('');
   const [dynamicValidationSchema, setDynamicValidationSchema] = useState(baseValidationSchema);
   const navigate = useNavigate();
+
+  const theme = useTheme();
+  const colors = tokens(theme.palette.mode);
 
   // Base initial values for the form
   const baseInitialValues = {
@@ -267,7 +272,7 @@ export default function CreateBorrowerForm(props) {
   };
 
   return (
-    <AppTheme {...props}>
+    <>
       <SnackbarNotification
         message={submitSuccess}
         color="green"
@@ -282,9 +287,10 @@ export default function CreateBorrowerForm(props) {
           borderRadius: 1,
           display: 'flex',
           flexDirection: 'column',
+          flex: 1,
         }}
       >
-        <Typography variant="caption" sx={{ my: 2 }}>
+        <Typography variant="caption" sx={{ my: 2}}>
           All fields are optional but you must provide at least First Name or Business Name.
         </Typography>
         
@@ -630,6 +636,6 @@ export default function CreateBorrowerForm(props) {
           </Box>
         </Box>
       </Box>
-    </AppTheme>
+    </>
   );
 }

@@ -21,6 +21,11 @@ import {
   treeViewCustomizations,
 } from './theme/customizations';
 
+import { tokens } from '../../theme';
+import {useTheme} from '@mui/material'
+import ColorModeToggle from '../../ComponentAssets/ColorModeToggle';
+import NavBar from '../../ComponentAssets/Menu/NavBar';
+
 const xThemeComponents = {
   ...chartsCustomizations,
   ...dataGridCustomizations,
@@ -33,6 +38,10 @@ export default function Dashboard(props) {
   const { showNotification } = useNotification();
   const [sideMenuOpen, setSideMenuOpen] = React.useState(true);
 
+  const theme = useTheme();
+  const colors = tokens(theme.palette.mode);
+
+
   React.useEffect(() => {
     if (location.state?.notification) {
       showNotification(location.state.notification.message, location.state.notification.color);
@@ -44,6 +53,58 @@ export default function Dashboard(props) {
   // Toggle sidebar only on desktop
   const handleShowMenu = () => setSideMenuOpen(true);
   const handleHideMenu = () => setSideMenuOpen(false);
+
+  return (<Box>
+    <Box sx={{ display: 'flex' }}>
+        {/* Show IconButton only on desktop */}
+        {!sideMenuOpen && (
+        <IconButton
+          aria-label="Show menu"
+          sx={{
+              ml: 3,
+              mt: 1,
+              display: { xs: 'none', sm: 'none', md: 'inline-flex' },
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              zIndex: 1300,
+              // background: '#fff',
+              boxShadow: 1,
+            }}
+          onClick={handleShowMenu}
+        >
+          <MenuIcon />
+        </IconButton>
+        )}
+        {sideMenuOpen && (
+          <SideMenu onHideMenu={handleHideMenu} />
+        )}
+        <AppNavbar />
+        {/* Main content */}
+        <Box
+          component="main"
+          sx={(theme) => ({
+            flexGrow: 1,
+            backgroundColor: colors.grey[900],
+            overflow: 'auto',
+          })}
+        >
+          <Stack
+            spacing={2}
+            sx={{
+              alignItems: 'center',
+              mx: 3,
+              pb: 5,
+              mt: { xs: 8, md: 0 },
+            }}
+          >
+            <NavBar />
+            <Header />
+            <Outlet /> {/* This will render the matched child route */}
+          </Stack>
+        </Box>
+      </Box>
+  </Box>)
 
   return (
     <AppTheme {...props} themeComponents={xThemeComponents}>

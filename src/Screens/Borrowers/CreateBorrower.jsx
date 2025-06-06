@@ -24,10 +24,14 @@ export default function CreateBorrower() {
         maxWidth: { xs: '100%', md: 800 },
         mx: 'auto',
         width: '100%',
+        flex: 1
 
       }}
     >
-      <Typography variant="h3" sx={{ mb: 2, fontWeight: 600 }}>
+      <Typography 
+        variant="h3" 
+        sx={{ mb: 2, fontWeight: 600, color: (theme) => theme.palette.neutral.light  }}
+      >
         Create a new Borrower
       </Typography>
       <Tabs

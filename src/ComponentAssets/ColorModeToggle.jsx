@@ -17,7 +17,7 @@ const ColorModeToggle = () => {
       color="inherit"
       sx={{
         "& svg": {
-          color: colors.grey[100],
+          color: colors.grey[200],
         },
       }}
     >

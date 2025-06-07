@@ -1,11 +1,11 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Onboarding from './Screens/Onboarding/Onboarding';
-import Dashboard from './muiTemplates/dashboard/Dashboard';
 import MainGrid from './muiTemplates/dashboard/components/MainGrid';
 import CreateBorrower from './Screens/Borrowers/CreateBorrower';
 import AllBorrowers from './Screens/Borrowers/AllBorrowers';
 import ViewBorrower from './Screens/Borrowers/ViewBorrower/ViewBorrower';
 import CustomFieldsManager from './Screens/AdminScreens/CustomFields/CustomFieldsManager';
+import Dashboard from './Screens/Dashboard/Dashboard';
 import Home from './Screens/Home';
 
 export default function AppRoutes({ userExists }) {
@@ -15,7 +15,7 @@ export default function AppRoutes({ userExists }) {
       <Routes>
         <Route
           path="/"
-          element={userExists ? <Home /> : <Onboarding />}
+          element={userExists ? <Dashboard /> : <Onboarding />}
         >
           {userExists && (
             <>

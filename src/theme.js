@@ -133,6 +133,8 @@ export const themeSettings = (mode) => {
         light: isDark ? colors.primary[400] : colors.primary[200],
         dark: isDark ? colors.primary[600] : colors.primary[300],
         contrastText: isDark ? "#fff" : "#171717", // <-- force text color
+        topbar: isDark ? '#181A1B' : 'white',
+        mainbgd: isDark? '#181A1B' : '#f5f5f5'
       },
       secondary: {
         main: colors.greenAccent[500],
@@ -404,20 +406,26 @@ export const themeSettings = (mode) => {
             "&:hover": {
               transform: "scale(1.05)",
             },
+            // Set icon color for all MUI icons inside IconButton
+            color: isDark ? "#c2c2c2" : "#292929",
+          },
+        },
+      },
+      MuiSvgIcon: {
+        styleOverrides: {
+          root: {
+            color: isDark ? "#c2c2c2" : "#292929",
           },
         },
       },
       MuiCard: {
         styleOverrides: {
           root: {
-            borderRadius: 12,
-            border: isDark ? `1px solid ${colors.grey[700]}` : `1px solid ${colors.grey[200]}`,
-            transition: "all 0.2s ease-in-out",
-            "&:hover": {
-              transform: "translateY(-2px)",
-              boxShadow: isDark
-                ? "0px 8px 20px rgba(0, 0, 0, 0.4)"
-                : "0px 8px 20px rgba(0, 0, 0, 0.15)",
+            borderRadius: '8px',
+            backgroundColor: isDark ? colors.primary[600] : '#ffffff',
+            transition: 'all 0.2s ease-in-out',
+            '&:hover': {
+              borderColor: isDark ? colors.grey[600] : colors.grey[300],
             },
           },
         },
@@ -446,6 +454,22 @@ export const themeSettings = (mode) => {
           paper: {
             backgroundColor: isDark ? colors.primary[600] : colors.grey[50],
             borderRight: isDark ? `1px solid ${colors.grey[700]}` : `1px solid ${colors.grey[200]}`,
+          },
+        },
+      },
+      MuiTypography: {
+        styleOverrides: {
+          h6: {
+            fontSize: '0.875rem',
+            fontWeight: 600,
+            letterSpacing: '0.5px',
+          },
+          subtitle2: {
+            fontSize: '0.75rem',
+            color: isDark ? colors.grey[400] : colors.grey[600],
+          },
+          caption: {
+            fontSize: '0.75rem',
           },
         },
       },

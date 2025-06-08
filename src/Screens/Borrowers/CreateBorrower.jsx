@@ -5,10 +5,14 @@ import Tab from '@mui/material/Tab';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import CreateBorrowerForm from './CreateBorrowerForm';
+import { useTheme } from '@mui/material';
+import { tokens } from '../../theme';
 
 export default function CreateBorrower() {
   const [tab, setTab] = useState(0);
   const [editing, setEditing] = useState(false);
+  const theme = useTheme();
+  const colors = tokens(theme.palette.mode);
 
   const handleTabChange = (event, newValue) => {
     setTab(newValue);
@@ -29,25 +33,28 @@ export default function CreateBorrower() {
       }}
     >
       <Typography 
-        variant="h3" 
-        sx={{ mb: 2, fontWeight: 600, color: (theme) => theme.palette.neutral.light  }}
+        variant="h4" 
+        sx={{ mb: 2, fontWeight: 600,}}
       >
-        Create a new Borrower
+        CREATE A NEW BORROWER
       </Typography>
       <Tabs
         value={tab}
         onChange={handleTabChange}
-        textColor="primary"
-        indicatorColor="primary"
         variant='scrollable'
         scrollButtons="auto"
-
         sx={{
           borderBottom: 1,
-          borderColor: 'divider',
+          borderColor: colors.blueAccent[600],
           mb: 2,
-          // '& .MuiTab-root': { color: '#fff' },
-          // '& .Mui-selected': { color: '#1de9b6' }
+          '& .MuiTabs-indicator': {
+            backgroundColor: colors.blueAccent[100], // Blue accent indicator
+            height: 4,
+            // borderRadius: 1,
+          },
+          '& .MuiTab-root.Mui-selected': {
+            color: colors.blueAccent[100] + ' !important', // Active tab text color
+          },
         }}
       >
         <Tab sx={{mx: 1}} label="BORROWER DETAILS" />

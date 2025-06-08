@@ -5,15 +5,20 @@ import FormLabel from '@mui/material/FormLabel';
 import { styled } from '@mui/material/styles';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import Grid from '@mui/material/Grid';
+import { useTheme } from "@mui/material";
+import { tokens } from "../theme";
 
 const FormGrid = styled(Grid)(() => ({
   display: 'flex',
   flexDirection: 'column',
 }));
 
-const StyledOutlinedInput = styled(OutlinedInput)({
-  border: '1px solid #708090',
-  fontSize: '1rem',
+const StyledOutlinedInput = styled(OutlinedInput)(({ theme }) => {
+  const colors = tokens(theme.palette.mode);
+  return {
+    border: `1px solid ${colors.grey[200]}`,
+    fontSize: '1rem',
+  };
 });
 
 /**
@@ -46,8 +51,6 @@ export default function DropDownInputs({ dropdowns, editing = true }) {
                   color: "#196496",
                   WebkitTextFillColor: "#196496", // For Safari support
                 },
-                    color: 'blue !important'
-
               }}
             id={dropdown.id}
             
@@ -60,11 +63,26 @@ export default function DropDownInputs({ dropdowns, editing = true }) {
             MenuProps={{ PaperProps: { style: { maxHeight: 300 } } }}
             disabled={!editing}
           >
-            <MenuItem value="">
+            <MenuItem 
+              value=""
+              sx={{
+                '&:hover': {
+                  color: 'white',
+                },
+              }}
+            >
               <em>{dropdown.placeholder || `Select ${dropdown.label}`}</em>
             </MenuItem>
             {dropdown.options.map((opt) => (
-              <MenuItem key={opt.value} value={opt.value}>
+              <MenuItem 
+                key={opt.value} 
+                value={opt.value}
+                sx={{
+                  '&:hover': {
+                    color: 'white',
+                  },
+                }}
+              >
                 {opt.label}
               </MenuItem>
             ))}

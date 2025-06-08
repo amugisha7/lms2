@@ -39,7 +39,7 @@ const SideBar = ({ open = true, onClose }) => {
   return (
     <Box
       sx={{
-        width: 220,
+        width: 240,
         bgcolor: '#282828',
         color: 'white',
         display: open ? 'flex' : 'none',
@@ -131,7 +131,7 @@ const SideBar = ({ open = true, onClose }) => {
                         }}
                       >
                         <ListItemIcon sx={{ color: 'white', minWidth: 36 }}>
-                          <PersonAddIcon />
+                          <PersonAddIcon sx={{color: 'white'}}/>
                         </ListItemIcon>
                         <ListItemText
                           primary="Create Borrower"
@@ -152,7 +152,7 @@ const SideBar = ({ open = true, onClose }) => {
                         }}
                       >
                         <ListItemIcon sx={{ color: 'white', minWidth: 36 }}>
-                          <ListAltIcon />
+                          <ListAltIcon sx={{color: 'white'}}/>
                         </ListItemIcon>
                         <ListItemText
                           primary="View Borrowers"

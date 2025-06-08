@@ -5,6 +5,9 @@ import { createTheme } from "@mui/material/styles";
 export const tokens = (mode) => ({
   ...(mode === "dark"
     ? {
+        white: {
+          100: "#282828",
+        },
         grey: {
           100: "#e0e0e0",
           200: "#c2c2c2",
@@ -49,19 +52,33 @@ export const tokens = (mode) => ({
           800: "#58201e",
           900: "#2c100f",
         },
+        orangeAccent: {
+          100: "#fef5e7",
+          200: "#fdebd0",
+          300: "#fce1b8",
+          400: "#fbd7a1",
+          500: "#facd89",
+          600: "#f9c372",
+          700: "#f8b95a",
+          800: "#f7af43",
+          900: "#ED9100",
+        },
         blueAccent: {
-          100: "#e1e2fe",
-          200: "#c3c6fd",
-          300: "#a4a9fc",
-          400: "#868dfb",
-          500: "#6870fa",
-          600: "#535ac8",
-          700: "#3e4396",
-          800: "#2a2d64",
-          900: "#151632",
+          100: "#e6f0f7",
+          200: "#cce1ef",
+          300: "#b3d2e7",
+          400: "#99c3df",
+          500: "#80b4d7",
+          600: "#66a5cf",
+          700: "#4d96c7",
+          800: "#3387bf",
+          900: "#043F69",
         },
       }
     : {
+        white: {
+          100: "#ffffff", // manually changed
+        },
         grey: {
           100: "#141414",
           200: "#292929",
@@ -106,16 +123,27 @@ export const tokens = (mode) => ({
           800: "#f1b9b7",
           900: "#f8dcdb",
         },
+        orangeAccent: {
+          100: "#ED9100",
+          200: "#f7af43",
+          300: "#f8b95a",
+          400: "#f9c372",
+          500: "#facd89",
+          600: "#fbd7a1",
+          700: "#fce1b8",
+          800: "#fdebd0",
+          900: "#fef5e7",
+        },
         blueAccent: {
-          100: "#151632",
-          200: "#2a2d64",
-          300: "#3e4396",
-          400: "#535ac8",
-          500: "#6870fa",
-          600: "#868dfb",
-          700: "#a4a9fc",
-          800: "#c3c6fd",
-          900: "#e1e2fe",
+          100: "#043F69",
+          200: "#3387bf",
+          300: "#4d96c7",
+          400: "#66a5cf",
+          500: "#80b4d7",
+          600: "#99c3df",
+          700: "#b3d2e7",
+          800: "#cce1ef",
+          900: "#e6f0f7",
         },
       }),
 });
@@ -177,7 +205,7 @@ export const themeSettings = (mode) => {
         surface: isDark ? colors.primary[600] : colors.grey[100],
       },
       text: {
-        primary: isDark ? "#fff" : "#171717",     // <-- force text color
+        primary: isDark ? "#e8e6e3" : "#393a3d",     // <-- force text color
         secondary: isDark ? colors.grey[300] : colors.grey[600],
         disabled: isDark ? colors.grey[500] : colors.grey[400],
       },
@@ -192,6 +220,7 @@ export const themeSettings = (mode) => {
     },
     typography: {
       fontFamily: [
+        '"Montserrat"', // <-- Set Montserrat as the default font
         '"Inter"',
         '"Source Sans Pro"',
         '-apple-system',
@@ -211,7 +240,7 @@ export const themeSettings = (mode) => {
       fontWeightMedium: 500,
       fontWeightBold: 600,
       h1: {
-        fontFamily: '"Inter", "Source Sans Pro", sans-serif',
+        fontFamily: '"Montserrat", "Inter", "Source Sans Pro", sans-serif', // <-- Use Montserrat
         fontWeight: 700,
         fontSize: "clamp(2rem, 5vw, 3.5rem)",
         lineHeight: 1.2,
@@ -222,7 +251,7 @@ export const themeSettings = (mode) => {
         },
       },
       h2: {
-        fontFamily: '"Inter", "Source Sans Pro", sans-serif',
+        fontFamily: '"Montserrat", "Inter", "Source Sans Pro", sans-serif',
         fontWeight: 600,
         fontSize: "clamp(1.5rem, 4vw, 2.5rem)",
         lineHeight: 1.3,
@@ -233,7 +262,7 @@ export const themeSettings = (mode) => {
         },
       },
       h3: {
-        fontFamily: '"Inter", "Source Sans Pro", sans-serif',
+        fontFamily: '"Montserrat", "Inter", "Source Sans Pro", sans-serif',
         fontWeight: 600,
         fontSize: "clamp(1.25rem, 3vw, 2rem)",
         lineHeight: 1.4,
@@ -244,7 +273,7 @@ export const themeSettings = (mode) => {
         },
       },
       h4: {
-        fontFamily: '"Inter", "Source Sans Pro", sans-serif',
+        fontFamily: '"Montserrat", "Inter", "Source Sans Pro", sans-serif',
         fontWeight: 500,
         fontSize: "clamp(1.1rem, 2.5vw, 1.5rem)",
         lineHeight: 1.4,
@@ -254,14 +283,14 @@ export const themeSettings = (mode) => {
         },
       },
       h5: {
-        fontFamily: '"Inter", "Source Sans Pro", sans-serif',
+        fontFamily: '"Montserrat", "Inter", "Source Sans Pro", sans-serif',
         fontWeight: 500,
         fontSize: "clamp(1rem, 2vw, 1.25rem)",
         lineHeight: 1.5,
         color: isDark ? "#fff" : "#171717",
       },
       h6: {
-        fontFamily: '"Inter", "Source Sans Pro", sans-serif',
+        fontFamily: '"Montserrat", "Inter", "Source Sans Pro", sans-serif',
         fontWeight: 500,
         fontSize: "clamp(0.875rem, 1.5vw, 1.125rem)",
         lineHeight: 1.5,

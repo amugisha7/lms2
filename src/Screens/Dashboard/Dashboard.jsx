@@ -32,12 +32,12 @@ const Dashboard = () => {
       <SideBar open={drawerOpen} />
       
       {/* Main Content */}
-      <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+      <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', height: '100vh' }}>
         {/* Top Bar */}
         <TopBar onMenuClick={() => setDrawerOpen((prev) => !prev)} />
         
         {/* Dashboard Content */}
-        <Box sx={{ p: 5, flexGrow: 1 }}>
+        <Box sx={{ p: 5, flexGrow: 1, overflow: 'auto' }}>
           <Outlet />
         </Box>
       </Box>

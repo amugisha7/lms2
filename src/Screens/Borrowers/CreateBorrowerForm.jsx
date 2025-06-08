@@ -27,11 +27,14 @@ const FormGrid = styled(Grid)(() => ({
   flexDirection: 'column',
 }));
 
-const StyledOutlinedInput = styled(OutlinedInput)(({ error }) => ({
-  border: error ? '1.5px solid #d32f2f' : '1px solid #708090',
-  fontSize: '1rem',
-  color: 'blue !important'
-}));
+const StyledOutlinedInput = styled(OutlinedInput)(({ error, theme }) => {
+  const colors = tokens(theme.palette.mode);
+  return {
+    border: error ? '1.5px solid #d32f2f' : `1px solid ${colors.grey[200]}`,
+    fontSize: '1rem',
+    // color: 'blue !important'
+  };
+});
 
 const titles = [
   '', 'Mr.', 'Mrs.', 'Ms.', 'Miss', 'Dr.', 'Prof.', 'Rev.', 'Hon.', 'Eng.'
@@ -541,6 +544,19 @@ export default function CreateBorrowerForm(props) {
                 autoFocus
                 onBlur={() => { if (!formik.values.dob) setShowDobInput(false); }}
                 error={formik.touched.dob && Boolean(formik.errors.dob)}
+                sx={{
+                  '& input[type="date"]::-webkit-calendar-picker-indicator': {
+                    ...(theme.palette.mode === 'dark' && {
+                      filter: 'invert(1)',
+                    }),
+                    cursor: 'pointer',
+                  },
+                  '& input[type="date"]::-webkit-calendar-picker-indicator:hover': {
+                    ...(theme.palette.mode === 'dark' && {
+                      filter: 'invert(1) brightness(1.2)',
+                    }),
+                  },
+                }}
               />
             )}
             {formik.touched.dob && formik.errors.dob && (

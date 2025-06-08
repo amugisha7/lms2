@@ -9,44 +9,38 @@ import {
   Collapse
 } from '@mui/material';
 import {
-  Dashboard as DashboardIcon,
-  People as PeopleIcon,
-  AccountBalance as AccountBalanceIcon,
-  Group as GroupIcon,
-  AccountBalanceWallet as WalletIcon,
-  Assessment as ReportsIcon,
   ExpandLess,
-  ExpandMore,
-  PersonAdd as PersonAddIcon,
-  ListAlt as ListAltIcon
+  ExpandMore
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 
-import myLogo from '../../Resources/loantabs_logo.png'; // Adjust path if needed
+import myLogo from '../../Resources/loantabs_logo.png';
+import { menuItems } from './Menu';
 
 const SideBar = ({ open = true, onClose }) => {
-  const [borrowersOpen, setBorrowersOpen] = useState(false);
+  const [expandedItems, setExpandedItems] = useState({});
   const navigate = useNavigate();
-  const [menuItems] = useState([
-    { name: 'Dashboard', icon: <DashboardIcon sx={{ color: 'white'}}/>, active: true },
-    { name: 'Borrowers', icon: <PeopleIcon sx={{ color: 'white'}}/>, expandable: true },
-    { name: 'Loans', icon: <AccountBalanceIcon sx={{ color: 'white'}}/>, expandable: true },
-    { name: 'Team', icon: <GroupIcon sx={{ color: 'white'}}/>, expandable: true },
-    { name: 'Accounts', icon: <WalletIcon sx={{ color: 'white'}}/>, expandable: true },
-    { name: 'Reports', icon: <ReportsIcon sx={{ color: 'white'}}/>, expandable: true }
-  ]);
+
+  const handleToggleExpand = (itemName) => {
+    setExpandedItems(prev => ({
+      ...prev,
+      [itemName]: !prev[itemName]
+    }));
+  };
 
   return (
     <Box
       sx={{
-        width: 240,
+        width: 220,
+        minWidth: 220,
+        flexShrink: 0,
         bgcolor: '#282828',
         color: 'white',
         display: open ? 'flex' : 'none',
         flexDirection: 'column',
         transition: 'all 0.3s',
-        overflowY: 'auto', // Enable vertical scroll
-        height: '100vh'    // Ensure sidebar takes full viewport height
+        overflowY: 'auto',
+        height: '100vh'
       }}
     >
       {/* LoanTabs Logo */}
@@ -94,15 +88,18 @@ const SideBar = ({ open = true, onClose }) => {
       <Box sx={{ mt: 4 }}>
         <List dense>
           {menuItems.map((item, index) => {
-            if (item.name === 'Borrowers') {
+            if (item.expandable && item.children) {
+              const isExpanded = expandedItems[item.name] || false;
+              
               return (
                 <React.Fragment key={item.name}>
                   <ListItem
                     button
-                    onClick={() => setBorrowersOpen((prev) => !prev)}
+                    onClick={() => handleToggleExpand(item.name)}
                     sx={{
                       mb: 0.5,
                       px: 3,
+                      cursor: 'pointer',
                       '&:hover': { bgcolor: '#000' }
                     }}
                   >
@@ -116,64 +113,50 @@ const SideBar = ({ open = true, onClose }) => {
                         sx: { color: 'white' }
                       }}
                     />
-                    {borrowersOpen ? <ExpandLess sx={{ color: 'white' }} /> : <ExpandMore sx={{ color: 'white' }} />}
+                    {isExpanded ? <ExpandLess sx={{ color: 'white' }} /> : <ExpandMore sx={{ color: 'white' }} />}
                   </ListItem>
-                  <Collapse in={borrowersOpen} timeout="auto" unmountOnExit>
+                  <Collapse in={isExpanded} timeout="auto" unmountOnExit>
                     <List component="div" disablePadding dense>
-                      <ListItem
-                        button
-                        onClick={() => navigate('/addBorrower')}
-                        sx={{
-                          pl: 6,
-                          mb: 0.5,
-                          color: 'white',
-                          '&:hover': { bgcolor: '#000' }
-                        }}
-                      >
-                        <ListItemIcon sx={{ color: 'white', minWidth: 36 }}>
-                          <PersonAddIcon sx={{color: 'white'}}/>
-                        </ListItemIcon>
-                        <ListItemText
-                          primary="Create Borrower"
-                          primaryTypographyProps={{
-                            fontSize: '0.85rem',
-                            sx: { color: 'white' }
+                      {item.children.map((child, childIndex) => (
+                        <ListItem
+                          key={child.name}
+                          button
+                          onClick={() => child.route && navigate(child.route)}
+                          sx={{
+                            pl: 6,
+                            mb: 0.5,
+                            color: 'white',
+                            cursor: 'pointer',
+                            '&:hover': { bgcolor: '#000' }
                           }}
-                        />
-                      </ListItem>
-                      <ListItem
-                        button
-                        onClick={() => navigate('/allBorrowers')}
-                        sx={{
-                          pl: 6,
-                          mb: 0.5,
-                          color: 'white',
-                          '&:hover': { bgcolor: '#000' }
-                        }}
-                      >
-                        <ListItemIcon sx={{ color: 'white', minWidth: 36 }}>
-                          <ListAltIcon sx={{color: 'white'}}/>
-                        </ListItemIcon>
-                        <ListItemText
-                          primary="View Borrowers"
-                          primaryTypographyProps={{
-                            fontSize: '0.85rem',
-                            sx: { color: 'white' }
-                          }}
-                        />
-                      </ListItem>
+                        >
+                          <ListItemIcon sx={{ color: 'white', minWidth: 36 }}>
+                            {child.icon}
+                          </ListItemIcon>
+                          <ListItemText
+                            primary={child.name}
+                            primaryTypographyProps={{
+                              fontSize: '0.85rem',
+                              sx: { color: 'white' }
+                            }}
+                          />
+                        </ListItem>
+                      ))}
                     </List>
                   </Collapse>
                 </React.Fragment>
               );
             }
+            
             return (
               <ListItem
                 key={item.name}
                 button
+                onClick={() => item.route && navigate(item.route)}
                 sx={{
                   mb: 0.5,
                   px: 3,
+                  cursor: 'pointer',
                   '&:hover': { bgcolor: '#000' }
                 }}
               >

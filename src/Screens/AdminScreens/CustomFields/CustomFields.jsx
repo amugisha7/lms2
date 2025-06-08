@@ -14,6 +14,8 @@ import { styled } from '@mui/material/styles';
 import { generateClient } from 'aws-amplify/api';
 import { UserContext } from '../../../App'; // adjust path as 
 import * as Yup from 'yup';
+import { useTheme } from "@mui/material";
+import { tokens } from '../../../theme';
 
 const FormGrid = styled(Grid)(() => ({
   display: 'flex',
@@ -25,7 +27,6 @@ const StyledTextField = styled(TextField)(({ error }) => ({
   '& .MuiOutlinedInput-root': {
     border: error ? '1.5px solid #d32f2f' : '1px solid #708090',
     fontSize: '1rem',
-    color: 'blue !important'
   },
   "& .MuiOutlinedInput-input.Mui-disabled": {
     color: "#196496",
@@ -47,6 +48,8 @@ const CustomFields = ({
   const [loading, setLoading] = useState(true);
   const [showDateInputs, setShowDateInputs] = useState({});
   const client = generateClient();
+  const theme = useTheme();
+  const colors = tokens(theme.palette.mode);
 
   useEffect(() => {
     const fetchCustomFields = async () => {
@@ -221,7 +224,6 @@ const CustomFields = ({
                   color: "#196496",
                   WebkitTextFillColor: "#196496", // For Safari support
                 },
-                    color: 'blue !important'
 
               }}
             >
@@ -229,7 +231,13 @@ const CustomFields = ({
                 <em>Select {field.label}</em>
               </MenuItem>
               {field.options?.map((option, index) => (
-                <MenuItem key={`${fieldName}-option-${index}`} value={option}>
+                <MenuItem key={`${fieldName}-option-${index}`} value={option}
+                  sx={{
+                    '&:hover': {
+                      color: 'white',
+                    },
+                  }}
+                >
                   {option}
                 </MenuItem>
               ))}
@@ -254,7 +262,6 @@ const CustomFields = ({
                 '& .MuiInputBase-root': {
                   resize: field.fieldType === 'textarea' ? 'vertical' : 'none',
                   minHeight: field.fieldType === 'textarea' ? '100px' : 'auto',
-                      color: 'blue !important'
 
                 }
               }}
@@ -274,15 +281,19 @@ const CustomFields = ({
                 onClick={() => editing && toggleDateInput(fieldName)}
                 sx={{
                   justifyContent: 'flex-start',
-                  color: formik.values[fieldName] ? 'inherit' : '#888',
                   border: hasError ? '1.5px solid #d32f2f' : '1px solid #708090',
+                  color: colors.grey[200],
                   fontSize: '1rem',
                   textTransform: 'none',
                   height: 40,
                   pl: 2,
+                  backgroundColor: 'transparent', // transparent background
+                  '&:hover': {
+                    backgroundColor: 'rgba(0,0,0,0.04)', // subtle hover effect
+                  },
                 }}
                 fullWidth
-                disabled={!editing}
+                // disabled={!editing}
               >
                 {formik.values[fieldName] ? formik.values[fieldName] : `Select ${field.label}`}
               </Button>
@@ -290,12 +301,24 @@ const CustomFields = ({
               <StyledTextField
                 {...commonProps}
                 type="date"
-                color="blue"
                 onBlur={(e) => {
                   formik.handleBlur(e);
                   if (!formik.values[fieldName]) {
                     toggleDateInput(fieldName);
                   }
+                }}
+                sx={{
+                  '& input[type="date"]::-webkit-calendar-picker-indicator': {
+                    ...(theme.palette.mode === 'dark' && {
+                      filter: 'invert(1)',
+                    }),
+                    cursor: 'pointer',
+                  },
+                  '& input[type="date"]::-webkit-calendar-picker-indicator:hover': {
+                    ...(theme.palette.mode === 'dark' && {
+                      filter: 'invert(1) brightness(1.2)',
+                    }),
+                  },
                 }}
               />
             )}
@@ -336,21 +359,23 @@ const CustomFields = ({
   return (
     <>
       {/* Custom Fields Section Header */}
-      <Grid size={{xs:12}}>
-        <Typography variant="h6" sx={{ mt: 2, mb: 1, fontWeight: 'bold' }}>
-          Additional Information
+      <Grid container spacing={2}>
+        <FormGrid size={{ xs: 12}}>
+        <Typography variant="h6" sx={{ mt: 2, fontWeight: 'bold' }}>
+          ADDITONAL INFORMATION (Custom Fields)
         </Typography>
+        </FormGrid>
+        {/* Render Custom Fields */}
+        {customFields.map(field => (
+          <FormGrid key={field.id} size={{ xs: 12, md: 6 }}>
+            <FormLabel htmlFor={field.fieldName} required={field.required}>
+              {field.label}
+            </FormLabel>
+            {renderCustomField(field)}
+          </FormGrid>
+        ))}
       </Grid>
 
-      {/* Render Custom Fields */}
-      {customFields.map(field => (
-        <FormGrid key={field.id} size={{ xs: 12, md: 6 }}>
-          <FormLabel htmlFor={field.fieldName} required={field.required}>
-            {field.label}
-          </FormLabel>
-          {renderCustomField(field)}
-        </FormGrid>
-      ))}
     </>
   );
 };

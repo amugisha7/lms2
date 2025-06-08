@@ -9,6 +9,9 @@ import ViewBorrowerForm from './ViewBorrowerForm';
 import { generateClient } from 'aws-amplify/api';
 import Switch from '@mui/material/Switch';
 import { Checkbox } from '@mui/material';
+import { useTheme } from '@mui/material';
+import { tokens } from '../../../theme';
+
 
 export default function ViewBorrower() {
   const { borrowerId } = useParams();
@@ -18,6 +21,8 @@ export default function ViewBorrower() {
   const [loading, setLoading] = useState(true);
   const formRef = useRef();
   const [formSubmitting, setFormSubmitting] = useState(false); // Add this state
+  const theme = useTheme();
+  const colors = tokens(theme.palette.mode);
 
   useEffect(() => {
     const fetchBorrower = async () => {
@@ -89,21 +94,33 @@ export default function ViewBorrower() {
         width: '100%',
       }}
     >
-      <Typography variant="h3" sx={{ mb: 2, fontWeight: 600 }}>
+      <Typography variant="h4" sx={{ mb: 2, fontWeight: 600 }}>
         {borrower?.firstname || borrower?.othername
           ? `${borrower?.firstname || ''}${borrower?.othername ? ' ' + borrower.othername : ''}${borrower?.businessName ? ' / ' + borrower.businessName : ''}`
           : borrower?.businessName || 'View Borrower'}
       </Typography>
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-        <Checkbox
-          checked={editing}
-          onChange={() => setEditing((prev) => !prev)}
-          color="primary"
-          sx={{backgroundColor:'lightblue', border: '1px solid lightgrey !important'}}
-          disabled={formSubmitting}
-        />
-        {editing ? <Typography color='blue'>Editing Enabled</Typography> 
-          : <Typography>Enable Editing</Typography>}
+      <Box 
+        sx={{ 
+          display: 'flex', 
+          flexDirection: 'row', // column on mobile, row on desktop
+          gap: 3, 
+          justifyContent: 'flex-end', 
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', }}>
+          <Checkbox
+            checked={editing}
+            onChange={() => setEditing((prev) => !prev)}
+            // color="primary"
+            // sx={{backgroundColor:'lightblue', border: '1px solid lightgrey !important'}}
+            disabled={formSubmitting}
+          />
+          {editing ? <Typography variant='caption' 
+              sx={{ color: colors.blueAccent[300],  }}
+            >Editing Enabled</Typography>
+            : <Typography variant='caption'>Enable Editing</Typography>}
+        </Box>
+        {!editing && <Button>New Loan</Button>}
       </Box>
       {/* Floating Save Changes button */}
       {editing && (
@@ -113,7 +130,7 @@ export default function ViewBorrower() {
           sx={{
             position: 'fixed',
             bottom: 32,
-            right: 32, // changed from left: 32 to right: 32
+            right: 48, // changed from left: 32 to right: 32
             minWidth: 140,
             zIndex: 1300,
             boxShadow: 4,
@@ -140,8 +157,16 @@ export default function ViewBorrower() {
         scrollButtons="auto"
         sx={{
           borderBottom: 1,
-          borderColor: 'divider',
+          borderColor: colors.blueAccent[600],
           mb: 2,
+          '& .MuiTabs-indicator': {
+            backgroundColor: colors.blueAccent[100], // Blue accent indicator
+            height: 4,
+            // borderRadius: 1,
+          },
+          '& .MuiTab-root.Mui-selected': {
+            color: colors.blueAccent[100] + ' !important', // Active tab text color
+          },
         }}
       >
         <Tab sx={{mx: 1}} label="BORROWER DETAILS" />
@@ -151,7 +176,7 @@ export default function ViewBorrower() {
       <Box sx={{ mt: 0 }}>
         {tab === 0 && (
           <ViewBorrowerForm
-            editing={editing}
+            editing={editing} 
             borrower={borrower}
             formSubmitRef={formRef}
             setEditing={setEditing}

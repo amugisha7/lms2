@@ -34,7 +34,7 @@ const SideBar = ({ open = true, onClose }) => {
         width: 220,
         minWidth: 220,
         flexShrink: 0,
-        bgcolor: '#282828',
+        bgcolor: '#3B3B3B',
         color: 'white',
         display: open ? 'flex' : 'none',
         flexDirection: 'column',

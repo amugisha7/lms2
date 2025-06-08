@@ -1,5 +1,4 @@
 import React, { useContext, useState } from 'react';
-import AppTheme from '../../muiTemplates/shared-theme/AppTheme';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import FormLabel from '@mui/material/FormLabel';
@@ -527,6 +526,10 @@ export default function CreateBorrowerForm(props) {
                   textTransform: 'none',
                   height: 40,
                   pl: 2,
+                  backgroundColor: 'transparent', // <-- transparent background
+                  '&:hover': {
+                    backgroundColor: 'rgba(0,0,0,0.04)', // subtle hover effect (optional)
+                  },
                 }}
                 fullWidth
               >
@@ -602,14 +605,14 @@ export default function CreateBorrowerForm(props) {
 
           {/* Custom Fields Component */}
           <FormGrid size={{ xs: 12,}}>
+          </FormGrid>
+        </Grid>
             <CustomFields
               formKey="CreateBorrowerForm"
               formik={formik}
               onFieldsLoaded={handleCustomFieldsLoaded}
               onValidationSchemaChange={handleValidationSchemaChange}
             />
-          </FormGrid>
-        </Grid>
 
         {/* Submission Button and Feedback */}
         <Box sx={{ mt: 4, display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
@@ -625,9 +628,16 @@ export default function CreateBorrowerForm(props) {
           )}
           <Button
             type="submit"
-            sx={{ mb: 4 }}
+            sx={{ 
+              mb: 4, 
+              // color: colors.grey[900], 
+              // backgroundColor: colors.orangeAccent[100],
+              // '&:hover': {
+              //   color: colors.grey[100],
+              //   backgroundColor: colors.orangeAccent[300]
+              // }
+            }}
             variant="contained"
-            color="secondary"
             disabled={!formik.isValid || formik.isSubmitting}
           >
             {formik.isSubmitting ? 'Submitting...' : 'Create Borrower'}
@@ -645,8 +655,10 @@ export default function CreateBorrowerForm(props) {
                 },
               }}
             >
-              <Typography variant="body2">
-                Need to add custom fields? Click here to manage custom fields
+              <Typography variant="body2"
+                sx={{ color: colors.blueAccent[300] }}
+              >
+                Need to add custom fields? <b>Click here to manage custom fields</b>
               </Typography>
             </Link>
           </Box>

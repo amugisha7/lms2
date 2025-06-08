@@ -19,6 +19,8 @@ import { useColorScheme } from '@mui/material/styles';
 import SnackbarNotification from '../../../ComponentAssets/SnackbarNotification';
 import Link from '@mui/material/Link';
 import { Link as RouterLink } from 'react-router-dom';
+import { useTheme } from '@emotion/react';
+import { tokens } from '../../../theme';
 
 
 const FormGrid = styled(Grid)(() => ({
@@ -72,14 +74,16 @@ const baseValidationSchema = Yup.object().shape({
     .matches(/^[^,"'!{}]+$/, 'Invalid characters found. Cannot use , " \' ! { }'),
 });
 
-  const StyledOutlinedInput = styled(OutlinedInput)(({ error, theme }) => ({
+const StyledOutlinedInput = styled(OutlinedInput)(({ error, theme, disabled }) => {
+  const colors = tokens(theme.palette.mode);
+  return {
     border: error ? '1.5px solid #d32f2f' : '1px solid #708090',
     fontSize: '1rem',
-    color: 'blue !important'
-    
-    // color: resolvedMode === 'dark' ? '#90caf9' : '#0d2357', // Light blue on dark, dark blue on light
-  }));
-
+    // '& .MuiOutlinedInput-input': {
+    //   color: colors.blueAccent[300],
+    // },
+  };
+});
 
 export default function ViewBorrowerForm({ borrower, editing, setEditing, formSubmitRef, ...props }) {
   const { userDetails } = useContext(UserContext);
@@ -90,8 +94,8 @@ export default function ViewBorrowerForm({ borrower, editing, setEditing, formSu
 
   const { mode, systemMode } = useColorScheme();
   const resolvedMode = systemMode || mode;
-
-
+  const theme = useTheme();
+  const colors = tokens(theme.palette.mode);
 
   // Helper to flatten customFieldsData for Formik
   function flattenCustomFieldsData(customFieldsData) {
@@ -373,7 +377,7 @@ export default function ViewBorrowerForm({ borrower, editing, setEditing, formSu
   };
 
   return (
-    <AppTheme {...props}>
+    <>
       <SnackbarNotification
         message={submitSuccess}
         color="green"
@@ -388,6 +392,7 @@ export default function ViewBorrowerForm({ borrower, editing, setEditing, formSu
           borderRadius: 1,
           display: 'flex',
           flexDirection: 'column',
+          backgroundColor: editing ? theme.palette.primary.topbar : 'transparent',
         }}
       >
         <Grid container spacing={3}>
@@ -677,28 +682,25 @@ export default function ViewBorrowerForm({ borrower, editing, setEditing, formSu
             {(!showDobInput && !editing) ? (
               <Button
                 variant="outlined"
-                onClick={() => setShowDobInput(true)}
-                disabled={!editing}
+                onClick={() => editing && setShowDobInput(true)}
                 sx={{
                   justifyContent: 'flex-start',
-                  // color: formik.values.dob ? 'inherit' : '#888',
-                  color: 'blue',
-                  border: '1px solid #708090',
+                  color: colors.grey[200],
                   fontSize: '1rem',
                   textTransform: 'none',
                   height: 40,
                   pl: 2,
-                  "& .MuiOutlinedInput-input.Mui-disabled": {
-                    color: "#196496",
-                    WebkitTextFillColor: "#196496", // For Safari support
-                  }
+                  backgroundColor: 'transparent', // transparent background
+                  '&:hover': {
+                    backgroundColor: 'rgba(0,0,0,0.04)', // subtle hover effect
+                  },
                 }}
                 fullWidth
               >
                 {formik.values.dob ? formik.values.dob : 'Select date of birth'}
               </Button>
             ) : (
-              <StyledOutlinedInput
+              <StyledOutlinedInput 
                 id="dob"
                 name="dob"
                 type="date"
@@ -709,10 +711,17 @@ export default function ViewBorrowerForm({ borrower, editing, setEditing, formSu
                 onBlur={() => { if (!formik.values.dob) setShowDobInput(false); }}
                 error={formik.touched.dob && Boolean(formik.errors.dob)}
                 sx={{
-                  "& .MuiOutlinedInput-input.Mui-disabled": {
-                    color: "#196496",
-                    WebkitTextFillColor: "#196496", // For Safari support
-                  }
+                  '& input[type="date"]::-webkit-calendar-picker-indicator': {
+                    ...(theme.palette.mode === 'dark' && {
+                      filter: 'invert(1)',
+                    }),
+                    cursor: 'pointer',
+                  },
+                  '& input[type="date"]::-webkit-calendar-picker-indicator:hover': {
+                    ...(theme.palette.mode === 'dark' && {
+                      filter: 'invert(1) brightness(1.2)',
+                    }),
+                  },
                 }}
               />
             )}
@@ -792,11 +801,13 @@ export default function ViewBorrowerForm({ borrower, editing, setEditing, formSu
                 },
               }}
             >
-              <Typography variant="body2">
-                Click here to manage custom fields
+              <Typography variant="body2"
+                sx={{ color: colors.blueAccent[300] }}
+              >
+                Click here to manage Custom Fields
               </Typography>
             </Link>
           </Box>
       </Box>
-    </AppTheme>
+    </>
   );}

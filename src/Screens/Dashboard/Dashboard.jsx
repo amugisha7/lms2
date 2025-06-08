@@ -48,7 +48,9 @@ const Dashboard = () => {
         
         {/* Dashboard Content */}
         <Box sx={{ 
-          p: { xs: 2, sm: 2, md: 3, lg: 5 }, 
+          p: { xs: 2, sm: 4, md: 4, lg: 5 }, 
+          pt: { xs: 3, sm: undefined, md: undefined, lg: undefined }, // add pt:4 to mobile
+          pb: 6,
           flexGrow: 1, 
           overflowX: 'auto',
           overflowY: 'auto'

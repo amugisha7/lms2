@@ -160,9 +160,9 @@ export const themeSettings = (mode) => {
         main: isDark ? colors.primary[500] : colors.primary[100],
         light: isDark ? colors.primary[400] : colors.primary[200],
         dark: isDark ? colors.primary[600] : colors.primary[300],
-        contrastText: isDark ? "#fff" : "#171717", // <-- force text color
-        topbar: isDark ? '#181A1B' : 'white',
-        mainbgd: isDark? '#181A1B' : '#f5f5f5'
+        contrastText: isDark ? "#fff" : "#171717",
+        topbar: isDark ? 'black' : 'white',
+        mainbgd: isDark ? '#212121' : '#FFF5EE',
       },
       secondary: {
         main: colors.greenAccent[500],
@@ -419,11 +419,15 @@ export const themeSettings = (mode) => {
             borderRadius: 8,
             padding: "8px 16px",
             transition: "all 0.2s ease-in-out",
+            color: isDark ? "#fff" : "#fff", // Text color for both modes
+            backgroundColor: isDark ? "#f08735" : "#dd621a", // Background color
             "&:hover": {
-              transform: "translateY(-1px)",
-              boxShadow: isDark
-                ? "0px 4px 12px rgba(0, 0, 0, 0.4)"
-                : "0px 4px 12px rgba(0, 0, 0, 0.15)",
+              translate: 'translateY(-2px)',
+              backgroundColor: "#bc3401", // Hover background color for both modes
+            },
+            "&.Mui-disabled": {
+              color: isDark ? colors.grey[500] : "#fff", // Disabled text color
+              backgroundColor: isDark ? "#f5c77e" : "#CDC8B1", // Disabled background color
             },
           },
         },
@@ -502,6 +506,26 @@ export const themeSettings = (mode) => {
           },
         },
       },
+      MuiOutlinedInput: {
+          styleOverrides: {
+            input: {
+              color: isDark ? "#e8e6e3" : "#393a3d", // Input text color
+              '&.Mui-disabled': {
+                color: isDark ? 'white !important' : 'black !important', // Disabled input text color
+                WebkitTextFillColor: isDark ? 'white !important' : 'black !important',
+              }
+            }
+          }
+        },
+        MuiTextField: {
+          styleOverrides: {
+            root: {
+              '& .MuiOutlinedInput-input': {
+                color: isDark ? "#e8e6e3" : "#393a3d",
+              }
+            }
+          }
+        },    
     },
   };
 };

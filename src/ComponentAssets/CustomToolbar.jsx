@@ -10,7 +10,7 @@ import InputAdornment from '@mui/material/InputAdornment';
 import TextField from '@mui/material/TextField';
 import CancelIcon from '@mui/icons-material/Cancel';
 import SearchIcon from '@mui/icons-material/Search';
-import { styled } from '@mui/material/styles';
+import { styled, useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import { Typography } from '@mui/material';
 
@@ -19,8 +19,15 @@ const StyledQuickFilter = styled(QuickFilter)({
 });
 
 function CustomToolbar() {
+  const theme = useTheme();
+
   return (
-    <Toolbar sx={{ justifyContent: 'space-between', display: 'flex' }}>
+    <Toolbar
+      sx={{
+        justifyContent: 'space-between',
+        display: 'flex',
+      }}
+    >
       <Box sx={{ flex: 1, display: 'flex', alignItems: 'center' }}>
         <StyledQuickFilter expanded>
           <QuickFilterControl

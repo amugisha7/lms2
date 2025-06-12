@@ -5,7 +5,8 @@ import { createTheme } from "@mui/material/styles";
 export const tokens = (mode) => ({
   ...(mode === "dark"
     ? {
-        white: {
+        
+      white: {
           100: "#282828",
         },
         grey: {
@@ -73,6 +74,9 @@ export const tokens = (mode) => ({
           700: "#4d96c7",
           800: "#3387bf",
           900: "#043F69",
+        },
+        blueText: {
+          main: "#7CC4FE",
         },
       }
     : {
@@ -145,6 +149,9 @@ export const tokens = (mode) => ({
           800: "#cce1ef",
           900: "#e6f0f7",
         },
+        blueText: {
+          main: "#014486",
+        },
       }),
 });
 
@@ -152,7 +159,6 @@ export const tokens = (mode) => ({
 export const themeSettings = (mode) => {
   const colors = tokens(mode);
   const isDark = mode === "dark";
-
   return {
     palette: {
       mode,
@@ -163,6 +169,7 @@ export const themeSettings = (mode) => {
         contrastText: isDark ? "#fff" : "#171717",
         topbar: isDark ? 'black' : 'white',
         mainbgd: isDark ? '#212121' : '#FFF5EE',
+        gridBottomBorder: isDark? 'black' : 'grey'
       },
       secondary: {
         main: colors.greenAccent[500],
@@ -217,6 +224,9 @@ export const themeSettings = (mode) => {
         disabledBackground: isDark ? colors.grey[700] : colors.grey[200],
       },
       divider: isDark ? colors.grey[700] : colors.grey[300],
+      blueText: {
+        main: colors.blueText.main,
+      },
     },
     typography: {
       fontFamily: [
@@ -525,7 +535,15 @@ export const themeSettings = (mode) => {
               }
             }
           }
-        },    
+        },
+        MuiDataGrid: {
+          styleOverrides: {
+            root: {
+              // backgroundColor: isDark ? 'blue' : 'red',
+              backgroundColor: isDark ? '#212121' : '#FFF5EE'
+            },
+          },
+        },
     },
   };
 };

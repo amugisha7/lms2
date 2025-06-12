@@ -47,15 +47,21 @@ const Dashboard = () => {
         <TopBar onMenuClick={() => setDrawerOpen((prev) => !prev)} />
         
         {/* Dashboard Content */}
-        <Box sx={{ 
-          p: { xs: 2, sm: 4, md: 4, lg: 5 }, 
-          pt: { xs: 3, sm: undefined, md: undefined, lg: undefined }, // add pt:4 to mobile
-          pb: 6,
-          flexGrow: 1, 
-          overflowX: 'auto',
-          overflowY: 'auto'
-        }}>
-          <Outlet />
+        <Box
+          sx={{
+            p: { xs: 2, sm: 4, md: 4, lg: 5 },
+            pt: { xs: 3, sm: undefined, md: undefined, lg: undefined },
+            pb: 6,
+            flexGrow: 1,
+            overflowX: 'auto',
+            overflowY: 'auto',
+            display: 'flex', // Add flex display
+            justifyContent: { xs: 'flex-start', sm: 'center', md: 'center', lg: 'center' }, // Center on sm and up
+          }}
+        >
+          <Box sx={{ width: '100%', maxWidth: 1200 }}>
+            <Outlet />
+          </Box>
         </Box>
       </Box>
     </Box>

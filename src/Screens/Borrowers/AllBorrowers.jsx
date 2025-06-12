@@ -12,8 +12,12 @@ import {
 } from '@mui/x-data-grid'
 import DownloadIcon from '@mui/icons-material/Download';
 import Button from '@mui/material/Button';
+import {useTheme} from '@mui/material/styles';
+import AddIcon from '@mui/icons-material/Add'; // Add this import
 
-function myToolbar() {
+function MyToolbar() {
+
+  const theme = useTheme()
   return (
     <Box
       sx={{
@@ -21,6 +25,7 @@ function myToolbar() {
         justifyContent: 'space-between',
         alignItems: 'center',
         pr: 2,
+        backgroundColor: theme.palette.primary.mainbgd, // Use mainbgd from theme
       }}
     >
       <Box sx={{ maxWidth: 300, width: '100%' }}>
@@ -28,15 +33,18 @@ function myToolbar() {
       </Box>
       <Box
         sx={{
-          maxWidth: 300,
+          maxWidth: 20,
           width: '100%',
           display: 'flex',
           justifyContent: 'flex-end',
           '@media (max-width:600px)': { display: 'none' }, // Hide on mobile
         }}
       >
-        <ExportCsv>
-          <DownloadIcon />
+        <ExportCsv render={<DownloadIcon sx={{ 
+          fontSize: 20, 
+          cursor: 'pointer',
+          color: theme.palette.blueText.main, // Use blueText from theme
+          }} />}>
         </ExportCsv>
       </Box>
     </Box>
@@ -48,12 +56,27 @@ function AllBorrowers() {
   const [borrowers, setBorrowers] = useState([]);
   const [loading, setLoading] = useState(true);
   const { userDetails } = useContext(UserContext);
+  const theme = useTheme(); // <-- add this
 
   const columns = [
     { 
       field: 'combinedName', 
       headerName: 'Full Name / Business Name', 
       width: 280,
+      renderCell: (params) => (
+        <span
+          style={{
+            color: theme.palette.blueText.main,
+            textDecoration: 'none',
+            cursor: 'pointer',
+          }}
+          onClick={() => navigate(`/viewBorrower/${params.row.id}`)}
+          onMouseOver={e => (e.currentTarget.style.textDecoration = 'underline')}
+          onMouseOut={e => (e.currentTarget.style.textDecoration = 'none')}
+        >
+          {params.value}
+        </span>
+      ),
     },
     { 
       field: 'phoneNumber', 
@@ -75,20 +98,6 @@ function AllBorrowers() {
       headerName: 'Status', 
       width: 100 
     },
-    { 
-      field: 'actions',
-      headerName: 'View',
-      width: 50,
-      sortable: false,
-      renderCell: (params) => (
-        <IconButton
-          onClick={() => navigate(`/viewBorrower/${params.row.id}`)}
-          size="small"
-        >
-          <VisibilityIcon sx={{ fontSize: 20 }} />
-        </IconButton>
-      ),
-    }
   ];
 
   useEffect(() => {
@@ -145,9 +154,13 @@ function AllBorrowers() {
         const processedBorrowers = allBorrowers.map(borrower => ({
           ...borrower,
           combinedName: (borrower.firstname || borrower.othername)
-            ? `${[borrower.firstname, borrower.othername].filter(Boolean).join(' ')}${borrower.businessName ? ` / ${borrower.businessName}` : ''}`
+            ? `${[borrower.firstname, borrower.othername].filter(Boolean).join(' ')}${borrower.businessName ? ` (${borrower.businessName})` : ''}`
             : borrower.businessName || ''
         }));
+        // Sort by combinedName alphabetically (case-insensitive)
+        processedBorrowers.sort((a, b) =>
+          a.combinedName.localeCompare(b.combinedName, undefined, { sensitivity: 'base' })
+        );
         setBorrowers(processedBorrowers);
       } catch (error) {
         console.error('Error processing borrowers:', error);
@@ -163,15 +176,35 @@ function AllBorrowers() {
 
   return (
     <Box sx={{width: '100%', maxWidth: { sm: '100%', md: '1200px' } }}>
-      <Typography variant="h3" sx={{ mb: 2, fontWeight: 600 }}>
-        View/Manage Borrowers
-      </Typography>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+        <Typography variant="h4">
+          View Borrowers
+        </Typography>
+        <Button
+          variant="outlined"
+          startIcon={<AddIcon sx={{ color: theme.palette.blueText.main }} />}
+          onClick={() => navigate('/addBorrower')}
+          sx={{
+            borderColor: theme.palette.blueText.main,
+            color: theme.palette.blueText.main,
+            backgroundColor: 'transparent',
+            '&:hover': {
+              backgroundColor: "transparent",
+              borderColor: theme.palette.blueText.main,
+              borderWidth: '2px', // Make border 2px on hover
+            },
+          }}
+        >
+          Create Borrower
+        </Button>
+      </Box>
       {loading ? (
         <Typography sx={{ mt: 4 }}>Loading borrowers...</Typography>
       ) : borrowers.length > 0 ? (
         <DataGrid
           rows={borrowers}
           columns={columns}
+          density="compact"
           initialState={{
             pagination: {
               paginationModel: {
@@ -180,11 +213,16 @@ function AllBorrowers() {
             },
           }}
           pageSizeOptions={[25, 50, 100]}
-          slots={{ toolbar: myToolbar }}
+          slots={{ toolbar: MyToolbar }}
           showToolbar
-          onRowClick={(params) => navigate(`/viewBorrower/${params.row.id}`)}
+          disableRowSelectionOnClick
           sx={{
-            cursor: 'pointer' // Changes cursor to pointer when hovering over rows
+            '& .MuiDataGrid-cell': {
+              borderBottom: `1px solid ${theme.palette.primary.gridBottomBorder}`, // Use theme color for cell bottom border
+            },
+            '& .MuiDataGrid-columnHeaders': {
+              // borderBottom: '2px solid #bdbdbd', // Slightly darker border for header
+            },
           }}
         />
       ) : (

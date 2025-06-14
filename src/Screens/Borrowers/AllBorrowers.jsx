@@ -177,7 +177,7 @@ function AllBorrowers() {
   return (
     <Box sx={{width: '100%', maxWidth: { sm: '100%', md: '1200px' } }}>
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-        <Typography variant="h4">
+      <Typography variant="h4" sx={{ my: 2, fontWeight: 600 }}>
           View Borrowers
         </Typography>
         <Button

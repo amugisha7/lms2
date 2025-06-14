@@ -81,10 +81,6 @@ function App({ signOut, user }) {
     checkUser();
   }, [user?.userId]);
 
-  if (!online) {
-    return <NoInternet />;
-  }
-
   return (
     <ColorModeContext.Provider value={colorMode}>
       <ThemeProvider theme={theme}>
@@ -95,7 +91,14 @@ function App({ signOut, user }) {
               <NotificationProvider>
                 {error
                   ? <ErrorLoadingWorkspace onSignOut={signOut} />
-                  : <AppRoutes userExists={userExists} />}
+                  : (
+                    <>
+                      {!online && <NoInternet />}
+                      <div style={{ display: online ? 'block' : 'none' }}>
+                        <AppRoutes userExists={userExists} />
+                      </div>
+                    </>
+                  )}
               </NotificationProvider>
             </SnackbarProvider>
           }

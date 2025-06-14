@@ -6,6 +6,8 @@ import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import CreateCustomFieldsForm from './CreateCustomFieldsForm';
 import ModifyCustomFields from './ModifyCustomFields';
+import { useTheme } from '@mui/material';
+import { tokens } from '../../../theme';
 
 export default function CreateBorrower() {
   const [tab, setTab] = useState(0);
@@ -13,6 +15,8 @@ export default function CreateBorrower() {
   const handleTabChange = (event, newValue) => {
     setTab(newValue);
   };
+  const theme = useTheme();
+  const colors = tokens(theme.palette.mode);
 
   return (
     <Box
@@ -32,13 +36,18 @@ export default function CreateBorrower() {
         indicatorColor="primary"
         variant='scrollable'
         scrollButtons="auto"
-
         sx={{
           borderBottom: 1,
-          borderColor: 'divider',
+          borderColor: colors.blueAccent[600],
           mb: 2,
-          // '& .MuiTab-root': { color: '#fff' },
-          // '& .Mui-selected': { color: '#1de9b6' }
+          '& .MuiTabs-indicator': {
+            backgroundColor: colors.blueAccent[100], // Blue accent indicator
+            height: 4,
+            // borderRadius: 1,
+          },
+          '& .MuiTab-root.Mui-selected': {
+            color: colors.blueAccent[100] + ' !important', // Active tab text color
+          },
         }}
       >
         <Tab sx={{mx: 1}} label="CREATE" />

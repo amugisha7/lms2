@@ -11,7 +11,7 @@ import Switch from '@mui/material/Switch';
 import { Checkbox } from '@mui/material';
 import { useTheme } from '@mui/material';
 import { tokens } from '../../../theme';
-
+import AddIcon from '@mui/icons-material/Add'; // Add this import
 
 export default function ViewBorrower() {
   const { borrowerId } = useParams();
@@ -120,7 +120,23 @@ export default function ViewBorrower() {
             >Editing Enabled</Typography>
             : <Typography variant='caption'>Enable Editing</Typography>}
         </Box>
-        {!editing && <Button>New Loan</Button>}
+        {!editing && <Button
+          variant="outlined"
+          startIcon={<AddIcon sx={{ color: theme.palette.blueText.main }} />}
+          // onClick={() => navigate('/addBorrower')}
+          sx={{
+            borderColor: theme.palette.blueText.main,
+            color: theme.palette.blueText.main,
+            backgroundColor: 'transparent',
+            '&:hover': {
+              backgroundColor: "transparent",
+              borderColor: theme.palette.blueText.main,
+              borderWidth: '2px', // Make border 2px on hover
+            },
+          }}
+        >
+          New Loan
+        </Button>}
       </Box>
       {/* Floating Save Changes button */}
       {editing && (

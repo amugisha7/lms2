@@ -31,7 +31,6 @@ const StyledOutlinedInput = styled(OutlinedInput)(({ error, theme }) => {
   return {
     border: error ? '1.5px solid #d32f2f' : `1px solid ${colors.grey[200]}`,
     fontSize: '1rem',
-    // color: 'blue !important'
   };
 });
 

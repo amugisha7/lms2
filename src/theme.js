@@ -169,6 +169,7 @@ export const themeSettings = (mode) => {
         contrastText: isDark ? "#fff" : "#171717",
         topbar: isDark ? 'black' : 'white',
         mainbgd: isDark ? '#212121' : '#FFF5EE',
+        mainbox: isDark ? '#1B1B1B' : 'white',
         gridBottomBorder: isDark? 'black' : 'grey'
       },
       secondary: {

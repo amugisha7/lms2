@@ -21,6 +21,7 @@ function EditableLabelTextField({ value, onChange, autoFocus }) {
       variant="standard"
       fullWidth
       autoFocus={autoFocus}
+      onKeyDown={(e) => e.stopPropagation()} // <-- Add this line
     />
   );
 }
@@ -109,7 +110,7 @@ export default function CustomFieldsDataGrid({ rows, loading, hasFetched, onRowU
     },
     {
       field: 'actions',
-      headerName: 'Actions',
+      headerName: 'Edit',
       flex: 1,
       sortable: false,
       disableColumnMenu: true,
@@ -117,26 +118,32 @@ export default function CustomFieldsDataGrid({ rows, loading, hasFetched, onRowU
         if (params.id === editRowId) {
           return (
             <Box>
-              <IconButton onClick={handleSaveClick} size="small" color="primary">
-                <SaveIcon />
+              <IconButton onClick={handleSaveClick} size="small">
+                <SaveIcon 
+                  fontSize="small"
+                  sx={{ color: theme.palette.blueText.main }}
+                />
               </IconButton>
               <IconButton onClick={handleCancelEdit} size="small">
-                <CancelIcon />
+                <CancelIcon fontSize="small" />
               </IconButton>
             </Box>
           );
         }
         return (
-          <IconButton onClick={() => handleEditClick(params.id, params.row)} size="small" color="secondary">
-            <EditIcon />
+          <IconButton onClick={() => handleEditClick(params.id, params.row)} size="small">
+            <EditIcon 
+              fontSize="small"
+              sx={{ color: theme.palette.blueText.main }}
+            />
           </IconButton>
         );
       }
     },
     {
       field: 'delete',
-      headerName: '',
-      flex: 0.5,
+      headerName: 'Delete',
+      flex: 0.6,
       renderCell: (params) => (
           <Box
             sx={{
@@ -161,6 +168,7 @@ export default function CustomFieldsDataGrid({ rows, loading, hasFetched, onRowU
               size="small"
             >
               <DeleteIcon 
+                fontSize="small"
                 sx={{
                     color: theme.palette.error.main 
                 }}

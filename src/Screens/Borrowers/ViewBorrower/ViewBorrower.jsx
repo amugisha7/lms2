@@ -12,6 +12,8 @@ import { Checkbox } from '@mui/material';
 import { useTheme } from '@mui/material';
 import { tokens } from '../../../theme';
 import AddIcon from '@mui/icons-material/Add'; // Add this import
+import IconButton from '@mui/material/IconButton';
+import CancelIcon from '@mui/icons-material/Cancel';
 
 export default function ViewBorrower() {
   const { borrowerId } = useParams();
@@ -86,6 +88,24 @@ export default function ViewBorrower() {
     return <Typography>Loading...</Typography>;
   }
 
+  // Move tab content rendering outside of Tabs, and keep components mounted
+  const tabPanels = [
+    <ViewBorrowerForm
+      key="details"
+      editing={editing}
+      borrower={borrower}
+      formSubmitRef={formRef}
+      setEditing={setEditing}
+      setFormSubmitting={setFormSubmitting}
+    />,
+    <Button key="docs" variant="contained" onClick={handleBackToDetails}>
+      You must first create the borrower
+    </Button>,
+    <Button key="loans" variant="contained" onClick={handleBackToDetails}>
+      You must first create the borrower
+    </Button>,
+  ];
+
   return (
     <Box
       sx={{
@@ -138,31 +158,55 @@ export default function ViewBorrower() {
           New Loan
         </Button>}
       </Box>
-      {/* Floating Save Changes button */}
+      {/* Floating Save Changes button and Cancel icon */}
       {editing && (
-        <Button
-          variant="contained"
-          color="secondary"
+        <Box
           sx={{
             position: 'fixed',
             bottom: 32,
-            right: 48, // changed from left: 32 to right: 32
-            minWidth: 140,
+            right: 48,
+            display: 'flex',
+            alignItems: 'center',
             zIndex: 1300,
-            boxShadow: 4,
-            // backgroundColor: 'green !important', color: '#FFF'
-          }}
-          disabled={formSubmitting}
-          onClick={async () => {
-            if (formRef.current) {
-              setFormSubmitting(true);
-              await formRef.current();
-              setFormSubmitting(false);
-            }
+            gap: 1,
           }}
         >
-          Save Changes
-        </Button>
+          <Button
+            variant="contained"
+            color="secondary"
+            sx={{
+              minWidth: 140,
+              boxShadow: 4,
+            }}
+            disabled={formSubmitting}
+            onClick={async () => {
+              if (formRef.current) {
+                setFormSubmitting(true);
+                await formRef.current();
+                setFormSubmitting(false);
+              }
+            }}
+          >
+            Save Changes
+          </Button>
+          <IconButton
+            color="error"
+            sx={{
+              // backgroundColor: 'background.paper',
+              borderRadius: '50%',
+              boxShadow: 3,
+              ml: 1,
+              '&:hover': {
+                backgroundColor: 'error.light',
+              },
+            }}
+            aria-label="Cancel editing"
+            onClick={() => setEditing(false)}
+            disabled={formSubmitting}
+          >
+            <CancelIcon />
+          </IconButton>
+        </Box>
       )}
       <Tabs
         value={tab}
@@ -190,25 +234,15 @@ export default function ViewBorrower() {
         <Tab sx={{mx: 1}} label="LOANS" />
       </Tabs>
       <Box sx={{ mt: 0 }}>
-        {tab === 0 && (
-          <ViewBorrowerForm
-            editing={editing} 
-            borrower={borrower}
-            formSubmitRef={formRef}
-            setEditing={setEditing}
-            setFormSubmitting={setFormSubmitting} // Pass down for completeness if needed
-          />
-        )}
-        {tab === 1 && (
-          <Button variant="contained" onClick={handleBackToDetails}>
-            You must first create the borrower
-          </Button>
-        )}
-        {tab === 2 && (
-          <Button variant="contained" onClick={handleBackToDetails}>
-            You must first create the borrower
-          </Button>
-        )}
+        {/* Render all tab panels, only show the active one, but keep state */}
+        {tabPanels.map((panel, idx) => (
+          <Box
+            key={idx}
+            sx={{ display: tab === idx ? 'block' : 'none', width: '100%' }}
+          >
+            {panel}
+          </Box>
+        ))}
       </Box>
     </Box>
   );

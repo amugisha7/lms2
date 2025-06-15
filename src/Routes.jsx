@@ -7,6 +7,7 @@ import ViewBorrower from './Screens/Borrowers/ViewBorrower/ViewBorrower';
 import CustomFieldsManager from './Screens/AdminScreens/CustomFields/CustomFieldsManager';
 import Dashboard from './Screens/Dashboard/Dashboard';
 import Home from './Screens/Home';
+import CreateLoanProductForm from './Screens/LoanProducts/CreateLoanProductForm'; // Add this import
 
 export default function AppRoutes({ userExists }) {
 
@@ -23,12 +24,15 @@ export default function AppRoutes({ userExists }) {
               <Route path="reports" element={<MainGrid />} />
               <Route path="settings" element={<Onboarding />} />
 
-              // Borrowers routes
+              {/* Borrowers routes */}
               <Route path="allBorrowers" element={<AllBorrowers />} />
               <Route path="addBorrower" element={<CreateBorrower />} />
               <Route path="viewBorrower/:borrowerId" element={<ViewBorrower />} />
               <Route path="customFields" element={<CustomFieldsManager />} />
               {/* Add more routes as needed */}
+
+              {/* Loan Products route */}
+              <Route path="admin/add-loan-product" element={<CreateLoanProductForm />} />
             </>
           )}
         </Route>

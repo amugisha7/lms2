@@ -56,6 +56,9 @@ type Institution @model {
   branches: [Branch] @hasMany
   loanProducts: [LoanProduct] @hasMany
   customFormFields: [CustomFormField] @hasMany
+
+  # --- LoanFeesConfig relationship ---
+  loanFeesConfigs: [LoanFeesConfig] @hasMany
 }
 
 type Branch @model {
@@ -75,6 +78,10 @@ type Branch @model {
   payrolls: [Payroll] @hasMany
   financialReports: [FinancialReport] @hasMany
   customFormFields: [CustomFormField] @hasMany
+
+  # --- LoanFeesConfig relationship ---
+  loanFeesConfigs: [LoanFeesConfig]
+    @manyToMany(relationName: "BranchLoanFeesConfig")
 }
 
 type User @model {
@@ -639,6 +646,19 @@ type CustomFormField @model {
   createdBy: String
   branch: Branch @belongsTo
   institution: Institution @belongsTo
+}
+
+type LoanFeesConfig @model {
+  id: ID!
+  name: String # Fee name (required)
+  category: String # "non_deductable", "deductable", or "capitalized"
+  calculationMethod: String # "fixed" or "percentage"
+  description: String
+  percentageBase: String # "principal", "interest", or "principal_interest" (nullable, only for percentage)
+  rate: Float # For percentage-based fees (nullable)
+  status: String
+  institution: Institution @belongsTo
+  branches: [Branch] @manyToMany(relationName: "BranchLoanFeesConfig")
 }
 
 # ---------- End of Schema ----------

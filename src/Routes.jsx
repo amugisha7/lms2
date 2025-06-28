@@ -1,24 +1,26 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Onboarding from './Screens/Onboarding/Onboarding';
-import MainGrid from './muiTemplates/dashboard/components/MainGrid';
-import CreateBorrower from './Screens/Borrowers/CreateBorrower';
-import AllBorrowers from './Screens/Borrowers/AllBorrowers';
-import ViewBorrower from './Screens/Borrowers/ViewBorrower/ViewBorrower';
-import CustomFieldsManager from './Screens/AdminScreens/CustomFields/CustomFieldsManager';
-import Dashboard from './Screens/Dashboard/Dashboard';
-import Home from './Screens/Home';
-import CreateLoanProductForm from './Screens/LoanProducts/CreateLoanProductForm'; // Add this import
-import CreateLoanFeesForm from './Screens/LoanFees/CreateLoanFeesForm'; // Add this import
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import Onboarding from "./Screens/Onboarding/Onboarding";
+import MainGrid from "./muiTemplates/dashboard/components/MainGrid";
+import CreateBorrower from "./Screens/Borrowers/CreateBorrower";
+import AllBorrowers from "./Screens/Borrowers/AllBorrowers";
+import ViewBorrower from "./Screens/Borrowers/ViewBorrower/ViewBorrower";
+import CustomFieldsManager from "./Screens/AdminScreens/CustomFields/CustomFieldsManager";
+import Dashboard from "./Screens/Dashboard/Dashboard";
+import Home from "./Screens/Home";
+import CreateLoanProductForm from "./Screens/LoanProducts/CreateLoanProductForm"; // Add this import
+import CreateLoanFeesForm from "./Screens/LoanFees/CreateLoanFeesForm"; // Add this import
+import CreateLoanProductFormOptimized from "./Screens/LoanProducts/CreateLoanProductFormOptimized"; // Add this import
 
 export default function AppRoutes({ userExists }) {
-
   return (
     <Router>
       <Routes>
-        <Route
-          path="/"
-          element={userExists ? <Dashboard /> : <Onboarding />}
-        >
+        <Route path="/" element={userExists ? <Dashboard /> : <Onboarding />}>
           {userExists && (
             <>
               <Route index element={<MainGrid />} />
@@ -28,15 +30,24 @@ export default function AppRoutes({ userExists }) {
               {/* Borrowers routes */}
               <Route path="allBorrowers" element={<AllBorrowers />} />
               <Route path="addBorrower" element={<CreateBorrower />} />
-              <Route path="viewBorrower/:borrowerId" element={<ViewBorrower />} />
+              <Route
+                path="viewBorrower/:borrowerId"
+                element={<ViewBorrower />}
+              />
               <Route path="customFields" element={<CustomFieldsManager />} />
               {/* Add more routes as needed */}
 
               {/* Loan Products route */}
-              <Route path="admin/add-loan-product" element={<CreateLoanProductForm />} />
+              <Route
+                path="admin/add-loan-product"
+                element={<CreateLoanProductFormOptimized />}
+              />
 
               {/* Loan Fees route */}
-              <Route path="admin/add-loan-fee" element={<CreateLoanFeesForm />} />
+              <Route
+                path="admin/add-loan-fee"
+                element={<CreateLoanFeesForm />}
+              />
             </>
           )}
         </Route>

@@ -38,27 +38,36 @@ const FEE_PERCENTAGE_BASE_OPTIONS = [
 ];
 
 export default function CreateLoanFeesForm() {
+  const [feeCalculation, setFeeCalculation] = React.useState("fixed");
+  const [feePercentageBase, setFeePercentageBase] = React.useState("");
+
   const formik = useFormik({
     initialValues: {
       name: "",
+      description: "",
       category: "non_deductable",
     },
     validationSchema: Yup.object().shape({
       name: Yup.string()
         .required("Fee Name is required")
         .max(100, "Name too long"),
+      description: Yup.string().max(500, "Description too long"),
       category: Yup.string().required("Fee Category is required"),
     }),
     onSubmit: async (values, { setSubmitting, resetForm }) => {
-      // Replace with your API call
+      // Log all values including local state
+      const allValues = {
+        ...values,
+        feeCalculation,
+        feePercentageBase:
+          feeCalculation === "percentage" ? feePercentageBase : "",
+      };
+      console.log("Loan Fee Form Submission:", allValues);
       setSubmitting(false);
       resetForm();
       alert("Loan fee created!");
     },
   });
-
-  const [feeCalculation, setFeeCalculation] = React.useState("fixed");
-  const [feePercentageBase, setFeePercentageBase] = React.useState("");
 
   return (
     <Box
@@ -72,7 +81,6 @@ export default function CreateLoanFeesForm() {
         display: "flex",
         flexDirection: "column",
         maxWidth: { xs: "100%", md: 800 },
-        mx: "auto",
         width: "100%",
         flex: 1,
         mb: 6,
@@ -87,9 +95,12 @@ export default function CreateLoanFeesForm() {
           Help
         </Typography>
       </Typography>
+      <Typography variant="caption" sx={{ mb: 1 }}>
+        You must provide a 'Name'. Every other field is optional.
+      </Typography>
 
       <Grid container spacing={3}>
-        <FormGrid size={{ xs: 12, md: 12 }}>
+        <FormGrid size={{ xs: 12, md: 6 }}>
           <FormLabel htmlFor="name">Name*</FormLabel>
           <StyledOutlinedInput
             id="name"
@@ -104,6 +115,29 @@ export default function CreateLoanFeesForm() {
           {formik.touched.name && formik.errors.name && (
             <Typography color="error" variant="caption">
               {formik.errors.name}
+            </Typography>
+          )}
+        </FormGrid>
+
+        <FormGrid size={{ xs: 12, md: 6 }}>
+          <FormLabel htmlFor="description">Description</FormLabel>
+          <StyledOutlinedInput
+            id="description"
+            name="description"
+            placeholder="Fee Description (optional)"
+            size="small"
+            multiline
+            rows={3}
+            value={formik.values.description}
+            onChange={formik.handleChange}
+            error={
+              formik.touched.description && Boolean(formik.errors.description)
+            }
+            sx={{ maxWidth: 500, mb: 2 }}
+          />
+          {formik.touched.description && formik.errors.description && (
+            <Typography color="error" variant="caption">
+              {formik.errors.description}
             </Typography>
           )}
         </FormGrid>
@@ -125,10 +159,8 @@ export default function CreateLoanFeesForm() {
                 control={<Radio />}
                 label={
                   <Box>
-                    <Typography sx={{ fontWeight: 600 }}>
-                      Non-Deductable Fee
-                    </Typography>
-                    <Typography variant="body2">
+                    <Typography>Non-Deductable Fee</Typography>
+                    <Typography variant="caption">
                       This fee appears as a separate line item in the loan
                       schedule. The borrower must make a payment specifically
                       for this fee. You can set the fee amount when creating a
@@ -144,10 +176,8 @@ export default function CreateLoanFeesForm() {
                 control={<Radio />}
                 label={
                   <Box>
-                    <Typography sx={{ fontWeight: 600 }}>
-                      Deductable Fee
-                    </Typography>
-                    <Typography variant="body2">
+                    <Typography>Deductable Fee</Typography>
+                    <Typography variant="caption">
                       This fee is automatically taken out of the loan amount
                       when the loan is disbursed. The borrower receives less
                       money but doesn't need to make a separate payment for this
@@ -164,10 +194,8 @@ export default function CreateLoanFeesForm() {
                 control={<Radio />}
                 label={
                   <Box>
-                    <Typography sx={{ fontWeight: 600 }}>
-                      Capitalized Fee
-                    </Typography>
-                    <Typography variant="body2">
+                    <Typography>Capitalized Fee</Typography>
+                    <Typography variant="caption">
                       This fee is added to the loan principal amount, so
                       interest is charged on both the original loan and this
                       fee. The borrower pays back the fee plus interest over the
@@ -255,7 +283,7 @@ export default function CreateLoanFeesForm() {
           disabled={formik.isSubmitting}
           sx={{ mb: 6 }}
         >
-          {formik.isSubmitting ? "Saving..." : "Save Loan Fee"}
+          {formik.isSubmitting ? "Saving..." : "Create Loan Fee"}
         </Button>
       </Box>
     </Box>

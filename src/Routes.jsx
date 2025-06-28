@@ -8,6 +8,7 @@ import CustomFieldsManager from './Screens/AdminScreens/CustomFields/CustomField
 import Dashboard from './Screens/Dashboard/Dashboard';
 import Home from './Screens/Home';
 import CreateLoanProductForm from './Screens/LoanProducts/CreateLoanProductForm'; // Add this import
+import CreateLoanFeesForm from './Screens/LoanFees/CreateLoanFeesForm'; // Add this import
 
 export default function AppRoutes({ userExists }) {
 
@@ -33,6 +34,9 @@ export default function AppRoutes({ userExists }) {
 
               {/* Loan Products route */}
               <Route path="admin/add-loan-product" element={<CreateLoanProductForm />} />
+
+              {/* Loan Fees route */}
+              <Route path="admin/add-loan-fee" element={<CreateLoanFeesForm />} />
             </>
           )}
         </Route>

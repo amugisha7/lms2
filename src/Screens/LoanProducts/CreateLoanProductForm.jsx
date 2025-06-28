@@ -72,6 +72,29 @@ const INTEREST_PERIOD_OPTIONS = [
   { value: "per_loan", label: "Per Loan" },
 ];
 
+const DURATION_PERIOD_OPTIONS = [
+  { value: "days", label: "Days" },
+  { value: "weeks", label: "Weeks" },
+  { value: "months", label: "Months" },
+  { value: "years", label: "Years" },
+];
+
+const REPAYMENT_FREQUENCY_OPTIONS = [
+  { value: "daily", label: "Daily" },
+  { value: "weekly", label: "Weekly" },
+  { value: "biweekly", label: "Biweekly" },
+  { value: "monthly", label: "Monthly" },
+  { value: "bimonthly", label: "Bimonthly" },
+  { value: "quarterly", label: "Quarterly" },
+  { value: "every_4_months", label: "Every 4 Months" },
+  { value: "semi_annual", label: "Semi-Annual" },
+  { value: "every_9_months", label: "Every 9 Months" },
+  { value: "yearly", label: "Yearly" },
+  { value: "lump_sum", label: "Lump-Sum" },
+];
+
+const REPAYMENT_ORDER_OPTIONS = ["Penalty", "Fees", "Interest", "Principal"];
+
 // Dummy branches for dropdown (replace with real data as needed)
 const BRANCHES = [
   { value: "branch1", label: "Branch 1" },
@@ -96,6 +119,14 @@ export default function CreateLoanProductForm(props) {
       maxPrincipal: "",
       interestMethod: "",
       interestType: "",
+      minInterest: "",
+      defaultInterest: "",
+      maxInterest: "",
+      durationPeriod: "",
+      minDuration: "",
+      defaultDuration: "",
+      maxDuration: "",
+      repaymentFrequency: "",
     },
     validationSchema: Yup.object().shape({
       name: Yup.string()
@@ -161,6 +192,132 @@ export default function CreateLoanProductForm(props) {
           }
           return schema;
         }),
+      minInterest: Yup.number()
+        .min(0, "Minimum Interest must be at least 0")
+        .nullable()
+        .transform((value, originalValue) =>
+          originalValue === "" ? null : value
+        ),
+      maxInterest: Yup.number()
+        .min(0, "Maximum Interest must be at least 0")
+        .nullable()
+        .transform((value, originalValue) =>
+          originalValue === "" ? null : value
+        )
+        .when("minInterest", (minInterest, schema) =>
+          minInterest !== null &&
+          minInterest !== undefined &&
+          minInterest !== ""
+            ? schema.min(
+                minInterest,
+                "Maximum Interest must be greater than or equal to Minimum Interest"
+              )
+            : schema
+        ),
+      defaultInterest: Yup.number()
+        .min(0, "Default Interest must be at least 0")
+        .nullable()
+        .transform((value, originalValue) =>
+          originalValue === "" ? null : value
+        )
+        .when("minInterest", (minInterestValue, schema) => {
+          if (
+            minInterestValue !== null &&
+            minInterestValue !== undefined &&
+            minInterestValue !== ""
+          ) {
+            const numMinInterest = Number(minInterestValue);
+            if (!isNaN(numMinInterest)) {
+              return schema.min(
+                numMinInterest,
+                "Default Interest must be greater than or equal to Minimum Interest"
+              );
+            }
+          }
+          return schema;
+        })
+        .when("maxInterest", (maxInterestValue, schema) => {
+          if (
+            maxInterestValue !== null &&
+            maxInterestValue !== undefined &&
+            maxInterestValue !== ""
+          ) {
+            const numMaxInterest = Number(maxInterestValue);
+            if (!isNaN(numMaxInterest)) {
+              return schema.max(
+                numMaxInterest,
+                "Default Interest must be less than or equal to Maximum Interest"
+              );
+            }
+          }
+          return schema;
+        }),
+      durationPeriod: Yup.string()
+        .oneOf(DURATION_PERIOD_OPTIONS.map((o) => o.value))
+        .nullable(),
+      minDuration: Yup.number()
+        .min(0, "Minimum Duration must be at least 0")
+        .nullable()
+        .transform((value, originalValue) =>
+          originalValue === "" ? null : value
+        ),
+      maxDuration: Yup.number()
+        .min(0, "Maximum Duration must be at least 0")
+        .nullable()
+        .transform((value, originalValue) =>
+          originalValue === "" ? null : value
+        )
+        .when("minDuration", (minDuration, schema) =>
+          minDuration !== null &&
+          minDuration !== undefined &&
+          minDuration !== ""
+            ? schema.min(
+                minDuration,
+                "Maximum Duration must be greater than or equal to Minimum Duration"
+              )
+            : schema
+        ),
+      defaultDuration: Yup.number()
+        .min(0, "Default Duration must be at least 0")
+        .nullable()
+        .transform((value, originalValue) =>
+          originalValue === "" ? null : value
+        )
+        .when("minDuration", (minDurationValue, schema) => {
+          if (
+            minDurationValue !== null &&
+            minDurationValue !== undefined &&
+            minDurationValue !== ""
+          ) {
+            const numMinDuration = Number(minDurationValue);
+            if (!isNaN(numMinDuration)) {
+              return schema.min(
+                numMinDuration,
+                "Default Duration must be greater than or equal to Minimum Duration"
+              );
+            }
+          }
+          return schema;
+        })
+        .when("maxDuration", (maxDurationValue, schema) => {
+          if (
+            maxDurationValue !== null &&
+            maxDurationValue !== undefined &&
+            maxDurationValue !== ""
+          ) {
+            const numMaxDuration = Number(maxDurationValue);
+            if (!isNaN(numMaxDuration)) {
+              return schema.max(
+                numMaxDuration,
+                "Default Duration must be less than or equal to Maximum Duration"
+              );
+            }
+          }
+          return schema;
+        }),
+      repaymentFrequency: Yup.string()
+        .oneOf(REPAYMENT_FREQUENCY_OPTIONS.map((o) => o.value))
+        .nullable(),
       // All other fields are optional
     }),
     onSubmit: async (values, { setSubmitting, resetForm }) => {
@@ -185,6 +342,39 @@ export default function CreateLoanProductForm(props) {
       }
     },
   });
+
+  const [repaymentOrder, setRepaymentOrder] = React.useState(
+    REPAYMENT_ORDER_OPTIONS
+  );
+  const [selectedOrderIndex, setSelectedOrderIndex] = React.useState(0);
+
+  const handleOrderSelect = (event) => {
+    setSelectedOrderIndex(event.target.selectedIndex);
+  };
+
+  const moveOrderUp = () => {
+    if (selectedOrderIndex > 0) {
+      const newOrder = [...repaymentOrder];
+      [newOrder[selectedOrderIndex - 1], newOrder[selectedOrderIndex]] = [
+        newOrder[selectedOrderIndex],
+        newOrder[selectedOrderIndex - 1],
+      ];
+      setRepaymentOrder(newOrder);
+      setSelectedOrderIndex(selectedOrderIndex - 1);
+    }
+  };
+
+  const moveOrderDown = () => {
+    if (selectedOrderIndex < repaymentOrder.length - 1) {
+      const newOrder = [...repaymentOrder];
+      [newOrder[selectedOrderIndex + 1], newOrder[selectedOrderIndex]] = [
+        newOrder[selectedOrderIndex],
+        newOrder[selectedOrderIndex + 1],
+      ];
+      setRepaymentOrder(newOrder);
+      setSelectedOrderIndex(selectedOrderIndex + 1);
+    }
+  };
 
   return (
     <Box
@@ -377,7 +567,7 @@ export default function CreateLoanProductForm(props) {
           </Typography>
           <hr style={{ width: "100%" }} />
         </FormGrid>
-        <FormGrid size={{ xs: 12, md: 6 }}>
+        <FormGrid size={{ xs: 12, md: 4 }}>
           <FormLabel htmlFor="interestMethod">Interest Method</FormLabel>
           <StyledSelect
             id="interestMethod"
@@ -420,7 +610,7 @@ export default function CreateLoanProductForm(props) {
           </StyledSelect>
         </FormGrid>
 
-        <FormGrid size={{ xs: 12, md: 6 }}>
+        <FormGrid size={{ xs: 12, md: 4 }}>
           <FormLabel htmlFor="interestType">Interest Type</FormLabel>
           <StyledSelect
             id="interestType"
@@ -467,7 +657,7 @@ export default function CreateLoanProductForm(props) {
         </FormGrid>
 
         {/* Loan Interest Period Dropdown */}
-        <FormGrid size={{ xs: 12, md: 6 }}>
+        <FormGrid size={{ xs: 12, md: 4 }}>
           <FormLabel htmlFor="interestPeriod">Loan Interest Period</FormLabel>
           <StyledSelect
             id="interestPeriod"
@@ -502,6 +692,276 @@ export default function CreateLoanProductForm(props) {
               </MenuItem>
             ))}
           </StyledSelect>
+        </FormGrid>
+        <FormGrid size={{ xs: 12, md: 4 }}>
+          <FormLabel htmlFor="minInterest">Minimum Interest Amount</FormLabel>
+          <StyledOutlinedInput
+            id="minInterest"
+            name="minInterest"
+            type="number"
+            placeholder="Minimum"
+            size="small"
+            value={formik.values.minInterest}
+            onChange={formik.handleChange}
+            error={
+              formik.touched.minInterest && Boolean(formik.errors.minInterest)
+            }
+            inputProps={{ min: 0 }}
+          />
+          {formik.touched.minInterest && formik.errors.minInterest && (
+            <Typography color="error" variant="caption">
+              {formik.errors.minInterest}
+            </Typography>
+          )}
+        </FormGrid>
+        <FormGrid size={{ xs: 12, md: 4 }}>
+          <FormLabel htmlFor="defaultInterest">
+            Default Interest Amount
+          </FormLabel>
+          <StyledOutlinedInput
+            id="defaultInterest"
+            name="defaultInterest"
+            type="number"
+            placeholder="Default"
+            size="small"
+            value={formik.values.defaultInterest}
+            onChange={formik.handleChange}
+            error={
+              formik.touched.defaultInterest &&
+              Boolean(formik.errors.defaultInterest)
+            }
+            inputProps={{ min: 0 }}
+          />
+          {formik.touched.defaultInterest && formik.errors.defaultInterest && (
+            <Typography color="error" variant="caption">
+              {formik.errors.defaultInterest}
+            </Typography>
+          )}
+        </FormGrid>
+        <FormGrid size={{ xs: 12, md: 4 }}>
+          <FormLabel htmlFor="maxInterest">Maximum Interest Amount</FormLabel>
+          <StyledOutlinedInput
+            id="maxInterest"
+            name="maxInterest"
+            type="number"
+            placeholder="Maximum"
+            size="small"
+            value={formik.values.maxInterest}
+            onChange={formik.handleChange}
+            error={
+              formik.touched.maxInterest && Boolean(formik.errors.maxInterest)
+            }
+            inputProps={{ min: 0 }}
+          />
+          {formik.touched.maxInterest && formik.errors.maxInterest && (
+            <Typography color="error" variant="caption">
+              {formik.errors.maxInterest}
+            </Typography>
+          )}
+        </FormGrid>
+
+        {/* Duration Settings Section */}
+        <FormGrid size={{ xs: 12, md: 12 }}>
+          <Typography variant="caption" sx={{ mt: 2 }}>
+            DURATION SETTINGS:
+          </Typography>
+          <hr style={{ width: "100%" }} />
+        </FormGrid>
+        <FormGrid size={{ xs: 12, md: 3 }}>
+          <FormLabel htmlFor="durationPeriod">Loan Duration Period</FormLabel>
+          <StyledSelect
+            id="durationPeriod"
+            name="durationPeriod"
+            value={formik.values.durationPeriod || ""}
+            onChange={formik.handleChange}
+            error={false}
+            size="small"
+            fullWidth
+            renderValue={(selected) => {
+              if (!selected) return "Select Duration Period";
+              const found = DURATION_PERIOD_OPTIONS.find(
+                (o) => o.value === selected
+              );
+              return found ? found.label : "Select Duration Period";
+            }}
+          >
+            <MenuItem value="" disabled>
+              Select Duration Period
+            </MenuItem>
+            {DURATION_PERIOD_OPTIONS.map((option) => (
+              <MenuItem
+                key={option.value}
+                value={option.value}
+                sx={{
+                  "&:hover": {
+                    color: "white",
+                  },
+                }}
+              >
+                {option.label}
+              </MenuItem>
+            ))}
+          </StyledSelect>
+        </FormGrid>
+        <FormGrid size={{ xs: 12, md: 3 }}>
+          <FormLabel htmlFor="minDuration">Minimum Duration</FormLabel>
+          <StyledOutlinedInput
+            id="minDuration"
+            name="minDuration"
+            type="number"
+            placeholder="Minimum"
+            size="small"
+            value={formik.values.minDuration}
+            onChange={formik.handleChange}
+            error={
+              formik.touched.minDuration && Boolean(formik.errors.minDuration)
+            }
+            inputProps={{ min: 0 }}
+          />
+          {formik.touched.minDuration && formik.errors.minDuration && (
+            <Typography color="error" variant="caption">
+              {formik.errors.minDuration}
+            </Typography>
+          )}
+        </FormGrid>
+        <FormGrid size={{ xs: 12, md: 3 }}>
+          <FormLabel htmlFor="defaultDuration">Default Duration</FormLabel>
+          <StyledOutlinedInput
+            id="defaultDuration"
+            name="defaultDuration"
+            type="number"
+            placeholder="Default"
+            size="small"
+            value={formik.values.defaultDuration}
+            onChange={formik.handleChange}
+            error={
+              formik.touched.defaultDuration &&
+              Boolean(formik.errors.defaultDuration)
+            }
+            inputProps={{ min: 0 }}
+          />
+          {formik.touched.defaultDuration && formik.errors.defaultDuration && (
+            <Typography color="error" variant="caption">
+              {formik.errors.defaultDuration}
+            </Typography>
+          )}
+        </FormGrid>
+        <FormGrid size={{ xs: 12, md: 3 }}>
+          <FormLabel htmlFor="maxDuration">Maximum Duration</FormLabel>
+          <StyledOutlinedInput
+            id="maxDuration"
+            name="maxDuration"
+            type="number"
+            placeholder="Maximum"
+            size="small"
+            value={formik.values.maxDuration}
+            onChange={formik.handleChange}
+            error={
+              formik.touched.maxDuration && Boolean(formik.errors.maxDuration)
+            }
+            inputProps={{ min: 0 }}
+          />
+          {formik.touched.maxDuration && formik.errors.maxDuration && (
+            <Typography color="error" variant="caption">
+              {formik.errors.maxDuration}
+            </Typography>
+          )}
+        </FormGrid>
+
+        {/* Repayment Settings Section */}
+        <FormGrid size={{ xs: 12, md: 12 }}>
+          <Typography variant="caption" sx={{ mt: 2 }}>
+            REPAYMENT SETTINGS:
+          </Typography>
+          <hr style={{ width: "100%" }} />
+        </FormGrid>
+        <FormGrid size={{ xs: 12, md: 6 }}>
+          <FormLabel htmlFor="repaymentFrequency">
+            Repayment Frequency
+          </FormLabel>
+          <StyledSelect
+            id="repaymentFrequency"
+            name="repaymentFrequency"
+            value={formik.values.repaymentFrequency || ""}
+            onChange={formik.handleChange}
+            error={false}
+            size="small"
+            fullWidth
+            renderValue={(selected) => {
+              if (!selected) return "Select Repayment Frequency";
+              const found = REPAYMENT_FREQUENCY_OPTIONS.find(
+                (o) => o.value === selected
+              );
+              return found ? found.label : "Select Repayment Frequency";
+            }}
+          >
+            <MenuItem value="" disabled>
+              Select Repayment Frequency
+            </MenuItem>
+            {REPAYMENT_FREQUENCY_OPTIONS.map((option) => (
+              <MenuItem
+                key={option.value}
+                value={option.value}
+                sx={{
+                  "&:hover": {
+                    color: "white",
+                  },
+                }}
+              >
+                {option.label}
+              </MenuItem>
+            ))}
+          </StyledSelect>
+        </FormGrid>
+        <FormGrid size={{ xs: 12, md: 12 }}>
+          <FormLabel sx={{ mb: 1 }}>Repayment Order</FormLabel>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-start",
+            }}
+          >
+            <Typography variant="caption" sx={{ mb: 1 }}>
+              This is the order in which received payments are allocated. For
+              example, if the order is Fees → Principal → Interest → Penalty and
+              a $100 payment is received, the system first covers any Fees, then
+              applies the remainder to Principal, then Interest, and finally
+              Penalty.
+            </Typography>
+            <select
+              size={4}
+              style={{ width: 180, fontSize: "1rem", marginBottom: 8 }}
+              value={repaymentOrder[selectedOrderIndex]}
+              onChange={handleOrderSelect}
+            >
+              {repaymentOrder.map((item, idx) => (
+                <option key={item} value={item}>
+                  {item}
+                </option>
+              ))}
+            </select>
+            <Box>
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={moveOrderUp}
+                disabled={selectedOrderIndex === 0}
+                sx={{ mr: 1, minWidth: 40, p: 0.5 }}
+              >
+                Up
+              </Button>
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={moveOrderDown}
+                disabled={selectedOrderIndex === repaymentOrder.length - 1}
+                sx={{ minWidth: 40, p: 0.5 }}
+              >
+                Down
+              </Button>
+            </Box>
+          </Box>
         </FormGrid>
       </Grid>
 

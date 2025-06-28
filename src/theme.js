@@ -168,7 +168,7 @@ export const themeSettings = (mode) => {
         dark: isDark ? colors.primary[600] : colors.primary[300],
         contrastText: isDark ? "#fff" : "#171717",
         topbar: isDark ? 'black' : 'white',
-        mainbgd: isDark ? '#212121' : '#FFF5EE',
+        mainbgd: isDark ? '#212121' : '#FFFfff',
         mainbox: isDark ? '#1B1B1B' : 'white',
         gridBottomBorder: isDark? 'black' : 'grey'
       },
@@ -208,7 +208,7 @@ export const themeSettings = (mode) => {
         light: colors.grey[100],
       },
       background: {
-        default: isDark ? "#333333" : "#fcfcfc", // <-- fixed
+        default: isDark ? "#333333" : "#ffffff", // <-- fixed
         paper: isDark ? colors.primary[400] : "#ffffff",
         surface: isDark ? colors.primary[600] : colors.grey[100],
       },

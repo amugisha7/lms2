@@ -11,11 +11,10 @@ import AllBorrowers from "./Screens/Borrowers/AllBorrowers";
 import ViewBorrower from "./Screens/Borrowers/ViewBorrower/ViewBorrower";
 import CustomFieldsManager from "./Screens/AdminScreens/CustomFields/CustomFieldsManager";
 import Dashboard from "./Screens/Dashboard/Dashboard";
-import Home from "./Screens/Home";
-import CreateLoanProductForm from "./Screens/LoanProducts/CreateLoanProductForm"; // Add this import
 import CreateLoanFeesForm from "./Screens/LoanFees/CreateLoanFeesForm"; // Add this import
 import CreateLoanProductFormOptimized from "./Screens/LoanProducts/CreateLoanProductFormOptimized"; // Add this import
 import AdminPage from "./Screens/AdminScreens/AdminPage";
+import LoanFees from "./Screens/LoanFees/LoanFees"; // Add this import
 
 export default function AppRoutes({ userExists }) {
   return (
@@ -49,6 +48,7 @@ export default function AppRoutes({ userExists }) {
                 path="admin/add-loan-fee"
                 element={<CreateLoanFeesForm />}
               />
+              <Route path="admin/loan-fees" element={<LoanFees />} />
 
               {/* Admin main page route */}
               <Route path="admin" element={<AdminPage />} />

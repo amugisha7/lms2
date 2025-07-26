@@ -480,6 +480,8 @@ type LoanFees @model {
   loanProducts: [LoanProduct] @manyToMany(relationName: "LoanProductLoanFees")
   accountID: ID @index(name: "byAccountID")
   account: Account @belongsTo(fields: ["accountID"])
+  loanFeesConfigs: [LoanFeesConfig]
+    @manyToMany(relationName: "LoanFeesLoanFeesConfig")
 }
 
 type Penalty @model {
@@ -659,6 +661,7 @@ type LoanFeesConfig @model {
   status: String
   institution: Institution @belongsTo
   branches: [Branch] @manyToMany(relationName: "BranchLoanFeesConfig")
+  loanFees: [LoanFees] @manyToMany(relationName: "LoanFeesLoanFeesConfig")
 }
 
 # ---------- End of Schema ----------

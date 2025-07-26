@@ -43,6 +43,10 @@ export const getInstitution = /* GraphQL */ `
         nextToken
         __typename
       }
+      loanFeesConfigs {
+        nextToken
+        __typename
+      }
       createdAt
       updatedAt
       __typename
@@ -157,6 +161,10 @@ export const getBranch = /* GraphQL */ `
         __typename
       }
       customFormFields {
+        nextToken
+        __typename
+      }
+      loanFeesConfigs {
         nextToken
         __typename
       }
@@ -310,6 +318,7 @@ export const getEmployee = /* GraphQL */ `
       phoneNumber1
       phoneNumber2
       email
+      title
       addressLine1
       addressLine2
       city
@@ -394,6 +403,7 @@ export const getEmployee = /* GraphQL */ `
         phoneNumber1
         phoneNumber2
         email
+        title
         addressLine1
         addressLine2
         city
@@ -491,6 +501,7 @@ export const listEmployees = /* GraphQL */ `
         phoneNumber1
         phoneNumber2
         email
+        title
         addressLine1
         addressLine2
         city
@@ -558,6 +569,7 @@ export const getBorrower = /* GraphQL */ `
       borrowerInterestRate
       city
       state
+      title
       zipcode
       employmentStatus
       employerName
@@ -659,6 +671,7 @@ export const listBorrowers = /* GraphQL */ `
         borrowerInterestRate
         city
         state
+        title
         zipcode
         employmentStatus
         employerName
@@ -720,6 +733,7 @@ export const getGuarantor = /* GraphQL */ `
         borrowerInterestRate
         city
         state
+        title
         zipcode
         employmentStatus
         employerName
@@ -814,6 +828,7 @@ export const getSecurity = /* GraphQL */ `
         borrowerInterestRate
         city
         state
+        title
         zipcode
         employmentStatus
         employerName
@@ -1075,6 +1090,7 @@ export const getCreditScore = /* GraphQL */ `
         borrowerInterestRate
         city
         state
+        title
         zipcode
         employmentStatus
         employerName
@@ -1109,6 +1125,7 @@ export const getCreditScore = /* GraphQL */ `
         phoneNumber1
         phoneNumber2
         email
+        title
         addressLine1
         addressLine2
         city
@@ -1235,6 +1252,7 @@ export const getDocument = /* GraphQL */ `
         phoneNumber1
         phoneNumber2
         email
+        title
         addressLine1
         addressLine2
         city
@@ -1339,6 +1357,7 @@ export const getContract = /* GraphQL */ `
         borrowerInterestRate
         city
         state
+        title
         zipcode
         employmentStatus
         employerName
@@ -1445,6 +1464,7 @@ export const getApplication = /* GraphQL */ `
         borrowerInterestRate
         city
         state
+        title
         zipcode
         employmentStatus
         employerName
@@ -1525,6 +1545,7 @@ export const getApplication = /* GraphQL */ `
         phoneNumber1
         phoneNumber2
         email
+        title
         addressLine1
         addressLine2
         city
@@ -1640,6 +1661,7 @@ export const getCollateral = /* GraphQL */ `
         borrowerInterestRate
         city
         state
+        title
         zipcode
         employmentStatus
         employerName
@@ -1762,6 +1784,7 @@ export const getLoan = /* GraphQL */ `
         borrowerInterestRate
         city
         state
+        title
         zipcode
         employmentStatus
         employerName
@@ -1858,6 +1881,7 @@ export const getLoan = /* GraphQL */ `
         phoneNumber1
         phoneNumber2
         email
+        title
         addressLine1
         addressLine2
         city
@@ -2084,6 +2108,10 @@ export const getLoanFees = /* GraphQL */ `
         createdAt
         updatedAt
         branchAccountsId
+        __typename
+      }
+      loanFeesConfigs {
+        nextToken
         __typename
       }
       createdAt
@@ -2374,6 +2402,7 @@ export const getAccount = /* GraphQL */ `
         phoneNumber1
         phoneNumber2
         email
+        title
         addressLine1
         addressLine2
         city
@@ -2505,6 +2534,7 @@ export const getMoneyTransaction = /* GraphQL */ `
         phoneNumber1
         phoneNumber2
         email
+        title
         addressLine1
         addressLine2
         city
@@ -2662,6 +2692,7 @@ export const getPayment = /* GraphQL */ `
         phoneNumber1
         phoneNumber2
         email
+        title
         addressLine1
         addressLine2
         city
@@ -2809,6 +2840,7 @@ export const getExpense = /* GraphQL */ `
         phoneNumber1
         phoneNumber2
         email
+        title
         addressLine1
         addressLine2
         city
@@ -3073,6 +3105,86 @@ export const listCustomFormFields = /* GraphQL */ `
     }
   }
 `;
+export const getLoanFeesConfig = /* GraphQL */ `
+  query GetLoanFeesConfig($id: ID!) {
+    getLoanFeesConfig(id: $id) {
+      id
+      name
+      category
+      calculationMethod
+      description
+      percentageBase
+      rate
+      status
+      institution {
+        id
+        name
+        currencyCode
+        subscriptionTier
+        subscriptionStatus
+        trialEndDate
+        nextBillingDate
+        stripeCustomerID
+        stripeSubscriptionID
+        defaultDateFormat
+        defaultCurrencyFormat
+        defaultLanguage
+        regulatoryRegion
+        maxUsers
+        maxBranches
+        maxStaffPerBranch
+        saccoFeaturesEnabled
+        staffManagementEnabled
+        payrollEnabled
+        collectionsModuleEnabled
+        customWorkflowsEnabled
+        advancedReportingEnabled
+        apiIntegrationSettings
+        createdAt
+        updatedAt
+        __typename
+      }
+      branches {
+        nextToken
+        __typename
+      }
+      loanFees {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      institutionLoanFeesConfigsId
+      __typename
+    }
+  }
+`;
+export const listLoanFeesConfigs = /* GraphQL */ `
+  query ListLoanFeesConfigs(
+    $filter: ModelLoanFeesConfigFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listLoanFeesConfigs(filter: $filter, limit: $limit, nextToken: $nextToken) {
+      items {
+        id
+        name
+        category
+        calculationMethod
+        description
+        percentageBase
+        rate
+        status
+        createdAt
+        updatedAt
+        institutionLoanFeesConfigsId
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
 export const getBranchLoanProduct = /* GraphQL */ `
   query GetBranchLoanProduct($id: ID!) {
     getBranchLoanProduct(id: $id) {
@@ -3136,6 +3248,66 @@ export const listBranchLoanProducts = /* GraphQL */ `
     }
   }
 `;
+export const getBranchLoanFeesConfig = /* GraphQL */ `
+  query GetBranchLoanFeesConfig($id: ID!) {
+    getBranchLoanFeesConfig(id: $id) {
+      id
+      branchId
+      loanFeesConfigId
+      branch {
+        id
+        name
+        branchCode
+        address
+        createdAt
+        updatedAt
+        institutionBranchesId
+        __typename
+      }
+      loanFeesConfig {
+        id
+        name
+        category
+        calculationMethod
+        description
+        percentageBase
+        rate
+        status
+        createdAt
+        updatedAt
+        institutionLoanFeesConfigsId
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const listBranchLoanFeesConfigs = /* GraphQL */ `
+  query ListBranchLoanFeesConfigs(
+    $filter: ModelBranchLoanFeesConfigFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listBranchLoanFeesConfigs(
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        branchId
+        loanFeesConfigId
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
 export const getPayrollEmployee = /* GraphQL */ `
   query GetPayrollEmployee($id: ID!) {
     getPayrollEmployee(id: $id) {
@@ -3151,6 +3323,7 @@ export const getPayrollEmployee = /* GraphQL */ `
         phoneNumber1
         phoneNumber2
         email
+        title
         addressLine1
         addressLine2
         city
@@ -3252,6 +3425,7 @@ export const getLoanApprovedByEmployee = /* GraphQL */ `
         phoneNumber1
         phoneNumber2
         email
+        title
         addressLine1
         addressLine2
         city
@@ -3366,6 +3540,7 @@ export const getExpenseApprovedByEmployee = /* GraphQL */ `
         phoneNumber1
         phoneNumber2
         email
+        title
         addressLine1
         addressLine2
         city
@@ -3470,6 +3645,7 @@ export const getApplicationApprovedByEmployee = /* GraphQL */ `
         phoneNumber1
         phoneNumber2
         email
+        title
         addressLine1
         addressLine2
         city
@@ -3572,6 +3748,7 @@ export const getCreditScoreApprovedByEmployee = /* GraphQL */ `
         phoneNumber1
         phoneNumber2
         email
+        title
         addressLine1
         addressLine2
         city
@@ -3669,6 +3846,7 @@ export const getMoneyTransactionApprovedByEmployee = /* GraphQL */ `
         phoneNumber1
         phoneNumber2
         email
+        title
         addressLine1
         addressLine2
         city
@@ -3772,6 +3950,7 @@ export const getPaymentApprovedByEmployee = /* GraphQL */ `
         phoneNumber1
         phoneNumber2
         email
+        title
         addressLine1
         addressLine2
         city
@@ -3872,6 +4051,7 @@ export const getBorrowerLoanOfficer = /* GraphQL */ `
         phoneNumber1
         phoneNumber2
         email
+        title
         addressLine1
         addressLine2
         city
@@ -3932,6 +4112,7 @@ export const getBorrowerLoanOfficer = /* GraphQL */ `
         borrowerInterestRate
         city
         state
+        title
         zipcode
         employmentStatus
         employerName
@@ -4014,6 +4195,7 @@ export const getBorrowerDocument = /* GraphQL */ `
         borrowerInterestRate
         city
         state
+        title
         zipcode
         employmentStatus
         employerName
@@ -5507,6 +5689,76 @@ export const listInvestmentAccounts = /* GraphQL */ `
     }
   }
 `;
+export const getLoanFeesLoanFeesConfig = /* GraphQL */ `
+  query GetLoanFeesLoanFeesConfig($id: ID!) {
+    getLoanFeesLoanFeesConfig(id: $id) {
+      id
+      loanFeesId
+      loanFeesConfigId
+      loanFees {
+        id
+        amount
+        loanFeesName
+        loanFeesCategory
+        loanFeesCalculationMethod
+        loanFeesRate
+        loanFeesDate
+        loanFeesStatus
+        notes
+        loanFeesType
+        loanFeesDescription
+        loanFeesAttribute1
+        loanFeesAttribute2
+        accountID
+        createdAt
+        updatedAt
+        loanLoanFeesId
+        __typename
+      }
+      loanFeesConfig {
+        id
+        name
+        category
+        calculationMethod
+        description
+        percentageBase
+        rate
+        status
+        createdAt
+        updatedAt
+        institutionLoanFeesConfigsId
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const listLoanFeesLoanFeesConfigs = /* GraphQL */ `
+  query ListLoanFeesLoanFeesConfigs(
+    $filter: ModelLoanFeesLoanFeesConfigFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listLoanFeesLoanFeesConfigs(
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        loanFeesId
+        loanFeesConfigId
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
 export const getOtherIncomeAccount = /* GraphQL */ `
   query GetOtherIncomeAccount($id: ID!) {
     getOtherIncomeAccount(id: $id) {
@@ -5600,6 +5852,7 @@ export const employeesByRelatedUserID = /* GraphQL */ `
         phoneNumber1
         phoneNumber2
         email
+        title
         addressLine1
         addressLine2
         city
@@ -5667,6 +5920,7 @@ export const employeesByRelatedBorrowerID = /* GraphQL */ `
         phoneNumber1
         phoneNumber2
         email
+        title
         addressLine1
         addressLine2
         city
@@ -5734,6 +5988,7 @@ export const employeesBySupervisorID = /* GraphQL */ `
         phoneNumber1
         phoneNumber2
         email
+        title
         addressLine1
         addressLine2
         city
@@ -6385,6 +6640,62 @@ export const branchLoanProductsByLoanProductId = /* GraphQL */ `
         id
         branchId
         loanProductId
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const branchLoanFeesConfigsByBranchId = /* GraphQL */ `
+  query BranchLoanFeesConfigsByBranchId(
+    $branchId: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelBranchLoanFeesConfigFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    branchLoanFeesConfigsByBranchId(
+      branchId: $branchId
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        branchId
+        loanFeesConfigId
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const branchLoanFeesConfigsByLoanFeesConfigId = /* GraphQL */ `
+  query BranchLoanFeesConfigsByLoanFeesConfigId(
+    $loanFeesConfigId: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelBranchLoanFeesConfigFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    branchLoanFeesConfigsByLoanFeesConfigId(
+      loanFeesConfigId: $loanFeesConfigId
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        branchId
+        loanFeesConfigId
         createdAt
         updatedAt
         __typename
@@ -7953,6 +8264,62 @@ export const investmentAccountsByAccountId = /* GraphQL */ `
         id
         investmentId
         accountId
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const loanFeesLoanFeesConfigsByLoanFeesId = /* GraphQL */ `
+  query LoanFeesLoanFeesConfigsByLoanFeesId(
+    $loanFeesId: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelLoanFeesLoanFeesConfigFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    loanFeesLoanFeesConfigsByLoanFeesId(
+      loanFeesId: $loanFeesId
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        loanFeesId
+        loanFeesConfigId
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const loanFeesLoanFeesConfigsByLoanFeesConfigId = /* GraphQL */ `
+  query LoanFeesLoanFeesConfigsByLoanFeesConfigId(
+    $loanFeesConfigId: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelLoanFeesLoanFeesConfigFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    loanFeesLoanFeesConfigsByLoanFeesConfigId(
+      loanFeesConfigId: $loanFeesConfigId
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        loanFeesId
+        loanFeesConfigId
         createdAt
         updatedAt
         __typename

@@ -51,6 +51,7 @@ export default function BorrowerUpdateForm(props) {
     borrowerInterestRate: "",
     city: "",
     state: "",
+    title: "",
     zipcode: "",
     employmentStatus: "",
     employerName: "",
@@ -115,6 +116,7 @@ export default function BorrowerUpdateForm(props) {
   );
   const [city, setCity] = React.useState(initialValues.city);
   const [state, setState] = React.useState(initialValues.state);
+  const [title, setTitle] = React.useState(initialValues.title);
   const [zipcode, setZipcode] = React.useState(initialValues.zipcode);
   const [employmentStatus, setEmploymentStatus] = React.useState(
     initialValues.employmentStatus
@@ -195,6 +197,7 @@ export default function BorrowerUpdateForm(props) {
     setBorrowerInterestRate(cleanValues.borrowerInterestRate);
     setCity(cleanValues.city);
     setState(cleanValues.state);
+    setTitle(cleanValues.title);
     setZipcode(cleanValues.zipcode);
     setEmploymentStatus(cleanValues.employmentStatus);
     setEmployerName(cleanValues.employerName);
@@ -258,6 +261,7 @@ export default function BorrowerUpdateForm(props) {
     borrowerInterestRate: [],
     city: [],
     state: [],
+    title: [],
     zipcode: [],
     employmentStatus: [],
     employerName: [],
@@ -324,6 +328,7 @@ export default function BorrowerUpdateForm(props) {
           borrowerInterestRate: borrowerInterestRate ?? null,
           city: city ?? null,
           state: state ?? null,
+          title: title ?? null,
           zipcode: zipcode ?? null,
           employmentStatus: employmentStatus ?? null,
           employerName: employerName ?? null,
@@ -423,6 +428,7 @@ export default function BorrowerUpdateForm(props) {
               borrowerInterestRate,
               city,
               state,
+              title,
               zipcode,
               employmentStatus,
               employerName,
@@ -485,6 +491,7 @@ export default function BorrowerUpdateForm(props) {
               borrowerInterestRate,
               city,
               state,
+              title,
               zipcode,
               employmentStatus,
               employerName,
@@ -547,6 +554,7 @@ export default function BorrowerUpdateForm(props) {
               borrowerInterestRate,
               city,
               state,
+              title,
               zipcode,
               employmentStatus,
               employerName,
@@ -609,6 +617,7 @@ export default function BorrowerUpdateForm(props) {
               borrowerInterestRate,
               city,
               state,
+              title,
               zipcode,
               employmentStatus,
               employerName,
@@ -671,6 +680,7 @@ export default function BorrowerUpdateForm(props) {
               borrowerInterestRate,
               city,
               state,
+              title,
               zipcode,
               employmentStatus,
               employerName,
@@ -733,6 +743,7 @@ export default function BorrowerUpdateForm(props) {
               borrowerInterestRate,
               city,
               state,
+              title,
               zipcode,
               employmentStatus,
               employerName,
@@ -795,6 +806,7 @@ export default function BorrowerUpdateForm(props) {
               borrowerInterestRate,
               city,
               state,
+              title,
               zipcode,
               employmentStatus,
               employerName,
@@ -857,6 +869,7 @@ export default function BorrowerUpdateForm(props) {
               borrowerInterestRate,
               city,
               state,
+              title,
               zipcode,
               employmentStatus,
               employerName,
@@ -919,6 +932,7 @@ export default function BorrowerUpdateForm(props) {
               borrowerInterestRate,
               city,
               state,
+              title,
               zipcode,
               employmentStatus,
               employerName,
@@ -981,6 +995,7 @@ export default function BorrowerUpdateForm(props) {
               borrowerInterestRate,
               city,
               state,
+              title,
               zipcode,
               employmentStatus,
               employerName,
@@ -1043,6 +1058,7 @@ export default function BorrowerUpdateForm(props) {
               borrowerInterestRate,
               city,
               state,
+              title,
               zipcode,
               employmentStatus,
               employerName,
@@ -1105,6 +1121,7 @@ export default function BorrowerUpdateForm(props) {
               borrowerInterestRate,
               city,
               state,
+              title,
               zipcode,
               employmentStatus,
               employerName,
@@ -1169,6 +1186,7 @@ export default function BorrowerUpdateForm(props) {
               borrowerInterestRate,
               city,
               state,
+              title,
               zipcode,
               employmentStatus,
               employerName,
@@ -1231,6 +1249,7 @@ export default function BorrowerUpdateForm(props) {
               borrowerInterestRate,
               city,
               state,
+              title,
               zipcode,
               employmentStatus,
               employerName,
@@ -1297,6 +1316,7 @@ export default function BorrowerUpdateForm(props) {
               borrowerInterestRate,
               city,
               state,
+              title,
               zipcode,
               employmentStatus,
               employerName,
@@ -1363,6 +1383,7 @@ export default function BorrowerUpdateForm(props) {
               borrowerInterestRate,
               city,
               state,
+              title,
               zipcode,
               employmentStatus,
               employerName,
@@ -1431,6 +1452,7 @@ export default function BorrowerUpdateForm(props) {
               borrowerInterestRate,
               city,
               state,
+              title,
               zipcode,
               employmentStatus,
               employerName,
@@ -1499,6 +1521,7 @@ export default function BorrowerUpdateForm(props) {
               borrowerInterestRate: value,
               city,
               state,
+              title,
               zipcode,
               employmentStatus,
               employerName,
@@ -1563,6 +1586,7 @@ export default function BorrowerUpdateForm(props) {
               borrowerInterestRate,
               city: value,
               state,
+              title,
               zipcode,
               employmentStatus,
               employerName,
@@ -1625,6 +1649,7 @@ export default function BorrowerUpdateForm(props) {
               borrowerInterestRate,
               city,
               state: value,
+              title,
               zipcode,
               employmentStatus,
               employerName,
@@ -1659,6 +1684,69 @@ export default function BorrowerUpdateForm(props) {
         {...getOverrideProps(overrides, "state")}
       ></TextField>
       <TextField
+        label="Title"
+        isRequired={false}
+        isReadOnly={false}
+        value={title}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              firstname,
+              othername,
+              businessName,
+              typeOfBusiness,
+              uniqueIdNumber,
+              phoneNumber,
+              otherPhoneNumber,
+              email,
+              gender,
+              dateOfBirth,
+              nationality,
+              nationalIdPicture,
+              passportPicture,
+              address,
+              points,
+              borrowerOpeningBalance,
+              borrowerClosingBalance,
+              borrowerInterestRate,
+              city,
+              state,
+              title: value,
+              zipcode,
+              employmentStatus,
+              employerName,
+              creditScore,
+              additionalNote1,
+              additionalNote2,
+              borrowerDocument1,
+              borrowerDocument1URL,
+              borrowerDocument2,
+              borrowerDocument2URL,
+              borrowerDocument3,
+              borrowerDocument3URL,
+              borrowerDocument4,
+              borrowerDocument4URL,
+              borrowerStatus,
+              borrowertype,
+              borrowerAttribute1,
+              borrowerAttribute2,
+              customFieldsData,
+            };
+            const result = onChange(modelFields);
+            value = result?.title ?? value;
+          }
+          if (errors.title?.hasError) {
+            runValidationTasks("title", value);
+          }
+          setTitle(value);
+        }}
+        onBlur={() => runValidationTasks("title", title)}
+        errorMessage={errors.title?.errorMessage}
+        hasError={errors.title?.hasError}
+        {...getOverrideProps(overrides, "title")}
+      ></TextField>
+      <TextField
         label="Zipcode"
         isRequired={false}
         isReadOnly={false}
@@ -1687,6 +1775,7 @@ export default function BorrowerUpdateForm(props) {
               borrowerInterestRate,
               city,
               state,
+              title,
               zipcode: value,
               employmentStatus,
               employerName,
@@ -1749,6 +1838,7 @@ export default function BorrowerUpdateForm(props) {
               borrowerInterestRate,
               city,
               state,
+              title,
               zipcode,
               employmentStatus: value,
               employerName,
@@ -1811,6 +1901,7 @@ export default function BorrowerUpdateForm(props) {
               borrowerInterestRate,
               city,
               state,
+              title,
               zipcode,
               employmentStatus,
               employerName: value,
@@ -1873,6 +1964,7 @@ export default function BorrowerUpdateForm(props) {
               borrowerInterestRate,
               city,
               state,
+              title,
               zipcode,
               employmentStatus,
               employerName,
@@ -1935,6 +2027,7 @@ export default function BorrowerUpdateForm(props) {
               borrowerInterestRate,
               city,
               state,
+              title,
               zipcode,
               employmentStatus,
               employerName,
@@ -1997,6 +2090,7 @@ export default function BorrowerUpdateForm(props) {
               borrowerInterestRate,
               city,
               state,
+              title,
               zipcode,
               employmentStatus,
               employerName,
@@ -2059,6 +2153,7 @@ export default function BorrowerUpdateForm(props) {
               borrowerInterestRate,
               city,
               state,
+              title,
               zipcode,
               employmentStatus,
               employerName,
@@ -2123,6 +2218,7 @@ export default function BorrowerUpdateForm(props) {
               borrowerInterestRate,
               city,
               state,
+              title,
               zipcode,
               employmentStatus,
               employerName,
@@ -2187,6 +2283,7 @@ export default function BorrowerUpdateForm(props) {
               borrowerInterestRate,
               city,
               state,
+              title,
               zipcode,
               employmentStatus,
               employerName,
@@ -2251,6 +2348,7 @@ export default function BorrowerUpdateForm(props) {
               borrowerInterestRate,
               city,
               state,
+              title,
               zipcode,
               employmentStatus,
               employerName,
@@ -2315,6 +2413,7 @@ export default function BorrowerUpdateForm(props) {
               borrowerInterestRate,
               city,
               state,
+              title,
               zipcode,
               employmentStatus,
               employerName,
@@ -2379,6 +2478,7 @@ export default function BorrowerUpdateForm(props) {
               borrowerInterestRate,
               city,
               state,
+              title,
               zipcode,
               employmentStatus,
               employerName,
@@ -2443,6 +2543,7 @@ export default function BorrowerUpdateForm(props) {
               borrowerInterestRate,
               city,
               state,
+              title,
               zipcode,
               employmentStatus,
               employerName,
@@ -2507,6 +2608,7 @@ export default function BorrowerUpdateForm(props) {
               borrowerInterestRate,
               city,
               state,
+              title,
               zipcode,
               employmentStatus,
               employerName,
@@ -2571,6 +2673,7 @@ export default function BorrowerUpdateForm(props) {
               borrowerInterestRate,
               city,
               state,
+              title,
               zipcode,
               employmentStatus,
               employerName,
@@ -2633,6 +2736,7 @@ export default function BorrowerUpdateForm(props) {
               borrowerInterestRate,
               city,
               state,
+              title,
               zipcode,
               employmentStatus,
               employerName,
@@ -2695,6 +2799,7 @@ export default function BorrowerUpdateForm(props) {
               borrowerInterestRate,
               city,
               state,
+              title,
               zipcode,
               employmentStatus,
               employerName,
@@ -2759,6 +2864,7 @@ export default function BorrowerUpdateForm(props) {
               borrowerInterestRate,
               city,
               state,
+              title,
               zipcode,
               employmentStatus,
               employerName,
@@ -2823,6 +2929,7 @@ export default function BorrowerUpdateForm(props) {
               borrowerInterestRate,
               city,
               state,
+              title,
               zipcode,
               employmentStatus,
               employerName,

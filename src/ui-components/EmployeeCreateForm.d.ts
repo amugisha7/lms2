@@ -29,6 +29,7 @@ export declare type EmployeeCreateFormInputValues = {
     phoneNumber1?: string;
     phoneNumber2?: string;
     email?: string;
+    title?: string;
     addressLine1?: string;
     addressLine2?: string;
     city?: string;
@@ -70,6 +71,7 @@ export declare type EmployeeCreateFormValidationValues = {
     phoneNumber1?: ValidationFunction<string>;
     phoneNumber2?: ValidationFunction<string>;
     email?: ValidationFunction<string>;
+    title?: ValidationFunction<string>;
     addressLine1?: ValidationFunction<string>;
     addressLine2?: ValidationFunction<string>;
     city?: ValidationFunction<string>;
@@ -113,6 +115,7 @@ export declare type EmployeeCreateFormOverridesProps = {
     phoneNumber1?: PrimitiveOverrideProps<TextFieldProps>;
     phoneNumber2?: PrimitiveOverrideProps<TextFieldProps>;
     email?: PrimitiveOverrideProps<TextFieldProps>;
+    title?: PrimitiveOverrideProps<TextFieldProps>;
     addressLine1?: PrimitiveOverrideProps<TextFieldProps>;
     addressLine2?: PrimitiveOverrideProps<TextFieldProps>;
     city?: PrimitiveOverrideProps<TextFieldProps>;

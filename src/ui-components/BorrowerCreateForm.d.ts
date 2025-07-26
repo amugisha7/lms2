@@ -42,6 +42,7 @@ export declare type BorrowerCreateFormInputValues = {
     borrowerInterestRate?: number;
     city?: string;
     state?: string;
+    title?: string;
     zipcode?: string;
     employmentStatus?: string;
     employerName?: string;
@@ -83,6 +84,7 @@ export declare type BorrowerCreateFormValidationValues = {
     borrowerInterestRate?: ValidationFunction<number>;
     city?: ValidationFunction<string>;
     state?: ValidationFunction<string>;
+    title?: ValidationFunction<string>;
     zipcode?: ValidationFunction<string>;
     employmentStatus?: ValidationFunction<string>;
     employerName?: ValidationFunction<string>;
@@ -126,6 +128,7 @@ export declare type BorrowerCreateFormOverridesProps = {
     borrowerInterestRate?: PrimitiveOverrideProps<TextFieldProps>;
     city?: PrimitiveOverrideProps<TextFieldProps>;
     state?: PrimitiveOverrideProps<TextFieldProps>;
+    title?: PrimitiveOverrideProps<TextFieldProps>;
     zipcode?: PrimitiveOverrideProps<TextFieldProps>;
     employmentStatus?: PrimitiveOverrideProps<TextFieldProps>;
     employerName?: PrimitiveOverrideProps<TextFieldProps>;

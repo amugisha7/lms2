@@ -35,6 +35,8 @@ export { default as InstitutionUpdateForm } from "./InstitutionUpdateForm";
 export { default as InvestmentCreateForm } from "./InvestmentCreateForm";
 export { default as InvestmentUpdateForm } from "./InvestmentUpdateForm";
 export { default as LoanCreateForm } from "./LoanCreateForm";
+export { default as LoanFeesConfigCreateForm } from "./LoanFeesConfigCreateForm";
+export { default as LoanFeesConfigUpdateForm } from "./LoanFeesConfigUpdateForm";
 export { default as LoanFeesCreateForm } from "./LoanFeesCreateForm";
 export { default as LoanFeesUpdateForm } from "./LoanFeesUpdateForm";
 export { default as LoanProductCreateForm } from "./LoanProductCreateForm";

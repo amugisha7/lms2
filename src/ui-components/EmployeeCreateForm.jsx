@@ -36,6 +36,7 @@ export default function EmployeeCreateForm(props) {
     phoneNumber1: "",
     phoneNumber2: "",
     email: "",
+    title: "",
     addressLine1: "",
     addressLine2: "",
     city: "",
@@ -82,6 +83,7 @@ export default function EmployeeCreateForm(props) {
     initialValues.phoneNumber2
   );
   const [email, setEmail] = React.useState(initialValues.email);
+  const [title, setTitle] = React.useState(initialValues.title);
   const [addressLine1, setAddressLine1] = React.useState(
     initialValues.addressLine1
   );
@@ -177,6 +179,7 @@ export default function EmployeeCreateForm(props) {
     setPhoneNumber1(initialValues.phoneNumber1);
     setPhoneNumber2(initialValues.phoneNumber2);
     setEmail(initialValues.email);
+    setTitle(initialValues.title);
     setAddressLine1(initialValues.addressLine1);
     setAddressLine2(initialValues.addressLine2);
     setCity(initialValues.city);
@@ -219,6 +222,7 @@ export default function EmployeeCreateForm(props) {
     phoneNumber1: [],
     phoneNumber2: [],
     email: [],
+    title: [],
     addressLine1: [],
     addressLine2: [],
     city: [],
@@ -285,6 +289,7 @@ export default function EmployeeCreateForm(props) {
           phoneNumber1,
           phoneNumber2,
           email,
+          title,
           addressLine1,
           addressLine2,
           city,
@@ -386,6 +391,7 @@ export default function EmployeeCreateForm(props) {
               phoneNumber1,
               phoneNumber2,
               email,
+              title,
               addressLine1,
               addressLine2,
               city,
@@ -448,6 +454,7 @@ export default function EmployeeCreateForm(props) {
               phoneNumber1,
               phoneNumber2,
               email,
+              title,
               addressLine1,
               addressLine2,
               city,
@@ -510,6 +517,7 @@ export default function EmployeeCreateForm(props) {
               phoneNumber1,
               phoneNumber2,
               email,
+              title,
               addressLine1,
               addressLine2,
               city,
@@ -573,6 +581,7 @@ export default function EmployeeCreateForm(props) {
               phoneNumber1,
               phoneNumber2,
               email,
+              title,
               addressLine1,
               addressLine2,
               city,
@@ -635,6 +644,7 @@ export default function EmployeeCreateForm(props) {
               phoneNumber1: value,
               phoneNumber2,
               email,
+              title,
               addressLine1,
               addressLine2,
               city,
@@ -697,6 +707,7 @@ export default function EmployeeCreateForm(props) {
               phoneNumber1,
               phoneNumber2: value,
               email,
+              title,
               addressLine1,
               addressLine2,
               city,
@@ -759,6 +770,7 @@ export default function EmployeeCreateForm(props) {
               phoneNumber1,
               phoneNumber2,
               email: value,
+              title,
               addressLine1,
               addressLine2,
               city,
@@ -806,6 +818,69 @@ export default function EmployeeCreateForm(props) {
         {...getOverrideProps(overrides, "email")}
       ></TextField>
       <TextField
+        label="Title"
+        isRequired={false}
+        isReadOnly={false}
+        value={title}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              firstName,
+              lastName,
+              middleName,
+              dateOfBirth,
+              phoneNumber1,
+              phoneNumber2,
+              email,
+              title: value,
+              addressLine1,
+              addressLine2,
+              city,
+              stateProvince,
+              postalCode,
+              nextOfKinName,
+              nextOfKinPhoneNumber,
+              nextOfKinEmail,
+              nextOfKinRelationship,
+              nextOfKinAddress,
+              nationalID,
+              passportNumber,
+              nationality,
+              status,
+              employmentType,
+              employmentStatus,
+              employmentStartDate,
+              employmentEndDate,
+              employmentPosition,
+              employmentDepartment,
+              employmentGrade,
+              employmentLocation,
+              grossSalary,
+              bankAccountNumber,
+              bankName,
+              bankBranchCode,
+              socialSecurityNumber,
+              taxIdentificationNumber,
+              taxExemptStatus,
+              customFieldsData,
+              relatedUserID,
+              relatedBorrowerID,
+            };
+            const result = onChange(modelFields);
+            value = result?.title ?? value;
+          }
+          if (errors.title?.hasError) {
+            runValidationTasks("title", value);
+          }
+          setTitle(value);
+        }}
+        onBlur={() => runValidationTasks("title", title)}
+        errorMessage={errors.title?.errorMessage}
+        hasError={errors.title?.hasError}
+        {...getOverrideProps(overrides, "title")}
+      ></TextField>
+      <TextField
         label="Address line1"
         isRequired={false}
         isReadOnly={false}
@@ -821,6 +896,7 @@ export default function EmployeeCreateForm(props) {
               phoneNumber1,
               phoneNumber2,
               email,
+              title,
               addressLine1: value,
               addressLine2,
               city,
@@ -883,6 +959,7 @@ export default function EmployeeCreateForm(props) {
               phoneNumber1,
               phoneNumber2,
               email,
+              title,
               addressLine1,
               addressLine2: value,
               city,
@@ -945,6 +1022,7 @@ export default function EmployeeCreateForm(props) {
               phoneNumber1,
               phoneNumber2,
               email,
+              title,
               addressLine1,
               addressLine2,
               city: value,
@@ -1007,6 +1085,7 @@ export default function EmployeeCreateForm(props) {
               phoneNumber1,
               phoneNumber2,
               email,
+              title,
               addressLine1,
               addressLine2,
               city,
@@ -1069,6 +1148,7 @@ export default function EmployeeCreateForm(props) {
               phoneNumber1,
               phoneNumber2,
               email,
+              title,
               addressLine1,
               addressLine2,
               city,
@@ -1131,6 +1211,7 @@ export default function EmployeeCreateForm(props) {
               phoneNumber1,
               phoneNumber2,
               email,
+              title,
               addressLine1,
               addressLine2,
               city,
@@ -1193,6 +1274,7 @@ export default function EmployeeCreateForm(props) {
               phoneNumber1,
               phoneNumber2,
               email,
+              title,
               addressLine1,
               addressLine2,
               city,
@@ -1257,6 +1339,7 @@ export default function EmployeeCreateForm(props) {
               phoneNumber1,
               phoneNumber2,
               email,
+              title,
               addressLine1,
               addressLine2,
               city,
@@ -1319,6 +1402,7 @@ export default function EmployeeCreateForm(props) {
               phoneNumber1,
               phoneNumber2,
               email,
+              title,
               addressLine1,
               addressLine2,
               city,
@@ -1383,6 +1467,7 @@ export default function EmployeeCreateForm(props) {
               phoneNumber1,
               phoneNumber2,
               email,
+              title,
               addressLine1,
               addressLine2,
               city,
@@ -1445,6 +1530,7 @@ export default function EmployeeCreateForm(props) {
               phoneNumber1,
               phoneNumber2,
               email,
+              title,
               addressLine1,
               addressLine2,
               city,
@@ -1507,6 +1593,7 @@ export default function EmployeeCreateForm(props) {
               phoneNumber1,
               phoneNumber2,
               email,
+              title,
               addressLine1,
               addressLine2,
               city,
@@ -1569,6 +1656,7 @@ export default function EmployeeCreateForm(props) {
               phoneNumber1,
               phoneNumber2,
               email,
+              title,
               addressLine1,
               addressLine2,
               city,
@@ -1631,6 +1719,7 @@ export default function EmployeeCreateForm(props) {
               phoneNumber1,
               phoneNumber2,
               email,
+              title,
               addressLine1,
               addressLine2,
               city,
@@ -1693,6 +1782,7 @@ export default function EmployeeCreateForm(props) {
               phoneNumber1,
               phoneNumber2,
               email,
+              title,
               addressLine1,
               addressLine2,
               city,
@@ -1755,6 +1845,7 @@ export default function EmployeeCreateForm(props) {
               phoneNumber1,
               phoneNumber2,
               email,
+              title,
               addressLine1,
               addressLine2,
               city,
@@ -1818,6 +1909,7 @@ export default function EmployeeCreateForm(props) {
               phoneNumber1,
               phoneNumber2,
               email,
+              title,
               addressLine1,
               addressLine2,
               city,
@@ -1883,6 +1975,7 @@ export default function EmployeeCreateForm(props) {
               phoneNumber1,
               phoneNumber2,
               email,
+              title,
               addressLine1,
               addressLine2,
               city,
@@ -1947,6 +2040,7 @@ export default function EmployeeCreateForm(props) {
               phoneNumber1,
               phoneNumber2,
               email,
+              title,
               addressLine1,
               addressLine2,
               city,
@@ -2011,6 +2105,7 @@ export default function EmployeeCreateForm(props) {
               phoneNumber1,
               phoneNumber2,
               email,
+              title,
               addressLine1,
               addressLine2,
               city,
@@ -2075,6 +2170,7 @@ export default function EmployeeCreateForm(props) {
               phoneNumber1,
               phoneNumber2,
               email,
+              title,
               addressLine1,
               addressLine2,
               city,
@@ -2137,6 +2233,7 @@ export default function EmployeeCreateForm(props) {
               phoneNumber1,
               phoneNumber2,
               email,
+              title,
               addressLine1,
               addressLine2,
               city,
@@ -2205,6 +2302,7 @@ export default function EmployeeCreateForm(props) {
               phoneNumber1,
               phoneNumber2,
               email,
+              title,
               addressLine1,
               addressLine2,
               city,
@@ -2267,6 +2365,7 @@ export default function EmployeeCreateForm(props) {
               phoneNumber1,
               phoneNumber2,
               email,
+              title,
               addressLine1,
               addressLine2,
               city,
@@ -2331,6 +2430,7 @@ export default function EmployeeCreateForm(props) {
               phoneNumber1,
               phoneNumber2,
               email,
+              title,
               addressLine1,
               addressLine2,
               city,
@@ -2393,6 +2493,7 @@ export default function EmployeeCreateForm(props) {
               phoneNumber1,
               phoneNumber2,
               email,
+              title,
               addressLine1,
               addressLine2,
               city,
@@ -2455,6 +2556,7 @@ export default function EmployeeCreateForm(props) {
               phoneNumber1,
               phoneNumber2,
               email,
+              title,
               addressLine1,
               addressLine2,
               city,
@@ -2519,6 +2621,7 @@ export default function EmployeeCreateForm(props) {
               phoneNumber1,
               phoneNumber2,
               email,
+              title,
               addressLine1,
               addressLine2,
               city,
@@ -2583,6 +2686,7 @@ export default function EmployeeCreateForm(props) {
               phoneNumber1,
               phoneNumber2,
               email,
+              title,
               addressLine1,
               addressLine2,
               city,
@@ -2644,6 +2748,7 @@ export default function EmployeeCreateForm(props) {
               phoneNumber1,
               phoneNumber2,
               email,
+              title,
               addressLine1,
               addressLine2,
               city,
@@ -2706,6 +2811,7 @@ export default function EmployeeCreateForm(props) {
               phoneNumber1,
               phoneNumber2,
               email,
+              title,
               addressLine1,
               addressLine2,
               city,
@@ -2768,6 +2874,7 @@ export default function EmployeeCreateForm(props) {
               phoneNumber1,
               phoneNumber2,
               email,
+              title,
               addressLine1,
               addressLine2,
               city,

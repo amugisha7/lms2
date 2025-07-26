@@ -12,6 +12,8 @@ import FormControlLabel from "@mui/material/FormControlLabel";
 import FormControl from "@mui/material/FormControl";
 import { useFormik } from "formik";
 import * as Yup from "yup";
+import { generateClient } from "aws-amplify/api";
+import { UserContext } from "../../App";
 
 const FormGrid = styled(Grid)(() => ({
   display: "flex",
@@ -40,6 +42,10 @@ const FEE_PERCENTAGE_BASE_OPTIONS = [
 export default function CreateLoanFeesForm() {
   const [feeCalculation, setFeeCalculation] = React.useState("fixed");
   const [feePercentageBase, setFeePercentageBase] = React.useState("");
+  const client = generateClient();
+  const { userDetails } = React.useContext(UserContext); // get userDetails from context
+  const [submitError, setSubmitError] = React.useState("");
+  const [submitSuccess, setSubmitSuccess] = React.useState("");
 
   const formik = useFormik({
     initialValues: {
@@ -50,22 +56,69 @@ export default function CreateLoanFeesForm() {
     validationSchema: Yup.object().shape({
       name: Yup.string()
         .required("Fee Name is required")
-        .max(100, "Name too long"),
-      description: Yup.string().max(500, "Description too long"),
+        .max(100, "Name too long")
+        .matches(/^[^,"'!{}]+$/, "Name contains invalid characters"),
+      description: Yup.string()
+        .max(500, "Description too long")
+        .matches(/^[^,"'!{}]+$/, "Description contains invalid characters"),
       category: Yup.string().required("Fee Category is required"),
     }),
     onSubmit: async (values, { setSubmitting, resetForm }) => {
-      // Log all values including local state
+      setSubmitError("");
+      setSubmitSuccess("");
+      setSubmitting(true);
+
+      // Ensure userDetails exists before submitting
+      if (!userDetails || !userDetails.institutionUsersId) {
+        setSubmitError("ERROR. Please reload the page or contact support.");
+        setSubmitting(false);
+        return;
+      }
+
       const allValues = {
         ...values,
-        feeCalculation,
-        feePercentageBase:
+        calculationMethod: feeCalculation,
+        percentageBase:
           feeCalculation === "percentage" ? feePercentageBase : "",
       };
-      console.log("Loan Fee Form Submission:", allValues);
-      setSubmitting(false);
-      resetForm();
-      alert("Loan fee created!");
+
+      try {
+        const result = await client.graphql({
+          query: `
+            mutation CreateLoanFeesConfig($input: CreateLoanFeesConfigInput!) {
+              createLoanFeesConfig(input: $input) {
+                name
+                category
+                calculationMethod
+                description
+                percentageBase
+                status
+                institutionLoanFeesConfigsId
+              }
+            }
+          `,
+          variables: {
+            input: {
+              name: allValues.name.trim(),
+              category: allValues.category,
+              calculationMethod: allValues.calculationMethod,
+              description: allValues.description?.trim() || null,
+              percentageBase: allValues.percentageBase || null,
+              status: "active", // Or set as needed
+              institutionLoanFeesConfigsId:
+                userDetails?.institutionUsersId || null, // include institution ID
+            },
+          },
+        });
+
+        setSubmitSuccess("Loan fee config created!");
+        resetForm();
+      } catch (err) {
+        console.error("Error creating loan fee config:", err);
+        setSubmitError("Failed to create loan fee config. Please try again.");
+      } finally {
+        setSubmitting(false);
+      }
     },
   });
 
@@ -144,8 +197,10 @@ export default function CreateLoanFeesForm() {
 
         <FormGrid size={{ xs: 12, md: 12 }}>
           <FormGrid size={{ xs: 12, md: 12 }}>
-            <Typography variant="caption">FEES CATEGORY:</Typography>
-            <hr style={{ width: "100%" }} />
+            <hr style={{ width: "100%", marginBottom: "20px" }} />
+            <Typography sx={{ mb: "20px" }} variant="caption">
+              FEES CATEGORY:
+            </Typography>
           </FormGrid>
 
           <FormControl component="fieldset">
@@ -164,8 +219,7 @@ export default function CreateLoanFeesForm() {
                       This fee appears as a separate line item in the loan
                       schedule. The borrower must make a payment specifically
                       for this fee. You can set the fee amount when creating a
-                      new loan &rarr;{" "}
-                      <b style={{ color: "#1976d2" }}>Add Loan</b>.
+                      new loan
                     </Typography>
                   </Box>
                 }
@@ -182,8 +236,7 @@ export default function CreateLoanFeesForm() {
                       when the loan is disbursed. The borrower receives less
                       money but doesn't need to make a separate payment for this
                       fee. It won't appear in the payment schedule. You can set
-                      the fee amount when adding a new loan &rarr;{" "}
-                      <b style={{ color: "#1976d2" }}>Add Loan</b>.
+                      the fee amount when adding a new loan
                     </Typography>
                   </Box>
                 }
@@ -200,8 +253,7 @@ export default function CreateLoanFeesForm() {
                       interest is charged on both the original loan and this
                       fee. The borrower pays back the fee plus interest over the
                       life of the loan through regular payments. You can set the
-                      fee amount when adding a new loan &rarr;{" "}
-                      <b style={{ color: "#1976d2" }}>Add Loan</b>.
+                      fee amount when adding a new loan
                     </Typography>
                   </Box>
                 }
@@ -213,8 +265,10 @@ export default function CreateLoanFeesForm() {
 
         <FormGrid size={{ xs: 12, md: 12 }}>
           <FormGrid size={{ xs: 12, md: 12 }}>
-            <Typography variant="caption">FEES CALCULATION:</Typography>
-            <hr style={{ width: "100%" }} />
+            <hr style={{ width: "100%", marginBottom: "20px" }} />
+            <Typography sx={{ mb: "20px" }} variant="caption">
+              FEES CALCULATION:
+            </Typography>
           </FormGrid>
           <Typography variant="caption" sx={{ mb: 1 }}>
             If you choose Fixed Amount, you'll need to enter the exact fee value
@@ -226,7 +280,15 @@ export default function CreateLoanFeesForm() {
             <RadioGroup
               name="feeCalculation"
               value={feeCalculation}
-              onChange={(e) => setFeeCalculation(e.target.value)}
+              onChange={(e) => {
+                const { value } = e.target;
+                setFeeCalculation(value);
+                if (value === "percentage") {
+                  setFeePercentageBase("principal");
+                } else {
+                  setFeePercentageBase("");
+                }
+              }}
               row
             >
               {FEE_CALCULATION_OPTIONS.map((option) => (
@@ -242,30 +304,31 @@ export default function CreateLoanFeesForm() {
           </FormControl>
         </FormGrid>
 
-        {feeCalculation === "percentage" && (
-          <FormGrid size={{ xs: 12, md: 12 }}>
-            <FormLabel sx={{ fontWeight: 500, mb: 1 }}>
-              Calculate Fee percentage % of
-            </FormLabel>
-            <FormControl component="fieldset">
-              <RadioGroup
-                name="feePercentageBase"
-                value={feePercentageBase}
-                onChange={(e) => setFeePercentageBase(e.target.value)}
-              >
-                {FEE_PERCENTAGE_BASE_OPTIONS.map((option) => (
-                  <FormControlLabel
-                    key={option.value}
-                    value={option.value}
-                    control={<Radio />}
-                    label={option.label}
-                    sx={{ mb: 1 }}
-                  />
-                ))}
-              </RadioGroup>
-            </FormControl>
-          </FormGrid>
-        )}
+        <FormGrid size={{ xs: 12, md: 12 }}>
+          <FormLabel sx={{ fontWeight: 500, mb: 1 }}>
+            Calculate Fee percentage % of
+          </FormLabel>
+          <FormControl
+            component="fieldset"
+            disabled={feeCalculation !== "percentage"}
+          >
+            <RadioGroup
+              name="feePercentageBase"
+              value={feePercentageBase}
+              onChange={(e) => setFeePercentageBase(e.target.value)}
+            >
+              {FEE_PERCENTAGE_BASE_OPTIONS.map((option) => (
+                <FormControlLabel
+                  key={option.value}
+                  value={option.value}
+                  control={<Radio />}
+                  label={option.label}
+                  sx={{ mb: 1 }}
+                />
+              ))}
+            </RadioGroup>
+          </FormControl>
+        </FormGrid>
       </Grid>
 
       <Box
@@ -280,12 +343,23 @@ export default function CreateLoanFeesForm() {
           type="submit"
           variant="contained"
           color="secondary"
-          disabled={formik.isSubmitting}
+          disabled={formik.isSubmitting || !formik.values.name}
           sx={{ mb: 6 }}
         >
           {formik.isSubmitting ? "Saving..." : "Create Loan Fee"}
         </Button>
       </Box>
+
+      {submitError && (
+        <Typography color="error" sx={{ mb: 1 }}>
+          {submitError}
+        </Typography>
+      )}
+      {submitSuccess && (
+        <Typography color="primary" sx={{ mb: 1 }}>
+          {submitSuccess}
+        </Typography>
+      )}
     </Box>
   );
 }

@@ -13,7 +13,7 @@ export default function PrincipalSettings({ formik }) {
   return (
     <>
       <Grid size={{ xs: 12, md: 12 }}>
-        <hr style={{ width: "100%" }} />
+        <hr style={{ width: "100%", marginBottom: "20px" }} />
         <Typography variant="caption">PRINCIPAL SETTINGS:</Typography>
       </Grid>
       <Grid size={{ xs: 12, md: 4 }}>

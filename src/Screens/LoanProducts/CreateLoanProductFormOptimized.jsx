@@ -26,24 +26,207 @@ const BRANCHES = [
   { value: "branch3", label: "Branch 3" },
 ];
 
+const StyledOutlinedInput = styled(OutlinedInput)(({ error, theme }) => {
+  const colors = tokens(theme.palette.mode);
+  return {
+    border: error ? "1.5px solid #d32f2f" : `1px solid ${colors.grey[200]}`,
+    fontSize: "1rem",
+  };
+});
+
+const FormGrid = styled(Grid)(() => ({
+  display: "flex",
+  flexDirection: "column",
+}));
+
+const baseValidationSchema = Yup.object().shape({
+  name: Yup.string()
+    .required("Loan Product Name is required")
+    .max(100, "Name too long"),
+  minPrincipal: Yup.number()
+    .min(0, "Minimum Principal must be at least 0")
+    .nullable()
+    .transform((value, originalValue) => (originalValue === "" ? null : value)),
+  maxPrincipal: Yup.number()
+    .min(0, "Maximum Principal must be at least 0")
+    .nullable()
+    .transform((value, originalValue) => (originalValue === "" ? null : value))
+    .when("minPrincipal", (minPrincipal, schema) =>
+      minPrincipal !== null && minPrincipal !== undefined && minPrincipal !== ""
+        ? schema.min(
+            minPrincipal,
+            "Maximum Principal must be greater than or equal to Minimum Principal"
+          )
+        : schema
+    ),
+  defaultPrincipal: Yup.number()
+    .min(0, "Default Principal must be at least 0")
+    .nullable()
+    .transform((value, originalValue) => (originalValue === "" ? null : value))
+    .when("minPrincipal", (minPrincipalValue, schema) => {
+      if (
+        minPrincipalValue !== null &&
+        minPrincipalValue !== undefined &&
+        minPrincipalValue !== ""
+      ) {
+        const numMinPrincipal = Number(minPrincipalValue);
+        if (!isNaN(numMinPrincipal)) {
+          return schema.min(
+            numMinPrincipal,
+            "Default Principal must be greater than or equal to Minimum Principal"
+          );
+        }
+      }
+      return schema;
+    })
+    .when("maxPrincipal", (maxPrincipalValue, schema) => {
+      if (
+        maxPrincipalValue !== null &&
+        maxPrincipalValue !== undefined &&
+        maxPrincipalValue !== ""
+      ) {
+        const numMaxPrincipal = Number(maxPrincipalValue);
+        if (!isNaN(numMaxPrincipal)) {
+          return schema.max(
+            numMaxPrincipal,
+            "Default Principal must be less than or equal to Maximum Principal"
+          );
+        }
+      }
+      return schema;
+    }),
+  minInterest: Yup.number()
+    .min(0, "Minimum Interest must be at least 0")
+    .nullable()
+    .transform((value, originalValue) => (originalValue === "" ? null : value)),
+  maxInterest: Yup.number()
+    .min(0, "Maximum Interest must be at least 0")
+    .nullable()
+    .transform((value, originalValue) => (originalValue === "" ? null : value))
+    .when("minInterest", (minInterest, schema) =>
+      minInterest !== null && minInterest !== undefined && minInterest !== ""
+        ? schema.min(
+            minInterest,
+            "Maximum Interest must be greater than or equal to Minimum Interest"
+          )
+        : schema
+    ),
+  defaultInterest: Yup.number()
+    .min(0, "Default Interest must be at least 0")
+    .nullable()
+    .transform((value, originalValue) => (originalValue === "" ? null : value))
+    .when("minInterest", (minInterestValue, schema) => {
+      if (
+        minInterestValue !== null &&
+        minInterestValue !== undefined &&
+        minInterestValue !== ""
+      ) {
+        const numMinInterest = Number(minInterestValue);
+        if (!isNaN(numMinInterest)) {
+          return schema.min(
+            numMinInterest,
+            "Default Interest must be greater than or equal to Minimum Interest"
+          );
+        }
+      }
+      return schema;
+    })
+    .when("maxInterest", (maxInterestValue, schema) => {
+      if (
+        maxInterestValue !== null &&
+        maxInterestValue !== undefined &&
+        maxInterestValue !== ""
+      ) {
+        const numMaxInterest = Number(maxInterestValue);
+        if (!isNaN(numMaxInterest)) {
+          return schema.max(
+            numMaxInterest,
+            "Default Interest must be less than or equal to Maximum Interest"
+          );
+        }
+      }
+      return schema;
+    }),
+  durationPeriod: Yup.string()
+    .oneOf(["days", "weeks", "months", "years"])
+    .nullable(),
+  minDuration: Yup.number()
+    .min(0, "Minimum Duration must be at least 0")
+    .nullable()
+    .transform((value, originalValue) => (originalValue === "" ? null : value)),
+  maxDuration: Yup.number()
+    .min(0, "Maximum Duration must be at least 0")
+    .nullable()
+    .transform((value, originalValue) => (originalValue === "" ? null : value))
+    .when("minDuration", (minDuration, schema) =>
+      minDuration !== null && minDuration !== undefined && minDuration !== ""
+        ? schema.min(
+            minDuration,
+            "Maximum Duration must be greater than or equal to Minimum Duration"
+          )
+        : schema
+    ),
+  defaultDuration: Yup.number()
+    .min(0, "Default Duration must be at least 0")
+    .nullable()
+    .transform((value, originalValue) => (originalValue === "" ? null : value))
+    .when("minDuration", (minDurationValue, schema) => {
+      if (
+        minDurationValue !== null &&
+        minDurationValue !== undefined &&
+        minDurationValue !== ""
+      ) {
+        const numMinDuration = Number(minDurationValue);
+        if (!isNaN(numMinDuration)) {
+          return schema.min(
+            numMinDuration,
+            "Default Duration must be greater than or equal to Minimum Duration"
+          );
+        }
+      }
+      return schema;
+    })
+    .when("maxDuration", (maxDurationValue, schema) => {
+      if (
+        maxDurationValue !== null &&
+        maxDurationValue !== undefined &&
+        maxDurationValue !== ""
+      ) {
+        const numMaxDuration = Number(maxDurationValue);
+        if (!isNaN(numMaxDuration)) {
+          return schema.max(
+            numMaxDuration,
+            "Default Duration must be less than or equal to Maximum Duration"
+          );
+        }
+      }
+      return schema;
+    }),
+  repaymentFrequency: Yup.string()
+    .oneOf([
+      "daily",
+      "weekly",
+      "biweekly",
+      "monthly",
+      "bimonthly",
+      "quarterly",
+      "every_4_months",
+      "semi_annual",
+      "every_9_months",
+      "yearly",
+      "lump_sum",
+    ])
+    .nullable(),
+  // All other fields are optional
+});
+
 export default function CreateLoanProductFormOptimized(props) {
   const { userDetails } = useContext(UserContext);
   const navigate = useNavigate();
   const [submitError, setSubmitError] = React.useState("");
   const [submitSuccess, setSubmitSuccess] = React.useState("");
-
-  const FormGrid = styled(Grid)(() => ({
-    display: "flex",
-    flexDirection: "column",
-  }));
-
-  const StyledOutlinedInput = styled(OutlinedInput)(({ error, theme }) => {
-    const colors = tokens(theme.palette.mode);
-    return {
-      border: error ? "1.5px solid #d32f2f" : `1px solid ${colors.grey[200]}`,
-      fontSize: "1rem",
-    };
-  });
+  const [validationSchema, setValidationSchema] =
+    React.useState(baseValidationSchema);
 
   const repaymentOrderRef = React.useRef();
 
@@ -66,210 +249,7 @@ export default function CreateLoanProductFormOptimized(props) {
       maxDuration: "",
       repaymentFrequency: "",
     },
-    validationSchema: Yup.object().shape({
-      name: Yup.string()
-        .required("Loan Product Name is required")
-        .max(100, "Name too long"),
-      minPrincipal: Yup.number()
-        .min(0, "Minimum Principal must be at least 0")
-        .nullable()
-        .transform((value, originalValue) =>
-          originalValue === "" ? null : value
-        ),
-      maxPrincipal: Yup.number()
-        .min(0, "Maximum Principal must be at least 0")
-        .nullable()
-        .transform((value, originalValue) =>
-          originalValue === "" ? null : value
-        )
-        .when("minPrincipal", (minPrincipal, schema) =>
-          minPrincipal !== null &&
-          minPrincipal !== undefined &&
-          minPrincipal !== ""
-            ? schema.min(
-                minPrincipal,
-                "Maximum Principal must be greater than or equal to Minimum Principal"
-              )
-            : schema
-        ),
-      defaultPrincipal: Yup.number()
-        .min(0, "Default Principal must be at least 0")
-        .nullable()
-        .transform((value, originalValue) =>
-          originalValue === "" ? null : value
-        )
-        .when("minPrincipal", (minPrincipalValue, schema) => {
-          if (
-            minPrincipalValue !== null &&
-            minPrincipalValue !== undefined &&
-            minPrincipalValue !== ""
-          ) {
-            const numMinPrincipal = Number(minPrincipalValue);
-            if (!isNaN(numMinPrincipal)) {
-              return schema.min(
-                numMinPrincipal,
-                "Default Principal must be greater than or equal to Minimum Principal"
-              );
-            }
-          }
-          return schema;
-        })
-        .when("maxPrincipal", (maxPrincipalValue, schema) => {
-          if (
-            maxPrincipalValue !== null &&
-            maxPrincipalValue !== undefined &&
-            maxPrincipalValue !== ""
-          ) {
-            const numMaxPrincipal = Number(maxPrincipalValue);
-            if (!isNaN(numMaxPrincipal)) {
-              return schema.max(
-                numMaxPrincipal,
-                "Default Principal must be less than or equal to Maximum Principal"
-              );
-            }
-          }
-          return schema;
-        }),
-      minInterest: Yup.number()
-        .min(0, "Minimum Interest must be at least 0")
-        .nullable()
-        .transform((value, originalValue) =>
-          originalValue === "" ? null : value
-        ),
-      maxInterest: Yup.number()
-        .min(0, "Maximum Interest must be at least 0")
-        .nullable()
-        .transform((value, originalValue) =>
-          originalValue === "" ? null : value
-        )
-        .when("minInterest", (minInterest, schema) =>
-          minInterest !== null &&
-          minInterest !== undefined &&
-          minInterest !== ""
-            ? schema.min(
-                minInterest,
-                "Maximum Interest must be greater than or equal to Minimum Interest"
-              )
-            : schema
-        ),
-      defaultInterest: Yup.number()
-        .min(0, "Default Interest must be at least 0")
-        .nullable()
-        .transform((value, originalValue) =>
-          originalValue === "" ? null : value
-        )
-        .when("minInterest", (minInterestValue, schema) => {
-          if (
-            minInterestValue !== null &&
-            minInterestValue !== undefined &&
-            minInterestValue !== ""
-          ) {
-            const numMinInterest = Number(minInterestValue);
-            if (!isNaN(numMinInterest)) {
-              return schema.min(
-                numMinInterest,
-                "Default Interest must be greater than or equal to Minimum Interest"
-              );
-            }
-          }
-          return schema;
-        })
-        .when("maxInterest", (maxInterestValue, schema) => {
-          if (
-            maxInterestValue !== null &&
-            maxInterestValue !== undefined &&
-            maxInterestValue !== ""
-          ) {
-            const numMaxInterest = Number(maxInterestValue);
-            if (!isNaN(numMaxInterest)) {
-              return schema.max(
-                numMaxInterest,
-                "Default Interest must be less than or equal to Maximum Interest"
-              );
-            }
-          }
-          return schema;
-        }),
-      durationPeriod: Yup.string()
-        .oneOf(["days", "weeks", "months", "years"])
-        .nullable(),
-      minDuration: Yup.number()
-        .min(0, "Minimum Duration must be at least 0")
-        .nullable()
-        .transform((value, originalValue) =>
-          originalValue === "" ? null : value
-        ),
-      maxDuration: Yup.number()
-        .min(0, "Maximum Duration must be at least 0")
-        .nullable()
-        .transform((value, originalValue) =>
-          originalValue === "" ? null : value
-        )
-        .when("minDuration", (minDuration, schema) =>
-          minDuration !== null &&
-          minDuration !== undefined &&
-          minDuration !== ""
-            ? schema.min(
-                minDuration,
-                "Maximum Duration must be greater than or equal to Minimum Duration"
-              )
-            : schema
-        ),
-      defaultDuration: Yup.number()
-        .min(0, "Default Duration must be at least 0")
-        .nullable()
-        .transform((value, originalValue) =>
-          originalValue === "" ? null : value
-        )
-        .when("minDuration", (minDurationValue, schema) => {
-          if (
-            minDurationValue !== null &&
-            minDurationValue !== undefined &&
-            minDurationValue !== ""
-          ) {
-            const numMinDuration = Number(minDurationValue);
-            if (!isNaN(numMinDuration)) {
-              return schema.min(
-                numMinDuration,
-                "Default Duration must be greater than or equal to Minimum Duration"
-              );
-            }
-          }
-          return schema;
-        })
-        .when("maxDuration", (maxDurationValue, schema) => {
-          if (
-            maxDurationValue !== null &&
-            maxDurationValue !== undefined &&
-            maxDurationValue !== ""
-          ) {
-            const numMaxDuration = Number(maxDurationValue);
-            if (!isNaN(numMaxDuration)) {
-              return schema.max(
-                numMaxDuration,
-                "Default Duration must be less than or equal to Maximum Duration"
-              );
-            }
-          }
-          return schema;
-        }),
-      repaymentFrequency: Yup.string()
-        .oneOf([
-          "daily",
-          "weekly",
-          "biweekly",
-          "monthly",
-          "bimonthly",
-          "quarterly",
-          "every_4_months",
-          "semi_annual",
-          "every_9_months",
-          "yearly",
-          "lump_sum",
-        ])
-        .nullable(),
-      // All other fields are optional
-    }),
+    validationSchema, // now uses state
     onSubmit: async (values, { setSubmitting, resetForm }) => {
       let repaymentOrder = null;
       if (
@@ -295,7 +275,8 @@ export default function CreateLoanProductFormOptimized(props) {
           interestTypeMaturity: values.interestTypeMaturity,
           calculateInterestOn: values.calculateInterestOn,
           loanInterestRateAfterMaturity: values.loanInterestRateAfterMaturity,
-          recurringPeriodAfterMaturityUnit: values.recurringPeriodAfterMaturityUnit,
+          recurringPeriodAfterMaturityUnit:
+            values.recurringPeriodAfterMaturityUnit,
         }
       );
       setSubmitError("");

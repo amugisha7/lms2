@@ -21,7 +21,7 @@ export default function DurationSettings({ formik }) {
   return (
     <>
       <Grid size={{ xs: 12, md: 12 }}>
-        <hr style={{ width: "100%" }} />
+        <hr style={{ width: "100%", marginBottom: "20px" }} />
         <Typography variant="caption" sx={{ mt: 2 }}>
           DURATION SETTINGS:
         </Typography>

@@ -15,6 +15,7 @@ import Home from "./Screens/Home";
 import CreateLoanProductForm from "./Screens/LoanProducts/CreateLoanProductForm"; // Add this import
 import CreateLoanFeesForm from "./Screens/LoanFees/CreateLoanFeesForm"; // Add this import
 import CreateLoanProductFormOptimized from "./Screens/LoanProducts/CreateLoanProductFormOptimized"; // Add this import
+import AdminPage from "./Screens/AdminScreens/AdminPage";
 
 export default function AppRoutes({ userExists }) {
   return (
@@ -48,6 +49,9 @@ export default function AppRoutes({ userExists }) {
                 path="admin/add-loan-fee"
                 element={<CreateLoanFeesForm />}
               />
+
+              {/* Admin main page route */}
+              <Route path="admin" element={<AdminPage />} />
             </>
           )}
         </Route>

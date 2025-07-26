@@ -443,6 +443,33 @@ export const themeSettings = (mode) => {
           },
         },
       },
+      MuiLink: {
+        styleOverrides: {
+          root: {
+            color: isDark ? '#76B1D3' : '#043F69',
+            textDecoration: 'none',
+            '&:hover': {
+              textDecoration: 'underline',
+            },
+          },
+        },
+      },
+      MuiTypography: {
+        styleOverrides: {
+          h6: {
+            fontSize: '0.875rem',
+            fontWeight: 600,
+            letterSpacing: '0.5px',
+          },
+          subtitle2: {
+            fontSize: '0.75rem',
+            color: isDark ? colors.grey[400] : colors.grey[600],
+          },
+          caption: {
+            fontSize: '0.75rem',
+          },
+        },
+      },
       MuiIconButton: {
         styleOverrides: {
           root: {

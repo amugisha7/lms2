@@ -51,13 +51,13 @@ function App({ signOut, user }) {
                 branchUsersId 
                 institution {
                   name
+                  currencyCode
                 }
               } 
             }`,
             variables: { id: user.userId },
           });
           const userData = res.data.getUser;
-
           setUserDetails(userData || null);
           setError(false);
           setUserExists(!!userData?.id);

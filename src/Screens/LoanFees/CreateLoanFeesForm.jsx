@@ -15,6 +15,7 @@ import * as Yup from "yup";
 import { generateClient } from "aws-amplify/api";
 import { UserContext } from "../../App";
 import { useNavigate } from "react-router-dom";
+import InputAdornment from "@mui/material/InputAdornment";
 
 const FormGrid = styled(Grid)(() => ({
   display: "flex",
@@ -43,6 +44,7 @@ const FEE_PERCENTAGE_BASE_OPTIONS = [
 export default function CreateLoanFeesForm() {
   const [feeCalculation, setFeeCalculation] = React.useState("fixed");
   const [feePercentageBase, setFeePercentageBase] = React.useState("");
+  const [feeValue, setFeeValue] = React.useState("");
   const client = generateClient();
   const { userDetails } = React.useContext(UserContext); // get userDetails from context
   const [submitError, setSubmitError] = React.useState("");
@@ -54,6 +56,7 @@ export default function CreateLoanFeesForm() {
       name: "",
       description: "",
       category: "non_deductable",
+      feeValue: "",
     },
     validationSchema: Yup.object().shape({
       name: Yup.string()
@@ -64,6 +67,10 @@ export default function CreateLoanFeesForm() {
         .max(500, "Description too long")
         .matches(/^[^,"'!{}]+$/, "Description contains invalid characters"),
       category: Yup.string().required("Fee Category is required"),
+      feeValue: Yup.number()
+        .typeError("Fee value must be a number")
+        .required("Fee value is required")
+        .min(0, "Fee value must be positive"),
     }),
     onSubmit: async (values, { setSubmitting, resetForm }) => {
       setSubmitError("");
@@ -82,6 +89,7 @@ export default function CreateLoanFeesForm() {
         calculationMethod: feeCalculation,
         percentageBase:
           feeCalculation === "percentage" ? feePercentageBase : "",
+        feeValue: values.feeValue,
       };
 
       try {
@@ -96,6 +104,7 @@ export default function CreateLoanFeesForm() {
                 percentageBase
                 status
                 institutionLoanFeesConfigsId
+                rate
               }
             }
           `,
@@ -106,9 +115,10 @@ export default function CreateLoanFeesForm() {
               calculationMethod: allValues.calculationMethod,
               description: allValues.description?.trim() || null,
               percentageBase: allValues.percentageBase || null,
-              status: "active", // Or set as needed
+              status: "active",
               institutionLoanFeesConfigsId:
-                userDetails?.institutionUsersId || null, // include institution ID
+                userDetails?.institutionUsersId || null,
+              rate: allValues.feeValue,
             },
           },
         });
@@ -306,6 +316,62 @@ export default function CreateLoanFeesForm() {
               ))}
             </RadioGroup>
           </FormControl>
+        </FormGrid>
+
+        <FormGrid size={{ xs: 12, md: 6 }}>
+          {feeCalculation === "fixed" ? (
+            <>
+              <FormLabel htmlFor="feeValue">Fee Amount*</FormLabel>
+              <OutlinedInput
+                id="feeValue"
+                name="feeValue"
+                type="number"
+                placeholder="Enter fixed fee amount"
+                size="small"
+                value={formik.values.feeValue}
+                onChange={formik.handleChange}
+                error={
+                  formik.touched.feeValue && Boolean(formik.errors.feeValue)
+                }
+                sx={{ maxWidth: 300, mb: 2 }}
+                startAdornment={
+                  <InputAdornment position="start">
+                    {userDetails?.institution?.currencyCode || ""}
+                  </InputAdornment>
+                }
+                inputProps={{ min: 0 }}
+              />
+              {formik.touched.feeValue && formik.errors.feeValue && (
+                <Typography color="error" variant="caption">
+                  {formik.errors.feeValue}
+                </Typography>
+              )}
+            </>
+          ) : (
+            <>
+              <FormLabel htmlFor="feeValue">Fee Percentage Rate (%)*</FormLabel>
+              <OutlinedInput
+                id="feeValue"
+                name="feeValue"
+                type="number"
+                placeholder="Enter fee percentage rate"
+                size="small"
+                value={formik.values.feeValue}
+                onChange={formik.handleChange}
+                error={
+                  formik.touched.feeValue && Boolean(formik.errors.feeValue)
+                }
+                sx={{ maxWidth: 300, mb: 2 }}
+                endAdornment={<InputAdornment position="end">%</InputAdornment>}
+                inputProps={{ min: 0, max: 100, step: "any" }}
+              />
+              {formik.touched.feeValue && formik.errors.feeValue && (
+                <Typography color="error" variant="caption">
+                  {formik.errors.feeValue}
+                </Typography>
+              )}
+            </>
+          )}
         </FormGrid>
 
         <FormGrid size={{ xs: 12, md: 12 }}>

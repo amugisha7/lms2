@@ -29,34 +29,14 @@ const CATEGORY_LABELS = {
 
 const CALCULATION_LABELS = {
   fixed: "Fixed",
-  percentage: "Percentage",
+  percentage: "% of",
 };
 
 const PERCENTAGE_BASE_LABELS = {
   principal: "Principal",
   interest: "Interest",
-  principal_interest: "Principal + Interest",
+  principal_interest: "Principal + Int.",
 };
-
-const CATEGORY_OPTIONS = [
-  { value: "non_deductable", label: "Non-Deductable Fee" },
-  { value: "deductable", label: "Deductable Fee" },
-  { value: "capitalized", label: "Capitalized Fee" },
-];
-
-const CALCULATION_OPTIONS = [
-  { value: "fixed", label: "Fixed" },
-  { value: "percentage", label: "Percentage" },
-];
-
-const PERCENTAGE_BASE_OPTIONS = [
-  { value: "principal", label: "Principal" },
-  { value: "interest", label: "Interest" },
-  {
-    value: "principal_interest",
-    label: "Principal + Interest",
-  },
-];
 
 export default function LoanFees() {
   const [loanFees, setLoanFees] = React.useState([]);
@@ -98,6 +78,7 @@ export default function LoanFees() {
                   status
                   description
                   percentageBase
+                  rate
                 }
               }
             }
@@ -194,6 +175,8 @@ export default function LoanFees() {
       field: "name",
       headerName: "Name",
       width: 250,
+      sortable: false,
+      disableColumnMenu: true,
       renderCell: (params) => (
         <Box
           sx={{
@@ -225,28 +208,57 @@ export default function LoanFees() {
       ),
     },
     {
+      field: "rate",
+      headerName: "Rate/Value",
+      width: 140,
+      sortable: false,
+      disableColumnMenu: true,
+      renderCell: (params) => {
+        const currency = userDetails?.institution?.currencyCode || "$";
+        if (params.row.calculationMethod === "percentage") {
+          return params.row.rate !== undefined && params.row.rate !== null
+            ? `${params.row.rate}%`
+            : "-";
+        }
+        if (params.row.calculationMethod === "fixed") {
+          return params.row.rate !== undefined && params.row.rate !== null
+            ? `${currency} ${params.row.rate}`
+            : "-";
+        }
+        return "-";
+      },
+    },
+    {
       field: "calculationMethod",
-      headerName: "Calculation",
-      width: 130,
+      headerName: "Type",
+      width: 60,
+      sortable: false,
+      disableColumnMenu: true,
       renderCell: (params) => CALCULATION_LABELS[params.value] || params.value,
     },
     {
       field: "percentageBase",
-      headerName: "% Base",
-      width: 150,
+      headerName: "",
+      width: 120,
+      sortable: false,
+      disableColumnMenu: true,
       renderCell: (params) =>
         PERCENTAGE_BASE_LABELS[params.value] || params.value,
     },
     {
       field: "category",
       headerName: "Category",
-      width: 160,
+      width: 130,
+      sortable: false,
+      disableColumnMenu: true,
       renderCell: (params) => CATEGORY_LABELS[params.value] || params.value,
     },
     {
       field: "status",
       headerName: "Status",
       width: 100,
+      sortable: false,
+      disableColumnMenu: true,
       renderCell: (params) =>
         params.value
           ? params.value.charAt(0).toUpperCase() + params.value.slice(1)
@@ -257,6 +269,7 @@ export default function LoanFees() {
       headerName: "",
       width: 80,
       sortable: false,
+      disableColumnMenu: true,
       renderCell: (params) => (
         <Box>
           <IconButton

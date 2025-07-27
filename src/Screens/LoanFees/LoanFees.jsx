@@ -29,7 +29,7 @@ const CATEGORY_LABELS = {
 
 const CALCULATION_LABELS = {
   fixed: "Fixed",
-  percentage: "% of",
+  percentage: "% of →",
 };
 
 const PERCENTAGE_BASE_LABELS = {
@@ -209,21 +209,21 @@ export default function LoanFees() {
     },
     {
       field: "rate",
-      headerName: "Rate/Value",
-      width: 140,
+      headerName: "Amount",
+      width: 120,
       sortable: false,
       disableColumnMenu: true,
       renderCell: (params) => {
         const currency = userDetails?.institution?.currencyCode || "$";
-        if (params.row.calculationMethod === "percentage") {
-          return params.row.rate !== undefined && params.row.rate !== null
-            ? `${params.row.rate}%`
+        const value =
+          params.row.rate !== undefined && params.row.rate !== null
+            ? Number(params.row.rate).toLocaleString()
             : "-";
+        if (params.row.calculationMethod === "percentage") {
+          return value !== "-" ? `${value}%` : "-";
         }
         if (params.row.calculationMethod === "fixed") {
-          return params.row.rate !== undefined && params.row.rate !== null
-            ? `${currency} ${params.row.rate}`
-            : "-";
+          return value !== "-" ? `${currency} ${value}` : "-";
         }
         return "-";
       },
@@ -231,7 +231,7 @@ export default function LoanFees() {
     {
       field: "calculationMethod",
       headerName: "Type",
-      width: 60,
+      width: 70,
       sortable: false,
       disableColumnMenu: true,
       renderCell: (params) => CALCULATION_LABELS[params.value] || params.value,
@@ -239,7 +239,7 @@ export default function LoanFees() {
     {
       field: "percentageBase",
       headerName: "",
-      width: 120,
+      width: 115,
       sortable: false,
       disableColumnMenu: true,
       renderCell: (params) =>
@@ -248,7 +248,7 @@ export default function LoanFees() {
     {
       field: "category",
       headerName: "Category",
-      width: 130,
+      width: 160,
       sortable: false,
       disableColumnMenu: true,
       renderCell: (params) => CATEGORY_LABELS[params.value] || params.value,
@@ -256,7 +256,7 @@ export default function LoanFees() {
     {
       field: "status",
       headerName: "Status",
-      width: 100,
+      width: 80,
       sortable: false,
       disableColumnMenu: true,
       renderCell: (params) =>

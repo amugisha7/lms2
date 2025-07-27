@@ -14,6 +14,7 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import { generateClient } from "aws-amplify/api";
 import { UserContext } from "../../App";
+import InputAdornment from "@mui/material/InputAdornment";
 
 const FormGrid = styled(Grid)(() => ({
   display: "flex",
@@ -70,6 +71,11 @@ export default function EditLoanFeesForm({
     initialValues.category || "non_deductable"
   );
   const [status, setStatus] = React.useState(initialValues.status || "active");
+  const [rate, setRate] = React.useState(
+    initialValues.rate !== undefined && initialValues.rate !== null
+      ? initialValues.rate
+      : ""
+  );
 
   const formik = useFormik({
     initialValues: {
@@ -77,6 +83,10 @@ export default function EditLoanFeesForm({
       description: initialValues.description || "",
       category: initialValues.category || "non_deductable",
       status: initialValues.status || "active",
+      rate:
+        initialValues.rate !== undefined && initialValues.rate !== null
+          ? initialValues.rate
+          : "",
     },
     enableReinitialize: true,
     validationSchema: Yup.object().shape({
@@ -89,6 +99,10 @@ export default function EditLoanFeesForm({
         .matches(/^[^,"'!{}]+$/, "Description contains invalid characters"),
       category: Yup.string().required("Fee Category is required"),
       status: Yup.string().required("Status is required"),
+      rate: Yup.number()
+        .typeError("Rate/Value must be a number")
+        .required("Rate/Value is required")
+        .min(0, "Rate/Value must be positive"),
     }),
     onSubmit: async (values, { setSubmitting }) => {
       setSubmitError("");
@@ -107,6 +121,7 @@ export default function EditLoanFeesForm({
         percentageBase:
           feeCalculation === "percentage" ? feePercentageBase : "",
         status,
+        rate: values.rate,
       };
 
       try {
@@ -122,6 +137,7 @@ export default function EditLoanFeesForm({
                 percentageBase
                 status
                 institutionLoanFeesConfigsId
+                rate
               }
             }
           `,
@@ -136,6 +152,7 @@ export default function EditLoanFeesForm({
               status: allValues.status,
               institutionLoanFeesConfigsId:
                 userDetails?.institutionUsersId || null,
+              rate: allValues.rate,
             },
           },
         });
@@ -276,6 +293,51 @@ export default function EditLoanFeesForm({
               ))}
             </RadioGroup>
           </FormControl>
+        </FormGrid>
+        <FormGrid size={{ xs: 12, md: 12 }}>
+          <FormLabel sx={{ fontWeight: 500, mb: 1 }}>
+            {feeCalculation === "fixed"
+              ? "Fee Amount*"
+              : "Fee Percentage Rate (%)*"}
+          </FormLabel>
+          {feeCalculation === "fixed" ? (
+            <OutlinedInput
+              id="rate"
+              name="rate"
+              type="number"
+              placeholder="Enter fixed fee amount"
+              size="small"
+              value={formik.values.rate}
+              onChange={formik.handleChange}
+              error={formik.touched.rate && Boolean(formik.errors.rate)}
+              sx={{ maxWidth: 300, mb: 2 }}
+              startAdornment={
+                <InputAdornment position="start">
+                  {userDetails?.institution?.currencyCode || ""}
+                </InputAdornment>
+              }
+              inputProps={{ min: 0 }}
+            />
+          ) : (
+            <OutlinedInput
+              id="rate"
+              name="rate"
+              type="number"
+              placeholder="Enter fee percentage rate"
+              size="small"
+              value={formik.values.rate}
+              onChange={formik.handleChange}
+              error={formik.touched.rate && Boolean(formik.errors.rate)}
+              sx={{ maxWidth: 300, mb: 2 }}
+              endAdornment={<InputAdornment position="end">%</InputAdornment>}
+              inputProps={{ min: 0, max: 100, step: "any" }}
+            />
+          )}
+          {formik.touched.rate && formik.errors.rate && (
+            <Typography color="error" variant="caption">
+              {formik.errors.rate}
+            </Typography>
+          )}
         </FormGrid>
         <FormGrid size={{ xs: 12, md: 12 }}>
           <FormLabel sx={{ fontWeight: 500, mb: 1 }}>

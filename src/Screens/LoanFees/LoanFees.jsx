@@ -29,13 +29,13 @@ const CATEGORY_LABELS = {
 
 const CALCULATION_LABELS = {
   fixed: "Fixed",
-  percentage: "% of →",
+  percentage: "%",
 };
 
 const PERCENTAGE_BASE_LABELS = {
   principal: "Principal",
   interest: "Interest",
-  principal_interest: "Principal + Int.",
+  principal_interest: "(Principal + Interest)",
 };
 
 export default function LoanFees() {
@@ -208,9 +208,9 @@ export default function LoanFees() {
       ),
     },
     {
-      field: "rate",
+      field: "amount",
       headerName: "Amount",
-      width: 120,
+      width: 220,
       sortable: false,
       disableColumnMenu: true,
       renderCell: (params) => {
@@ -220,9 +220,15 @@ export default function LoanFees() {
             ? Number(params.row.rate).toLocaleString()
             : "-";
         if (params.row.calculationMethod === "percentage") {
-          return value !== "-" ? `${value}%` : "-";
+          // Example: "2% of Principal"
+          const base =
+            PERCENTAGE_BASE_LABELS[params.row.percentageBase] ||
+            params.row.percentageBase ||
+            "";
+          return value !== "-" ? `${value}% of ${base}` : "-";
         }
         if (params.row.calculationMethod === "fixed") {
+          // Example: "$ 2,000"
           return value !== "-" ? `${currency} ${value}` : "-";
         }
         return "-";
@@ -235,15 +241,6 @@ export default function LoanFees() {
       sortable: false,
       disableColumnMenu: true,
       renderCell: (params) => CALCULATION_LABELS[params.value] || params.value,
-    },
-    {
-      field: "percentageBase",
-      headerName: "",
-      width: 115,
-      sortable: false,
-      disableColumnMenu: true,
-      renderCell: (params) =>
-        PERCENTAGE_BASE_LABELS[params.value] || params.value,
     },
     {
       field: "category",

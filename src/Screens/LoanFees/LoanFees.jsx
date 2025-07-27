@@ -12,8 +12,14 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import IconButton from "@mui/material/IconButton";
 import MenuItem from "@mui/material/MenuItem";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import CancelIcon from "@mui/icons-material/Cancel";
+import Dialog from "@mui/material/Dialog";
+import EditLoanFeesForm from "./EditLoanFeesForm";
+import InfoIcon from "@mui/icons-material/Info";
+import Popover from "@mui/material/Popover";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import InputAdornment from "@mui/material/InputAdornment";
+import ClearIcon from "@mui/icons-material/Clear";
 
 const CATEGORY_LABELS = {
   non_deductable: "Non-Deductable Fee",
@@ -44,8 +50,8 @@ const CALCULATION_OPTIONS = [
 ];
 
 const PERCENTAGE_BASE_OPTIONS = [
-  { value: "principal", label: "Principal Amount" },
-  { value: "interest", label: "Interest Amount" },
+  { value: "principal", label: "Principal" },
+  { value: "interest", label: "Interest" },
   {
     value: "principal_interest",
     label: "Principal + Interest",
@@ -56,8 +62,14 @@ export default function LoanFees() {
   const [loanFees, setLoanFees] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
   const [search, setSearch] = React.useState("");
-  const [editRowId, setEditRowId] = React.useState(null);
-  const [editRowData, setEditRowData] = React.useState({});
+  const [editDialogOpen, setEditDialogOpen] = React.useState(false);
+  const [editDialogRow, setEditDialogRow] = React.useState(null);
+  const [popoverAnchorEl, setPopoverAnchorEl] = React.useState(null);
+  const [popoverContent, setPopoverContent] = React.useState("");
+  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
+  const [deleteDialogRow, setDeleteDialogRow] = React.useState(null);
+  const [deleteLoading, setDeleteLoading] = React.useState(false);
+  const [deleteError, setDeleteError] = React.useState("");
   const theme = useTheme();
   const { userDetails } = React.useContext(UserContext); // Get userDetails from context
 
@@ -85,7 +97,7 @@ export default function LoanFees() {
                   category
                   status
                   description
-                  institutionLoanFeesConfigsId
+                  percentageBase
                 }
               }
             }
@@ -95,10 +107,6 @@ export default function LoanFees() {
           },
         });
         setLoanFees(result.data.listLoanFeesConfigs.items || []);
-        console.log(
-          "result.data.listLoanFeesConfigs.items::: ",
-          result.data.listLoanFeesConfigs.items
-        );
       } catch (err) {
         setLoanFees([]);
       } finally {
@@ -108,53 +116,93 @@ export default function LoanFees() {
     if (userDetails?.institutionUsersId) {
       fetchLoanFees();
     }
-  }, []);
+  }, [userDetails?.institutionUsersId]);
 
-  const handleEditClick = (row) => {
-    setEditRowId(row.id);
-    setEditRowData({ ...row });
+  const handleInfoClick = (event, description) => {
+    setPopoverAnchorEl(event.currentTarget);
+    setPopoverContent(description);
   };
 
-  const handleEditChange = (field, value) => {
-    setEditRowData((prev) => ({ ...prev, [field]: value }));
-    // If calculationMethod changes, reset percentageBase if needed
-    if (field === "calculationMethod" && value !== "percentage") {
-      setEditRowData((prev) => ({ ...prev, percentageBase: "" }));
-    }
+  const handlePopoverClose = () => {
+    setPopoverAnchorEl(null);
+    setPopoverContent("");
   };
 
-  const handleEditCancel = () => {
-    setEditRowId(null);
-    setEditRowData({});
+  const handleEditDialogOpen = (row) => {
+    setEditDialogRow(row);
+    setEditDialogOpen(true);
   };
 
-  const handleEditSave = async () => {
-    // TODO: Add API call to update the row in backend
-    // For now, update locally
+  const handleEditDialogClose = () => {
+    setEditDialogOpen(false);
+    setEditDialogRow(null);
+  };
+
+  // Add this function to update the row in loanFees state
+  const handleEditSuccess = (updatedRow) => {
     setLoanFees((prev) =>
-      prev.map((fee) =>
-        fee.id === editRowId ? { ...fee, ...editRowData } : fee
+      prev.map((row) =>
+        row.id === updatedRow.id ? { ...row, ...updatedRow } : row
       )
     );
-    setEditRowId(null);
-    setEditRowData({});
+    handleEditDialogClose();
+  };
+
+  // Delete dialog handlers
+  const handleDeleteDialogOpen = (row) => {
+    setDeleteDialogRow(row);
+    setDeleteDialogOpen(true);
+    setDeleteError("");
+  };
+
+  const handleDeleteDialogClose = () => {
+    setDeleteDialogOpen(false);
+    setDeleteDialogRow(null);
+    setDeleteError("");
+  };
+
+  const handleDeleteConfirm = async () => {
+    setDeleteLoading(true);
+    setDeleteError("");
+    try {
+      const client = generateClient();
+      await client.graphql({
+        query: `
+          mutation DeleteLoanFeesConfig($input: DeleteLoanFeesConfigInput!) {
+            deleteLoanFeesConfig(input: $input) {
+              id
+            }
+          }
+        `,
+        variables: {
+          input: { id: deleteDialogRow.id },
+        },
+      });
+      setLoanFees((prev) =>
+        prev.filter((row) => row.id !== deleteDialogRow.id)
+      );
+      handleDeleteDialogClose();
+    } catch (err) {
+      setDeleteError("Failed to delete. Please try again.");
+    } finally {
+      setDeleteLoading(false);
+    }
   };
 
   const columns = [
     {
       field: "name",
       headerName: "Name",
-      width: 220,
-      renderCell: (params) =>
-        editRowId === params.row.id ? (
-          <TextField
-            size="small"
-            value={editRowData.name || ""}
-            onChange={(e) => handleEditChange("name", e.target.value)}
-            sx={{ width: 180 }}
-            InputProps={{ sx: { fontSize: "0.8rem" } }}
-          />
-        ) : (
+      width: 250,
+      renderCell: (params) => (
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            width: "100%",
+          }}
+        >
           <span
             style={{
               color: theme.palette.blueText?.main || "#1976d2",
@@ -164,152 +212,76 @@ export default function LoanFees() {
           >
             {params.value}
           </span>
-        ),
+          {params.row.description && (
+            <IconButton
+              size="small"
+              onClick={(e) => handleInfoClick(e, params.row.description)}
+              sx={{ ml: 1 }}
+            >
+              <InfoIcon fontSize="small" />
+            </IconButton>
+          )}
+        </Box>
+      ),
     },
     {
       field: "calculationMethod",
       headerName: "Calculation",
-      width: 140,
-      renderCell: (params) =>
-        editRowId === params.row.id ? (
-          <TextField
-            select
-            size="small"
-            value={editRowData.calculationMethod || ""}
-            onChange={(e) =>
-              handleEditChange("calculationMethod", e.target.value)
-            }
-            sx={{ width: 120 }}
-            InputProps={{ sx: { fontSize: "0.8rem" } }}
-            SelectProps={{ sx: { fontSize: "0.8rem" } }}
-          >
-            {CALCULATION_OPTIONS.map((opt) => (
-              <MenuItem
-                key={opt.value}
-                value={opt.value}
-                sx={{
-                  "&:hover": {
-                    color: "white",
-                  },
-                  fontSize: "0.8rem",
-                }}
-              >
-                {opt.label}
-              </MenuItem>
-            ))}
-          </TextField>
-        ) : (
-          CALCULATION_LABELS[params.value] || params.value
-        ),
+      width: 130,
+      renderCell: (params) => CALCULATION_LABELS[params.value] || params.value,
     },
     {
       field: "percentageBase",
       headerName: "% Base",
-      width: 120,
+      width: 150,
       renderCell: (params) =>
-        editRowId === params.row.id ? (
-          <TextField
-            select
-            size="small"
-            value={editRowData.percentageBase || ""}
-            onChange={(e) => handleEditChange("percentageBase", e.target.value)}
-            sx={{ width: 110 }}
-            disabled={editRowData.calculationMethod !== "percentage"}
-            InputProps={{ sx: { fontSize: "0.8rem" } }}
-            SelectProps={{ sx: { fontSize: "0.8rem" } }}
-          >
-            {PERCENTAGE_BASE_OPTIONS.map((opt) => (
-              <MenuItem
-                key={opt.value}
-                value={opt.value}
-                sx={{
-                  "&:hover": {
-                    color: "white",
-                  },
-                  fontSize: "0.8rem",
-                }}
-              >
-                {opt.label}
-              </MenuItem>
-            ))}
-          </TextField>
-        ) : (
-          PERCENTAGE_BASE_LABELS[params.value] || params.value
-        ),
+        PERCENTAGE_BASE_LABELS[params.value] || params.value,
     },
     {
       field: "category",
       headerName: "Category",
       width: 160,
-      renderCell: (params) =>
-        editRowId === params.row.id ? (
-          <TextField
-            select
-            size="small"
-            value={editRowData.category || ""}
-            onChange={(e) => handleEditChange("category", e.target.value)}
-            sx={{ width: 150 }}
-            InputProps={{ sx: { fontSize: "0.8rem" } }}
-            SelectProps={{ sx: { fontSize: "0.8rem" } }}
-          >
-            {CATEGORY_OPTIONS.map((opt) => (
-              <MenuItem
-                key={opt.value}
-                value={opt.value}
-                sx={{
-                  "&:hover": {
-                    color: "white",
-                  },
-                  fontSize: "0.8rem",
-                }}
-              >
-                {opt.label}
-              </MenuItem>
-            ))}
-          </TextField>
-        ) : (
-          CATEGORY_LABELS[params.value] || params.value
-        ),
+      renderCell: (params) => CATEGORY_LABELS[params.value] || params.value,
     },
     {
       field: "status",
       headerName: "Status",
-      width: 120,
+      width: 100,
+      renderCell: (params) =>
+        params.value
+          ? params.value.charAt(0).toUpperCase() + params.value.slice(1)
+          : "",
     },
     {
       field: "actions",
       headerName: "",
-      width: 140,
+      width: 80,
       sortable: false,
-      renderCell: (params) =>
-        editRowId === params.row.id ? (
-          <Box>
-            <IconButton size="small" sx={{ mr: 1 }} onClick={handleEditSave}>
-              <CheckCircleIcon fontSize="small" sx={{ color: "green" }} />
-            </IconButton>
-            <IconButton size="small" onClick={handleEditCancel}>
-              <CancelIcon fontSize="small" />
-            </IconButton>
-          </Box>
-        ) : (
-          <Box>
-            <IconButton
-              size="small"
-              sx={{ mr: 1 }}
-              onClick={() => handleEditClick(params.row)}
-            >
-              <EditIcon
-                fontSize="small"
-                sx={{ color: theme.palette.blueText?.main }}
-              />
-            </IconButton>
-            <IconButton size="small">
-              <DeleteIcon fontSize="small" sx={{ color: "red" }} />
-            </IconButton>
-          </Box>
-        ),
+      renderCell: (params) => (
+        <Box>
+          <IconButton
+            size="small"
+            sx={{ mr: 1 }}
+            onClick={() => handleEditDialogOpen(params.row)}
+          >
+            <EditIcon
+              fontSize="small"
+              sx={{ color: theme.palette.blueText?.main }}
+            />
+          </IconButton>
+          <IconButton
+            size="small"
+            onClick={() => handleDeleteDialogOpen(params.row)}
+          >
+            <DeleteIcon fontSize="small" sx={{ color: "red" }} />
+          </IconButton>
+        </Box>
+      ),
     },
   ];
+
+  const openPopover = Boolean(popoverAnchorEl);
+  const popoverId = openPopover ? "description-popover" : undefined;
 
   return (
     <Box
@@ -335,11 +307,6 @@ export default function LoanFees() {
           Help
         </Typography>
       </Typography>
-      <Link to="/admin">
-        <Typography variant="caption" sx={{ mb: 2, display: "inline-block" }}>
-          Back to Admin
-        </Typography>
-      </Link>
       <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
         <Button
           variant="contained"
@@ -357,6 +324,20 @@ export default function LoanFees() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           sx={{ width: 220 }}
+          InputProps={{
+            endAdornment: search && (
+              <InputAdornment position="end">
+                <IconButton
+                  size="small"
+                  aria-label="clear search"
+                  onClick={() => setSearch("")}
+                  edge="end"
+                >
+                  <ClearIcon size="small" />
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
         />
       </Box>
       <Box sx={{ height: 520, width: "100%" }}>
@@ -364,7 +345,13 @@ export default function LoanFees() {
           <Typography sx={{ mt: 4 }}>Loading loan fees...</Typography>
         ) : (
           <DataGrid
-            rows={loanFees}
+            rows={
+              search
+                ? loanFees.filter((row) =>
+                    row.name?.toLowerCase().includes(search.toLowerCase())
+                  )
+                : loanFees
+            }
             columns={columns}
             getRowId={(row) => row.id}
             density="compact"
@@ -377,21 +364,11 @@ export default function LoanFees() {
             }}
             pageSizeOptions={[25, 50, 100]}
             disableRowSelectionOnClick
-            getRowHeight={(params) =>
-              params.id === editRowId ? 50 : undefined
-            }
-            getRowClassName={(params) =>
-              params.id === editRowId ? "editing-row" : ""
-            }
             sx={{
               "& .MuiDataGrid-cell": {
                 borderBottom: `1px solid ${
                   theme.palette.primary?.gridBottomBorder || "#e0e0e0"
                 }`,
-              },
-              "& .editing-row": {
-                paddingTop: "3px",
-                paddingBottom: "3px",
               },
               "& .MuiDataGrid-columnHeaders": {
                 // borderBottom: '2px solid #bdbdbd',
@@ -400,6 +377,67 @@ export default function LoanFees() {
           />
         )}
       </Box>
+      <Popover
+        id={popoverId}
+        open={openPopover}
+        anchorEl={popoverAnchorEl}
+        onClose={handlePopoverClose}
+        anchorOrigin={{
+          vertical: "bottom",
+          horizontal: "left",
+        }}
+      >
+        <Typography sx={{ p: 2, maxWidth: 350, fontSize: "0.875rem" }}>
+          {popoverContent}
+        </Typography>
+      </Popover>
+      <Dialog
+        open={editDialogOpen}
+        onClose={handleEditDialogClose}
+        maxWidth="md"
+        fullWidth
+      >
+        {editDialogRow && (
+          <EditLoanFeesForm
+            initialValues={editDialogRow}
+            onClose={handleEditDialogClose}
+            onEditSuccess={handleEditSuccess} // Pass callback
+          />
+        )}
+      </Dialog>
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={handleDeleteDialogClose}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogContent>
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            Confirm Delete
+          </Typography>
+          <Typography sx={{ mb: 2 }}>
+            Are you sure you want to delete <b>{deleteDialogRow?.name}</b>?
+          </Typography>
+          {deleteError && (
+            <Typography color="error" sx={{ mb: 1 }}>
+              {deleteError}
+            </Typography>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteDialogClose} disabled={deleteLoading}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleDeleteConfirm}
+            color="error"
+            variant="contained"
+            disabled={deleteLoading}
+          >
+            {deleteLoading ? "Deleting..." : "Delete"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

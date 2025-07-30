@@ -10,7 +10,7 @@ import { UserContext } from "../../App";
 import { useNavigate } from "react-router-dom";
 import PrincipalSettings from "./LoanProductFormSections/PrincipalSettings";
 import InterestSettings from "./LoanProductFormSections/InterestSettings";
-import LoanMaturitySettings from "./LoanMaturitySettings";
+import LoanMaturitySettings from "./LoanProductFormSections/LoanMaturitySettings";
 import DurationSettings from "./LoanProductFormSections/DurationSettings";
 import RepaymentSettings from "./LoanProductFormSections/RepaymentSettings";
 import BranchSelect from "./LoanProductFormSections/BranchSelect";
@@ -18,6 +18,7 @@ import { styled } from "@mui/material/styles";
 import FormLabel from "@mui/material/FormLabel";
 import OutlinedInput from "@mui/material/OutlinedInput";
 import { tokens } from "../../theme";
+import LoanFeesSettings from "./LoanProductFormSections/LoanFeesSettings";
 
 // Dummy branches for dropdown (replace with real data as needed)
 const BRANCHES = [
@@ -227,6 +228,7 @@ export default function CreateLoanProductFormOptimized(props) {
   const [submitSuccess, setSubmitSuccess] = React.useState("");
   const [validationSchema, setValidationSchema] =
     React.useState(baseValidationSchema);
+  const [selectedLoanFees, setSelectedLoanFees] = React.useState([]);
 
   const repaymentOrderRef = React.useRef();
 
@@ -279,6 +281,7 @@ export default function CreateLoanProductFormOptimized(props) {
             values.recurringPeriodAfterMaturityUnit,
         }
       );
+      console.log("Selected Loan Fee IDs:", selectedLoanFees);
       setSubmitError("");
       setSubmitSuccess("");
       setSubmitting(true);
@@ -350,6 +353,12 @@ export default function CreateLoanProductFormOptimized(props) {
         <DurationSettings formik={formik} />
         <RepaymentSettings formik={formik} ref={repaymentOrderRef} />
         <LoanMaturitySettings formik={formik} />
+        <FormGrid size={{ xs: 12, md: 12 }}>
+          <LoanFeesSettings
+            value={selectedLoanFees}
+            onChange={setSelectedLoanFees}
+          />
+        </FormGrid>
       </Grid>
       <Box
         sx={{

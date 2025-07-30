@@ -12,7 +12,7 @@ import {
   OutlinedInput,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import { tokens } from "../../theme";
+import { tokens } from "../../../theme";
 import Grid from "@mui/material/Grid";
 
 const CALCULATE_INTEREST_OPTIONS = [

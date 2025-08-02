@@ -170,6 +170,7 @@ export const onCreateBranch = /* GraphQL */ `
       name
       branchCode
       address
+      status
       institution {
         id
         name
@@ -252,6 +253,7 @@ export const onUpdateBranch = /* GraphQL */ `
       name
       branchCode
       address
+      status
       institution {
         id
         name
@@ -334,6 +336,7 @@ export const onDeleteBranch = /* GraphQL */ `
       name
       branchCode
       address
+      status
       institution {
         id
         name
@@ -464,6 +467,7 @@ export const onCreateUser = /* GraphQL */ `
         name
         branchCode
         address
+        status
         createdAt
         updatedAt
         institutionBranchesId
@@ -536,6 +540,7 @@ export const onUpdateUser = /* GraphQL */ `
         name
         branchCode
         address
+        status
         createdAt
         updatedAt
         institutionBranchesId
@@ -608,6 +613,7 @@ export const onDeleteUser = /* GraphQL */ `
         name
         branchCode
         address
+        status
         createdAt
         updatedAt
         institutionBranchesId
@@ -672,6 +678,7 @@ export const onCreateEmployee = /* GraphQL */ `
         name
         branchCode
         address
+        status
         createdAt
         updatedAt
         institutionBranchesId
@@ -850,6 +857,7 @@ export const onUpdateEmployee = /* GraphQL */ `
         name
         branchCode
         address
+        status
         createdAt
         updatedAt
         institutionBranchesId
@@ -1028,6 +1036,7 @@ export const onDeleteEmployee = /* GraphQL */ `
         name
         branchCode
         address
+        status
         createdAt
         updatedAt
         institutionBranchesId
@@ -1208,6 +1217,7 @@ export const onCreateBorrower = /* GraphQL */ `
         name
         branchCode
         address
+        status
         createdAt
         updatedAt
         institutionBranchesId
@@ -1305,6 +1315,7 @@ export const onUpdateBorrower = /* GraphQL */ `
         name
         branchCode
         address
+        status
         createdAt
         updatedAt
         institutionBranchesId
@@ -1402,6 +1413,7 @@ export const onDeleteBorrower = /* GraphQL */ `
         name
         branchCode
         address
+        status
         createdAt
         updatedAt
         institutionBranchesId
@@ -2001,14 +2013,26 @@ export const onCreateLoanProduct = /* GraphQL */ `
       id
       name
       description
-      interestRateMin
-      interestRateMax
-      termMonthsMin
-      termMonthsMax
       principalAmountMin
       principalAmountMax
+      principalAmountDefault
+      interestRateMin
+      interestRateMax
+      interestRateDefault
       interestCalculationMethod
-      repaymentFrequencies
+      interestType
+      interestPeriod
+      termDurationMin
+      termDurationMax
+      termDurationDefault
+      durationPeriod
+      repaymentFrequency
+      repaymentOrder
+      extendLoanAfterMaturity
+      interestTypeMaturity
+      calculateInterestOn
+      loanInterestRateAfterMaturity
+      recurringPeriodAfterMaturityUnit
       institution {
         id
         name
@@ -2072,14 +2096,26 @@ export const onUpdateLoanProduct = /* GraphQL */ `
       id
       name
       description
-      interestRateMin
-      interestRateMax
-      termMonthsMin
-      termMonthsMax
       principalAmountMin
       principalAmountMax
+      principalAmountDefault
+      interestRateMin
+      interestRateMax
+      interestRateDefault
       interestCalculationMethod
-      repaymentFrequencies
+      interestType
+      interestPeriod
+      termDurationMin
+      termDurationMax
+      termDurationDefault
+      durationPeriod
+      repaymentFrequency
+      repaymentOrder
+      extendLoanAfterMaturity
+      interestTypeMaturity
+      calculateInterestOn
+      loanInterestRateAfterMaturity
+      recurringPeriodAfterMaturityUnit
       institution {
         id
         name
@@ -2143,14 +2179,26 @@ export const onDeleteLoanProduct = /* GraphQL */ `
       id
       name
       description
-      interestRateMin
-      interestRateMax
-      termMonthsMin
-      termMonthsMax
       principalAmountMin
       principalAmountMax
+      principalAmountDefault
+      interestRateMin
+      interestRateMax
+      interestRateDefault
       interestCalculationMethod
-      repaymentFrequencies
+      interestType
+      interestPeriod
+      termDurationMin
+      termDurationMax
+      termDurationDefault
+      durationPeriod
+      repaymentFrequency
+      repaymentOrder
+      extendLoanAfterMaturity
+      interestTypeMaturity
+      calculateInterestOn
+      loanInterestRateAfterMaturity
+      recurringPeriodAfterMaturityUnit
       institution {
         id
         name
@@ -2580,6 +2628,7 @@ export const onCreateDocument = /* GraphQL */ `
         name
         branchCode
         address
+        status
         createdAt
         updatedAt
         institutionBranchesId
@@ -2682,6 +2731,7 @@ export const onUpdateDocument = /* GraphQL */ `
         name
         branchCode
         address
+        status
         createdAt
         updatedAt
         institutionBranchesId
@@ -2784,6 +2834,7 @@ export const onDeleteDocument = /* GraphQL */ `
         name
         branchCode
         address
+        status
         createdAt
         updatedAt
         institutionBranchesId
@@ -3201,14 +3252,26 @@ export const onCreateApplication = /* GraphQL */ `
         id
         name
         description
-        interestRateMin
-        interestRateMax
-        termMonthsMin
-        termMonthsMax
         principalAmountMin
         principalAmountMax
+        principalAmountDefault
+        interestRateMin
+        interestRateMax
+        interestRateDefault
         interestCalculationMethod
-        repaymentFrequencies
+        interestType
+        interestPeriod
+        termDurationMin
+        termDurationMax
+        termDurationDefault
+        durationPeriod
+        repaymentFrequency
+        repaymentOrder
+        extendLoanAfterMaturity
+        interestTypeMaturity
+        calculateInterestOn
+        loanInterestRateAfterMaturity
+        recurringPeriodAfterMaturityUnit
         createdAt
         updatedAt
         institutionLoanProductsId
@@ -3366,14 +3429,26 @@ export const onUpdateApplication = /* GraphQL */ `
         id
         name
         description
-        interestRateMin
-        interestRateMax
-        termMonthsMin
-        termMonthsMax
         principalAmountMin
         principalAmountMax
+        principalAmountDefault
+        interestRateMin
+        interestRateMax
+        interestRateDefault
         interestCalculationMethod
-        repaymentFrequencies
+        interestType
+        interestPeriod
+        termDurationMin
+        termDurationMax
+        termDurationDefault
+        durationPeriod
+        repaymentFrequency
+        repaymentOrder
+        extendLoanAfterMaturity
+        interestTypeMaturity
+        calculateInterestOn
+        loanInterestRateAfterMaturity
+        recurringPeriodAfterMaturityUnit
         createdAt
         updatedAt
         institutionLoanProductsId
@@ -3531,14 +3606,26 @@ export const onDeleteApplication = /* GraphQL */ `
         id
         name
         description
-        interestRateMin
-        interestRateMax
-        termMonthsMin
-        termMonthsMax
         principalAmountMin
         principalAmountMax
+        principalAmountDefault
+        interestRateMin
+        interestRateMax
+        interestRateDefault
         interestCalculationMethod
-        repaymentFrequencies
+        interestType
+        interestPeriod
+        termDurationMin
+        termDurationMax
+        termDurationDefault
+        durationPeriod
+        repaymentFrequency
+        repaymentOrder
+        extendLoanAfterMaturity
+        interestTypeMaturity
+        calculateInterestOn
+        loanInterestRateAfterMaturity
+        recurringPeriodAfterMaturityUnit
         createdAt
         updatedAt
         institutionLoanProductsId
@@ -3975,14 +4062,26 @@ export const onCreateLoan = /* GraphQL */ `
         id
         name
         description
-        interestRateMin
-        interestRateMax
-        termMonthsMin
-        termMonthsMax
         principalAmountMin
         principalAmountMax
+        principalAmountDefault
+        interestRateMin
+        interestRateMax
+        interestRateDefault
         interestCalculationMethod
-        repaymentFrequencies
+        interestType
+        interestPeriod
+        termDurationMin
+        termDurationMax
+        termDurationDefault
+        durationPeriod
+        repaymentFrequency
+        repaymentOrder
+        extendLoanAfterMaturity
+        interestTypeMaturity
+        calculateInterestOn
+        loanInterestRateAfterMaturity
+        recurringPeriodAfterMaturityUnit
         createdAt
         updatedAt
         institutionLoanProductsId
@@ -4166,14 +4265,26 @@ export const onUpdateLoan = /* GraphQL */ `
         id
         name
         description
-        interestRateMin
-        interestRateMax
-        termMonthsMin
-        termMonthsMax
         principalAmountMin
         principalAmountMax
+        principalAmountDefault
+        interestRateMin
+        interestRateMax
+        interestRateDefault
         interestCalculationMethod
-        repaymentFrequencies
+        interestType
+        interestPeriod
+        termDurationMin
+        termDurationMax
+        termDurationDefault
+        durationPeriod
+        repaymentFrequency
+        repaymentOrder
+        extendLoanAfterMaturity
+        interestTypeMaturity
+        calculateInterestOn
+        loanInterestRateAfterMaturity
+        recurringPeriodAfterMaturityUnit
         createdAt
         updatedAt
         institutionLoanProductsId
@@ -4357,14 +4468,26 @@ export const onDeleteLoan = /* GraphQL */ `
         id
         name
         description
-        interestRateMin
-        interestRateMax
-        termMonthsMin
-        termMonthsMax
         principalAmountMin
         principalAmountMax
+        principalAmountDefault
+        interestRateMin
+        interestRateMax
+        interestRateDefault
         interestCalculationMethod
-        repaymentFrequencies
+        interestType
+        interestPeriod
+        termDurationMin
+        termDurationMax
+        termDurationDefault
+        durationPeriod
+        repaymentFrequency
+        repaymentOrder
+        extendLoanAfterMaturity
+        interestTypeMaturity
+        calculateInterestOn
+        loanInterestRateAfterMaturity
+        recurringPeriodAfterMaturityUnit
         createdAt
         updatedAt
         institutionLoanProductsId
@@ -5043,6 +5166,7 @@ export const onCreatePayroll = /* GraphQL */ `
         name
         branchCode
         address
+        status
         createdAt
         updatedAt
         institutionBranchesId
@@ -5079,6 +5203,7 @@ export const onUpdatePayroll = /* GraphQL */ `
         name
         branchCode
         address
+        status
         createdAt
         updatedAt
         institutionBranchesId
@@ -5115,6 +5240,7 @@ export const onDeletePayroll = /* GraphQL */ `
         name
         branchCode
         address
+        status
         createdAt
         updatedAt
         institutionBranchesId
@@ -5154,6 +5280,7 @@ export const onCreateAccount = /* GraphQL */ `
         name
         branchCode
         address
+        status
         createdAt
         updatedAt
         institutionBranchesId
@@ -5270,6 +5397,7 @@ export const onUpdateAccount = /* GraphQL */ `
         name
         branchCode
         address
+        status
         createdAt
         updatedAt
         institutionBranchesId
@@ -5386,6 +5514,7 @@ export const onDeleteAccount = /* GraphQL */ `
         name
         branchCode
         address
+        status
         createdAt
         updatedAt
         institutionBranchesId
@@ -6582,6 +6711,7 @@ export const onCreateFinancialReport = /* GraphQL */ `
         name
         branchCode
         address
+        status
         createdAt
         updatedAt
         institutionBranchesId
@@ -6611,6 +6741,7 @@ export const onUpdateFinancialReport = /* GraphQL */ `
         name
         branchCode
         address
+        status
         createdAt
         updatedAt
         institutionBranchesId
@@ -6640,6 +6771,7 @@ export const onDeleteFinancialReport = /* GraphQL */ `
         name
         branchCode
         address
+        status
         createdAt
         updatedAt
         institutionBranchesId
@@ -6670,6 +6802,7 @@ export const onCreateCustomFormField = /* GraphQL */ `
         name
         branchCode
         address
+        status
         createdAt
         updatedAt
         institutionBranchesId
@@ -6729,6 +6862,7 @@ export const onUpdateCustomFormField = /* GraphQL */ `
         name
         branchCode
         address
+        status
         createdAt
         updatedAt
         institutionBranchesId
@@ -6788,6 +6922,7 @@ export const onDeleteCustomFormField = /* GraphQL */ `
         name
         branchCode
         address
+        status
         createdAt
         updatedAt
         institutionBranchesId
@@ -7010,6 +7145,7 @@ export const onCreateBranchLoanProduct = /* GraphQL */ `
         name
         branchCode
         address
+        status
         createdAt
         updatedAt
         institutionBranchesId
@@ -7019,14 +7155,26 @@ export const onCreateBranchLoanProduct = /* GraphQL */ `
         id
         name
         description
-        interestRateMin
-        interestRateMax
-        termMonthsMin
-        termMonthsMax
         principalAmountMin
         principalAmountMax
+        principalAmountDefault
+        interestRateMin
+        interestRateMax
+        interestRateDefault
         interestCalculationMethod
-        repaymentFrequencies
+        interestType
+        interestPeriod
+        termDurationMin
+        termDurationMax
+        termDurationDefault
+        durationPeriod
+        repaymentFrequency
+        repaymentOrder
+        extendLoanAfterMaturity
+        interestTypeMaturity
+        calculateInterestOn
+        loanInterestRateAfterMaturity
+        recurringPeriodAfterMaturityUnit
         createdAt
         updatedAt
         institutionLoanProductsId
@@ -7051,6 +7199,7 @@ export const onUpdateBranchLoanProduct = /* GraphQL */ `
         name
         branchCode
         address
+        status
         createdAt
         updatedAt
         institutionBranchesId
@@ -7060,14 +7209,26 @@ export const onUpdateBranchLoanProduct = /* GraphQL */ `
         id
         name
         description
-        interestRateMin
-        interestRateMax
-        termMonthsMin
-        termMonthsMax
         principalAmountMin
         principalAmountMax
+        principalAmountDefault
+        interestRateMin
+        interestRateMax
+        interestRateDefault
         interestCalculationMethod
-        repaymentFrequencies
+        interestType
+        interestPeriod
+        termDurationMin
+        termDurationMax
+        termDurationDefault
+        durationPeriod
+        repaymentFrequency
+        repaymentOrder
+        extendLoanAfterMaturity
+        interestTypeMaturity
+        calculateInterestOn
+        loanInterestRateAfterMaturity
+        recurringPeriodAfterMaturityUnit
         createdAt
         updatedAt
         institutionLoanProductsId
@@ -7092,6 +7253,7 @@ export const onDeleteBranchLoanProduct = /* GraphQL */ `
         name
         branchCode
         address
+        status
         createdAt
         updatedAt
         institutionBranchesId
@@ -7101,14 +7263,26 @@ export const onDeleteBranchLoanProduct = /* GraphQL */ `
         id
         name
         description
-        interestRateMin
-        interestRateMax
-        termMonthsMin
-        termMonthsMax
         principalAmountMin
         principalAmountMax
+        principalAmountDefault
+        interestRateMin
+        interestRateMax
+        interestRateDefault
         interestCalculationMethod
-        repaymentFrequencies
+        interestType
+        interestPeriod
+        termDurationMin
+        termDurationMax
+        termDurationDefault
+        durationPeriod
+        repaymentFrequency
+        repaymentOrder
+        extendLoanAfterMaturity
+        interestTypeMaturity
+        calculateInterestOn
+        loanInterestRateAfterMaturity
+        recurringPeriodAfterMaturityUnit
         createdAt
         updatedAt
         institutionLoanProductsId
@@ -7133,6 +7307,7 @@ export const onCreateBranchLoanFeesConfig = /* GraphQL */ `
         name
         branchCode
         address
+        status
         createdAt
         updatedAt
         institutionBranchesId
@@ -7171,6 +7346,7 @@ export const onUpdateBranchLoanFeesConfig = /* GraphQL */ `
         name
         branchCode
         address
+        status
         createdAt
         updatedAt
         institutionBranchesId
@@ -7209,6 +7385,7 @@ export const onDeleteBranchLoanFeesConfig = /* GraphQL */ `
         name
         branchCode
         address
+        status
         createdAt
         updatedAt
         institutionBranchesId
@@ -9838,14 +10015,26 @@ export const onCreateLoanProductLoanFees = /* GraphQL */ `
         id
         name
         description
-        interestRateMin
-        interestRateMax
-        termMonthsMin
-        termMonthsMax
         principalAmountMin
         principalAmountMax
+        principalAmountDefault
+        interestRateMin
+        interestRateMax
+        interestRateDefault
         interestCalculationMethod
-        repaymentFrequencies
+        interestType
+        interestPeriod
+        termDurationMin
+        termDurationMax
+        termDurationDefault
+        durationPeriod
+        repaymentFrequency
+        repaymentOrder
+        extendLoanAfterMaturity
+        interestTypeMaturity
+        calculateInterestOn
+        loanInterestRateAfterMaturity
+        recurringPeriodAfterMaturityUnit
         createdAt
         updatedAt
         institutionLoanProductsId
@@ -9889,14 +10078,26 @@ export const onUpdateLoanProductLoanFees = /* GraphQL */ `
         id
         name
         description
-        interestRateMin
-        interestRateMax
-        termMonthsMin
-        termMonthsMax
         principalAmountMin
         principalAmountMax
+        principalAmountDefault
+        interestRateMin
+        interestRateMax
+        interestRateDefault
         interestCalculationMethod
-        repaymentFrequencies
+        interestType
+        interestPeriod
+        termDurationMin
+        termDurationMax
+        termDurationDefault
+        durationPeriod
+        repaymentFrequency
+        repaymentOrder
+        extendLoanAfterMaturity
+        interestTypeMaturity
+        calculateInterestOn
+        loanInterestRateAfterMaturity
+        recurringPeriodAfterMaturityUnit
         createdAt
         updatedAt
         institutionLoanProductsId
@@ -9940,14 +10141,26 @@ export const onDeleteLoanProductLoanFees = /* GraphQL */ `
         id
         name
         description
-        interestRateMin
-        interestRateMax
-        termMonthsMin
-        termMonthsMax
         principalAmountMin
         principalAmountMax
+        principalAmountDefault
+        interestRateMin
+        interestRateMax
+        interestRateDefault
         interestCalculationMethod
-        repaymentFrequencies
+        interestType
+        interestPeriod
+        termDurationMin
+        termDurationMax
+        termDurationDefault
+        durationPeriod
+        repaymentFrequency
+        repaymentOrder
+        extendLoanAfterMaturity
+        interestTypeMaturity
+        calculateInterestOn
+        loanInterestRateAfterMaturity
+        recurringPeriodAfterMaturityUnit
         createdAt
         updatedAt
         institutionLoanProductsId
@@ -9991,14 +10204,26 @@ export const onCreateLoanProductPenalty = /* GraphQL */ `
         id
         name
         description
-        interestRateMin
-        interestRateMax
-        termMonthsMin
-        termMonthsMax
         principalAmountMin
         principalAmountMax
+        principalAmountDefault
+        interestRateMin
+        interestRateMax
+        interestRateDefault
         interestCalculationMethod
-        repaymentFrequencies
+        interestType
+        interestPeriod
+        termDurationMin
+        termDurationMax
+        termDurationDefault
+        durationPeriod
+        repaymentFrequency
+        repaymentOrder
+        extendLoanAfterMaturity
+        interestTypeMaturity
+        calculateInterestOn
+        loanInterestRateAfterMaturity
+        recurringPeriodAfterMaturityUnit
         createdAt
         updatedAt
         institutionLoanProductsId
@@ -10042,14 +10267,26 @@ export const onUpdateLoanProductPenalty = /* GraphQL */ `
         id
         name
         description
-        interestRateMin
-        interestRateMax
-        termMonthsMin
-        termMonthsMax
         principalAmountMin
         principalAmountMax
+        principalAmountDefault
+        interestRateMin
+        interestRateMax
+        interestRateDefault
         interestCalculationMethod
-        repaymentFrequencies
+        interestType
+        interestPeriod
+        termDurationMin
+        termDurationMax
+        termDurationDefault
+        durationPeriod
+        repaymentFrequency
+        repaymentOrder
+        extendLoanAfterMaturity
+        interestTypeMaturity
+        calculateInterestOn
+        loanInterestRateAfterMaturity
+        recurringPeriodAfterMaturityUnit
         createdAt
         updatedAt
         institutionLoanProductsId
@@ -10093,14 +10330,26 @@ export const onDeleteLoanProductPenalty = /* GraphQL */ `
         id
         name
         description
-        interestRateMin
-        interestRateMax
-        termMonthsMin
-        termMonthsMax
         principalAmountMin
         principalAmountMax
+        principalAmountDefault
+        interestRateMin
+        interestRateMax
+        interestRateDefault
         interestCalculationMethod
-        repaymentFrequencies
+        interestType
+        interestPeriod
+        termDurationMin
+        termDurationMax
+        termDurationDefault
+        durationPeriod
+        repaymentFrequency
+        repaymentOrder
+        extendLoanAfterMaturity
+        interestTypeMaturity
+        calculateInterestOn
+        loanInterestRateAfterMaturity
+        recurringPeriodAfterMaturityUnit
         createdAt
         updatedAt
         institutionLoanProductsId

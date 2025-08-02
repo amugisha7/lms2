@@ -34,6 +34,7 @@ export default function BranchSelect({ formik, branches }) {
             formik.touched.branch && Boolean(formik.errors.branch)
               ? "1.5px solid #d32f2f"
               : `1px solid ${colors.grey[200]}`,
+          width: "100%",
         }}
       >
         <MenuItem value="" disabled>

@@ -66,6 +66,7 @@ type Branch @model {
   name: String
   branchCode: String
   address: String
+  status: String
 
   # --- Relationships ---
   institution: Institution @belongsTo
@@ -282,14 +283,38 @@ type LoanProduct @model {
   id: ID!
   name: String
   description: String
-  interestRateMin: Float
-  interestRateMax: Float
-  termMonthsMin: Int
-  termMonthsMax: Int
+
+  # Principal settings
   principalAmountMin: Float
   principalAmountMax: Float
+  principalAmountDefault: Float
+
+  # Interest settings
+  interestRateMin: Float
+  interestRateMax: Float
+  interestRateDefault: Float
   interestCalculationMethod: InterestCalculationMethod
-  repaymentFrequencies: String
+  interestType: String
+  interestPeriod: String
+
+  # Duration settings
+  termDurationMin: Int
+  termDurationMax: Int
+  termDurationDefault: Int
+  durationPeriod: String
+
+  # Repayment settings
+  repaymentFrequency: String
+  repaymentOrder: AWSJSON
+
+  # Maturity settings
+  extendLoanAfterMaturity: Boolean
+  interestTypeMaturity: String
+  calculateInterestOn: String
+  loanInterestRateAfterMaturity: Float
+  recurringPeriodAfterMaturityUnit: String
+
+  # Relationships
   institution: Institution @belongsTo
   branches: [Branch] @manyToMany(relationName: "BranchLoanProduct")
   loanFees: [LoanFees] @manyToMany(relationName: "LoanProductLoanFees")

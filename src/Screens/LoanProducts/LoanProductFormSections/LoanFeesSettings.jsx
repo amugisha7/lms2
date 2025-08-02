@@ -63,7 +63,7 @@ export default function LoanFeesSettings({ value = [], onChange }) {
   }, [assign, userDetails?.institutionUsersId]);
 
   React.useEffect(() => {
-    if (onChange) onChange(selected);
+    if (assign === "yes" && onChange) onChange(selected);
     // eslint-disable-next-line
   }, [selected]);
 
@@ -74,7 +74,12 @@ export default function LoanFeesSettings({ value = [], onChange }) {
   };
 
   const handleAssignChange = (e) => {
-    setAssign(e.target.value);
+    const val = e.target.value;
+    setAssign(val);
+    if (val === "no") {
+      setSelected(""); // set to empty string if "no"
+      if (onChange) onChange("");
+    }
   };
 
   return (

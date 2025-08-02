@@ -13,19 +13,13 @@ import InterestSettings from "./LoanProductFormSections/InterestSettings";
 import LoanMaturitySettings from "./LoanProductFormSections/LoanMaturitySettings";
 import DurationSettings from "./LoanProductFormSections/DurationSettings";
 import RepaymentSettings from "./LoanProductFormSections/RepaymentSettings";
-import BranchSelect from "./LoanProductFormSections/BranchSelect";
+import LoanBranchesSelect from "./LoanBranchesSelect";
 import { styled } from "@mui/material/styles";
 import FormLabel from "@mui/material/FormLabel";
 import OutlinedInput from "@mui/material/OutlinedInput";
 import { tokens } from "../../theme";
 import LoanFeesSettings from "./LoanProductFormSections/LoanFeesSettings";
-
-// Dummy branches for dropdown (replace with real data as needed)
-const BRANCHES = [
-  { value: "branch1", label: "Branch 1" },
-  { value: "branch2", label: "Branch 2" },
-  { value: "branch3", label: "Branch 3" },
-];
+import { generateClient } from "aws-amplify/api";
 
 const StyledOutlinedInput = styled(OutlinedInput)(({ error, theme }) => {
   const colors = tokens(theme.palette.mode);
@@ -228,9 +222,59 @@ export default function CreateLoanProductFormOptimized(props) {
   const [submitSuccess, setSubmitSuccess] = React.useState("");
   const [validationSchema, setValidationSchema] =
     React.useState(baseValidationSchema);
-  const [selectedLoanFees, setSelectedLoanFees] = React.useState([]);
+  const [selectedLoanFees, setSelectedLoanFees] = React.useState(""); // default to empty string
 
   const repaymentOrderRef = React.useRef();
+  const client = generateClient();
+
+  // Helper to build payload for API
+  const buildLoanProductInput = (
+    values,
+    repaymentOrder,
+    selectedLoanFees,
+    userDetails
+  ) => ({
+    name: values.name,
+    description: "",
+    principalAmountMin: values.minPrincipal
+      ? Number(values.minPrincipal)
+      : null,
+    principalAmountMax: values.maxPrincipal
+      ? Number(values.maxPrincipal)
+      : null,
+    principalAmountDefault: values.defaultPrincipal
+      ? Number(values.defaultPrincipal)
+      : null,
+    interestRateMin: values.minInterest ? Number(values.minInterest) : null,
+    interestRateMax: values.maxInterest ? Number(values.maxInterest) : null,
+    interestRateDefault: values.defaultInterest
+      ? Number(values.defaultInterest)
+      : null,
+    interestCalculationMethod: values.interestMethod || null,
+    interestType: values.interestType || null,
+    interestPeriod: values.interestPeriod || null,
+    termDurationMin: values.minDuration ? Number(values.minDuration) : null,
+    termDurationMax: values.maxDuration ? Number(values.maxDuration) : null,
+    termDurationDefault: values.defaultDuration
+      ? Number(values.defaultDuration)
+      : null,
+    durationPeriod: values.durationPeriod || null,
+    repaymentFrequency: values.repaymentFrequency || null,
+    repaymentOrder: repaymentOrder ? JSON.stringify(repaymentOrder) : null,
+    extendLoanAfterMaturity:
+      values.extendLoanAfterMaturity === ""
+        ? null
+        : values.extendLoanAfterMaturity === "true" ||
+          values.extendLoanAfterMaturity === true,
+    interestTypeMaturity: values.interestTypeMaturity || null,
+    calculateInterestOn: values.calculateInterestOn || null,
+    loanInterestRateAfterMaturity: values.loanInterestRateAfterMaturity
+      ? Number(values.loanInterestRateAfterMaturity)
+      : null,
+    recurringPeriodAfterMaturityUnit:
+      values.recurringPeriodAfterMaturityUnit || null,
+    institutionLoanProductsId: userDetails?.institutionUsersId || null, // <-- required institution id
+  });
 
   const formik = useFormik({
     initialValues: {
@@ -250,6 +294,12 @@ export default function CreateLoanProductFormOptimized(props) {
       defaultDuration: "",
       maxDuration: "",
       repaymentFrequency: "",
+      // Loan Maturity Settings defaults as empty strings
+      extendLoanAfterMaturity: "",
+      interestTypeMaturity: "",
+      calculateInterestOn: "",
+      loanInterestRateAfterMaturity: "",
+      recurringPeriodAfterMaturityUnit: "",
     },
     validationSchema, // now uses state
     onSubmit: async (values, { setSubmitting, resetForm }) => {
@@ -260,33 +310,92 @@ export default function CreateLoanProductFormOptimized(props) {
       ) {
         repaymentOrder = repaymentOrderRef.current.getRepaymentOrder();
       }
-      // Capitalize each word and join with commas, e.g. "Fees, Interest, Penalty, Principal"
-      const repaymentOrderString = Array.isArray(repaymentOrder)
-        ? repaymentOrder
-            .map((item) => item.charAt(0).toUpperCase() + item.slice(1))
-            .join(",")
-        : "";
-      console.log(
-        "Loan Product Form Values:",
-        values,
-        "Repayment Order:",
-        repaymentOrderString,
-        "Loan Maturity Settings:",
-        {
-          extendLoanAfterMaturity: values.extendLoanAfterMaturity,
-          interestTypeMaturity: values.interestTypeMaturity,
-          calculateInterestOn: values.calculateInterestOn,
-          loanInterestRateAfterMaturity: values.loanInterestRateAfterMaturity,
-          recurringPeriodAfterMaturityUnit:
-            values.recurringPeriodAfterMaturityUnit,
-        }
-      );
-      console.log("Selected Loan Fee IDs:", selectedLoanFees);
       setSubmitError("");
       setSubmitSuccess("");
       setSubmitting(true);
       try {
-        // Replace with your actual API call
+        const input = buildLoanProductInput(
+          values,
+          repaymentOrder,
+          selectedLoanFees,
+          userDetails
+        );
+        console.log("Submitting to AppSync:", input);
+        const result = await client.graphql({
+          query: `
+            mutation CreateLoanProduct($input: CreateLoanProductInput!) {
+              createLoanProduct(input: $input) {
+                id
+                name
+              }
+            }
+          `,
+          variables: { input },
+        });
+        const loanProductId =
+          result?.data?.createLoanProduct?.id ||
+          result?.data?.createLoanProduct?.loanProduct?.id;
+
+        // --- Associate branches if any ---
+        if (
+          loanProductId &&
+          values.branch &&
+          Array.isArray(values.branch) &&
+          values.branch.length > 0
+        ) {
+          for (const branch of values.branch) {
+            const branchId = typeof branch === "object" ? branch.value : branch;
+            if (branchId) {
+              await client.graphql({
+                query: `
+                  mutation CreateBranchLoanProduct($input: CreateBranchLoanProductInput!) {
+                    createBranchLoanProduct(input: $input) {
+                      id
+                    }
+                  }
+                `,
+                variables: {
+                  input: {
+                    branchId,
+                    loanProductId,
+                  },
+                },
+              });
+            }
+          }
+        }
+
+        // --- Associate loan fees if any ---
+        let loanFeeIds = [];
+        if (selectedLoanFees && selectedLoanFees.length > 0) {
+          if (Array.isArray(selectedLoanFees)) {
+            loanFeeIds = selectedLoanFees.map((f) =>
+              typeof f === "object" ? f.value : f
+            );
+          } else if (typeof selectedLoanFees === "string") {
+            loanFeeIds = selectedLoanFees.split(",");
+          }
+        }
+        for (const loanFeesId of loanFeeIds) {
+          if (loanFeesId) {
+            await client.graphql({
+              query: `
+                mutation CreateLoanProductLoanFees($input: CreateLoanProductLoanFeesInput!) {
+                  createLoanProductLoanFees(input: $input) {
+                    id
+                  }
+                }
+              `,
+              variables: {
+                input: {
+                  loanFeesId,
+                  loanProductId,
+                },
+              },
+            });
+          }
+        }
+
         setSubmitSuccess("Loan product created successfully!");
         setSubmitting(false);
         resetForm();
@@ -294,6 +403,7 @@ export default function CreateLoanProductFormOptimized(props) {
         //   navigate("/loanProducts");
         // }, 1500);
       } catch (err) {
+        console.log("err::: ", err);
         setSubmitError("Failed to create loan product. Please try again.");
         setSubmitting(false);
       }
@@ -346,7 +456,7 @@ export default function CreateLoanProductFormOptimized(props) {
           )}
         </FormGrid>
         <FormGrid size={{ xs: 12, md: 6 }}>
-          <BranchSelect formik={formik} branches={BRANCHES} />
+          <LoanBranchesSelect formik={formik} />
         </FormGrid>
         <PrincipalSettings formik={formik} />
         <InterestSettings formik={formik} />

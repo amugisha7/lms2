@@ -28,10 +28,12 @@ export default function BranchUpdateForm(props) {
     name: "",
     branchCode: "",
     address: "",
+    status: "",
   };
   const [name, setName] = React.useState(initialValues.name);
   const [branchCode, setBranchCode] = React.useState(initialValues.branchCode);
   const [address, setAddress] = React.useState(initialValues.address);
+  const [status, setStatus] = React.useState(initialValues.status);
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     const cleanValues = branchRecord
@@ -40,6 +42,7 @@ export default function BranchUpdateForm(props) {
     setName(cleanValues.name);
     setBranchCode(cleanValues.branchCode);
     setAddress(cleanValues.address);
+    setStatus(cleanValues.status);
     setErrors({});
   };
   const [branchRecord, setBranchRecord] = React.useState(branchModelProp);
@@ -62,6 +65,7 @@ export default function BranchUpdateForm(props) {
     name: [],
     branchCode: [],
     address: [],
+    status: [],
   };
   const runValidationTasks = async (
     fieldName,
@@ -92,6 +96,7 @@ export default function BranchUpdateForm(props) {
           name: name ?? null,
           branchCode: branchCode ?? null,
           address: address ?? null,
+          status: status ?? null,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -155,6 +160,7 @@ export default function BranchUpdateForm(props) {
               name: value,
               branchCode,
               address,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.name ?? value;
@@ -181,6 +187,7 @@ export default function BranchUpdateForm(props) {
               name,
               branchCode: value,
               address,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.branchCode ?? value;
@@ -207,6 +214,7 @@ export default function BranchUpdateForm(props) {
               name,
               branchCode,
               address: value,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.address ?? value;
@@ -220,6 +228,33 @@ export default function BranchUpdateForm(props) {
         errorMessage={errors.address?.errorMessage}
         hasError={errors.address?.hasError}
         {...getOverrideProps(overrides, "address")}
+      ></TextField>
+      <TextField
+        label="Status"
+        isRequired={false}
+        isReadOnly={false}
+        value={status}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              name,
+              branchCode,
+              address,
+              status: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.status ?? value;
+          }
+          if (errors.status?.hasError) {
+            runValidationTasks("status", value);
+          }
+          setStatus(value);
+        }}
+        onBlur={() => runValidationTasks("status", status)}
+        errorMessage={errors.status?.errorMessage}
+        hasError={errors.status?.hasError}
+        {...getOverrideProps(overrides, "status")}
       ></TextField>
       <Flex
         justifyContent="space-between"

@@ -25,11 +25,13 @@ export declare type BranchUpdateFormInputValues = {
     name?: string;
     branchCode?: string;
     address?: string;
+    status?: string;
 };
 export declare type BranchUpdateFormValidationValues = {
     name?: ValidationFunction<string>;
     branchCode?: ValidationFunction<string>;
     address?: ValidationFunction<string>;
+    status?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type BranchUpdateFormOverridesProps = {
@@ -37,6 +39,7 @@ export declare type BranchUpdateFormOverridesProps = {
     name?: PrimitiveOverrideProps<TextFieldProps>;
     branchCode?: PrimitiveOverrideProps<TextFieldProps>;
     address?: PrimitiveOverrideProps<TextFieldProps>;
+    status?: PrimitiveOverrideProps<TextFieldProps>;
 } & EscapeHatchProps;
 export declare type BranchUpdateFormProps = React.PropsWithChildren<{
     overrides?: BranchUpdateFormOverridesProps | undefined | null;

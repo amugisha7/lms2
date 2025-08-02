@@ -41,7 +41,9 @@ const RepaymentSettings = forwardRef(function RepaymentSettings(
   }));
 
   const handleOrderSelect = (event) => {
-    setSelectedOrderIndex(event.target.selectedIndex);
+    const selectedValue = event.target.value;
+    const newIndex = repaymentOrder.findIndex((item) => item === selectedValue);
+    setSelectedOrderIndex(newIndex);
   };
 
   const moveOrderUp = () => {
@@ -138,8 +140,8 @@ const RepaymentSettings = forwardRef(function RepaymentSettings(
             onChange={handleOrderSelect}
           >
             {repaymentOrder.map((item, idx) => (
-              <option key={item} value={item}>
-                {item}
+              <option key={`${item}-${idx}`} value={item}>
+                {idx + 1}. {item}
               </option>
             ))}
           </select>

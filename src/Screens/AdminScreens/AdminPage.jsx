@@ -18,6 +18,13 @@ export default function AdminPage() {
       ],
     },
     {
+      category: "Branches",
+      links: [
+        { label: "Branches List", href: "/admin/branches" },
+        { label: "Add Branch", href: "/admin/add-branch" },
+      ],
+    },
+    {
       category: "Borrowers",
       links: [
         { label: "Create Borrower", href: "/addBorrower" },

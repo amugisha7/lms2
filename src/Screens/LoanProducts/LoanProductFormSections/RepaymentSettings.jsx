@@ -6,6 +6,11 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
+import List from "@mui/material/List";
+import ListItem from "@mui/material/ListItem";
+import IconButton from "@mui/material/IconButton";
+import ArrowUpward from "@mui/icons-material/ArrowUpward";
+import ArrowDownward from "@mui/icons-material/ArrowDownward";
 import { useTheme } from "@mui/material/styles";
 import { tokens } from "../../../theme";
 
@@ -34,39 +39,30 @@ const RepaymentSettings = forwardRef(function RepaymentSettings(
   const [repaymentOrder, setRepaymentOrder] = React.useState(
     REPAYMENT_ORDER_OPTIONS
   );
-  const [selectedOrderIndex, setSelectedOrderIndex] = React.useState(0);
 
   useImperativeHandle(ref, () => ({
     getRepaymentOrder: () => [...repaymentOrder],
   }));
 
-  const handleOrderSelect = (event) => {
-    const selectedValue = event.target.value;
-    const newIndex = repaymentOrder.findIndex((item) => item === selectedValue);
-    setSelectedOrderIndex(newIndex);
-  };
-
-  const moveOrderUp = () => {
-    if (selectedOrderIndex > 0) {
+  const moveOrderUp = (index) => {
+    if (index > 0) {
       const newOrder = [...repaymentOrder];
-      [newOrder[selectedOrderIndex - 1], newOrder[selectedOrderIndex]] = [
-        newOrder[selectedOrderIndex],
-        newOrder[selectedOrderIndex - 1],
+      [newOrder[index - 1], newOrder[index]] = [
+        newOrder[index],
+        newOrder[index - 1],
       ];
       setRepaymentOrder(newOrder);
-      setSelectedOrderIndex(selectedOrderIndex - 1);
     }
   };
 
-  const moveOrderDown = () => {
-    if (selectedOrderIndex < repaymentOrder.length - 1) {
+  const moveOrderDown = (index) => {
+    if (index < repaymentOrder.length - 1) {
       const newOrder = [...repaymentOrder];
-      [newOrder[selectedOrderIndex + 1], newOrder[selectedOrderIndex]] = [
-        newOrder[selectedOrderIndex],
-        newOrder[selectedOrderIndex + 1],
+      [newOrder[index + 1], newOrder[index]] = [
+        newOrder[index],
+        newOrder[index + 1],
       ];
       setRepaymentOrder(newOrder);
-      setSelectedOrderIndex(selectedOrderIndex + 1);
     }
   };
 
@@ -133,37 +129,63 @@ const RepaymentSettings = forwardRef(function RepaymentSettings(
             applies the remainder to Principal, then Interest, and finally
             Penalty.
           </Typography>
-          <select
-            size={4}
-            style={{ width: 180, fontSize: "1rem", marginBottom: 8 }}
-            value={repaymentOrder[selectedOrderIndex]}
-            onChange={handleOrderSelect}
+          <Box
+            sx={{
+              width: 200,
+              border: `1px solid ${colors.grey[200]}`,
+              borderRadius: "4px",
+            }}
           >
-            {repaymentOrder.map((item, idx) => (
-              <option key={`${item}-${idx}`} value={item}>
-                {idx + 1}. {item}
-              </option>
-            ))}
-          </select>
-          <Box>
-            <Button
-              variant="outlined"
-              size="small"
-              onClick={moveOrderUp}
-              disabled={selectedOrderIndex === 0}
-              sx={{ mr: 1, minWidth: 40, p: 0.5 }}
+            <List
+              dense
+              sx={{
+                // maxHeight: 160,
+                height: 105,
+                // overflow: "auto",
+                padding: 0,
+                "& .MuiListItem-root": {
+                  paddingTop: "0px",
+                  paddingBottom: "0px",
+                },
+              }}
             >
-              Up
-            </Button>
-            <Button
-              variant="outlined"
-              size="small"
-              onClick={moveOrderDown}
-              disabled={selectedOrderIndex === repaymentOrder.length - 1}
-              sx={{ minWidth: 40, p: 0.5 }}
-            >
-              Down
-            </Button>
+              {repaymentOrder.map((item, idx) => (
+                <ListItem
+                  key={`${item}-${idx}`}
+                  secondaryAction={
+                    <>
+                      <IconButton
+                        edge="end"
+                        aria-label="up"
+                        onClick={() => moveOrderUp(idx)}
+                        disabled={idx === 0}
+                        size="small"
+                      >
+                        <ArrowUpward
+                          sx={{ color: colors.blueAccent[400] }}
+                          fontSize="inherit"
+                        />
+                      </IconButton>
+                      <IconButton
+                        edge="end"
+                        aria-label="down"
+                        onClick={() => moveOrderDown(idx)}
+                        disabled={idx === repaymentOrder.length - 1}
+                        size="small"
+                      >
+                        <ArrowDownward
+                          sx={{ color: colors.blueAccent[400] }}
+                          fontSize="inherit"
+                        />
+                      </IconButton>
+                    </>
+                  }
+                  sx={{ color: colors.grey[200] }}
+                >
+                  {idx + 1}. {item}
+                </ListItem>
+              ))}
+            </List>
           </Box>
         </Box>
       </Grid>

@@ -13,7 +13,7 @@ import InterestSettings from "./LoanProductFormSections/InterestSettings";
 import LoanMaturitySettings from "./LoanProductFormSections/LoanMaturitySettings";
 import DurationSettings from "./LoanProductFormSections/DurationSettings";
 import RepaymentSettings from "./LoanProductFormSections/RepaymentSettings";
-import LoanBranchesSelect from "./LoanBranchesSelect";
+import LoanBranchesSelect from "./LoanProductFormSections/LoanBranchesSelect";
 import { styled } from "@mui/material/styles";
 import FormLabel from "@mui/material/FormLabel";
 import OutlinedInput from "@mui/material/OutlinedInput";
@@ -455,9 +455,7 @@ export default function CreateLoanProductFormOptimized(props) {
             </Typography>
           )}
         </FormGrid>
-        <FormGrid size={{ xs: 12, md: 6 }}>
-          <LoanBranchesSelect formik={formik} />
-        </FormGrid>
+        <LoanBranchesSelect formik={formik} />
         <PrincipalSettings formik={formik} />
         <InterestSettings formik={formik} />
         <DurationSettings formik={formik} />

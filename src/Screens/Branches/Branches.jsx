@@ -5,7 +5,6 @@ import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import { Link } from "react-router-dom";
-import { DataGrid } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
 import { UserContext } from "../../App";
 import EditIcon from "@mui/icons-material/Edit";
@@ -17,6 +16,9 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import InputAdornment from "@mui/material/InputAdornment";
 import ClearIcon from "@mui/icons-material/Clear";
+import ClickableText from "../../ComponentAssets/ClickableText";
+import CustomDataGrid from "../../ComponentAssets/CustomDataGrid";
+import CustomPopUp from "../../ComponentAssets/CustomPopUp";
 
 export default function Branches() {
   const [branches, setBranches] = React.useState([]);
@@ -28,6 +30,7 @@ export default function Branches() {
   const [deleteDialogRow, setDeleteDialogRow] = React.useState(null);
   const [deleteLoading, setDeleteLoading] = React.useState(false);
   const [deleteError, setDeleteError] = React.useState("");
+  const formRef = React.useRef();
   const theme = useTheme();
   const { userDetails } = React.useContext(UserContext);
 
@@ -134,65 +137,48 @@ export default function Branches() {
     }
   };
 
+  const handleEditClick = () => {
+    if (formRef.current) {
+      formRef.current.toggleEdit();
+    }
+  };
+
+  const handlePopupDeleteClick = () => {
+    setEditDialogOpen(false);
+    if (editDialogRow) {
+      handleDeleteDialogOpen(editDialogRow);
+    }
+  };
+
   const columns = [
     {
       field: "name",
       headerName: "Name",
       width: 220,
-      sortable: false,
-      disableColumnMenu: true,
+      renderCell: (params) => (
+        <ClickableText onClick={() => handleEditDialogOpen(params.row)}>
+          {params.value}
+        </ClickableText>
+      ),
     },
     {
       field: "branchCode",
       headerName: "Branch Code",
-      width: 120,
-      sortable: false,
-      disableColumnMenu: true,
+      width: 180,
     },
     {
       field: "address",
       headerName: "Address",
       width: 250,
-      sortable: false,
-      disableColumnMenu: true,
     },
     {
       field: "status",
       headerName: "Status",
       width: 100,
-      sortable: false,
-      disableColumnMenu: true,
       renderCell: (params) =>
         params.value
           ? params.value.charAt(0).toUpperCase() + params.value.slice(1)
           : "",
-    },
-    {
-      field: "actions",
-      headerName: "",
-      width: 80,
-      sortable: false,
-      disableColumnMenu: true,
-      renderCell: (params) => (
-        <Box>
-          <IconButton
-            size="small"
-            sx={{ mr: 1 }}
-            onClick={() => handleEditDialogOpen(params.row)}
-          >
-            <EditIcon
-              fontSize="small"
-              sx={{ color: theme.palette.blueText?.main }}
-            />
-          </IconButton>
-          <IconButton
-            size="small"
-            onClick={() => handleDeleteDialogOpen(params.row)}
-          >
-            <DeleteIcon fontSize="small" sx={{ color: "red" }} />
-          </IconButton>
-        </Box>
-      ),
     },
   ];
 
@@ -257,7 +243,7 @@ export default function Branches() {
         {loading ? (
           <Typography sx={{ mt: 4 }}>Loading branches...</Typography>
         ) : (
-          <DataGrid
+          <CustomDataGrid
             rows={
               search
                 ? branches.filter((row) =>
@@ -267,40 +253,33 @@ export default function Branches() {
             }
             columns={columns}
             getRowId={(row) => row.id}
-            density="compact"
-            initialState={{
-              pagination: {
-                paginationModel: {
-                  pageSize: 25,
-                },
-              },
-            }}
+            pageSize={25}
             pageSizeOptions={[25, 50, 100]}
-            disableRowSelectionOnClick
-            sx={{
-              "& .MuiDataGrid-cell": {
-                borderBottom: `1px solid ${
-                  theme.palette.primary?.gridBottomBorder || "#e0e0e0"
-                }`,
-              },
-            }}
+            loading={loading}
           />
         )}
       </Box>
-      <Dialog
+
+      <CustomPopUp
         open={editDialogOpen}
         onClose={handleEditDialogClose}
+        title={editDialogRow ? `${editDialogRow.name}` : "Branch Details"}
+        onEdit={handleEditClick}
+        onDelete={handlePopupDeleteClick}
         maxWidth="md"
         fullWidth
       >
         {editDialogRow && (
           <EditBranchesForm
+            ref={formRef}
             initialValues={editDialogRow}
             onClose={handleEditDialogClose}
             onEditSuccess={handleEditSuccess}
+            isEditMode={false}
           />
         )}
-      </Dialog>
+      </CustomPopUp>
+
       <Dialog
         open={deleteDialogOpen}
         onClose={handleDeleteDialogClose}

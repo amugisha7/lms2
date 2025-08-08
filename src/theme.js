@@ -77,6 +77,7 @@ export const tokens = (mode) => ({
         },
         blueText: {
           main: "#7CC4FE",
+          light: "#A3D8FF", // subtle lighter blue for hover
         },
       }
     : {
@@ -151,6 +152,7 @@ export const tokens = (mode) => ({
         },
         blueText: {
           main: "#014486",
+          light: "#1976d2", // subtle lighter blue for hover
         },
       }),
 });

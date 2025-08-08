@@ -33,20 +33,30 @@ export default function CustomPopUp({
           alignItems: "center",
           p: 2,
           borderBottom: "1px solid #e0e0e0",
+          position: "relative", // for absolute positioning of close button on mobile
+          flexWrap: { xs: "wrap", sm: "nowrap" }, // allow wrapping on mobile
         }}
       >
         <Typography
           variant="h5"
-          sx={{ fontWeight: 600, textTransform: "none" }}
+          sx={{
+            fontWeight: 600,
+            textTransform: "none",
+            width: { xs: "90%", sm: "auto" }, // 90% width on mobile
+            pr: { xs: 2, sm: 0 },
+          }}
         >
           {title}
         </Typography>
-        <Box sx={{ display: "flex", alignItems: "center" }}>
-          {showEdit && onEdit && (
-            <ClickableText onClick={onEdit} sx={{ mr: 2, fontSize: "0.9rem" }}>
-              Edit
-            </ClickableText>
-          )}
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            order: { xs: 1, sm: 0 }, // move to next line on mobile
+            width: { xs: "100%", sm: "auto" }, // full width on mobile
+            mt: { xs: 1, sm: 0 }, // margin top on mobile
+          }}
+        >
           {showDelete && onDelete && (
             <ClickableText
               onClick={onDelete}
@@ -62,7 +72,21 @@ export default function CustomPopUp({
               Delete
             </ClickableText>
           )}
-          <IconButton onClick={onClose} size="small">
+          {showEdit && onEdit && (
+            <ClickableText onClick={onEdit} sx={{ mr: 2, fontSize: "0.9rem" }}>
+              Edit
+            </ClickableText>
+          )}
+          <IconButton
+            onClick={onClose}
+            size="small"
+            sx={{
+              position: { xs: "absolute", sm: "static" },
+              top: { xs: 16, sm: "auto" },
+              right: { xs: 16, sm: "auto" },
+              ml: { xs: 0, sm: "60px" }, // add left margin except on mobile
+            }}
+          >
             <CloseIcon />
           </IconButton>
         </Box>

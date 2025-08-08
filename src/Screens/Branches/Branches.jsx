@@ -30,6 +30,7 @@ export default function Branches() {
   const [deleteDialogRow, setDeleteDialogRow] = React.useState(null);
   const [deleteLoading, setDeleteLoading] = React.useState(false);
   const [deleteError, setDeleteError] = React.useState("");
+  const [editMode, setEditMode] = React.useState(false);
   const formRef = React.useRef();
   const theme = useTheme();
   const { userDetails } = React.useContext(UserContext);
@@ -140,6 +141,7 @@ export default function Branches() {
   const handleEditClick = () => {
     if (formRef.current) {
       formRef.current.toggleEdit();
+      setEditMode(formRef.current.getEditMode());
     }
   };
 
@@ -268,6 +270,7 @@ export default function Branches() {
         onDelete={handlePopupDeleteClick}
         maxWidth="md"
         fullWidth
+        editMode={editMode}
       >
         {editDialogRow && (
           <EditBranchesForm

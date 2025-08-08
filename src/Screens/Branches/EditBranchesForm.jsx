@@ -3,14 +3,15 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import FormLabel from "@mui/material/FormLabel";
 import Grid from "@mui/material/Grid";
-import OutlinedInput from "@mui/material/OutlinedInput";
 import { styled } from "@mui/material/styles";
-import Button from "@mui/material/Button";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { generateClient } from "aws-amplify/api";
 import { UserContext } from "../../App";
 import FormControlLabel from "@mui/material/FormControlLabel";
+import { useTheme } from "@mui/material/styles";
+import CustomTextInput from "../../ComponentAssets/CustomTextInput";
+import CustomEditFormButtons from "../../ComponentAssets/CustomEditFormButtons";
 
 const FormGrid = styled(Grid)(() => ({
   display: "flex",
@@ -32,6 +33,7 @@ const EditBranchesForm = React.forwardRef(
     const [submitError, setSubmitError] = React.useState("");
     const [submitSuccess, setSubmitSuccess] = React.useState("");
     const [editMode, setEditMode] = React.useState(isEditMode);
+    const theme = useTheme();
 
     // Expose methods to parent component
     React.useImperativeHandle(ref, () => ({
@@ -116,67 +118,102 @@ const EditBranchesForm = React.forwardRef(
           p: 3,
           display: "flex",
           flexDirection: "column",
+          border: editMode
+            ? `2px solid ${
+                theme.palette.mode === "dark" ? "#76B1D3" : "#1976d2"
+              }`
+            : `1px solid ${
+                theme.palette.mode === "dark" ? "#525252" : "#e0e0e0"
+              }`,
+          borderRadius: 1,
+          backgroundColor: editMode
+            ? theme.palette.mode === "dark"
+              ? "rgba(118, 177, 211, 0.08)"
+              : "#f8f9ff"
+            : "transparent",
+          transition: "all 0.3s ease",
+          position: "relative",
+          "&::before": editMode
+            ? {
+                content: '""',
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                height: "4px",
+                background:
+                  theme.palette.mode === "dark"
+                    ? "linear-gradient(90deg, #76B1D3, #4d96c7)"
+                    : "linear-gradient(90deg, #1976d2, #42a5f5)",
+                borderRadius: "4px 4px 0 0",
+              }
+            : {},
         }}
       >
+        {editMode && (
+          <CustomEditFormButtons
+            formik={formik}
+            setEditMode={setEditMode}
+            setSubmitError={setSubmitError}
+            setSubmitSuccess={setSubmitSuccess}
+          />
+        )}
+        {submitError && (
+          <Typography color="error" sx={{ mt: 2 }}>
+            {submitError}
+          </Typography>
+        )}
+        {submitSuccess && (
+          <Typography color="primary" sx={{ mt: 2 }}>
+            {submitSuccess}
+          </Typography>
+        )}
         <Grid container spacing={3}>
           <FormGrid size={{ xs: 12, md: 6 }}>
             <FormLabel htmlFor="name">Branch Name*</FormLabel>
-            <OutlinedInput
+            <CustomTextInput
               id="name"
               name="name"
               placeholder="Branch Name"
-              size="small"
               value={formik.values.name}
               onChange={formik.handleChange}
               error={formik.touched.name && Boolean(formik.errors.name)}
+              helperText={formik.errors.name}
+              touched={formik.touched.name}
               disabled={!editMode}
-              sx={{ maxWidth: 500, mb: 2 }}
             />
-            {formik.touched.name && formik.errors.name && (
-              <Typography color="error" variant="caption">
-                {formik.errors.name}
-              </Typography>
-            )}
           </FormGrid>
           <FormGrid size={{ xs: 12, md: 6 }}>
             <FormLabel htmlFor="branchCode">Branch Code</FormLabel>
-            <OutlinedInput
+            <CustomTextInput
               id="branchCode"
               name="branchCode"
               placeholder="Branch Code"
-              size="small"
               value={formik.values.branchCode}
               onChange={formik.handleChange}
               error={
                 formik.touched.branchCode && Boolean(formik.errors.branchCode)
               }
+              helperText={formik.errors.branchCode}
+              touched={formik.touched.branchCode}
               disabled={!editMode}
             />
-            {formik.touched.branchCode && formik.errors.branchCode && (
-              <Typography color="error" variant="caption">
-                {formik.errors.branchCode}
-              </Typography>
-            )}
           </FormGrid>
           <FormGrid size={{ xs: 12, md: 12 }}>
             <FormLabel htmlFor="address">Address</FormLabel>
-            <OutlinedInput
+            <CustomTextInput
               id="address"
               name="address"
               placeholder="Branch Address (optional)"
-              size="small"
-              multiline
-              rows={2}
               value={formik.values.address}
               onChange={formik.handleChange}
               error={formik.touched.address && Boolean(formik.errors.address)}
+              helperText={formik.errors.address}
+              touched={formik.touched.address}
               disabled={!editMode}
+              multiline
+              rows={2}
             />
-            {formik.touched.address && formik.errors.address && (
-              <Typography color="error" variant="caption">
-                {formik.errors.address}
-              </Typography>
-            )}
           </FormGrid>
           <FormGrid size={{ xs: 12, md: 12 }}>
             <FormLabel sx={{ fontWeight: 500, mb: 1 }}>Status</FormLabel>
@@ -204,28 +241,6 @@ const EditBranchesForm = React.forwardRef(
             </Box>
           </FormGrid>
         </Grid>
-        {editMode && (
-          <Box sx={{ mt: 4, display: "flex", justifyContent: "flex-end" }}>
-            <Button
-              type="submit"
-              variant="contained"
-              color="primary"
-              disabled={formik.isSubmitting || !formik.values.name}
-            >
-              {formik.isSubmitting ? "Saving..." : "Save Changes"}
-            </Button>
-          </Box>
-        )}
-        {submitError && (
-          <Typography color="error" sx={{ mt: 2 }}>
-            {submitError}
-          </Typography>
-        )}
-        {submitSuccess && (
-          <Typography color="primary" sx={{ mt: 2 }}>
-            {submitSuccess}
-          </Typography>
-        )}
       </Box>
     );
   }

@@ -19,6 +19,7 @@ import ClearIcon from "@mui/icons-material/Clear";
 import ClickableText from "../../ComponentAssets/ClickableText";
 import CustomDataGrid from "../../ComponentAssets/CustomDataGrid";
 import CustomPopUp from "../../ComponentAssets/CustomPopUp";
+import DeleteDialog from "../../ComponentAssets/DeleteDialog";
 
 export default function Branches() {
   const [branches, setBranches] = React.useState([]);
@@ -283,39 +284,14 @@ export default function Branches() {
         )}
       </CustomPopUp>
 
-      <Dialog
+      <DeleteDialog
         open={deleteDialogOpen}
         onClose={handleDeleteDialogClose}
-        maxWidth="xs"
-        fullWidth
-      >
-        <DialogContent>
-          <Typography variant="h6" sx={{ mb: 2 }}>
-            Confirm Delete
-          </Typography>
-          <Typography sx={{ mb: 2 }}>
-            Are you sure you want to delete <b>{deleteDialogRow?.name}</b>?
-          </Typography>
-          {deleteError && (
-            <Typography color="error" sx={{ mb: 1 }}>
-              {deleteError}
-            </Typography>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleDeleteDialogClose} disabled={deleteLoading}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleDeleteConfirm}
-            color="error"
-            variant="contained"
-            disabled={deleteLoading}
-          >
-            {deleteLoading ? "Deleting..." : "Delete"}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        onConfirm={handleDeleteConfirm}
+        loading={deleteLoading}
+        error={deleteError}
+        name={deleteDialogRow?.name}
+      />
     </Box>
   );
 }

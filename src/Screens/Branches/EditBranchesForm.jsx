@@ -118,36 +118,6 @@ const EditBranchesForm = React.forwardRef(
           p: 3,
           display: "flex",
           flexDirection: "column",
-          border: editMode
-            ? `2px solid ${
-                theme.palette.mode === "dark" ? "#76B1D3" : "#1976d2"
-              }`
-            : `1px solid ${
-                theme.palette.mode === "dark" ? "#525252" : "#e0e0e0"
-              }`,
-          borderRadius: 1,
-          backgroundColor: editMode
-            ? theme.palette.mode === "dark"
-              ? "rgba(118, 177, 211, 0.08)"
-              : "#f8f9ff"
-            : "transparent",
-          transition: "all 0.3s ease",
-          position: "relative",
-          "&::before": editMode
-            ? {
-                content: '""',
-                position: "absolute",
-                top: 0,
-                left: 0,
-                right: 0,
-                height: "4px",
-                background:
-                  theme.palette.mode === "dark"
-                    ? "linear-gradient(90deg, #76B1D3, #4d96c7)"
-                    : "linear-gradient(90deg, #1976d2, #42a5f5)",
-                borderRadius: "4px 4px 0 0",
-              }
-            : {},
         }}
       >
         {editMode && (

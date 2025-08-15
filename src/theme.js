@@ -570,7 +570,7 @@ export const themeSettings = (mode) => {
           styleOverrides: {
             root: {
               // backgroundColor: isDark ? 'blue' : 'red',
-              backgroundColor: isDark ? '#212121' : '#FFF5EE'
+              backgroundColor: isDark ? '#212121' : '#FFFfff'
             },
           },
         },

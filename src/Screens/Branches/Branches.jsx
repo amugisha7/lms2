@@ -3,19 +3,8 @@ import { generateClient } from "aws-amplify/api";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
-import TextField from "@mui/material/TextField";
-import { Link } from "react-router-dom";
-import { useTheme } from "@mui/material/styles";
 import { UserContext } from "../../App";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
-import IconButton from "@mui/material/IconButton";
-import Dialog from "@mui/material/Dialog";
 import EditBranchesForm from "./EditBranchesForm";
-import DialogActions from "@mui/material/DialogActions";
-import DialogContent from "@mui/material/DialogContent";
-import InputAdornment from "@mui/material/InputAdornment";
-import ClearIcon from "@mui/icons-material/Clear";
 import ClickableText from "../../ComponentAssets/ClickableText";
 import CustomDataGrid from "../../ComponentAssets/CustomDataGrid";
 import CustomPopUp from "../../ComponentAssets/CustomPopUp";
@@ -25,7 +14,7 @@ import CreateBranchesForm from "./CreateBranchesForm";
 export default function Branches() {
   const [branches, setBranches] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
-  const [search, setSearch] = React.useState("");
+  const [search] = React.useState("");
   const [editDialogOpen, setEditDialogOpen] = React.useState(false);
   const [editDialogRow, setEditDialogRow] = React.useState(null);
   const [createDialogOpen, setCreateDialogOpen] = React.useState(false);
@@ -35,7 +24,6 @@ export default function Branches() {
   const [deleteError, setDeleteError] = React.useState("");
   const [editMode, setEditMode] = React.useState(false);
   const formRef = React.useRef();
-  const theme = useTheme();
   const { userDetails } = React.useContext(UserContext);
 
   React.useEffect(() => {
@@ -215,46 +203,33 @@ export default function Branches() {
         mb: 6,
       }}
     >
-      <Typography
-        variant="h4"
-        sx={{ mb: 2, fontWeight: 600, my: 2, textTransform: "none" }}
+      <Box
+        sx={{
+          mb: 2,
+          display: "flex",
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
       >
-        Branches{" "}
-        <Typography variant="caption" sx={{ color: "#90a4ae" }}>
-          Help
-        </Typography>
-      </Typography>
-      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
-        <Button
-          variant="contained"
-          color="success"
-          sx={{ mb: 2 }}
-          onClick={handleCreateDialogOpen}
+        <Typography
+          variant="h4"
+          sx={{ mb: 2, fontWeight: 600, my: 2, textTransform: "none" }}
         >
-          Add Branch
-        </Button>
-        <TextField
-          label="Search"
-          variant="outlined"
-          size="small"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          sx={{ width: 220 }}
-          InputProps={{
-            endAdornment: search && (
-              <InputAdornment position="end">
-                <IconButton
-                  size="small"
-                  aria-label="clear search"
-                  onClick={() => setSearch("")}
-                  edge="end"
-                >
-                  <ClearIcon size="small" />
-                </IconButton>
-              </InputAdornment>
-            ),
-          }}
-        />
+          Branches{" "}
+          <Typography variant="caption" sx={{ color: "#90a4ae" }}>
+            Help
+          </Typography>
+        </Typography>
+        <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+          <Button
+            variant="contained"
+            color="success"
+            onClick={handleCreateDialogOpen}
+          >
+            Add Branch
+          </Button>
+        </Box>
       </Box>
       <Box sx={{ width: "100%" }}>
         {loading ? (

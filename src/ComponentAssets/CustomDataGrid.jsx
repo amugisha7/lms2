@@ -1,15 +1,32 @@
 import React from "react";
-import { DataGrid } from "@mui/x-data-grid";
+import { DataGrid, ExportCsv, Toolbar, ToolbarButton } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
 import Box from "@mui/material/Box";
+import { Button } from "@mui/material";
+import ClickableText from "./ClickableText";
+import FileDownloadIcon from "@mui/icons-material/FileDownload";
+import Tooltip from "@mui/material/Tooltip";
+
+function CustomToolbar() {
+  return (
+    <Toolbar>
+      <Tooltip title="Download as CSV">
+        <ExportCsv render={<ToolbarButton />}>
+          <FileDownloadIcon fontSize="small" />
+        </ExportCsv>
+      </Tooltip>
+    </Toolbar>
+  );
+}
 
 const CustomDataGrid = ({
   rows,
   columns,
   loading = false,
-  height = 520,
-  pageSize = 25,
-  pageSizeOptions = [25, 50, 100],
+  minHeight = 400,
+  maxHeight = 700,
+  pageSize = 50,
+  pageSizeOptions = [50, 100],
   allowSorting = true,
   ...otherProps
 }) => {
@@ -17,11 +34,15 @@ const CustomDataGrid = ({
   const isDark = theme.palette.mode === "dark";
 
   const customStyles = {
-    height,
+    // height,
     width: "100%",
-    border: `1px solid ${isDark ? "#404040" : "#e0e0e0"}`,
-    borderRadius: "8px",
+    // border: `1px solid ${isDark ? "#404040" : "#e0e0e0"}`, // Remove top border
+    // borderLeft: `1px solid ${isDark ? "#404040" : "#e0e0e0"}`,
+    // borderRight: `1px solid ${isDark ? "#404040" : "#e0e0e0"}`,
+    // borderBottom: `1px solid ${isDark ? "#404040" : "#e0e0e0"}`,
+    // borderRadius: "8px",
     overflow: "hidden",
+    marginBottom: 8,
     fontFamily: theme.typography.fontFamily,
 
     // Header styling
@@ -165,6 +186,8 @@ const CustomDataGrid = ({
             borderRadius: 0,
           },
         }}
+        slots={{ toolbar: CustomToolbar }}
+        showToolbar
       />
     </Box>
   );

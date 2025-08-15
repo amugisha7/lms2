@@ -20,6 +20,7 @@ import ClickableText from "../../ComponentAssets/ClickableText";
 import CustomDataGrid from "../../ComponentAssets/CustomDataGrid";
 import CustomPopUp from "../../ComponentAssets/CustomPopUp";
 import DeleteDialog from "../../ComponentAssets/DeleteDialog";
+import CreateBranchesForm from "./CreateBranchesForm";
 
 export default function Branches() {
   const [branches, setBranches] = React.useState([]);
@@ -27,6 +28,7 @@ export default function Branches() {
   const [search, setSearch] = React.useState("");
   const [editDialogOpen, setEditDialogOpen] = React.useState(false);
   const [editDialogRow, setEditDialogRow] = React.useState(null);
+  const [createDialogOpen, setCreateDialogOpen] = React.useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
   const [deleteDialogRow, setDeleteDialogRow] = React.useState(null);
   const [deleteLoading, setDeleteLoading] = React.useState(false);
@@ -153,6 +155,19 @@ export default function Branches() {
     }
   };
 
+  const handleCreateDialogOpen = () => {
+    setCreateDialogOpen(true);
+  };
+
+  const handleCreateDialogClose = () => {
+    setCreateDialogOpen(false);
+  };
+
+  const handleCreateSuccess = (newBranch) => {
+    setBranches((prev) => [...prev, newBranch]);
+    handleCreateDialogClose();
+  };
+
   const columns = [
     {
       field: "name",
@@ -214,8 +229,7 @@ export default function Branches() {
           variant="contained"
           color="success"
           sx={{ mb: 2 }}
-          component={Link}
-          to="/admin/add-branch"
+          onClick={handleCreateDialogOpen}
         >
           Add Branch
         </Button>
@@ -242,7 +256,7 @@ export default function Branches() {
           }}
         />
       </Box>
-      <Box sx={{ height: 520, width: "100%" }}>
+      <Box sx={{ width: "100%" }}>
         {loading ? (
           <Typography sx={{ mt: 4 }}>Loading branches...</Typography>
         ) : (
@@ -262,6 +276,21 @@ export default function Branches() {
           />
         )}
       </Box>
+
+      <CustomPopUp
+        open={createDialogOpen}
+        onClose={handleCreateDialogClose}
+        title="Create Branch"
+        showEdit={false}
+        showDelete={false}
+        maxWidth="md"
+        fullWidth
+      >
+        <CreateBranchesForm
+          onClose={handleCreateDialogClose}
+          onCreateSuccess={handleCreateSuccess}
+        />
+      </CustomPopUp>
 
       <CustomPopUp
         open={editDialogOpen}

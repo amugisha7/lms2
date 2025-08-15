@@ -56,10 +56,15 @@ const EditBranchesForm = React.forwardRef(
       validationSchema: Yup.object().shape({
         name: Yup.string()
           .required("Branch Name is required")
-          .max(100, "Name too long"),
-        branchCode: Yup.string().max(20, "Code too long"),
-        address: Yup.string().max(200, "Address too long"),
-        status: Yup.string().required("Status is required"),
+          .max(100, "Name too long")
+          .matches(/^[^,"'!{}]+$/, "Name contains invalid characters"),
+        branchCode: Yup.string()
+          .max(20, "Code too long")
+          .matches(/^[^,"'!{}]+$/, "Code contains invalid characters"),
+        address: Yup.string()
+          .max(200, "Address too long")
+          .matches(/^[^,"'!{}]+$/, "Address contains invalid characters"),
+        status: Yup.string(),
       }),
       onSubmit: async (values, { setSubmitting }) => {
         setSubmitError("");

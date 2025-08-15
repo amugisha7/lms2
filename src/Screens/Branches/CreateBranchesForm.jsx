@@ -3,26 +3,25 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import FormLabel from "@mui/material/FormLabel";
 import Grid from "@mui/material/Grid";
-import OutlinedInput from "@mui/material/OutlinedInput";
 import { styled } from "@mui/material/styles";
-import Button from "@mui/material/Button";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { generateClient } from "aws-amplify/api";
 import { UserContext } from "../../App";
-import { useNavigate } from "react-router-dom";
+import CustomTextInput from "../../ComponentAssets/CustomTextInput";
+import CreateFormButtons from "../../ComponentAssets/CreateFormButtons";
 
 const FormGrid = styled(Grid)(() => ({
   display: "flex",
   flexDirection: "column",
 }));
 
-export default function CreateBranchesForm() {
+export default function CreateBranchesForm({ onClose, onCreateSuccess }) {
   const client = generateClient();
   const { userDetails } = React.useContext(UserContext);
   const [submitError, setSubmitError] = React.useState("");
   const [submitSuccess, setSubmitSuccess] = React.useState("");
-  const navigate = useNavigate();
+  const [editMode, setEditMode] = React.useState(true); // Always in edit mode for create form
 
   const formik = useFormik({
     initialValues: {
@@ -74,15 +73,16 @@ export default function CreateBranchesForm() {
               branchCode: values.branchCode.trim(),
               address: values.address?.trim() || null,
               status: values.status,
-              branchInstitutionId: userDetails.institutionUsersId,
+              institutionBranchesId: userDetails.institutionUsersId,
             },
           },
         });
 
         setSubmitSuccess("Branch created!");
         resetForm();
-        navigate("/admin/branches");
+        onCreateSuccess(result.data.createBranch);
       } catch (err) {
+        console.log("err::: ", err);
         setSubmitError("Failed to create branch. Please try again.");
       } finally {
         setSubmitting(false);
@@ -95,35 +95,20 @@ export default function CreateBranchesForm() {
       component="form"
       onSubmit={formik.handleSubmit}
       sx={{
-        mx: { xs: 0, sm: "auto" },
-        mt: { xs: 0, sm: 0 },
-        p: { xs: 0, sm: 0 },
-        borderRadius: 1,
         display: "flex",
         flexDirection: "column",
-        maxWidth: { xs: "100%", md: 800 },
         width: "100%",
         flex: 1,
-        mb: 6,
       }}
     >
-      <Typography
-        variant="h4"
-        sx={{ mb: 2, fontWeight: 600, my: 2, textTransform: "none" }}
-      >
-        CREATE A BRANCH{" "}
-        <Typography variant="caption" sx={{ color: "#90a4ae" }}>
-          Help
-        </Typography>
-      </Typography>
-      <Typography variant="caption" sx={{ mb: 1 }}>
+      <Typography variant="caption" sx={{ mb: 2, display: "block" }}>
         You must provide a 'Branch Name'.
       </Typography>
 
       <Grid container spacing={3}>
         <FormGrid size={{ xs: 12, md: 6 }}>
           <FormLabel htmlFor="name">Branch Name*</FormLabel>
-          <OutlinedInput
+          <CustomTextInput
             id="name"
             name="name"
             placeholder="Branch Name"
@@ -131,16 +116,13 @@ export default function CreateBranchesForm() {
             value={formik.values.name}
             onChange={formik.handleChange}
             error={formik.touched.name && Boolean(formik.errors.name)}
+            helperText={formik.errors.name}
+            touched={formik.touched.name}
           />
-          {formik.touched.name && formik.errors.name && (
-            <Typography color="error" variant="caption">
-              {formik.errors.name}
-            </Typography>
-          )}
         </FormGrid>
         <FormGrid size={{ xs: 12, md: 6 }}>
           <FormLabel htmlFor="branchCode">Branch Code</FormLabel>
-          <OutlinedInput
+          <CustomTextInput
             id="branchCode"
             name="branchCode"
             placeholder="Branch Code (optional)"
@@ -150,16 +132,13 @@ export default function CreateBranchesForm() {
             error={
               formik.touched.branchCode && Boolean(formik.errors.branchCode)
             }
+            helperText={formik.errors.branchCode}
+            touched={formik.touched.branchCode}
           />
-          {formik.touched.branchCode && formik.errors.branchCode && (
-            <Typography color="error" variant="caption">
-              {formik.errors.branchCode}
-            </Typography>
-          )}
         </FormGrid>
         <FormGrid size={{ xs: 12, md: 12 }}>
           <FormLabel htmlFor="address">Address</FormLabel>
-          <OutlinedInput
+          <CustomTextInput
             id="address"
             name="address"
             placeholder="Branch Address (optional)"
@@ -169,41 +148,27 @@ export default function CreateBranchesForm() {
             value={formik.values.address}
             onChange={formik.handleChange}
             error={formik.touched.address && Boolean(formik.errors.address)}
+            helperText={formik.errors.address}
+            touched={formik.touched.address}
           />
-          {formik.touched.address && formik.errors.address && (
-            <Typography color="error" variant="caption">
-              {formik.errors.address}
-            </Typography>
-          )}
         </FormGrid>
       </Grid>
 
-      <Box
-        sx={{
-          mt: 4,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "flex-end",
-        }}
-      >
-        <Button
-          type="submit"
-          variant="contained"
-          color="secondary"
-          disabled={formik.isSubmitting || !formik.values.name}
-          sx={{ mb: 6 }}
-        >
-          {formik.isSubmitting ? "Saving..." : "Create Branch"}
-        </Button>
-      </Box>
+      <CreateFormButtons
+        formik={formik}
+        setEditMode={setEditMode}
+        setSubmitError={setSubmitError}
+        setSubmitSuccess={setSubmitSuccess}
+        onClose={onClose}
+      />
 
       {submitError && (
-        <Typography color="error" sx={{ mb: 1 }}>
+        <Typography color="error" sx={{ mt: 2 }}>
           {submitError}
         </Typography>
       )}
       {submitSuccess && (
-        <Typography color="primary" sx={{ mb: 1 }}>
+        <Typography color="primary" sx={{ mt: 2 }}>
           {submitSuccess}
         </Typography>
       )}

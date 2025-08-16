@@ -8,34 +8,8 @@ import CustomDataGrid from "../../ComponentAssets/CustomDataGrid";
 import CustomPopUp from "../../ComponentAssets/CustomPopUp";
 import DeleteDialog from "../../ComponentAssets/DeleteDialog";
 import { useTheme } from "@mui/material/styles";
-
-// Placeholder for CreateLoanProductForm
-function CreateLoanProductForm({ onClose, onCreateSuccess }) {
-  return (
-    <Box sx={{ p: 2 }}>
-      <Typography variant="body1">
-        Create Loan Product Form (placeholder)
-      </Typography>
-      <Button onClick={onClose} sx={{ mt: 2 }}>
-        Close
-      </Button>
-    </Box>
-  );
-}
-
-// Placeholder for EditLoanProductForm
-const EditLoanProductForm = React.forwardRef(
-  ({ initialValues, onClose, onEditSuccess, isEditMode }, ref) => (
-    <Box sx={{ p: 2 }}>
-      <Typography variant="body1">
-        Edit Loan Product Form (placeholder) for: {initialValues?.name}
-      </Typography>
-      <Button onClick={onClose} sx={{ mt: 2 }}>
-        Close
-      </Button>
-    </Box>
-  )
-);
+import ClickableText from "../../ComponentAssets/ClickableText";
+import EditLoanProductForm from "./EditLoanProductForm";
 
 export default function LoanProducts() {
   const [loanProducts, setLoanProducts] = React.useState([]);
@@ -49,6 +23,8 @@ export default function LoanProducts() {
   const [deleteLoading, setDeleteLoading] = React.useState(false);
   const [deleteError, setDeleteError] = React.useState("");
   const [editMode, setEditMode] = React.useState(false);
+  const [viewDialogOpen, setViewDialogOpen] = React.useState(false);
+  const [viewDialogRow, setViewDialogRow] = React.useState(null);
   const formRef = React.useRef();
   const { userDetails } = React.useContext(UserContext);
   const theme = useTheme();
@@ -111,9 +87,6 @@ export default function LoanProducts() {
                     loanFees {
                       items {
                         id
-                        loanFees {
-                          loanFeesName
-                        }
                       }
                     }
                   }
@@ -231,16 +204,51 @@ export default function LoanProducts() {
     handleCreateDialogClose();
   };
 
-  // Select 5 relevant fields for the datagrid
+  const handleViewDialogOpen = (row) => {
+    setViewDialogRow(row);
+    setViewDialogOpen(true);
+  };
+
+  const handleViewDialogClose = () => {
+    setViewDialogOpen(false);
+    setViewDialogRow(null);
+  };
+
+  // Updated columns to show only name, branches, and status
   const columns = [
-    { field: "name", headerName: "Name", width: 200 },
-    { field: "description", headerName: "Description", width: 250 },
-    { field: "principalAmountMin", headerName: "Min Principal", width: 120 },
-    { field: "principalAmountMax", headerName: "Max Principal", width: 120 },
     {
-      field: "interestRateDefault",
-      headerName: "Default Interest Rate",
-      width: 160,
+      field: "name",
+      headerName: "Name",
+      width: 250,
+      renderCell: (params) => (
+        <ClickableText onClick={() => handleViewDialogOpen(params.row)}>
+          {params.value}
+        </ClickableText>
+      ),
+    },
+    {
+      field: "branches",
+      headerName: "Branches",
+      width: 300,
+      renderCell: (params) => {
+        const branchNames =
+          params.row.branches?.items
+            ?.map((item) => item.branch?.name)
+            .filter(Boolean) || [];
+        return branchNames.length > 0
+          ? branchNames.join(", ")
+          : "No branches assigned";
+      },
+    },
+    {
+      field: "status",
+      headerName: "Status",
+      width: 120,
+      renderCell: (params) => {
+        // Status is "Active" if not set or if explicitly active
+        const status = params.row.status || "Active";
+        return status;
+      },
     },
   ];
 
@@ -325,10 +333,29 @@ export default function LoanProducts() {
         maxWidth="md"
         fullWidth
       >
-        <CreateLoanProductForm
+        <EditLoanProductForm
           onClose={handleCreateDialogClose}
           onCreateSuccess={handleCreateSuccess}
+          isViewMode={false}
         />
+      </CustomPopUp>
+
+      <CustomPopUp
+        open={viewDialogOpen}
+        onClose={handleViewDialogClose}
+        title={viewDialogRow ? `${viewDialogRow.name}` : "Loan Product Details"}
+        showEdit={false}
+        showDelete={false}
+        maxWidth="md"
+        fullWidth
+      >
+        {viewDialogRow && (
+          <EditLoanProductForm
+            initialValues={viewDialogRow}
+            onClose={handleViewDialogClose}
+            isViewMode={true}
+          />
+        )}
       </CustomPopUp>
 
       <CustomPopUp
@@ -347,7 +374,7 @@ export default function LoanProducts() {
             initialValues={editDialogRow}
             onClose={handleEditDialogClose}
             onEditSuccess={handleEditSuccess}
-            isEditMode={false}
+            isViewMode={false}
           />
         )}
       </CustomPopUp>

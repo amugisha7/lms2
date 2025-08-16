@@ -34,6 +34,7 @@ export declare type PenaltyUpdateFormInputValues = {
     penaltyDescription?: string;
     penaltyAttribute1?: string;
     penaltyAttribute2?: string;
+    status?: string;
 };
 export declare type PenaltyUpdateFormValidationValues = {
     amount?: ValidationFunction<number>;
@@ -48,6 +49,7 @@ export declare type PenaltyUpdateFormValidationValues = {
     penaltyDescription?: ValidationFunction<string>;
     penaltyAttribute1?: ValidationFunction<string>;
     penaltyAttribute2?: ValidationFunction<string>;
+    status?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type PenaltyUpdateFormOverridesProps = {
@@ -64,6 +66,7 @@ export declare type PenaltyUpdateFormOverridesProps = {
     penaltyDescription?: PrimitiveOverrideProps<TextFieldProps>;
     penaltyAttribute1?: PrimitiveOverrideProps<TextFieldProps>;
     penaltyAttribute2?: PrimitiveOverrideProps<TextFieldProps>;
+    status?: PrimitiveOverrideProps<TextFieldProps>;
 } & EscapeHatchProps;
 export declare type PenaltyUpdateFormProps = React.PropsWithChildren<{
     overrides?: PenaltyUpdateFormOverridesProps | undefined | null;

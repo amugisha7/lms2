@@ -70,9 +70,7 @@ const RepaymentSettings = forwardRef(function RepaymentSettings(
     <>
       <Grid size={{ xs: 12, md: 12 }}>
         <hr style={{ width: "100%", marginBottom: "20px" }} />
-        <Typography variant="caption" sx={{ mt: 2 }}>
-          REPAYMENT SETTINGS:
-        </Typography>
+        <p className="smallFormHeading">REPAYMENT SETTINGS:</p>
       </Grid>
       <Grid size={{ xs: 12, md: 6 }}>
         <FormLabel htmlFor="repaymentFrequency">Repayment Frequency</FormLabel>

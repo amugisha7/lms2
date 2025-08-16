@@ -14,7 +14,8 @@ export default function AdminPage() {
       links: [
         { label: "Add Loan Product", href: "/admin/add-loan-product" },
         { label: "Add Loan Fee", href: "/admin/add-loan-fee" },
-        { label: "Loan Fees List", href: "/admin/loan-fees" }, // Add this link
+        { label: "Loan Fees List", href: "/admin/loan-fees" },
+        { label: "View Loan Products", href: "/admin/loan-products" }, // Added link
       ],
     },
     {

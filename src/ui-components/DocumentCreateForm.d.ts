@@ -30,6 +30,7 @@ export declare type DocumentCreateFormInputValues = {
     s3Key?: string;
     fileName?: string;
     contentType?: string;
+    status?: string;
 };
 export declare type DocumentCreateFormValidationValues = {
     documentType?: ValidationFunction<string>;
@@ -40,6 +41,7 @@ export declare type DocumentCreateFormValidationValues = {
     s3Key?: ValidationFunction<string>;
     fileName?: ValidationFunction<string>;
     contentType?: ValidationFunction<string>;
+    status?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type DocumentCreateFormOverridesProps = {
@@ -52,6 +54,7 @@ export declare type DocumentCreateFormOverridesProps = {
     s3Key?: PrimitiveOverrideProps<TextFieldProps>;
     fileName?: PrimitiveOverrideProps<TextFieldProps>;
     contentType?: PrimitiveOverrideProps<TextFieldProps>;
+    status?: PrimitiveOverrideProps<TextFieldProps>;
 } & EscapeHatchProps;
 export declare type DocumentCreateFormProps = React.PropsWithChildren<{
     overrides?: DocumentCreateFormOverridesProps | undefined | null;

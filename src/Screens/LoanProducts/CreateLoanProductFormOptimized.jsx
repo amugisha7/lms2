@@ -250,7 +250,8 @@ export default function CreateLoanProductFormOptimized(props) {
     interestRateDefault: values.defaultInterest
       ? Number(values.defaultInterest)
       : null,
-    interestCalculationMethod: values.interestMethod || null,
+    //modify after appsync
+    // interestCalculationMethod: values.interestMethod || null,
     interestType: values.interestType || null,
     interestPeriod: values.interestPeriod || null,
     termDurationMin: values.minDuration ? Number(values.minDuration) : null,
@@ -434,9 +435,9 @@ export default function CreateLoanProductFormOptimized(props) {
       >
         Create a New Loan Product
       </Typography>
-      <Typography variant="caption" sx={{ my: 2 }}>
+      <p className="helperText">
         All fields are optional but you must provide a Loan Product Name.
-      </Typography>
+      </p>
       <Grid container spacing={3}>
         <FormGrid size={{ xs: 12, md: 6 }}>
           <FormLabel htmlFor="name">Loan Product Name*</FormLabel>

@@ -31,6 +31,7 @@ export default function CreditScoreUpdateForm(props) {
     scoreDate: "",
     scoreSource: "",
     scoreStatus: "",
+    status: "",
   };
   const [name, setName] = React.useState(initialValues.name);
   const [description, setDescription] = React.useState(
@@ -44,6 +45,7 @@ export default function CreditScoreUpdateForm(props) {
   const [scoreStatus, setScoreStatus] = React.useState(
     initialValues.scoreStatus
   );
+  const [status, setStatus] = React.useState(initialValues.status);
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     const cleanValues = creditScoreRecord
@@ -55,6 +57,7 @@ export default function CreditScoreUpdateForm(props) {
     setScoreDate(cleanValues.scoreDate);
     setScoreSource(cleanValues.scoreSource);
     setScoreStatus(cleanValues.scoreStatus);
+    setStatus(cleanValues.status);
     setErrors({});
   };
   const [creditScoreRecord, setCreditScoreRecord] =
@@ -81,6 +84,7 @@ export default function CreditScoreUpdateForm(props) {
     scoreDate: [],
     scoreSource: [],
     scoreStatus: [],
+    status: [],
   };
   const runValidationTasks = async (
     fieldName,
@@ -114,6 +118,7 @@ export default function CreditScoreUpdateForm(props) {
           scoreDate: scoreDate ?? null,
           scoreSource: scoreSource ?? null,
           scoreStatus: scoreStatus ?? null,
+          status: status ?? null,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -180,6 +185,7 @@ export default function CreditScoreUpdateForm(props) {
               scoreDate,
               scoreSource,
               scoreStatus,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.name ?? value;
@@ -209,6 +215,7 @@ export default function CreditScoreUpdateForm(props) {
               scoreDate,
               scoreSource,
               scoreStatus,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.description ?? value;
@@ -242,6 +249,7 @@ export default function CreditScoreUpdateForm(props) {
               scoreDate,
               scoreSource,
               scoreStatus,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.score ?? value;
@@ -272,6 +280,7 @@ export default function CreditScoreUpdateForm(props) {
               scoreDate: value,
               scoreSource,
               scoreStatus,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.scoreDate ?? value;
@@ -301,6 +310,7 @@ export default function CreditScoreUpdateForm(props) {
               scoreDate,
               scoreSource: value,
               scoreStatus,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.scoreSource ?? value;
@@ -330,6 +340,7 @@ export default function CreditScoreUpdateForm(props) {
               scoreDate,
               scoreSource,
               scoreStatus: value,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.scoreStatus ?? value;
@@ -343,6 +354,36 @@ export default function CreditScoreUpdateForm(props) {
         errorMessage={errors.scoreStatus?.errorMessage}
         hasError={errors.scoreStatus?.hasError}
         {...getOverrideProps(overrides, "scoreStatus")}
+      ></TextField>
+      <TextField
+        label="Status"
+        isRequired={false}
+        isReadOnly={false}
+        value={status}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              name,
+              description,
+              score,
+              scoreDate,
+              scoreSource,
+              scoreStatus,
+              status: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.status ?? value;
+          }
+          if (errors.status?.hasError) {
+            runValidationTasks("status", value);
+          }
+          setStatus(value);
+        }}
+        onBlur={() => runValidationTasks("status", status)}
+        errorMessage={errors.status?.errorMessage}
+        hasError={errors.status?.hasError}
+        {...getOverrideProps(overrides, "status")}
       ></TextField>
       <Flex
         justifyContent="space-between"

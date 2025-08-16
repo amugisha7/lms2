@@ -4,16 +4,41 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import { UserContext } from "../../App";
-import EditBranchesForm from "./EditBranchesForm";
-import ClickableText from "../../ComponentAssets/ClickableText";
 import CustomDataGrid from "../../ComponentAssets/CustomDataGrid";
 import CustomPopUp from "../../ComponentAssets/CustomPopUp";
 import DeleteDialog from "../../ComponentAssets/DeleteDialog";
-import CreateBranchesForm from "./CreateBranchesForm";
 import { useTheme } from "@mui/material/styles";
 
-export default function Branches() {
-  const [branches, setBranches] = React.useState([]);
+// Placeholder for CreateLoanProductForm
+function CreateLoanProductForm({ onClose, onCreateSuccess }) {
+  return (
+    <Box sx={{ p: 2 }}>
+      <Typography variant="body1">
+        Create Loan Product Form (placeholder)
+      </Typography>
+      <Button onClick={onClose} sx={{ mt: 2 }}>
+        Close
+      </Button>
+    </Box>
+  );
+}
+
+// Placeholder for EditLoanProductForm
+const EditLoanProductForm = React.forwardRef(
+  ({ initialValues, onClose, onEditSuccess, isEditMode }, ref) => (
+    <Box sx={{ p: 2 }}>
+      <Typography variant="body1">
+        Edit Loan Product Form (placeholder) for: {initialValues?.name}
+      </Typography>
+      <Button onClick={onClose} sx={{ mt: 2 }}>
+        Close
+      </Button>
+    </Box>
+  )
+);
+
+export default function LoanProducts() {
+  const [loanProducts, setLoanProducts] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
   const [search] = React.useState("");
   const [editDialogOpen, setEditDialogOpen] = React.useState(false);
@@ -29,46 +54,93 @@ export default function Branches() {
   const theme = useTheme();
 
   React.useEffect(() => {
-    const fetchBranches = async () => {
+    const fetchLoanProducts = async () => {
       setLoading(true);
       try {
         const client = generateClient();
         if (!userDetails?.institutionUsersId) {
-          setBranches([]);
+          setLoanProducts([]);
           setLoading(false);
           return;
         }
-        const result = await client.graphql({
-          query: `
-            query ListBranches($institutionId: ID!) {
-              listBranches(
-                filter: { institutionBranchesId: { eq: $institutionId } }
-                limit: 100
-              ) {
-                items {
-                  id
-                  name
-                  branchCode
-                  address
-                  status
+
+        let allLoanProducts = [];
+        let nextToken = null;
+
+        do {
+          const result = await client.graphql({
+            query: `
+              query ListLoanProducts($institutionId: ID!, $nextToken: String) {
+                listLoanProducts(
+                  filter: { institutionLoanProductsId: { eq: $institutionId } }
+                  limit: 100
+                  nextToken: $nextToken
+                ) {
+                  nextToken
+                  items {
+                    calculateInterestOn
+                    durationPeriod
+                    extendLoanAfterMaturity
+                    id
+                    interestCalculationMethod
+                    interestPeriod
+                    interestRateDefault
+                    interestRateMax
+                    interestRateMin
+                    interestType
+                    interestTypeMaturity
+                    loanInterestRateAfterMaturity
+                    name
+                    principalAmountDefault
+                    principalAmountMax
+                    principalAmountMin
+                    recurringPeriodAfterMaturityUnit
+                    repaymentFrequency
+                    repaymentOrder
+                    termDurationDefault
+                    termDurationMax
+                    termDurationMin
+                    branches {
+                      items {
+                        branchId
+                        branch {
+                          name
+                        }
+                      }
+                    }
+                    loanFees {
+                      items {
+                        id
+                        loanFees {
+                          loanFeesName
+                        }
+                      }
+                    }
+                  }
                 }
               }
-            }
-          `,
-          variables: {
-            institutionId: userDetails.institutionUsersId,
-          },
-        });
-        setBranches(result.data.listBranches.items || []);
+            `,
+            variables: {
+              institutionId: userDetails.institutionUsersId,
+              nextToken: nextToken,
+            },
+          });
+
+          const items = result.data.listLoanProducts.items || [];
+          allLoanProducts = [...allLoanProducts, ...items];
+          nextToken = result.data.listLoanProducts.nextToken;
+        } while (nextToken);
+
+        setLoanProducts(allLoanProducts);
       } catch (err) {
         console.log("err::: ", err);
-        setBranches([]);
+        setLoanProducts([]);
       } finally {
         setLoading(false);
       }
     };
     if (userDetails?.institutionUsersId) {
-      fetchBranches();
+      fetchLoanProducts();
     }
   }, [userDetails?.institutionUsersId]);
 
@@ -83,7 +155,7 @@ export default function Branches() {
   };
 
   const handleEditSuccess = (updatedRow) => {
-    setBranches((prev) =>
+    setLoanProducts((prev) =>
       prev.map((row) =>
         row.id === updatedRow.id ? { ...row, ...updatedRow } : row
       )
@@ -108,10 +180,11 @@ export default function Branches() {
     setDeleteError("");
     try {
       const client = generateClient();
+      // Placeholder mutation for deleting a loan product
       await client.graphql({
         query: `
-          mutation DeleteBranch($input: DeleteBranchInput!) {
-            deleteBranch(input: $input) {
+          mutation DeleteLoanProduct($input: DeleteLoanProductInput!) {
+            deleteLoanProduct(input: $input) {
               id
             }
           }
@@ -120,7 +193,7 @@ export default function Branches() {
           input: { id: deleteDialogRow.id },
         },
       });
-      setBranches((prev) =>
+      setLoanProducts((prev) =>
         prev.filter((row) => row.id !== deleteDialogRow.id)
       );
       handleDeleteDialogClose();
@@ -132,7 +205,7 @@ export default function Branches() {
   };
 
   const handleEditClick = () => {
-    if (formRef.current) {
+    if (formRef.current && formRef.current.toggleEdit) {
       formRef.current.toggleEdit();
       setEditMode(formRef.current.getEditMode());
     }
@@ -153,40 +226,21 @@ export default function Branches() {
     setCreateDialogOpen(false);
   };
 
-  const handleCreateSuccess = (newBranch) => {
-    setBranches((prev) => [...prev, newBranch]);
+  const handleCreateSuccess = (newLoanProduct) => {
+    setLoanProducts((prev) => [...prev, newLoanProduct]);
     handleCreateDialogClose();
   };
 
+  // Select 5 relevant fields for the datagrid
   const columns = [
+    { field: "name", headerName: "Name", width: 200 },
+    { field: "description", headerName: "Description", width: 250 },
+    { field: "principalAmountMin", headerName: "Min Principal", width: 120 },
+    { field: "principalAmountMax", headerName: "Max Principal", width: 120 },
     {
-      field: "name",
-      headerName: "Name",
-      width: 220,
-      renderCell: (params) => (
-        <ClickableText onClick={() => handleEditDialogOpen(params.row)}>
-          {params.value}
-        </ClickableText>
-      ),
-    },
-    {
-      field: "branchCode",
-      headerName: "Branch Code",
-      width: 180,
-    },
-    {
-      field: "address",
-      headerName: "Address",
-      width: 250,
-    },
-    {
-      field: "status",
-      headerName: "Status",
-      width: 100,
-      renderCell: (params) =>
-        params.value
-          ? params.value.charAt(0).toUpperCase() + params.value.slice(1)
-          : "",
+      field: "interestRateDefault",
+      headerName: "Default Interest Rate",
+      width: 160,
     },
   ];
 
@@ -218,7 +272,7 @@ export default function Branches() {
           variant="h4"
           sx={{ mb: 2, fontWeight: 600, my: 2, textTransform: "none" }}
         >
-          Branches{" "}
+          Loan Products{" "}
           <Typography variant="caption" sx={{ color: "#90a4ae" }}>
             Help
           </Typography>
@@ -229,29 +283,29 @@ export default function Branches() {
             color="success"
             onClick={handleCreateDialogOpen}
           >
-            Add Branch
+            Add Loan Product
           </Button>
         </Box>
       </Box>
       <Box sx={{ width: "100%" }}>
-        {/* Show info text if no branches */}
-        {!loading && branches.length === 0 && (
+        {/* Show info text if no loan products */}
+        {!loading && loanProducts.length === 0 && (
           <Typography
             sx={{ mb: 2, color: theme.palette.blueText?.main || "#1976d2" }}
           >
-            No branches found. Please create a branch to get started.
+            No loan products found. Please create a loan product to get started.
           </Typography>
         )}
         {loading ? (
-          <Typography sx={{ mt: 4 }}>Loading branches...</Typography>
+          <Typography sx={{ mt: 4 }}>Loading loan products...</Typography>
         ) : (
           <CustomDataGrid
             rows={
               search
-                ? branches.filter((row) =>
+                ? loanProducts.filter((row) =>
                     row.name?.toLowerCase().includes(search.toLowerCase())
                   )
-                : branches
+                : loanProducts
             }
             columns={columns}
             getRowId={(row) => row.id}
@@ -265,13 +319,13 @@ export default function Branches() {
       <CustomPopUp
         open={createDialogOpen}
         onClose={handleCreateDialogClose}
-        title="Create Branch"
+        title="Create Loan Product"
         showEdit={false}
         showDelete={false}
         maxWidth="md"
         fullWidth
       >
-        <CreateBranchesForm
+        <CreateLoanProductForm
           onClose={handleCreateDialogClose}
           onCreateSuccess={handleCreateSuccess}
         />
@@ -280,7 +334,7 @@ export default function Branches() {
       <CustomPopUp
         open={editDialogOpen}
         onClose={handleEditDialogClose}
-        title={editDialogRow ? `${editDialogRow.name}` : "Branch Details"}
+        title={editDialogRow ? `${editDialogRow.name}` : "Loan Product Details"}
         onEdit={handleEditClick}
         onDelete={handlePopupDeleteClick}
         maxWidth="md"
@@ -288,7 +342,7 @@ export default function Branches() {
         editMode={editMode}
       >
         {editDialogRow && (
-          <EditBranchesForm
+          <EditLoanProductForm
             ref={formRef}
             initialValues={editDialogRow}
             onClose={handleEditDialogClose}

@@ -44,6 +44,7 @@ export declare type InstitutionUpdateFormInputValues = {
     customWorkflowsEnabled?: boolean;
     advancedReportingEnabled?: boolean;
     apiIntegrationSettings?: string;
+    status?: string;
 };
 export declare type InstitutionUpdateFormValidationValues = {
     name?: ValidationFunction<string>;
@@ -68,6 +69,7 @@ export declare type InstitutionUpdateFormValidationValues = {
     customWorkflowsEnabled?: ValidationFunction<boolean>;
     advancedReportingEnabled?: ValidationFunction<boolean>;
     apiIntegrationSettings?: ValidationFunction<string>;
+    status?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type InstitutionUpdateFormOverridesProps = {
@@ -94,6 +96,7 @@ export declare type InstitutionUpdateFormOverridesProps = {
     customWorkflowsEnabled?: PrimitiveOverrideProps<SwitchFieldProps>;
     advancedReportingEnabled?: PrimitiveOverrideProps<SwitchFieldProps>;
     apiIntegrationSettings?: PrimitiveOverrideProps<TextAreaFieldProps>;
+    status?: PrimitiveOverrideProps<TextFieldProps>;
 } & EscapeHatchProps;
 export declare type InstitutionUpdateFormProps = React.PropsWithChildren<{
     overrides?: InstitutionUpdateFormOverridesProps | undefined | null;

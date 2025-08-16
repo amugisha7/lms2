@@ -43,6 +43,7 @@ export default function CollateralUpdateForm(props) {
     insuranceCompany: "",
     storedAt: "",
     customFieldsData: "",
+    status: "",
   };
   const [name, setName] = React.useState(initialValues.name);
   const [type, setType] = React.useState(initialValues.type);
@@ -70,6 +71,7 @@ export default function CollateralUpdateForm(props) {
   const [customFieldsData, setCustomFieldsData] = React.useState(
     initialValues.customFieldsData
   );
+  const [status, setStatus] = React.useState(initialValues.status);
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     const cleanValues = collateralRecord
@@ -92,6 +94,7 @@ export default function CollateralUpdateForm(props) {
         ? cleanValues.customFieldsData
         : JSON.stringify(cleanValues.customFieldsData)
     );
+    setStatus(cleanValues.status);
     setErrors({});
   };
   const [collateralRecord, setCollateralRecord] =
@@ -124,6 +127,7 @@ export default function CollateralUpdateForm(props) {
     insuranceCompany: [],
     storedAt: [],
     customFieldsData: [{ type: "JSON" }],
+    status: [],
   };
   const runValidationTasks = async (
     fieldName,
@@ -163,6 +167,7 @@ export default function CollateralUpdateForm(props) {
           insuranceCompany: insuranceCompany ?? null,
           storedAt: storedAt ?? null,
           customFieldsData: customFieldsData ?? null,
+          status: status ?? null,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -235,6 +240,7 @@ export default function CollateralUpdateForm(props) {
               insuranceCompany,
               storedAt,
               customFieldsData,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.name ?? value;
@@ -270,6 +276,7 @@ export default function CollateralUpdateForm(props) {
               insuranceCompany,
               storedAt,
               customFieldsData,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.type ?? value;
@@ -305,6 +312,7 @@ export default function CollateralUpdateForm(props) {
               insuranceCompany,
               storedAt,
               customFieldsData,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.description ?? value;
@@ -340,6 +348,7 @@ export default function CollateralUpdateForm(props) {
               insuranceCompany,
               storedAt,
               customFieldsData,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.location ?? value;
@@ -379,6 +388,7 @@ export default function CollateralUpdateForm(props) {
               insuranceCompany,
               storedAt,
               customFieldsData,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.value ?? value;
@@ -414,6 +424,7 @@ export default function CollateralUpdateForm(props) {
               insuranceCompany,
               storedAt,
               customFieldsData,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.serialNumber ?? value;
@@ -449,6 +460,7 @@ export default function CollateralUpdateForm(props) {
               insuranceCompany,
               storedAt,
               customFieldsData,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.registrationNumber ?? value;
@@ -486,6 +498,7 @@ export default function CollateralUpdateForm(props) {
               insuranceCompany,
               storedAt,
               customFieldsData,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.insuranceDetails ?? value;
@@ -522,6 +535,7 @@ export default function CollateralUpdateForm(props) {
               insuranceCompany,
               storedAt,
               customFieldsData,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.insuranceExpiryDate ?? value;
@@ -559,6 +573,7 @@ export default function CollateralUpdateForm(props) {
               insuranceCompany: value,
               storedAt,
               customFieldsData,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.insuranceCompany ?? value;
@@ -594,6 +609,7 @@ export default function CollateralUpdateForm(props) {
               insuranceCompany,
               storedAt: value,
               customFieldsData,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.storedAt ?? value;
@@ -629,6 +645,7 @@ export default function CollateralUpdateForm(props) {
               insuranceCompany,
               storedAt,
               customFieldsData: value,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.customFieldsData ?? value;
@@ -643,6 +660,42 @@ export default function CollateralUpdateForm(props) {
         hasError={errors.customFieldsData?.hasError}
         {...getOverrideProps(overrides, "customFieldsData")}
       ></TextAreaField>
+      <TextField
+        label="Status"
+        isRequired={false}
+        isReadOnly={false}
+        value={status}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              name,
+              type,
+              description,
+              location,
+              value,
+              serialNumber,
+              registrationNumber,
+              insuranceDetails,
+              insuranceExpiryDate,
+              insuranceCompany,
+              storedAt,
+              customFieldsData,
+              status: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.status ?? value;
+          }
+          if (errors.status?.hasError) {
+            runValidationTasks("status", value);
+          }
+          setStatus(value);
+        }}
+        onBlur={() => runValidationTasks("status", status)}
+        errorMessage={errors.status?.errorMessage}
+        hasError={errors.status?.hasError}
+        {...getOverrideProps(overrides, "status")}
+      ></TextField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}

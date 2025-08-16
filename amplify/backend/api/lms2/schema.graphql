@@ -59,6 +59,8 @@ type Institution @model {
 
   # --- LoanFeesConfig relationship ---
   loanFeesConfigs: [LoanFeesConfig] @hasMany
+
+  status: String
 }
 
 type Branch @model {
@@ -232,6 +234,7 @@ type Borrower @model {
   borrowerAttribute1: String
   borrowerAttribute2: String
   customFieldsData: AWSJSON
+  status: String
   branch: Branch @belongsTo
   loans: [Loan] @hasMany
   guarantors: [Guarantor] @hasMany
@@ -254,6 +257,7 @@ type Guarantor @model {
   email: String
   address: String
   customFieldsData: AWSJSON
+  status: String
   borrower: Borrower @belongsTo
   loans: [Loan] @manyToMany(relationName: "LoanGuarantor")
   applications: [Application] @manyToMany(relationName: "ApplicationGuarantor")
@@ -265,6 +269,7 @@ type Security @model {
   type: String
   description: String
   value: Float
+  status: String
   borrower: Borrower @belongsTo
 }
 
@@ -293,7 +298,7 @@ type LoanProduct @model {
   interestRateMin: Float
   interestRateMax: Float
   interestRateDefault: Float
-  interestCalculationMethod: InterestCalculationMethod
+  interestCalculationMethod: String
   interestType: String
   interestPeriod: String
 
@@ -313,6 +318,7 @@ type LoanProduct @model {
   calculateInterestOn: String
   loanInterestRateAfterMaturity: Float
   recurringPeriodAfterMaturityUnit: String
+  status: String
 
   # Relationships
   institution: Institution @belongsTo
@@ -332,6 +338,7 @@ type CreditScore @model {
   scoreDate: AWSDate
   scoreSource: String
   scoreStatus: String
+  status: String
   approvedByEmployees: [Employee]
     @manyToMany(relationName: "CreditScoreApprovedByEmployee")
   borrowerID: ID @index(name: "byBorrowerID")
@@ -350,6 +357,7 @@ type Document @model {
   s3Key: String
   fileName: String
   contentType: String
+  status: String
   branch: Branch @belongsTo
   borrowers: [Borrower] @manyToMany(relationName: "BorrowerDocument")
   loans: [Loan] @manyToMany(relationName: "LoanDocument")
@@ -368,6 +376,7 @@ type Contract @model {
   contractDate: AWSDate
   contractStatus: String
   contractRecord: AWSJSON
+  status: String
   borrower: Borrower @belongsTo
   applications: [Application] @manyToMany(relationName: "ApplicationContract")
   collaterals: [Collateral] @manyToMany(relationName: "CollateralContract")
@@ -416,6 +425,7 @@ type Collateral @model {
   insuranceCompany: String
   storedAt: String
   customFieldsData: AWSJSON
+  status: String
   borrower: Borrower @belongsTo
   loans: [Loan] @manyToMany(relationName: "LoanCollateral")
   applications: [Application] @manyToMany(relationName: "ApplicationCollateral")
@@ -446,6 +456,7 @@ type Loan @model {
   numberOfPayments: Float
   paymentFrequency: String
   customFieldsData: AWSJSON
+  status: String
   borrower: Borrower @belongsTo
   payments: [Payment] @hasMany
   loanFees: [LoanFees] @hasMany
@@ -484,6 +495,7 @@ type Investment @model {
   investmentAttribute2: String
   numberOfPayments: Float
   paymentFrequency: Float
+  status: String
   accounts: [Account] @manyToMany(relationName: "InvestmentAccount")
 }
 
@@ -501,6 +513,7 @@ type LoanFees @model {
   loanFeesDescription: String
   loanFeesAttribute1: String
   loanFeesAttribute2: String
+  status: String
   loan: Loan @belongsTo
   loanProducts: [LoanProduct] @manyToMany(relationName: "LoanProductLoanFees")
   accountID: ID @index(name: "byAccountID")
@@ -523,6 +536,7 @@ type Penalty @model {
   penaltyDescription: String
   penaltyAttribute1: String
   penaltyAttribute2: String
+  status: String
   loan: Loan @belongsTo
   loanProducts: [LoanProduct] @manyToMany(relationName: "LoanProductPenalty")
   accountID: ID @index(name: "byAccountID")
@@ -562,6 +576,7 @@ type Account @model {
   interestAccrued: Float
   interestAccruedDate: AWSDate
   accountStatus: String
+  status: String
   branch: Branch @belongsTo
   moneyTransactions: [MoneyTransaction] @hasMany
   expenses: [Expense] @hasMany
@@ -589,6 +604,7 @@ type MoneyTransaction @model {
   notes: String
   paymentMethod: String
   deviceInfo: String
+  status: String
   account: Account @belongsTo
   approvedByEmployees: [Employee]
     @manyToMany(relationName: "MoneyTransactionApprovedByEmployee")
@@ -648,6 +664,7 @@ type OtherIncome @model {
   amount: Float
   incomeDate: AWSDate
   incomeType: String
+  status: String
   accounts: [Account] @manyToMany(relationName: "OtherIncomeAccount")
 }
 
@@ -659,6 +676,7 @@ type FinancialReport @model {
   startDate: AWSDate
   endDate: AWSDate
   reportData: AWSJSON
+  status: String
   branch: Branch @belongsTo
 }
 
@@ -671,6 +689,7 @@ type CustomFormField @model {
   required: Boolean
   order: Int
   createdBy: String
+  status: String
   branch: Branch @belongsTo
   institution: Institution @belongsTo
 }

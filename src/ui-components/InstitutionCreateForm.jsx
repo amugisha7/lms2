@@ -52,6 +52,7 @@ export default function InstitutionCreateForm(props) {
     customWorkflowsEnabled: false,
     advancedReportingEnabled: false,
     apiIntegrationSettings: "",
+    status: "",
   };
   const [name, setName] = React.useState(initialValues.name);
   const [currencyCode, setCurrencyCode] = React.useState(
@@ -113,6 +114,7 @@ export default function InstitutionCreateForm(props) {
   const [apiIntegrationSettings, setApiIntegrationSettings] = React.useState(
     initialValues.apiIntegrationSettings
   );
+  const [status, setStatus] = React.useState(initialValues.status);
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     setName(initialValues.name);
@@ -137,6 +139,7 @@ export default function InstitutionCreateForm(props) {
     setCustomWorkflowsEnabled(initialValues.customWorkflowsEnabled);
     setAdvancedReportingEnabled(initialValues.advancedReportingEnabled);
     setApiIntegrationSettings(initialValues.apiIntegrationSettings);
+    setStatus(initialValues.status);
     setErrors({});
   };
   const validations = {
@@ -162,6 +165,7 @@ export default function InstitutionCreateForm(props) {
     customWorkflowsEnabled: [{ type: "Required" }],
     advancedReportingEnabled: [{ type: "Required" }],
     apiIntegrationSettings: [{ type: "JSON" }],
+    status: [],
   };
   const runValidationTasks = async (
     fieldName,
@@ -211,6 +215,7 @@ export default function InstitutionCreateForm(props) {
           customWorkflowsEnabled,
           advancedReportingEnabled,
           apiIntegrationSettings,
+          status,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -295,6 +300,7 @@ export default function InstitutionCreateForm(props) {
               customWorkflowsEnabled,
               advancedReportingEnabled,
               apiIntegrationSettings,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.name ?? value;
@@ -340,6 +346,7 @@ export default function InstitutionCreateForm(props) {
               customWorkflowsEnabled,
               advancedReportingEnabled,
               apiIntegrationSettings,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.currencyCode ?? value;
@@ -385,6 +392,7 @@ export default function InstitutionCreateForm(props) {
               customWorkflowsEnabled,
               advancedReportingEnabled,
               apiIntegrationSettings,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.subscriptionTier ?? value;
@@ -430,6 +438,7 @@ export default function InstitutionCreateForm(props) {
               customWorkflowsEnabled,
               advancedReportingEnabled,
               apiIntegrationSettings,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.subscriptionStatus ?? value;
@@ -478,6 +487,7 @@ export default function InstitutionCreateForm(props) {
               customWorkflowsEnabled,
               advancedReportingEnabled,
               apiIntegrationSettings,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.trialEndDate ?? value;
@@ -524,6 +534,7 @@ export default function InstitutionCreateForm(props) {
               customWorkflowsEnabled,
               advancedReportingEnabled,
               apiIntegrationSettings,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.nextBillingDate ?? value;
@@ -569,6 +580,7 @@ export default function InstitutionCreateForm(props) {
               customWorkflowsEnabled,
               advancedReportingEnabled,
               apiIntegrationSettings,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.stripeCustomerID ?? value;
@@ -614,6 +626,7 @@ export default function InstitutionCreateForm(props) {
               customWorkflowsEnabled,
               advancedReportingEnabled,
               apiIntegrationSettings,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.stripeSubscriptionID ?? value;
@@ -661,6 +674,7 @@ export default function InstitutionCreateForm(props) {
               customWorkflowsEnabled,
               advancedReportingEnabled,
               apiIntegrationSettings,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.defaultDateFormat ?? value;
@@ -708,6 +722,7 @@ export default function InstitutionCreateForm(props) {
               customWorkflowsEnabled,
               advancedReportingEnabled,
               apiIntegrationSettings,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.defaultCurrencyFormat ?? value;
@@ -755,6 +770,7 @@ export default function InstitutionCreateForm(props) {
               customWorkflowsEnabled,
               advancedReportingEnabled,
               apiIntegrationSettings,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.defaultLanguage ?? value;
@@ -800,6 +816,7 @@ export default function InstitutionCreateForm(props) {
               customWorkflowsEnabled,
               advancedReportingEnabled,
               apiIntegrationSettings,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.regulatoryRegion ?? value;
@@ -849,6 +866,7 @@ export default function InstitutionCreateForm(props) {
               customWorkflowsEnabled,
               advancedReportingEnabled,
               apiIntegrationSettings,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.maxUsers ?? value;
@@ -898,6 +916,7 @@ export default function InstitutionCreateForm(props) {
               customWorkflowsEnabled,
               advancedReportingEnabled,
               apiIntegrationSettings,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.maxBranches ?? value;
@@ -947,6 +966,7 @@ export default function InstitutionCreateForm(props) {
               customWorkflowsEnabled,
               advancedReportingEnabled,
               apiIntegrationSettings,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.maxStaffPerBranch ?? value;
@@ -994,6 +1014,7 @@ export default function InstitutionCreateForm(props) {
               customWorkflowsEnabled,
               advancedReportingEnabled,
               apiIntegrationSettings,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.saccoFeaturesEnabled ?? value;
@@ -1041,6 +1062,7 @@ export default function InstitutionCreateForm(props) {
               customWorkflowsEnabled,
               advancedReportingEnabled,
               apiIntegrationSettings,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.staffManagementEnabled ?? value;
@@ -1088,6 +1110,7 @@ export default function InstitutionCreateForm(props) {
               customWorkflowsEnabled,
               advancedReportingEnabled,
               apiIntegrationSettings,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.payrollEnabled ?? value;
@@ -1133,6 +1156,7 @@ export default function InstitutionCreateForm(props) {
               customWorkflowsEnabled,
               advancedReportingEnabled,
               apiIntegrationSettings,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.collectionsModuleEnabled ?? value;
@@ -1183,6 +1207,7 @@ export default function InstitutionCreateForm(props) {
               customWorkflowsEnabled: value,
               advancedReportingEnabled,
               apiIntegrationSettings,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.customWorkflowsEnabled ?? value;
@@ -1230,6 +1255,7 @@ export default function InstitutionCreateForm(props) {
               customWorkflowsEnabled,
               advancedReportingEnabled: value,
               apiIntegrationSettings,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.advancedReportingEnabled ?? value;
@@ -1279,6 +1305,7 @@ export default function InstitutionCreateForm(props) {
               customWorkflowsEnabled,
               advancedReportingEnabled,
               apiIntegrationSettings: value,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.apiIntegrationSettings ?? value;
@@ -1295,6 +1322,52 @@ export default function InstitutionCreateForm(props) {
         hasError={errors.apiIntegrationSettings?.hasError}
         {...getOverrideProps(overrides, "apiIntegrationSettings")}
       ></TextAreaField>
+      <TextField
+        label="Status"
+        isRequired={false}
+        isReadOnly={false}
+        value={status}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              name,
+              currencyCode,
+              subscriptionTier,
+              subscriptionStatus,
+              trialEndDate,
+              nextBillingDate,
+              stripeCustomerID,
+              stripeSubscriptionID,
+              defaultDateFormat,
+              defaultCurrencyFormat,
+              defaultLanguage,
+              regulatoryRegion,
+              maxUsers,
+              maxBranches,
+              maxStaffPerBranch,
+              saccoFeaturesEnabled,
+              staffManagementEnabled,
+              payrollEnabled,
+              collectionsModuleEnabled,
+              customWorkflowsEnabled,
+              advancedReportingEnabled,
+              apiIntegrationSettings,
+              status: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.status ?? value;
+          }
+          if (errors.status?.hasError) {
+            runValidationTasks("status", value);
+          }
+          setStatus(value);
+        }}
+        onBlur={() => runValidationTasks("status", status)}
+        errorMessage={errors.status?.errorMessage}
+        hasError={errors.status?.hasError}
+        {...getOverrideProps(overrides, "status")}
+      ></TextField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}

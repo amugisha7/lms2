@@ -35,6 +35,7 @@ export default function PenaltyCreateForm(props) {
     penaltyDescription: "",
     penaltyAttribute1: "",
     penaltyAttribute2: "",
+    status: "",
   };
   const [amount, setAmount] = React.useState(initialValues.amount);
   const [penaltyName, setPenaltyName] = React.useState(
@@ -67,6 +68,7 @@ export default function PenaltyCreateForm(props) {
   const [penaltyAttribute2, setPenaltyAttribute2] = React.useState(
     initialValues.penaltyAttribute2
   );
+  const [status, setStatus] = React.useState(initialValues.status);
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     setAmount(initialValues.amount);
@@ -81,6 +83,7 @@ export default function PenaltyCreateForm(props) {
     setPenaltyDescription(initialValues.penaltyDescription);
     setPenaltyAttribute1(initialValues.penaltyAttribute1);
     setPenaltyAttribute2(initialValues.penaltyAttribute2);
+    setStatus(initialValues.status);
     setErrors({});
   };
   const validations = {
@@ -96,6 +99,7 @@ export default function PenaltyCreateForm(props) {
     penaltyDescription: [],
     penaltyAttribute1: [],
     penaltyAttribute2: [],
+    status: [],
   };
   const runValidationTasks = async (
     fieldName,
@@ -135,6 +139,7 @@ export default function PenaltyCreateForm(props) {
           penaltyDescription,
           penaltyAttribute1,
           penaltyAttribute2,
+          status,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -213,6 +218,7 @@ export default function PenaltyCreateForm(props) {
               penaltyDescription,
               penaltyAttribute1,
               penaltyAttribute2,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.amount ?? value;
@@ -248,6 +254,7 @@ export default function PenaltyCreateForm(props) {
               penaltyDescription,
               penaltyAttribute1,
               penaltyAttribute2,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.penaltyName ?? value;
@@ -283,6 +290,7 @@ export default function PenaltyCreateForm(props) {
               penaltyDescription,
               penaltyAttribute1,
               penaltyAttribute2,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.penaltyCategory ?? value;
@@ -318,6 +326,7 @@ export default function PenaltyCreateForm(props) {
               penaltyDescription,
               penaltyAttribute1,
               penaltyAttribute2,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.penaltyCalculationMethod ?? value;
@@ -362,6 +371,7 @@ export default function PenaltyCreateForm(props) {
               penaltyDescription,
               penaltyAttribute1,
               penaltyAttribute2,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.penaltyRate ?? value;
@@ -398,6 +408,7 @@ export default function PenaltyCreateForm(props) {
               penaltyDescription,
               penaltyAttribute1,
               penaltyAttribute2,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.penaltyDate ?? value;
@@ -433,6 +444,7 @@ export default function PenaltyCreateForm(props) {
               penaltyDescription,
               penaltyAttribute1,
               penaltyAttribute2,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.penaltyStatus ?? value;
@@ -468,6 +480,7 @@ export default function PenaltyCreateForm(props) {
               penaltyDescription,
               penaltyAttribute1,
               penaltyAttribute2,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.notes ?? value;
@@ -503,6 +516,7 @@ export default function PenaltyCreateForm(props) {
               penaltyDescription,
               penaltyAttribute1,
               penaltyAttribute2,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.penaltyType ?? value;
@@ -538,6 +552,7 @@ export default function PenaltyCreateForm(props) {
               penaltyDescription: value,
               penaltyAttribute1,
               penaltyAttribute2,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.penaltyDescription ?? value;
@@ -575,6 +590,7 @@ export default function PenaltyCreateForm(props) {
               penaltyDescription,
               penaltyAttribute1: value,
               penaltyAttribute2,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.penaltyAttribute1 ?? value;
@@ -612,6 +628,7 @@ export default function PenaltyCreateForm(props) {
               penaltyDescription,
               penaltyAttribute1,
               penaltyAttribute2: value,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.penaltyAttribute2 ?? value;
@@ -627,6 +644,42 @@ export default function PenaltyCreateForm(props) {
         errorMessage={errors.penaltyAttribute2?.errorMessage}
         hasError={errors.penaltyAttribute2?.hasError}
         {...getOverrideProps(overrides, "penaltyAttribute2")}
+      ></TextField>
+      <TextField
+        label="Status"
+        isRequired={false}
+        isReadOnly={false}
+        value={status}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              amount,
+              penaltyName,
+              penaltyCategory,
+              penaltyCalculationMethod,
+              penaltyRate,
+              penaltyDate,
+              penaltyStatus,
+              notes,
+              penaltyType,
+              penaltyDescription,
+              penaltyAttribute1,
+              penaltyAttribute2,
+              status: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.status ?? value;
+          }
+          if (errors.status?.hasError) {
+            runValidationTasks("status", value);
+          }
+          setStatus(value);
+        }}
+        onBlur={() => runValidationTasks("status", status)}
+        errorMessage={errors.status?.errorMessage}
+        hasError={errors.status?.hasError}
+        {...getOverrideProps(overrides, "status")}
       ></TextField>
       <Flex
         justifyContent="space-between"

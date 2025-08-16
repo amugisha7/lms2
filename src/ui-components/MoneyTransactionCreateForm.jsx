@@ -35,6 +35,7 @@ export default function MoneyTransactionCreateForm(props) {
     notes: "",
     paymentMethod: "",
     deviceInfo: "",
+    status: "",
   };
   const [transactionType, setTransactionType] = React.useState(
     initialValues.transactionType
@@ -64,6 +65,7 @@ export default function MoneyTransactionCreateForm(props) {
     initialValues.paymentMethod
   );
   const [deviceInfo, setDeviceInfo] = React.useState(initialValues.deviceInfo);
+  const [status, setStatus] = React.useState(initialValues.status);
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     setTransactionType(initialValues.transactionType);
@@ -78,6 +80,7 @@ export default function MoneyTransactionCreateForm(props) {
     setNotes(initialValues.notes);
     setPaymentMethod(initialValues.paymentMethod);
     setDeviceInfo(initialValues.deviceInfo);
+    setStatus(initialValues.status);
     setErrors({});
   };
   const validations = {
@@ -93,6 +96,7 @@ export default function MoneyTransactionCreateForm(props) {
     notes: [],
     paymentMethod: [],
     deviceInfo: [],
+    status: [],
   };
   const runValidationTasks = async (
     fieldName,
@@ -132,6 +136,7 @@ export default function MoneyTransactionCreateForm(props) {
           notes,
           paymentMethod,
           deviceInfo,
+          status,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -206,6 +211,7 @@ export default function MoneyTransactionCreateForm(props) {
               notes,
               paymentMethod,
               deviceInfo,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.transactionType ?? value;
@@ -242,6 +248,7 @@ export default function MoneyTransactionCreateForm(props) {
               notes,
               paymentMethod,
               deviceInfo,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.transactionDate ?? value;
@@ -281,6 +288,7 @@ export default function MoneyTransactionCreateForm(props) {
               notes,
               paymentMethod,
               deviceInfo,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.amount ?? value;
@@ -316,6 +324,7 @@ export default function MoneyTransactionCreateForm(props) {
               notes,
               paymentMethod,
               deviceInfo,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.description ?? value;
@@ -351,6 +360,7 @@ export default function MoneyTransactionCreateForm(props) {
               notes,
               paymentMethod,
               deviceInfo,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.referenceNumber ?? value;
@@ -386,6 +396,7 @@ export default function MoneyTransactionCreateForm(props) {
               notes,
               paymentMethod,
               deviceInfo,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.relatedEntityType ?? value;
@@ -423,6 +434,7 @@ export default function MoneyTransactionCreateForm(props) {
               notes,
               paymentMethod,
               deviceInfo,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.approvalStatus ?? value;
@@ -459,6 +471,7 @@ export default function MoneyTransactionCreateForm(props) {
               notes,
               paymentMethod,
               deviceInfo,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.approvedDate ?? value;
@@ -494,6 +507,7 @@ export default function MoneyTransactionCreateForm(props) {
               notes,
               paymentMethod,
               deviceInfo,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.category ?? value;
@@ -529,6 +543,7 @@ export default function MoneyTransactionCreateForm(props) {
               notes: value,
               paymentMethod,
               deviceInfo,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.notes ?? value;
@@ -564,6 +579,7 @@ export default function MoneyTransactionCreateForm(props) {
               notes,
               paymentMethod: value,
               deviceInfo,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.paymentMethod ?? value;
@@ -599,6 +615,7 @@ export default function MoneyTransactionCreateForm(props) {
               notes,
               paymentMethod,
               deviceInfo: value,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.deviceInfo ?? value;
@@ -612,6 +629,42 @@ export default function MoneyTransactionCreateForm(props) {
         errorMessage={errors.deviceInfo?.errorMessage}
         hasError={errors.deviceInfo?.hasError}
         {...getOverrideProps(overrides, "deviceInfo")}
+      ></TextField>
+      <TextField
+        label="Status"
+        isRequired={false}
+        isReadOnly={false}
+        value={status}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              transactionType,
+              transactionDate,
+              amount,
+              description,
+              referenceNumber,
+              relatedEntityType,
+              approvalStatus,
+              approvedDate,
+              category,
+              notes,
+              paymentMethod,
+              deviceInfo,
+              status: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.status ?? value;
+          }
+          if (errors.status?.hasError) {
+            runValidationTasks("status", value);
+          }
+          setStatus(value);
+        }}
+        onBlur={() => runValidationTasks("status", status)}
+        errorMessage={errors.status?.errorMessage}
+        hasError={errors.status?.hasError}
+        {...getOverrideProps(overrides, "status")}
       ></TextField>
       <Flex
         justifyContent="space-between"

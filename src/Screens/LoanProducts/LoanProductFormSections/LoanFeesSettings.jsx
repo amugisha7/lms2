@@ -86,7 +86,7 @@ export default function LoanFeesSettings({ value = [], onChange }) {
     <Box sx={{ mt: 2 }}>
       <Grid size={{ xs: 12, md: 12 }}>
         <hr style={{ width: "100%", marginBottom: "20px" }} />
-        <Typography variant="caption">LOAN FEES SETTINGS:</Typography>
+        <p className="smallFormHeading">LOAN FEES SETTINGS:</p>
       </Grid>
       {/* Replace FormLabel with Typography */}
       <Typography sx={{ mt: 2 }}>Assign Loan Fees?</Typography>

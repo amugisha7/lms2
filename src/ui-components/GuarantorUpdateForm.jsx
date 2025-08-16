@@ -37,6 +37,7 @@ export default function GuarantorUpdateForm(props) {
     email: "",
     address: "",
     customFieldsData: "",
+    status: "",
   };
   const [name, setName] = React.useState(initialValues.name);
   const [relationship, setRelationship] = React.useState(
@@ -50,6 +51,7 @@ export default function GuarantorUpdateForm(props) {
   const [customFieldsData, setCustomFieldsData] = React.useState(
     initialValues.customFieldsData
   );
+  const [status, setStatus] = React.useState(initialValues.status);
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     const cleanValues = guarantorRecord
@@ -66,6 +68,7 @@ export default function GuarantorUpdateForm(props) {
         ? cleanValues.customFieldsData
         : JSON.stringify(cleanValues.customFieldsData)
     );
+    setStatus(cleanValues.status);
     setErrors({});
   };
   const [guarantorRecord, setGuarantorRecord] =
@@ -92,6 +95,7 @@ export default function GuarantorUpdateForm(props) {
     email: [],
     address: [],
     customFieldsData: [{ type: "JSON" }],
+    status: [],
   };
   const runValidationTasks = async (
     fieldName,
@@ -125,6 +129,7 @@ export default function GuarantorUpdateForm(props) {
           email: email ?? null,
           address: address ?? null,
           customFieldsData: customFieldsData ?? null,
+          status: status ?? null,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -191,6 +196,7 @@ export default function GuarantorUpdateForm(props) {
               email,
               address,
               customFieldsData,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.name ?? value;
@@ -220,6 +226,7 @@ export default function GuarantorUpdateForm(props) {
               email,
               address,
               customFieldsData,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.relationship ?? value;
@@ -249,6 +256,7 @@ export default function GuarantorUpdateForm(props) {
               email,
               address,
               customFieldsData,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.phoneNumber ?? value;
@@ -278,6 +286,7 @@ export default function GuarantorUpdateForm(props) {
               email: value,
               address,
               customFieldsData,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.email ?? value;
@@ -307,6 +316,7 @@ export default function GuarantorUpdateForm(props) {
               email,
               address: value,
               customFieldsData,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.address ?? value;
@@ -336,6 +346,7 @@ export default function GuarantorUpdateForm(props) {
               email,
               address,
               customFieldsData: value,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.customFieldsData ?? value;
@@ -350,6 +361,36 @@ export default function GuarantorUpdateForm(props) {
         hasError={errors.customFieldsData?.hasError}
         {...getOverrideProps(overrides, "customFieldsData")}
       ></TextAreaField>
+      <TextField
+        label="Status"
+        isRequired={false}
+        isReadOnly={false}
+        value={status}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              name,
+              relationship,
+              phoneNumber,
+              email,
+              address,
+              customFieldsData,
+              status: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.status ?? value;
+          }
+          if (errors.status?.hasError) {
+            runValidationTasks("status", value);
+          }
+          setStatus(value);
+        }}
+        onBlur={() => runValidationTasks("status", status)}
+        errorMessage={errors.status?.errorMessage}
+        hasError={errors.status?.hasError}
+        {...getOverrideProps(overrides, "status")}
+      ></TextField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}

@@ -34,6 +34,7 @@ export declare type CollateralUpdateFormInputValues = {
     insuranceCompany?: string;
     storedAt?: string;
     customFieldsData?: string;
+    status?: string;
 };
 export declare type CollateralUpdateFormValidationValues = {
     name?: ValidationFunction<string>;
@@ -48,6 +49,7 @@ export declare type CollateralUpdateFormValidationValues = {
     insuranceCompany?: ValidationFunction<string>;
     storedAt?: ValidationFunction<string>;
     customFieldsData?: ValidationFunction<string>;
+    status?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type CollateralUpdateFormOverridesProps = {
@@ -64,6 +66,7 @@ export declare type CollateralUpdateFormOverridesProps = {
     insuranceCompany?: PrimitiveOverrideProps<TextFieldProps>;
     storedAt?: PrimitiveOverrideProps<TextFieldProps>;
     customFieldsData?: PrimitiveOverrideProps<TextAreaFieldProps>;
+    status?: PrimitiveOverrideProps<TextFieldProps>;
 } & EscapeHatchProps;
 export declare type CollateralUpdateFormProps = React.PropsWithChildren<{
     overrides?: CollateralUpdateFormOverridesProps | undefined | null;

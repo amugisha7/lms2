@@ -30,6 +30,7 @@ export declare type DocumentUpdateFormInputValues = {
     s3Key?: string;
     fileName?: string;
     contentType?: string;
+    status?: string;
 };
 export declare type DocumentUpdateFormValidationValues = {
     documentType?: ValidationFunction<string>;
@@ -40,6 +41,7 @@ export declare type DocumentUpdateFormValidationValues = {
     s3Key?: ValidationFunction<string>;
     fileName?: ValidationFunction<string>;
     contentType?: ValidationFunction<string>;
+    status?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type DocumentUpdateFormOverridesProps = {
@@ -52,6 +54,7 @@ export declare type DocumentUpdateFormOverridesProps = {
     s3Key?: PrimitiveOverrideProps<TextFieldProps>;
     fileName?: PrimitiveOverrideProps<TextFieldProps>;
     contentType?: PrimitiveOverrideProps<TextFieldProps>;
+    status?: PrimitiveOverrideProps<TextFieldProps>;
 } & EscapeHatchProps;
 export declare type DocumentUpdateFormProps = React.PropsWithChildren<{
     overrides?: DocumentUpdateFormOverridesProps | undefined | null;

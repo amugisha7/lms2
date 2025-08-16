@@ -28,6 +28,7 @@ export declare type GuarantorCreateFormInputValues = {
     email?: string;
     address?: string;
     customFieldsData?: string;
+    status?: string;
 };
 export declare type GuarantorCreateFormValidationValues = {
     name?: ValidationFunction<string>;
@@ -36,6 +37,7 @@ export declare type GuarantorCreateFormValidationValues = {
     email?: ValidationFunction<string>;
     address?: ValidationFunction<string>;
     customFieldsData?: ValidationFunction<string>;
+    status?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type GuarantorCreateFormOverridesProps = {
@@ -46,6 +48,7 @@ export declare type GuarantorCreateFormOverridesProps = {
     email?: PrimitiveOverrideProps<TextFieldProps>;
     address?: PrimitiveOverrideProps<TextFieldProps>;
     customFieldsData?: PrimitiveOverrideProps<TextAreaFieldProps>;
+    status?: PrimitiveOverrideProps<TextFieldProps>;
 } & EscapeHatchProps;
 export declare type GuarantorCreateFormProps = React.PropsWithChildren<{
     overrides?: GuarantorCreateFormOverridesProps | undefined | null;

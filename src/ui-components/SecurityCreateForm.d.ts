@@ -26,12 +26,14 @@ export declare type SecurityCreateFormInputValues = {
     type?: string;
     description?: string;
     value?: number;
+    status?: string;
 };
 export declare type SecurityCreateFormValidationValues = {
     name?: ValidationFunction<string>;
     type?: ValidationFunction<string>;
     description?: ValidationFunction<string>;
     value?: ValidationFunction<number>;
+    status?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type SecurityCreateFormOverridesProps = {
@@ -40,6 +42,7 @@ export declare type SecurityCreateFormOverridesProps = {
     type?: PrimitiveOverrideProps<TextFieldProps>;
     description?: PrimitiveOverrideProps<TextFieldProps>;
     value?: PrimitiveOverrideProps<TextFieldProps>;
+    status?: PrimitiveOverrideProps<TextFieldProps>;
 } & EscapeHatchProps;
 export declare type SecurityCreateFormProps = React.PropsWithChildren<{
     overrides?: SecurityCreateFormOverridesProps | undefined | null;

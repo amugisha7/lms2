@@ -35,6 +35,7 @@ export default function FinancialReportCreateForm(props) {
     startDate: "",
     endDate: "",
     reportData: "",
+    status: "",
   };
   const [reportName, setReportName] = React.useState(initialValues.reportName);
   const [reportType, setReportType] = React.useState(initialValues.reportType);
@@ -42,6 +43,7 @@ export default function FinancialReportCreateForm(props) {
   const [startDate, setStartDate] = React.useState(initialValues.startDate);
   const [endDate, setEndDate] = React.useState(initialValues.endDate);
   const [reportData, setReportData] = React.useState(initialValues.reportData);
+  const [status, setStatus] = React.useState(initialValues.status);
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     setReportName(initialValues.reportName);
@@ -50,6 +52,7 @@ export default function FinancialReportCreateForm(props) {
     setStartDate(initialValues.startDate);
     setEndDate(initialValues.endDate);
     setReportData(initialValues.reportData);
+    setStatus(initialValues.status);
     setErrors({});
   };
   const validations = {
@@ -59,6 +62,7 @@ export default function FinancialReportCreateForm(props) {
     startDate: [],
     endDate: [],
     reportData: [{ type: "JSON" }],
+    status: [],
   };
   const runValidationTasks = async (
     fieldName,
@@ -92,6 +96,7 @@ export default function FinancialReportCreateForm(props) {
           startDate,
           endDate,
           reportData,
+          status,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -160,6 +165,7 @@ export default function FinancialReportCreateForm(props) {
               startDate,
               endDate,
               reportData,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.reportName ?? value;
@@ -189,6 +195,7 @@ export default function FinancialReportCreateForm(props) {
               startDate,
               endDate,
               reportData,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.reportType ?? value;
@@ -219,6 +226,7 @@ export default function FinancialReportCreateForm(props) {
               startDate,
               endDate,
               reportData,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.reportDate ?? value;
@@ -249,6 +257,7 @@ export default function FinancialReportCreateForm(props) {
               startDate: value,
               endDate,
               reportData,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.startDate ?? value;
@@ -279,6 +288,7 @@ export default function FinancialReportCreateForm(props) {
               startDate,
               endDate: value,
               reportData,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.endDate ?? value;
@@ -307,6 +317,7 @@ export default function FinancialReportCreateForm(props) {
               startDate,
               endDate,
               reportData: value,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.reportData ?? value;
@@ -321,6 +332,36 @@ export default function FinancialReportCreateForm(props) {
         hasError={errors.reportData?.hasError}
         {...getOverrideProps(overrides, "reportData")}
       ></TextAreaField>
+      <TextField
+        label="Status"
+        isRequired={false}
+        isReadOnly={false}
+        value={status}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              reportName,
+              reportType,
+              reportDate,
+              startDate,
+              endDate,
+              reportData,
+              status: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.status ?? value;
+          }
+          if (errors.status?.hasError) {
+            runValidationTasks("status", value);
+          }
+          setStatus(value);
+        }}
+        onBlur={() => runValidationTasks("status", status)}
+        errorMessage={errors.status?.errorMessage}
+        hasError={errors.status?.hasError}
+        {...getOverrideProps(overrides, "status")}
+      ></TextField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}

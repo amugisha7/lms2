@@ -37,6 +37,7 @@ export default function LoanFeesUpdateForm(props) {
     loanFeesDescription: "",
     loanFeesAttribute1: "",
     loanFeesAttribute2: "",
+    status: "",
   };
   const [amount, setAmount] = React.useState(initialValues.amount);
   const [loanFeesName, setLoanFeesName] = React.useState(
@@ -69,6 +70,7 @@ export default function LoanFeesUpdateForm(props) {
   const [loanFeesAttribute2, setLoanFeesAttribute2] = React.useState(
     initialValues.loanFeesAttribute2
   );
+  const [status, setStatus] = React.useState(initialValues.status);
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     const cleanValues = loanFeesRecord
@@ -86,6 +88,7 @@ export default function LoanFeesUpdateForm(props) {
     setLoanFeesDescription(cleanValues.loanFeesDescription);
     setLoanFeesAttribute1(cleanValues.loanFeesAttribute1);
     setLoanFeesAttribute2(cleanValues.loanFeesAttribute2);
+    setStatus(cleanValues.status);
     setErrors({});
   };
   const [loanFeesRecord, setLoanFeesRecord] = React.useState(loanFeesModelProp);
@@ -117,6 +120,7 @@ export default function LoanFeesUpdateForm(props) {
     loanFeesDescription: [],
     loanFeesAttribute1: [],
     loanFeesAttribute2: [],
+    status: [],
   };
   const runValidationTasks = async (
     fieldName,
@@ -156,6 +160,7 @@ export default function LoanFeesUpdateForm(props) {
           loanFeesDescription: loanFeesDescription ?? null,
           loanFeesAttribute1: loanFeesAttribute1 ?? null,
           loanFeesAttribute2: loanFeesAttribute2 ?? null,
+          status: status ?? null,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -232,6 +237,7 @@ export default function LoanFeesUpdateForm(props) {
               loanFeesDescription,
               loanFeesAttribute1,
               loanFeesAttribute2,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.amount ?? value;
@@ -267,6 +273,7 @@ export default function LoanFeesUpdateForm(props) {
               loanFeesDescription,
               loanFeesAttribute1,
               loanFeesAttribute2,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.loanFeesName ?? value;
@@ -302,6 +309,7 @@ export default function LoanFeesUpdateForm(props) {
               loanFeesDescription,
               loanFeesAttribute1,
               loanFeesAttribute2,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.loanFeesCategory ?? value;
@@ -337,6 +345,7 @@ export default function LoanFeesUpdateForm(props) {
               loanFeesDescription,
               loanFeesAttribute1,
               loanFeesAttribute2,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.loanFeesCalculationMethod ?? value;
@@ -381,6 +390,7 @@ export default function LoanFeesUpdateForm(props) {
               loanFeesDescription,
               loanFeesAttribute1,
               loanFeesAttribute2,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.loanFeesRate ?? value;
@@ -417,6 +427,7 @@ export default function LoanFeesUpdateForm(props) {
               loanFeesDescription,
               loanFeesAttribute1,
               loanFeesAttribute2,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.loanFeesDate ?? value;
@@ -452,6 +463,7 @@ export default function LoanFeesUpdateForm(props) {
               loanFeesDescription,
               loanFeesAttribute1,
               loanFeesAttribute2,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.loanFeesStatus ?? value;
@@ -487,6 +499,7 @@ export default function LoanFeesUpdateForm(props) {
               loanFeesDescription,
               loanFeesAttribute1,
               loanFeesAttribute2,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.notes ?? value;
@@ -522,6 +535,7 @@ export default function LoanFeesUpdateForm(props) {
               loanFeesDescription,
               loanFeesAttribute1,
               loanFeesAttribute2,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.loanFeesType ?? value;
@@ -557,6 +571,7 @@ export default function LoanFeesUpdateForm(props) {
               loanFeesDescription: value,
               loanFeesAttribute1,
               loanFeesAttribute2,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.loanFeesDescription ?? value;
@@ -594,6 +609,7 @@ export default function LoanFeesUpdateForm(props) {
               loanFeesDescription,
               loanFeesAttribute1: value,
               loanFeesAttribute2,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.loanFeesAttribute1 ?? value;
@@ -631,6 +647,7 @@ export default function LoanFeesUpdateForm(props) {
               loanFeesDescription,
               loanFeesAttribute1,
               loanFeesAttribute2: value,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.loanFeesAttribute2 ?? value;
@@ -646,6 +663,42 @@ export default function LoanFeesUpdateForm(props) {
         errorMessage={errors.loanFeesAttribute2?.errorMessage}
         hasError={errors.loanFeesAttribute2?.hasError}
         {...getOverrideProps(overrides, "loanFeesAttribute2")}
+      ></TextField>
+      <TextField
+        label="Status"
+        isRequired={false}
+        isReadOnly={false}
+        value={status}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              amount,
+              loanFeesName,
+              loanFeesCategory,
+              loanFeesCalculationMethod,
+              loanFeesRate,
+              loanFeesDate,
+              loanFeesStatus,
+              notes,
+              loanFeesType,
+              loanFeesDescription,
+              loanFeesAttribute1,
+              loanFeesAttribute2,
+              status: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.status ?? value;
+          }
+          if (errors.status?.hasError) {
+            runValidationTasks("status", value);
+          }
+          setStatus(value);
+        }}
+        onBlur={() => runValidationTasks("status", status)}
+        errorMessage={errors.status?.errorMessage}
+        hasError={errors.status?.hasError}
+        {...getOverrideProps(overrides, "status")}
       ></TextField>
       <Flex
         justifyContent="space-between"

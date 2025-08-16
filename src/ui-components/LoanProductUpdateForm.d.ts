@@ -5,7 +5,7 @@
  **************************************************************************/
 
 import * as React from "react";
-import { GridProps, SelectFieldProps, SwitchFieldProps, TextAreaFieldProps, TextFieldProps } from "@aws-amplify/ui-react";
+import { GridProps, SwitchFieldProps, TextAreaFieldProps, TextFieldProps } from "@aws-amplify/ui-react";
 export declare type EscapeHatchProps = {
     [elementHierarchy: string]: Record<string, unknown>;
 } | null;
@@ -44,6 +44,7 @@ export declare type LoanProductUpdateFormInputValues = {
     calculateInterestOn?: string;
     loanInterestRateAfterMaturity?: number;
     recurringPeriodAfterMaturityUnit?: string;
+    status?: string;
 };
 export declare type LoanProductUpdateFormValidationValues = {
     name?: ValidationFunction<string>;
@@ -68,6 +69,7 @@ export declare type LoanProductUpdateFormValidationValues = {
     calculateInterestOn?: ValidationFunction<string>;
     loanInterestRateAfterMaturity?: ValidationFunction<number>;
     recurringPeriodAfterMaturityUnit?: ValidationFunction<string>;
+    status?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type LoanProductUpdateFormOverridesProps = {
@@ -80,7 +82,7 @@ export declare type LoanProductUpdateFormOverridesProps = {
     interestRateMin?: PrimitiveOverrideProps<TextFieldProps>;
     interestRateMax?: PrimitiveOverrideProps<TextFieldProps>;
     interestRateDefault?: PrimitiveOverrideProps<TextFieldProps>;
-    interestCalculationMethod?: PrimitiveOverrideProps<SelectFieldProps>;
+    interestCalculationMethod?: PrimitiveOverrideProps<TextFieldProps>;
     interestType?: PrimitiveOverrideProps<TextFieldProps>;
     interestPeriod?: PrimitiveOverrideProps<TextFieldProps>;
     termDurationMin?: PrimitiveOverrideProps<TextFieldProps>;
@@ -94,6 +96,7 @@ export declare type LoanProductUpdateFormOverridesProps = {
     calculateInterestOn?: PrimitiveOverrideProps<TextFieldProps>;
     loanInterestRateAfterMaturity?: PrimitiveOverrideProps<TextFieldProps>;
     recurringPeriodAfterMaturityUnit?: PrimitiveOverrideProps<TextFieldProps>;
+    status?: PrimitiveOverrideProps<TextFieldProps>;
 } & EscapeHatchProps;
 export declare type LoanProductUpdateFormProps = React.PropsWithChildren<{
     overrides?: LoanProductUpdateFormOverridesProps | undefined | null;

@@ -40,6 +40,7 @@ export default function InvestmentCreateForm(props) {
     investmentAttribute2: "",
     numberOfPayments: "",
     paymentFrequency: "",
+    status: "",
   };
   const [principal, setPrincipal] = React.useState(initialValues.principal);
   const [description, setDescription] = React.useState(
@@ -80,6 +81,7 @@ export default function InvestmentCreateForm(props) {
   const [paymentFrequency, setPaymentFrequency] = React.useState(
     initialValues.paymentFrequency
   );
+  const [status, setStatus] = React.useState(initialValues.status);
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     setPrincipal(initialValues.principal);
@@ -99,6 +101,7 @@ export default function InvestmentCreateForm(props) {
     setInvestmentAttribute2(initialValues.investmentAttribute2);
     setNumberOfPayments(initialValues.numberOfPayments);
     setPaymentFrequency(initialValues.paymentFrequency);
+    setStatus(initialValues.status);
     setErrors({});
   };
   const validations = {
@@ -119,6 +122,7 @@ export default function InvestmentCreateForm(props) {
     investmentAttribute2: [],
     numberOfPayments: [],
     paymentFrequency: [],
+    status: [],
   };
   const runValidationTasks = async (
     fieldName,
@@ -163,6 +167,7 @@ export default function InvestmentCreateForm(props) {
           investmentAttribute2,
           numberOfPayments,
           paymentFrequency,
+          status,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -246,6 +251,7 @@ export default function InvestmentCreateForm(props) {
               investmentAttribute2,
               numberOfPayments,
               paymentFrequency,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.principal ?? value;
@@ -286,6 +292,7 @@ export default function InvestmentCreateForm(props) {
               investmentAttribute2,
               numberOfPayments,
               paymentFrequency,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.description ?? value;
@@ -330,6 +337,7 @@ export default function InvestmentCreateForm(props) {
               investmentAttribute2,
               numberOfPayments,
               paymentFrequency,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.fees ?? value;
@@ -374,6 +382,7 @@ export default function InvestmentCreateForm(props) {
               investmentAttribute2,
               numberOfPayments,
               paymentFrequency,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.interestRate ?? value;
@@ -415,6 +424,7 @@ export default function InvestmentCreateForm(props) {
               investmentAttribute2,
               numberOfPayments,
               paymentFrequency,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.startDate ?? value;
@@ -456,6 +466,7 @@ export default function InvestmentCreateForm(props) {
               investmentAttribute2,
               numberOfPayments,
               paymentFrequency,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.maturityDate ?? value;
@@ -497,6 +508,7 @@ export default function InvestmentCreateForm(props) {
               investmentAttribute2,
               numberOfPayments,
               paymentFrequency,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.stopDate ?? value;
@@ -541,6 +553,7 @@ export default function InvestmentCreateForm(props) {
               investmentAttribute2,
               numberOfPayments,
               paymentFrequency,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.extensionPeriod ?? value;
@@ -585,6 +598,7 @@ export default function InvestmentCreateForm(props) {
               investmentAttribute2,
               numberOfPayments,
               paymentFrequency,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.duration ?? value;
@@ -625,6 +639,7 @@ export default function InvestmentCreateForm(props) {
               investmentAttribute2,
               numberOfPayments,
               paymentFrequency,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.durationInterval ?? value;
@@ -665,6 +680,7 @@ export default function InvestmentCreateForm(props) {
               investmentAttribute2,
               numberOfPayments,
               paymentFrequency,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.type ?? value;
@@ -705,6 +721,7 @@ export default function InvestmentCreateForm(props) {
               investmentAttribute2,
               numberOfPayments,
               paymentFrequency,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.rateInterval ?? value;
@@ -745,6 +762,7 @@ export default function InvestmentCreateForm(props) {
               investmentAttribute2,
               numberOfPayments,
               paymentFrequency,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.investmentStatus ?? value;
@@ -785,6 +803,7 @@ export default function InvestmentCreateForm(props) {
               investmentAttribute2,
               numberOfPayments,
               paymentFrequency,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.investmentAttribute1 ?? value;
@@ -827,6 +846,7 @@ export default function InvestmentCreateForm(props) {
               investmentAttribute2: value,
               numberOfPayments,
               paymentFrequency,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.investmentAttribute2 ?? value;
@@ -873,6 +893,7 @@ export default function InvestmentCreateForm(props) {
               investmentAttribute2,
               numberOfPayments: value,
               paymentFrequency,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.numberOfPayments ?? value;
@@ -917,6 +938,7 @@ export default function InvestmentCreateForm(props) {
               investmentAttribute2,
               numberOfPayments,
               paymentFrequency: value,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.paymentFrequency ?? value;
@@ -930,6 +952,47 @@ export default function InvestmentCreateForm(props) {
         errorMessage={errors.paymentFrequency?.errorMessage}
         hasError={errors.paymentFrequency?.hasError}
         {...getOverrideProps(overrides, "paymentFrequency")}
+      ></TextField>
+      <TextField
+        label="Status"
+        isRequired={false}
+        isReadOnly={false}
+        value={status}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              principal,
+              description,
+              fees,
+              interestRate,
+              startDate,
+              maturityDate,
+              stopDate,
+              extensionPeriod,
+              duration,
+              durationInterval,
+              type,
+              rateInterval,
+              investmentStatus,
+              investmentAttribute1,
+              investmentAttribute2,
+              numberOfPayments,
+              paymentFrequency,
+              status: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.status ?? value;
+          }
+          if (errors.status?.hasError) {
+            runValidationTasks("status", value);
+          }
+          setStatus(value);
+        }}
+        onBlur={() => runValidationTasks("status", status)}
+        errorMessage={errors.status?.errorMessage}
+        hasError={errors.status?.hasError}
+        {...getOverrideProps(overrides, "status")}
       ></TextField>
       <Flex
         justifyContent="space-between"

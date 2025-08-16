@@ -39,6 +39,7 @@ export default function CustomFormFieldUpdateForm(props) {
     required: false,
     order: "",
     createdBy: "",
+    status: "",
   };
   const [formKey, setFormKey] = React.useState(initialValues.formKey);
   const [label, setLabel] = React.useState(initialValues.label);
@@ -47,6 +48,7 @@ export default function CustomFormFieldUpdateForm(props) {
   const [required, setRequired] = React.useState(initialValues.required);
   const [order, setOrder] = React.useState(initialValues.order);
   const [createdBy, setCreatedBy] = React.useState(initialValues.createdBy);
+  const [status, setStatus] = React.useState(initialValues.status);
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     const cleanValues = customFormFieldRecord
@@ -63,6 +65,7 @@ export default function CustomFormFieldUpdateForm(props) {
     setRequired(cleanValues.required);
     setOrder(cleanValues.order);
     setCreatedBy(cleanValues.createdBy);
+    setStatus(cleanValues.status);
     setErrors({});
   };
   const [customFormFieldRecord, setCustomFormFieldRecord] = React.useState(
@@ -91,6 +94,7 @@ export default function CustomFormFieldUpdateForm(props) {
     required: [],
     order: [],
     createdBy: [],
+    status: [],
   };
   const runValidationTasks = async (
     fieldName,
@@ -125,6 +129,7 @@ export default function CustomFormFieldUpdateForm(props) {
           required: required ?? null,
           order: order ?? null,
           createdBy: createdBy ?? null,
+          status: status ?? null,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -192,6 +197,7 @@ export default function CustomFormFieldUpdateForm(props) {
               required,
               order,
               createdBy,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.formKey ?? value;
@@ -222,6 +228,7 @@ export default function CustomFormFieldUpdateForm(props) {
               required,
               order,
               createdBy,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.label ?? value;
@@ -252,6 +259,7 @@ export default function CustomFormFieldUpdateForm(props) {
               required,
               order,
               createdBy,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.fieldType ?? value;
@@ -282,6 +290,7 @@ export default function CustomFormFieldUpdateForm(props) {
               required,
               order,
               createdBy,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.options ?? value;
@@ -312,6 +321,7 @@ export default function CustomFormFieldUpdateForm(props) {
               required: value,
               order,
               createdBy,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.required ?? value;
@@ -346,6 +356,7 @@ export default function CustomFormFieldUpdateForm(props) {
               required,
               order: value,
               createdBy,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.order ?? value;
@@ -376,6 +387,7 @@ export default function CustomFormFieldUpdateForm(props) {
               required,
               order,
               createdBy: value,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.createdBy ?? value;
@@ -389,6 +401,37 @@ export default function CustomFormFieldUpdateForm(props) {
         errorMessage={errors.createdBy?.errorMessage}
         hasError={errors.createdBy?.hasError}
         {...getOverrideProps(overrides, "createdBy")}
+      ></TextField>
+      <TextField
+        label="Status"
+        isRequired={false}
+        isReadOnly={false}
+        value={status}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              formKey,
+              label,
+              fieldType,
+              options,
+              required,
+              order,
+              createdBy,
+              status: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.status ?? value;
+          }
+          if (errors.status?.hasError) {
+            runValidationTasks("status", value);
+          }
+          setStatus(value);
+        }}
+        onBlur={() => runValidationTasks("status", status)}
+        errorMessage={errors.status?.errorMessage}
+        hasError={errors.status?.hasError}
+        {...getOverrideProps(overrides, "status")}
       ></TextField>
       <Flex
         justifyContent="space-between"

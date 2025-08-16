@@ -37,6 +37,7 @@ export default function AccountCreateForm(props) {
     interestAccrued: "",
     interestAccruedDate: "",
     accountStatus: "",
+    status: "",
   };
   const [name, setName] = React.useState(initialValues.name);
   const [accountType, setAccountType] = React.useState(
@@ -74,6 +75,7 @@ export default function AccountCreateForm(props) {
   const [accountStatus, setAccountStatus] = React.useState(
     initialValues.accountStatus
   );
+  const [status, setStatus] = React.useState(initialValues.status);
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     setName(initialValues.name);
@@ -90,6 +92,7 @@ export default function AccountCreateForm(props) {
     setInterestAccrued(initialValues.interestAccrued);
     setInterestAccruedDate(initialValues.interestAccruedDate);
     setAccountStatus(initialValues.accountStatus);
+    setStatus(initialValues.status);
     setErrors({});
   };
   const validations = {
@@ -107,6 +110,7 @@ export default function AccountCreateForm(props) {
     interestAccrued: [],
     interestAccruedDate: [],
     accountStatus: [],
+    status: [],
   };
   const runValidationTasks = async (
     fieldName,
@@ -148,6 +152,7 @@ export default function AccountCreateForm(props) {
           interestAccrued,
           interestAccruedDate,
           accountStatus,
+          status,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -224,6 +229,7 @@ export default function AccountCreateForm(props) {
               interestAccrued,
               interestAccruedDate,
               accountStatus,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.name ?? value;
@@ -261,6 +267,7 @@ export default function AccountCreateForm(props) {
               interestAccrued,
               interestAccruedDate,
               accountStatus,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.accountType ?? value;
@@ -298,6 +305,7 @@ export default function AccountCreateForm(props) {
               interestAccrued,
               interestAccruedDate,
               accountStatus,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.accountNumber ?? value;
@@ -335,6 +343,7 @@ export default function AccountCreateForm(props) {
               interestAccrued,
               interestAccruedDate,
               accountStatus,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.description ?? value;
@@ -372,6 +381,7 @@ export default function AccountCreateForm(props) {
               interestAccrued,
               interestAccruedDate,
               accountStatus,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.currency ?? value;
@@ -413,6 +423,7 @@ export default function AccountCreateForm(props) {
               interestAccrued,
               interestAccruedDate,
               accountStatus,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.currentBalance ?? value;
@@ -454,6 +465,7 @@ export default function AccountCreateForm(props) {
               interestAccrued,
               interestAccruedDate,
               accountStatus,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.openingBalance ?? value;
@@ -495,6 +507,7 @@ export default function AccountCreateForm(props) {
               interestAccrued,
               interestAccruedDate,
               accountStatus,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.interestRate ?? value;
@@ -532,6 +545,7 @@ export default function AccountCreateForm(props) {
               interestAccrued,
               interestAccruedDate,
               accountStatus,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.interestCalculationMethod ?? value;
@@ -574,6 +588,7 @@ export default function AccountCreateForm(props) {
               interestAccrued,
               interestAccruedDate,
               accountStatus,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.interestPostingFrequency ?? value;
@@ -616,6 +631,7 @@ export default function AccountCreateForm(props) {
               interestAccrued,
               interestAccruedDate,
               accountStatus,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.interestPostingDate ?? value;
@@ -659,6 +675,7 @@ export default function AccountCreateForm(props) {
               interestAccrued: value,
               interestAccruedDate,
               accountStatus,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.interestAccrued ?? value;
@@ -697,6 +714,7 @@ export default function AccountCreateForm(props) {
               interestAccrued,
               interestAccruedDate: value,
               accountStatus,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.interestAccruedDate ?? value;
@@ -736,6 +754,7 @@ export default function AccountCreateForm(props) {
               interestAccrued,
               interestAccruedDate,
               accountStatus: value,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.accountStatus ?? value;
@@ -749,6 +768,44 @@ export default function AccountCreateForm(props) {
         errorMessage={errors.accountStatus?.errorMessage}
         hasError={errors.accountStatus?.hasError}
         {...getOverrideProps(overrides, "accountStatus")}
+      ></TextField>
+      <TextField
+        label="Status"
+        isRequired={false}
+        isReadOnly={false}
+        value={status}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              name,
+              accountType,
+              accountNumber,
+              description,
+              currency,
+              currentBalance,
+              openingBalance,
+              interestRate,
+              interestCalculationMethod,
+              interestPostingFrequency,
+              interestPostingDate,
+              interestAccrued,
+              interestAccruedDate,
+              accountStatus,
+              status: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.status ?? value;
+          }
+          if (errors.status?.hasError) {
+            runValidationTasks("status", value);
+          }
+          setStatus(value);
+        }}
+        onBlur={() => runValidationTasks("status", status)}
+        errorMessage={errors.status?.errorMessage}
+        hasError={errors.status?.hasError}
+        {...getOverrideProps(overrides, "status")}
       ></TextField>
       <Flex
         justifyContent="space-between"

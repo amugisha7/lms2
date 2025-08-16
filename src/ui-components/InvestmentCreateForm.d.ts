@@ -39,6 +39,7 @@ export declare type InvestmentCreateFormInputValues = {
     investmentAttribute2?: string;
     numberOfPayments?: number;
     paymentFrequency?: number;
+    status?: string;
 };
 export declare type InvestmentCreateFormValidationValues = {
     principal?: ValidationFunction<number>;
@@ -58,6 +59,7 @@ export declare type InvestmentCreateFormValidationValues = {
     investmentAttribute2?: ValidationFunction<string>;
     numberOfPayments?: ValidationFunction<number>;
     paymentFrequency?: ValidationFunction<number>;
+    status?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type InvestmentCreateFormOverridesProps = {
@@ -79,6 +81,7 @@ export declare type InvestmentCreateFormOverridesProps = {
     investmentAttribute2?: PrimitiveOverrideProps<TextFieldProps>;
     numberOfPayments?: PrimitiveOverrideProps<TextFieldProps>;
     paymentFrequency?: PrimitiveOverrideProps<TextFieldProps>;
+    status?: PrimitiveOverrideProps<TextFieldProps>;
 } & EscapeHatchProps;
 export declare type InvestmentCreateFormProps = React.PropsWithChildren<{
     overrides?: InvestmentCreateFormOverridesProps | undefined | null;

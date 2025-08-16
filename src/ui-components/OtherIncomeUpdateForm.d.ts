@@ -27,6 +27,7 @@ export declare type OtherIncomeUpdateFormInputValues = {
     amount?: number;
     incomeDate?: string;
     incomeType?: string;
+    status?: string;
 };
 export declare type OtherIncomeUpdateFormValidationValues = {
     name?: ValidationFunction<string>;
@@ -34,6 +35,7 @@ export declare type OtherIncomeUpdateFormValidationValues = {
     amount?: ValidationFunction<number>;
     incomeDate?: ValidationFunction<string>;
     incomeType?: ValidationFunction<string>;
+    status?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type OtherIncomeUpdateFormOverridesProps = {
@@ -43,6 +45,7 @@ export declare type OtherIncomeUpdateFormOverridesProps = {
     amount?: PrimitiveOverrideProps<TextFieldProps>;
     incomeDate?: PrimitiveOverrideProps<TextFieldProps>;
     incomeType?: PrimitiveOverrideProps<TextFieldProps>;
+    status?: PrimitiveOverrideProps<TextFieldProps>;
 } & EscapeHatchProps;
 export declare type OtherIncomeUpdateFormProps = React.PropsWithChildren<{
     overrides?: OtherIncomeUpdateFormOverridesProps | undefined | null;

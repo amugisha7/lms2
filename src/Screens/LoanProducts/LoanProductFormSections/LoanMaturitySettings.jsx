@@ -57,13 +57,11 @@ export default function LoanMaturitySettings({ formik }) {
       <Grid container spacing={2} sx={{ mt: 2 }}>
         <Grid size={{ xs: 12, md: 12 }}>
           <hr style={{ width: "100%", marginBottom: "20px" }} />
-          <Typography variant="caption">LOAN MATURITY SETTINGS:</Typography>
+          <p className="smallFormHeading">LOAN MATURITY SETTINGS:</p>
         </Grid>
         <Grid size={{ xs: 12, md: 12 }}>
           <FormControl component="fieldset" fullWidth>
-            <FormLabel component="legend">
-              Should the Loan extend after Maturity?
-            </FormLabel>
+            <Typography>Should the Loan extend after Maturity?</Typography>
             <RadioGroup
               row
               name="extendLoanAfterMaturity"

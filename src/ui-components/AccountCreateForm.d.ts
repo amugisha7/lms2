@@ -36,6 +36,7 @@ export declare type AccountCreateFormInputValues = {
     interestAccrued?: number;
     interestAccruedDate?: string;
     accountStatus?: string;
+    status?: string;
 };
 export declare type AccountCreateFormValidationValues = {
     name?: ValidationFunction<string>;
@@ -52,6 +53,7 @@ export declare type AccountCreateFormValidationValues = {
     interestAccrued?: ValidationFunction<number>;
     interestAccruedDate?: ValidationFunction<string>;
     accountStatus?: ValidationFunction<string>;
+    status?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type AccountCreateFormOverridesProps = {
@@ -70,6 +72,7 @@ export declare type AccountCreateFormOverridesProps = {
     interestAccrued?: PrimitiveOverrideProps<TextFieldProps>;
     interestAccruedDate?: PrimitiveOverrideProps<TextFieldProps>;
     accountStatus?: PrimitiveOverrideProps<TextFieldProps>;
+    status?: PrimitiveOverrideProps<TextFieldProps>;
 } & EscapeHatchProps;
 export declare type AccountCreateFormProps = React.PropsWithChildren<{
     overrides?: AccountCreateFormOverridesProps | undefined | null;

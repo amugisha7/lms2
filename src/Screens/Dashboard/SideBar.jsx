@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Box,
   Typography,
@@ -6,25 +6,22 @@ import {
   ListItem,
   ListItemIcon,
   ListItemText,
-  Collapse
-} from '@mui/material';
-import {
-  ExpandLess,
-  ExpandMore
-} from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
+  Collapse,
+} from "@mui/material";
+import { ExpandLess, ExpandMore } from "@mui/icons-material";
+import { useNavigate } from "react-router-dom";
 
-import myLogo from '../../Resources/loantabs_logo.png';
-import { menuItems } from './Menu';
+import myLogo from "../../Resources/loantabs_logo.png";
+import { menuItems } from "./Menu";
 
 const SideBar = ({ open = true, onClose }) => {
   const [expandedItems, setExpandedItems] = useState({});
   const navigate = useNavigate();
 
   const handleToggleExpand = (itemName) => {
-    setExpandedItems(prev => ({
+    setExpandedItems((prev) => ({
       ...prev,
-      [itemName]: !prev[itemName]
+      [itemName]: !prev[itemName],
     }));
   };
 
@@ -34,43 +31,45 @@ const SideBar = ({ open = true, onClose }) => {
         width: 220,
         minWidth: 220,
         flexShrink: 0,
-        bgcolor: '#1B1B1B',
-        color: 'white',
-        display: open ? 'flex' : 'none',
-        flexDirection: 'column',
-        transition: 'all 0.3s',
-        overflowY: 'auto',
-        height: '100vh'
+        bgcolor: "#1B1B1B",
+        color: "white",
+        display: open ? "flex" : "none",
+        flexDirection: "column",
+        transition: "all 0.3s",
+        overflowY: "auto",
+        height: "100vh",
+        borderRight: "1px solid #e0e0e0",
       }}
     >
       {/* LoanTabs Logo */}
       <Box
         sx={{
-          display: 'flex',
-          alignItems: 'center',
-          flexDirection: 'row',
-          mt: 2, ml: 2
+          display: "flex",
+          alignItems: "center",
+          flexDirection: "row",
+          mt: 2,
+          ml: 2,
         }}
       >
         <Box
           sx={{
-            width: '2rem',
-            height: '2rem',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            alignSelf: 'center',
-            overflow: 'hidden',
+            width: "2rem",
+            height: "2rem",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            alignSelf: "center",
+            overflow: "hidden",
           }}
         >
           <img
             src={myLogo}
             alt="LoanTabs Logo"
             style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'contain',
-              display: 'block',
+              width: "100%",
+              height: "100%",
+              objectFit: "contain",
+              display: "block",
             }}
           />
         </Box>
@@ -78,7 +77,7 @@ const SideBar = ({ open = true, onClose }) => {
           variant="body"
           noWrap
           component="div"
-          sx={{ mr: 3, display: { xs: 'none', sm: 'block' } }}
+          sx={{ mr: 3, display: { xs: "none", sm: "block" } }}
         >
           LoanTabs
         </Typography>
@@ -90,7 +89,7 @@ const SideBar = ({ open = true, onClose }) => {
           {menuItems.map((item, index) => {
             if (item.expandable && item.children) {
               const isExpanded = expandedItems[item.name] || false;
-              
+
               return (
                 <React.Fragment key={item.name}>
                   <ListItem
@@ -99,21 +98,25 @@ const SideBar = ({ open = true, onClose }) => {
                     sx={{
                       mb: 0.5,
                       px: 3,
-                      cursor: 'pointer',
-                      '&:hover': { bgcolor: '#000' }
+                      cursor: "pointer",
+                      "&:hover": { bgcolor: "#000" },
                     }}
                   >
-                    <ListItemIcon sx={{ color: 'white', minWidth: 36 }}>
+                    <ListItemIcon sx={{ color: "white", minWidth: 36 }}>
                       {item.icon}
                     </ListItemIcon>
                     <ListItemText
                       primary={item.name}
                       primaryTypographyProps={{
-                        fontSize: '0.875rem',
-                        sx: { color: 'white' }
+                        fontSize: "0.875rem",
+                        sx: { color: "white" },
                       }}
                     />
-                    {isExpanded ? <ExpandLess sx={{ color: 'white' }} /> : <ExpandMore sx={{ color: 'white' }} />}
+                    {isExpanded ? (
+                      <ExpandLess sx={{ color: "white" }} />
+                    ) : (
+                      <ExpandMore sx={{ color: "white" }} />
+                    )}
                   </ListItem>
                   <Collapse in={isExpanded} timeout="auto" unmountOnExit>
                     <List component="div" disablePadding dense>
@@ -125,19 +128,19 @@ const SideBar = ({ open = true, onClose }) => {
                           sx={{
                             pl: 6,
                             mb: 0.5,
-                            color: 'white',
-                            cursor: 'pointer',
-                            '&:hover': { bgcolor: '#000' }
+                            color: "white",
+                            cursor: "pointer",
+                            "&:hover": { bgcolor: "#000" },
                           }}
                         >
-                          <ListItemIcon sx={{ color: 'white', minWidth: 36 }}>
+                          <ListItemIcon sx={{ color: "white", minWidth: 36 }}>
                             {child.icon}
                           </ListItemIcon>
                           <ListItemText
                             primary={child.name}
                             primaryTypographyProps={{
-                              fontSize: '0.85rem',
-                              sx: { color: 'white' }
+                              fontSize: "0.85rem",
+                              sx: { color: "white" },
                             }}
                           />
                         </ListItem>
@@ -147,7 +150,7 @@ const SideBar = ({ open = true, onClose }) => {
                 </React.Fragment>
               );
             }
-            
+
             return (
               <ListItem
                 key={item.name}
@@ -156,18 +159,18 @@ const SideBar = ({ open = true, onClose }) => {
                 sx={{
                   mb: 0.5,
                   px: 3,
-                  cursor: 'pointer',
-                  '&:hover': { bgcolor: '#000' }
+                  cursor: "pointer",
+                  "&:hover": { bgcolor: "#000" },
                 }}
               >
-                <ListItemIcon sx={{ color: 'white', minWidth: 36 }}>
+                <ListItemIcon sx={{ color: "white", minWidth: 36 }}>
                   {item.icon}
                 </ListItemIcon>
                 <ListItemText
                   primary={item.name}
                   primaryTypographyProps={{
-                    fontSize: '0.875rem',
-                    sx: { color: 'white' }
+                    fontSize: "0.875rem",
+                    sx: { color: "white" },
                   }}
                 />
               </ListItem>

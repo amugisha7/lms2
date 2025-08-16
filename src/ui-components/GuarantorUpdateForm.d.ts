@@ -28,6 +28,7 @@ export declare type GuarantorUpdateFormInputValues = {
     email?: string;
     address?: string;
     customFieldsData?: string;
+    status?: string;
 };
 export declare type GuarantorUpdateFormValidationValues = {
     name?: ValidationFunction<string>;
@@ -36,6 +37,7 @@ export declare type GuarantorUpdateFormValidationValues = {
     email?: ValidationFunction<string>;
     address?: ValidationFunction<string>;
     customFieldsData?: ValidationFunction<string>;
+    status?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type GuarantorUpdateFormOverridesProps = {
@@ -46,6 +48,7 @@ export declare type GuarantorUpdateFormOverridesProps = {
     email?: PrimitiveOverrideProps<TextFieldProps>;
     address?: PrimitiveOverrideProps<TextFieldProps>;
     customFieldsData?: PrimitiveOverrideProps<TextAreaFieldProps>;
+    status?: PrimitiveOverrideProps<TextFieldProps>;
 } & EscapeHatchProps;
 export declare type GuarantorUpdateFormProps = React.PropsWithChildren<{
     overrides?: GuarantorUpdateFormOverridesProps | undefined | null;

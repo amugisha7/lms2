@@ -14,7 +14,7 @@ export default function PrincipalSettings({ formik }) {
     <>
       <Grid size={{ xs: 12, md: 12 }}>
         <hr style={{ width: "100%", marginBottom: "20px" }} />
-        <Typography variant="caption">PRINCIPAL SETTINGS:</Typography>
+        <p className="smallFormHeading">PRINCIPAL SETTINGS:</p>
       </Grid>
       <Grid size={{ xs: 12, md: 4 }}>
         <FormLabel htmlFor="minPrincipal">Minimum Principal Amount</FormLabel>

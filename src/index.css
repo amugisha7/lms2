@@ -11,3 +11,18 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+.smallFormHeading {
+  color: #ff9800; /* Material orange 500 */
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-top: 30px;
+  margin-bottom: -5px;
+}
+
+.helperText {
+  color: #1e7ad6; 
+  font-size: 12px;/* Material Blue 700, good contrast on light/dark */
+}
+

@@ -33,6 +33,7 @@ export default function DocumentUpdateForm(props) {
     s3Key: "",
     fileName: "",
     contentType: "",
+    status: "",
   };
   const [documentType, setDocumentType] = React.useState(
     initialValues.documentType
@@ -54,6 +55,7 @@ export default function DocumentUpdateForm(props) {
   const [contentType, setContentType] = React.useState(
     initialValues.contentType
   );
+  const [status, setStatus] = React.useState(initialValues.status);
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     const cleanValues = documentRecord
@@ -67,6 +69,7 @@ export default function DocumentUpdateForm(props) {
     setS3Key(cleanValues.s3Key);
     setFileName(cleanValues.fileName);
     setContentType(cleanValues.contentType);
+    setStatus(cleanValues.status);
     setErrors({});
   };
   const [documentRecord, setDocumentRecord] = React.useState(documentModelProp);
@@ -94,6 +97,7 @@ export default function DocumentUpdateForm(props) {
     s3Key: [],
     fileName: [],
     contentType: [],
+    status: [],
   };
   const runValidationTasks = async (
     fieldName,
@@ -129,6 +133,7 @@ export default function DocumentUpdateForm(props) {
           s3Key: s3Key ?? null,
           fileName: fileName ?? null,
           contentType: contentType ?? null,
+          status: status ?? null,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -197,6 +202,7 @@ export default function DocumentUpdateForm(props) {
               s3Key,
               fileName,
               contentType,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.documentType ?? value;
@@ -228,6 +234,7 @@ export default function DocumentUpdateForm(props) {
               s3Key,
               fileName,
               contentType,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.documentName ?? value;
@@ -259,6 +266,7 @@ export default function DocumentUpdateForm(props) {
               s3Key,
               fileName,
               contentType,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.documentDescription ?? value;
@@ -292,6 +300,7 @@ export default function DocumentUpdateForm(props) {
               s3Key,
               fileName,
               contentType,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.serialNumber ?? value;
@@ -324,6 +333,7 @@ export default function DocumentUpdateForm(props) {
               s3Key,
               fileName,
               contentType,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.documentDate ?? value;
@@ -355,6 +365,7 @@ export default function DocumentUpdateForm(props) {
               s3Key: value,
               fileName,
               contentType,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.s3Key ?? value;
@@ -386,6 +397,7 @@ export default function DocumentUpdateForm(props) {
               s3Key,
               fileName: value,
               contentType,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.fileName ?? value;
@@ -417,6 +429,7 @@ export default function DocumentUpdateForm(props) {
               s3Key,
               fileName,
               contentType: value,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.contentType ?? value;
@@ -430,6 +443,38 @@ export default function DocumentUpdateForm(props) {
         errorMessage={errors.contentType?.errorMessage}
         hasError={errors.contentType?.hasError}
         {...getOverrideProps(overrides, "contentType")}
+      ></TextField>
+      <TextField
+        label="Status"
+        isRequired={false}
+        isReadOnly={false}
+        value={status}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              documentType,
+              documentName,
+              documentDescription,
+              serialNumber,
+              documentDate,
+              s3Key,
+              fileName,
+              contentType,
+              status: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.status ?? value;
+          }
+          if (errors.status?.hasError) {
+            runValidationTasks("status", value);
+          }
+          setStatus(value);
+        }}
+        onBlur={() => runValidationTasks("status", status)}
+        errorMessage={errors.status?.errorMessage}
+        hasError={errors.status?.hasError}
+        {...getOverrideProps(overrides, "status")}
       ></TextField>
       <Flex
         justifyContent="space-between"

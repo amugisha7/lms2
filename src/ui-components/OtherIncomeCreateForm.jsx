@@ -28,6 +28,7 @@ export default function OtherIncomeCreateForm(props) {
     amount: "",
     incomeDate: "",
     incomeType: "",
+    status: "",
   };
   const [name, setName] = React.useState(initialValues.name);
   const [description, setDescription] = React.useState(
@@ -36,6 +37,7 @@ export default function OtherIncomeCreateForm(props) {
   const [amount, setAmount] = React.useState(initialValues.amount);
   const [incomeDate, setIncomeDate] = React.useState(initialValues.incomeDate);
   const [incomeType, setIncomeType] = React.useState(initialValues.incomeType);
+  const [status, setStatus] = React.useState(initialValues.status);
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     setName(initialValues.name);
@@ -43,6 +45,7 @@ export default function OtherIncomeCreateForm(props) {
     setAmount(initialValues.amount);
     setIncomeDate(initialValues.incomeDate);
     setIncomeType(initialValues.incomeType);
+    setStatus(initialValues.status);
     setErrors({});
   };
   const validations = {
@@ -51,6 +54,7 @@ export default function OtherIncomeCreateForm(props) {
     amount: [],
     incomeDate: [],
     incomeType: [],
+    status: [],
   };
   const runValidationTasks = async (
     fieldName,
@@ -83,6 +87,7 @@ export default function OtherIncomeCreateForm(props) {
           amount,
           incomeDate,
           incomeType,
+          status,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -150,6 +155,7 @@ export default function OtherIncomeCreateForm(props) {
               amount,
               incomeDate,
               incomeType,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.name ?? value;
@@ -178,6 +184,7 @@ export default function OtherIncomeCreateForm(props) {
               amount,
               incomeDate,
               incomeType,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.description ?? value;
@@ -210,6 +217,7 @@ export default function OtherIncomeCreateForm(props) {
               amount: value,
               incomeDate,
               incomeType,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.amount ?? value;
@@ -239,6 +247,7 @@ export default function OtherIncomeCreateForm(props) {
               amount,
               incomeDate: value,
               incomeType,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.incomeDate ?? value;
@@ -267,6 +276,7 @@ export default function OtherIncomeCreateForm(props) {
               amount,
               incomeDate,
               incomeType: value,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.incomeType ?? value;
@@ -280,6 +290,35 @@ export default function OtherIncomeCreateForm(props) {
         errorMessage={errors.incomeType?.errorMessage}
         hasError={errors.incomeType?.hasError}
         {...getOverrideProps(overrides, "incomeType")}
+      ></TextField>
+      <TextField
+        label="Status"
+        isRequired={false}
+        isReadOnly={false}
+        value={status}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              name,
+              description,
+              amount,
+              incomeDate,
+              incomeType,
+              status: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.status ?? value;
+          }
+          if (errors.status?.hasError) {
+            runValidationTasks("status", value);
+          }
+          setStatus(value);
+        }}
+        onBlur={() => runValidationTasks("status", status)}
+        errorMessage={errors.status?.errorMessage}
+        hasError={errors.status?.hasError}
+        {...getOverrideProps(overrides, "status")}
       ></TextField>
       <Flex
         justifyContent="space-between"

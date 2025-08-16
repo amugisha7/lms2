@@ -29,6 +29,7 @@ export declare type CustomFormFieldUpdateFormInputValues = {
     required?: boolean;
     order?: number;
     createdBy?: string;
+    status?: string;
 };
 export declare type CustomFormFieldUpdateFormValidationValues = {
     formKey?: ValidationFunction<string>;
@@ -38,6 +39,7 @@ export declare type CustomFormFieldUpdateFormValidationValues = {
     required?: ValidationFunction<boolean>;
     order?: ValidationFunction<number>;
     createdBy?: ValidationFunction<string>;
+    status?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type CustomFormFieldUpdateFormOverridesProps = {
@@ -49,6 +51,7 @@ export declare type CustomFormFieldUpdateFormOverridesProps = {
     required?: PrimitiveOverrideProps<SwitchFieldProps>;
     order?: PrimitiveOverrideProps<TextFieldProps>;
     createdBy?: PrimitiveOverrideProps<TextFieldProps>;
+    status?: PrimitiveOverrideProps<TextFieldProps>;
 } & EscapeHatchProps;
 export declare type CustomFormFieldUpdateFormProps = React.PropsWithChildren<{
     overrides?: CustomFormFieldUpdateFormOverridesProps | undefined | null;

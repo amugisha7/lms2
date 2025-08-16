@@ -28,6 +28,7 @@ export declare type CreditScoreUpdateFormInputValues = {
     scoreDate?: string;
     scoreSource?: string;
     scoreStatus?: string;
+    status?: string;
 };
 export declare type CreditScoreUpdateFormValidationValues = {
     name?: ValidationFunction<string>;
@@ -36,6 +37,7 @@ export declare type CreditScoreUpdateFormValidationValues = {
     scoreDate?: ValidationFunction<string>;
     scoreSource?: ValidationFunction<string>;
     scoreStatus?: ValidationFunction<string>;
+    status?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type CreditScoreUpdateFormOverridesProps = {
@@ -46,6 +48,7 @@ export declare type CreditScoreUpdateFormOverridesProps = {
     scoreDate?: PrimitiveOverrideProps<TextFieldProps>;
     scoreSource?: PrimitiveOverrideProps<TextFieldProps>;
     scoreStatus?: PrimitiveOverrideProps<TextFieldProps>;
+    status?: PrimitiveOverrideProps<TextFieldProps>;
 } & EscapeHatchProps;
 export declare type CreditScoreUpdateFormProps = React.PropsWithChildren<{
     overrides?: CreditScoreUpdateFormOverridesProps | undefined | null;

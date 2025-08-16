@@ -48,10 +48,33 @@ export default function InterestSettings({ formik }) {
     <>
       <Grid size={{ xs: 12, md: 12 }}>
         <hr style={{ width: "100%", marginBottom: "20px" }} />
-        <Typography variant="caption" sx={{ mt: 2 }}>
-          INTEREST SETTINGS:
-        </Typography>
+        <p className="smallFormHeading">INTEREST SETTINGS:</p>
       </Grid>
+      {formik.values.interestMethod && (
+        <Grid size={{ xs: 12, md: 12 }} sx={{ mb: "-20px" }}>
+          <p className="helperText">
+            {(() => {
+              switch (formik.values.interestMethod) {
+                case "flat":
+                  return "Flat Rate – Interest is calculated once on the original principal for the entire loan term.";
+                case "reducing_equal_instalments":
+                  return "Reducing Balance – Equal Instalments – Repayments are equal, but interest is charged on the remaining balance each period.";
+                case "reducing_equal_principal":
+                  return "Reducing Balance – Equal Principal – Principal repayments are equal each period, causing decreasing total payments as interest reduces over time.";
+                case "interest_only":
+                  return "Interest-Only – Borrower pays only interest during the term, with the full principal due at the end.";
+                case "compound_accrued":
+                  return "Compound Interest – Accrued – Interest is added to the outstanding balance periodically, increasing the amount on which future interest is calculated.";
+                case "compound_equal_instalments":
+                  return "Compound Interest – Equal Instalments – Loan is repaid in equal amounts, with interest compounding on the remaining balance each period.";
+                default:
+                  return "";
+              }
+            })()}
+          </p>
+        </Grid>
+      )}
+
       <Grid size={{ xs: 12, md: 4 }}>
         <FormLabel htmlFor="interestMethod">Interest Method</FormLabel>
         <Select
@@ -249,6 +272,7 @@ export default function InterestSettings({ formik }) {
           </Typography>
         )}
       </Grid>
+      {/* Show explanation for selected interest method */}
     </>
   );
 }

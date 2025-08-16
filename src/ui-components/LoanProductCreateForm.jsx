@@ -10,7 +10,6 @@ import {
   Button,
   Flex,
   Grid,
-  SelectField,
   SwitchField,
   TextAreaField,
   TextField,
@@ -53,6 +52,7 @@ export default function LoanProductCreateForm(props) {
     calculateInterestOn: "",
     loanInterestRateAfterMaturity: "",
     recurringPeriodAfterMaturityUnit: "",
+    status: "",
   };
   const [name, setName] = React.useState(initialValues.name);
   const [description, setDescription] = React.useState(
@@ -117,6 +117,7 @@ export default function LoanProductCreateForm(props) {
     recurringPeriodAfterMaturityUnit,
     setRecurringPeriodAfterMaturityUnit,
   ] = React.useState(initialValues.recurringPeriodAfterMaturityUnit);
+  const [status, setStatus] = React.useState(initialValues.status);
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     setName(initialValues.name);
@@ -145,6 +146,7 @@ export default function LoanProductCreateForm(props) {
     setRecurringPeriodAfterMaturityUnit(
       initialValues.recurringPeriodAfterMaturityUnit
     );
+    setStatus(initialValues.status);
     setErrors({});
   };
   const validations = {
@@ -170,6 +172,7 @@ export default function LoanProductCreateForm(props) {
     calculateInterestOn: [],
     loanInterestRateAfterMaturity: [],
     recurringPeriodAfterMaturityUnit: [],
+    status: [],
   };
   const runValidationTasks = async (
     fieldName,
@@ -219,6 +222,7 @@ export default function LoanProductCreateForm(props) {
           calculateInterestOn,
           loanInterestRateAfterMaturity,
           recurringPeriodAfterMaturityUnit,
+          status,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -303,6 +307,7 @@ export default function LoanProductCreateForm(props) {
               calculateInterestOn,
               loanInterestRateAfterMaturity,
               recurringPeriodAfterMaturityUnit,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.name ?? value;
@@ -348,6 +353,7 @@ export default function LoanProductCreateForm(props) {
               calculateInterestOn,
               loanInterestRateAfterMaturity,
               recurringPeriodAfterMaturityUnit,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.description ?? value;
@@ -397,6 +403,7 @@ export default function LoanProductCreateForm(props) {
               calculateInterestOn,
               loanInterestRateAfterMaturity,
               recurringPeriodAfterMaturityUnit,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.principalAmountMin ?? value;
@@ -448,6 +455,7 @@ export default function LoanProductCreateForm(props) {
               calculateInterestOn,
               loanInterestRateAfterMaturity,
               recurringPeriodAfterMaturityUnit,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.principalAmountMax ?? value;
@@ -499,6 +507,7 @@ export default function LoanProductCreateForm(props) {
               calculateInterestOn,
               loanInterestRateAfterMaturity,
               recurringPeriodAfterMaturityUnit,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.principalAmountDefault ?? value;
@@ -550,6 +559,7 @@ export default function LoanProductCreateForm(props) {
               calculateInterestOn,
               loanInterestRateAfterMaturity,
               recurringPeriodAfterMaturityUnit,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.interestRateMin ?? value;
@@ -599,6 +609,7 @@ export default function LoanProductCreateForm(props) {
               calculateInterestOn,
               loanInterestRateAfterMaturity,
               recurringPeriodAfterMaturityUnit,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.interestRateMax ?? value;
@@ -648,6 +659,7 @@ export default function LoanProductCreateForm(props) {
               calculateInterestOn,
               loanInterestRateAfterMaturity,
               recurringPeriodAfterMaturityUnit,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.interestRateDefault ?? value;
@@ -664,10 +676,10 @@ export default function LoanProductCreateForm(props) {
         hasError={errors.interestRateDefault?.hasError}
         {...getOverrideProps(overrides, "interestRateDefault")}
       ></TextField>
-      <SelectField
+      <TextField
         label="Interest calculation method"
-        placeholder="Please select an option"
-        isDisabled={false}
+        isRequired={false}
+        isReadOnly={false}
         value={interestCalculationMethod}
         onChange={(e) => {
           let { value } = e.target;
@@ -695,6 +707,7 @@ export default function LoanProductCreateForm(props) {
               calculateInterestOn,
               loanInterestRateAfterMaturity,
               recurringPeriodAfterMaturityUnit,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.interestCalculationMethod ?? value;
@@ -713,23 +726,7 @@ export default function LoanProductCreateForm(props) {
         errorMessage={errors.interestCalculationMethod?.errorMessage}
         hasError={errors.interestCalculationMethod?.hasError}
         {...getOverrideProps(overrides, "interestCalculationMethod")}
-      >
-        <option
-          children="Simple"
-          value="SIMPLE"
-          {...getOverrideProps(overrides, "interestCalculationMethodoption0")}
-        ></option>
-        <option
-          children="Compound"
-          value="COMPOUND"
-          {...getOverrideProps(overrides, "interestCalculationMethodoption1")}
-        ></option>
-        <option
-          children="Flat"
-          value="FLAT"
-          {...getOverrideProps(overrides, "interestCalculationMethodoption2")}
-        ></option>
-      </SelectField>
+      ></TextField>
       <TextField
         label="Interest type"
         isRequired={false}
@@ -761,6 +758,7 @@ export default function LoanProductCreateForm(props) {
               calculateInterestOn,
               loanInterestRateAfterMaturity,
               recurringPeriodAfterMaturityUnit,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.interestType ?? value;
@@ -806,6 +804,7 @@ export default function LoanProductCreateForm(props) {
               calculateInterestOn,
               loanInterestRateAfterMaturity,
               recurringPeriodAfterMaturityUnit,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.interestPeriod ?? value;
@@ -855,6 +854,7 @@ export default function LoanProductCreateForm(props) {
               calculateInterestOn,
               loanInterestRateAfterMaturity,
               recurringPeriodAfterMaturityUnit,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.termDurationMin ?? value;
@@ -904,6 +904,7 @@ export default function LoanProductCreateForm(props) {
               calculateInterestOn,
               loanInterestRateAfterMaturity,
               recurringPeriodAfterMaturityUnit,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.termDurationMax ?? value;
@@ -953,6 +954,7 @@ export default function LoanProductCreateForm(props) {
               calculateInterestOn,
               loanInterestRateAfterMaturity,
               recurringPeriodAfterMaturityUnit,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.termDurationDefault ?? value;
@@ -1000,6 +1002,7 @@ export default function LoanProductCreateForm(props) {
               calculateInterestOn,
               loanInterestRateAfterMaturity,
               recurringPeriodAfterMaturityUnit,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.durationPeriod ?? value;
@@ -1045,6 +1048,7 @@ export default function LoanProductCreateForm(props) {
               calculateInterestOn,
               loanInterestRateAfterMaturity,
               recurringPeriodAfterMaturityUnit,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.repaymentFrequency ?? value;
@@ -1091,6 +1095,7 @@ export default function LoanProductCreateForm(props) {
               calculateInterestOn,
               loanInterestRateAfterMaturity,
               recurringPeriodAfterMaturityUnit,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.repaymentOrder ?? value;
@@ -1136,6 +1141,7 @@ export default function LoanProductCreateForm(props) {
               calculateInterestOn,
               loanInterestRateAfterMaturity,
               recurringPeriodAfterMaturityUnit,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.extendLoanAfterMaturity ?? value;
@@ -1183,6 +1189,7 @@ export default function LoanProductCreateForm(props) {
               calculateInterestOn,
               loanInterestRateAfterMaturity,
               recurringPeriodAfterMaturityUnit,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.interestTypeMaturity ?? value;
@@ -1230,6 +1237,7 @@ export default function LoanProductCreateForm(props) {
               calculateInterestOn: value,
               loanInterestRateAfterMaturity,
               recurringPeriodAfterMaturityUnit,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.calculateInterestOn ?? value;
@@ -1281,6 +1289,7 @@ export default function LoanProductCreateForm(props) {
               calculateInterestOn,
               loanInterestRateAfterMaturity: value,
               recurringPeriodAfterMaturityUnit,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.loanInterestRateAfterMaturity ?? value;
@@ -1331,6 +1340,7 @@ export default function LoanProductCreateForm(props) {
               calculateInterestOn,
               loanInterestRateAfterMaturity,
               recurringPeriodAfterMaturityUnit: value,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.recurringPeriodAfterMaturityUnit ?? value;
@@ -1349,6 +1359,52 @@ export default function LoanProductCreateForm(props) {
         errorMessage={errors.recurringPeriodAfterMaturityUnit?.errorMessage}
         hasError={errors.recurringPeriodAfterMaturityUnit?.hasError}
         {...getOverrideProps(overrides, "recurringPeriodAfterMaturityUnit")}
+      ></TextField>
+      <TextField
+        label="Status"
+        isRequired={false}
+        isReadOnly={false}
+        value={status}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              name,
+              description,
+              principalAmountMin,
+              principalAmountMax,
+              principalAmountDefault,
+              interestRateMin,
+              interestRateMax,
+              interestRateDefault,
+              interestCalculationMethod,
+              interestType,
+              interestPeriod,
+              termDurationMin,
+              termDurationMax,
+              termDurationDefault,
+              durationPeriod,
+              repaymentFrequency,
+              repaymentOrder,
+              extendLoanAfterMaturity,
+              interestTypeMaturity,
+              calculateInterestOn,
+              loanInterestRateAfterMaturity,
+              recurringPeriodAfterMaturityUnit,
+              status: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.status ?? value;
+          }
+          if (errors.status?.hasError) {
+            runValidationTasks("status", value);
+          }
+          setStatus(value);
+        }}
+        onBlur={() => runValidationTasks("status", status)}
+        errorMessage={errors.status?.errorMessage}
+        hasError={errors.status?.hasError}
+        {...getOverrideProps(overrides, "status")}
       ></TextField>
       <Flex
         justifyContent="space-between"

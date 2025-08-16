@@ -216,13 +216,15 @@ const baseValidationSchema = Yup.object().shape({
 });
 
 export default function EditLoanProductForm(props) {
+  const { initialValues, isViewMode = false, onClose, onEditSuccess } = props;
   const { userDetails } = useContext(UserContext);
   const navigate = useNavigate();
   const [submitError, setSubmitError] = React.useState("");
   const [submitSuccess, setSubmitSuccess] = React.useState("");
   const [validationSchema, setValidationSchema] =
     React.useState(baseValidationSchema);
-  const [selectedLoanFees, setSelectedLoanFees] = React.useState(""); // default to empty string
+  const [selectedLoanFees, setSelectedLoanFees] = React.useState("");
+  const [editMode, setEditMode] = React.useState(!isViewMode);
 
   const repaymentOrderRef = React.useRef();
   const client = generateClient();
@@ -277,32 +279,64 @@ export default function EditLoanProductForm(props) {
     institutionLoanProductsId: userDetails?.institutionUsersId || null, // <-- required institution id
   });
 
+  // Transform initial values from API format to form format
+  const getFormInitialValues = (apiValues) => {
+    if (!apiValues) {
+      return {
+        name: "",
+        branch: [],
+        minPrincipal: "",
+        defaultPrincipal: "",
+        maxPrincipal: "",
+        interestMethod: "",
+        interestType: "",
+        minInterest: "",
+        defaultInterest: "",
+        maxInterest: "",
+        interestPeriod: "",
+        durationPeriod: "",
+        minDuration: "",
+        defaultDuration: "",
+        maxDuration: "",
+        repaymentFrequency: "",
+        extendLoanAfterMaturity: "",
+        interestTypeMaturity: "",
+        calculateInterestOn: "",
+        loanInterestRateAfterMaturity: "",
+        recurringPeriodAfterMaturityUnit: "",
+      };
+    }
+
+    return {
+      name: apiValues.name || "",
+      branch: apiValues.branches?.items?.map((item) => item.branchId) || [],
+      minPrincipal: apiValues.principalAmountMin || "",
+      defaultPrincipal: apiValues.principalAmountDefault || "",
+      maxPrincipal: apiValues.principalAmountMax || "",
+      interestMethod: apiValues.interestCalculationMethod || "",
+      interestType: apiValues.interestType || "",
+      minInterest: apiValues.interestRateMin || "",
+      defaultInterest: apiValues.interestRateDefault || "",
+      maxInterest: apiValues.interestRateMax || "",
+      interestPeriod: apiValues.interestPeriod || "",
+      durationPeriod: apiValues.durationPeriod || "",
+      minDuration: apiValues.termDurationMin || "",
+      defaultDuration: apiValues.termDurationDefault || "",
+      maxDuration: apiValues.termDurationMax || "",
+      repaymentFrequency: apiValues.repaymentFrequency || "",
+      extendLoanAfterMaturity: apiValues.extendLoanAfterMaturity ? "yes" : "no",
+      interestTypeMaturity: apiValues.interestTypeMaturity || "",
+      calculateInterestOn: apiValues.calculateInterestOn || "",
+      loanInterestRateAfterMaturity:
+        apiValues.loanInterestRateAfterMaturity || "",
+      recurringPeriodAfterMaturityUnit:
+        apiValues.recurringPeriodAfterMaturityUnit || "",
+    };
+  };
+
   const formik = useFormik({
-    initialValues: {
-      name: "",
-      branch: [],
-      minPrincipal: "",
-      defaultPrincipal: "",
-      maxPrincipal: "",
-      interestMethod: "",
-      interestType: "",
-      minInterest: "",
-      defaultInterest: "",
-      maxInterest: "",
-      interestPeriod: "",
-      durationPeriod: "",
-      minDuration: "",
-      defaultDuration: "",
-      maxDuration: "",
-      repaymentFrequency: "",
-      // Loan Maturity Settings defaults as empty strings
-      extendLoanAfterMaturity: "",
-      interestTypeMaturity: "",
-      calculateInterestOn: "",
-      loanInterestRateAfterMaturity: "",
-      recurringPeriodAfterMaturityUnit: "",
-    },
-    validationSchema, // now uses state
+    initialValues: getFormInitialValues(initialValues),
+    validationSchema,
     onSubmit: async (values, { setSubmitting, resetForm }) => {
       let repaymentOrder = null;
       if (
@@ -411,6 +445,25 @@ export default function EditLoanProductForm(props) {
     },
   });
 
+  // Set selected loan fees from initial values
+  React.useEffect(() => {
+    if (initialValues?.loanFees?.items) {
+      const feeIds = initialValues.loanFees.items.map((item) => item.id);
+      setSelectedLoanFees(feeIds);
+    }
+  }, [initialValues]);
+
+  const toggleEdit = () => {
+    setEditMode(!editMode);
+  };
+
+  const getEditMode = () => editMode;
+
+  React.useImperativeHandle(props.ref, () => ({
+    toggleEdit,
+    getEditMode,
+  }));
+
   return (
     <Box
       component="form"
@@ -434,6 +487,7 @@ export default function EditLoanProductForm(props) {
             value={formik.values.name}
             onChange={formik.handleChange}
             error={formik.touched.name && Boolean(formik.errors.name)}
+            disabled={!editMode}
           />
           {formik.touched.name && formik.errors.name && (
             <Typography color="error" variant="caption">
@@ -441,47 +495,54 @@ export default function EditLoanProductForm(props) {
             </Typography>
           )}
         </FormGrid>
-        <LoanBranchesSelect formik={formik} />
-        <PrincipalSettings formik={formik} />
-        <InterestSettings formik={formik} />
-        <DurationSettings formik={formik} />
-        <RepaymentSettings formik={formik} ref={repaymentOrderRef} />
-        <LoanMaturitySettings formik={formik} />
+        <LoanBranchesSelect formik={formik} disabled={!editMode} />
+        <PrincipalSettings formik={formik} disabled={!editMode} />
+        <InterestSettings formik={formik} disabled={!editMode} />
+        <DurationSettings formik={formik} disabled={!editMode} />
+        <RepaymentSettings
+          formik={formik}
+          ref={repaymentOrderRef}
+          disabled={!editMode}
+        />
+        <LoanMaturitySettings formik={formik} disabled={!editMode} />
         <FormGrid size={{ xs: 12, md: 12 }}>
           <LoanFeesSettings
             value={selectedLoanFees}
             onChange={setSelectedLoanFees}
+            disabled={!editMode}
           />
         </FormGrid>
       </Grid>
-      <Box
-        sx={{
-          mt: 4,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "flex-end",
-        }}
-      >
-        {submitError && (
-          <Typography color="error" sx={{ mb: 1 }}>
-            {submitError}
-          </Typography>
-        )}
-        {submitSuccess && (
-          <Typography color="primary" sx={{ mb: 1 }}>
-            {submitSuccess}
-          </Typography>
-        )}
-        <Button
-          type="submit"
-          variant="contained"
-          color="secondary"
-          disabled={!formik.values.name || formik.isSubmitting}
-          sx={{ mb: 6 }}
+      {editMode && !isViewMode && (
+        <Box
+          sx={{
+            mt: 4,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "flex-end",
+          }}
         >
-          {formik.isSubmitting ? "Creating..." : "Create Loan Product"}
-        </Button>
-      </Box>
+          {submitError && (
+            <Typography color="error" sx={{ mb: 1 }}>
+              {submitError}
+            </Typography>
+          )}
+          {submitSuccess && (
+            <Typography color="primary" sx={{ mb: 1 }}>
+              {submitSuccess}
+            </Typography>
+          )}
+          <Button
+            type="submit"
+            variant="contained"
+            color="secondary"
+            disabled={!formik.values.name || formik.isSubmitting}
+            sx={{ mb: 6 }}
+          >
+            {formik.isSubmitting ? "Updating..." : "Update Loan Product"}
+          </Button>
+        </Box>
+      )}
     </Box>
   );
 }

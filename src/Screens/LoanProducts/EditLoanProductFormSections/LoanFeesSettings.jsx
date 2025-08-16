@@ -15,7 +15,11 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Grid from "@mui/material/Grid";
 
-export default function LoanFeesSettings({ value = [], onChange }) {
+export default function LoanFeesSettings({
+  value = [],
+  onChange,
+  disabled = false,
+}) {
   const [assign, setAssign] = React.useState("no");
   const [loading, setLoading] = React.useState(false);
   const [loanFees, setLoanFees] = React.useState([]);
@@ -95,9 +99,20 @@ export default function LoanFeesSettings({ value = [], onChange }) {
         name="assignLoanFees"
         value={assign}
         onChange={handleAssignChange}
+        disabled={disabled}
       >
-        <FormControlLabel value="no" control={<Radio />} label="No" />
-        <FormControlLabel value="yes" control={<Radio />} label="Yes" />
+        <FormControlLabel
+          value="no"
+          control={<Radio />}
+          label="No"
+          disabled={disabled}
+        />
+        <FormControlLabel
+          value="yes"
+          control={<Radio />}
+          label="Yes"
+          disabled={disabled}
+        />
       </RadioGroup>
       {assign === "yes" && (
         <Box sx={{ mt: 2 }}>
@@ -110,18 +125,13 @@ export default function LoanFeesSettings({ value = [], onChange }) {
               </Typography>
               <List dense>
                 {loanFees.map((fee) => (
-                  <ListItem
-                    key={fee.id}
-                    dense
-                    // button
-                    // onClick={() => handleToggle(fee.id)}
-                    sx={{ pl: 0 }}
-                  >
+                  <ListItem key={fee.id} dense sx={{ pl: 0 }}>
                     <Checkbox
                       checked={selected.includes(fee.id)}
                       tabIndex={-1}
                       disableRipple
                       onChange={() => handleToggle(fee.id)}
+                      disabled={disabled}
                     />
                     <ListItemText
                       primary={fee.name}

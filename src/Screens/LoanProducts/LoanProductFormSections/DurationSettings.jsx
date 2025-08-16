@@ -15,7 +15,7 @@ const DURATION_PERIOD_OPTIONS = [
   { value: "years", label: "Years" },
 ];
 
-export default function DurationSettings({ formik }) {
+export default function DurationSettings({ formik, disabled = false }) {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   return (
@@ -33,6 +33,7 @@ export default function DurationSettings({ formik }) {
           onChange={formik.handleChange}
           size="small"
           fullWidth
+          disabled={disabled}
           renderValue={(selected) => {
             if (!selected) return "Select Duration Period";
             const found = DURATION_PERIOD_OPTIONS.find(
@@ -72,6 +73,7 @@ export default function DurationSettings({ formik }) {
           size="small"
           value={formik.values.minDuration}
           onChange={formik.handleChange}
+          disabled={disabled}
           sx={{
             border:
               formik.touched.minDuration && formik.errors.minDuration
@@ -100,6 +102,7 @@ export default function DurationSettings({ formik }) {
           size="small"
           value={formik.values.defaultDuration}
           onChange={formik.handleChange}
+          disabled={disabled}
           sx={{
             border:
               formik.touched.defaultDuration && formik.errors.defaultDuration
@@ -129,6 +132,7 @@ export default function DurationSettings({ formik }) {
           size="small"
           value={formik.values.maxDuration}
           onChange={formik.handleChange}
+          disabled={disabled}
           sx={{
             border:
               formik.touched.maxDuration && formik.errors.maxDuration

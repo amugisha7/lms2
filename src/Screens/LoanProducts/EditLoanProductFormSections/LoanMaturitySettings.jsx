@@ -48,7 +48,7 @@ const MATURITY_PERIOD_OPTIONS = [
   "One-off / Lump-Sum",
 ];
 
-export default function LoanMaturitySettings({ formik }) {
+export default function LoanMaturitySettings({ formik, disabled = false }) {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
 
@@ -60,16 +60,27 @@ export default function LoanMaturitySettings({ formik }) {
           <p className="smallFormHeading">LOAN MATURITY SETTINGS:</p>
         </Grid>
         <Grid size={{ xs: 12, md: 12 }}>
-          <FormControl component="fieldset" fullWidth>
+          <FormControl component="fieldset" fullWidth disabled={disabled}>
             <Typography>Should the Loan extend after Maturity?</Typography>
             <RadioGroup
               row
               name="extendLoanAfterMaturity"
               value={formik.values.extendLoanAfterMaturity || "no"}
               onChange={formik.handleChange}
+              disabled={disabled}
             >
-              <FormControlLabel value="no" control={<Radio />} label="No" />
-              <FormControlLabel value="yes" control={<Radio />} label="Yes" />
+              <FormControlLabel
+                value="no"
+                control={<Radio />}
+                label="No"
+                disabled={disabled}
+              />
+              <FormControlLabel
+                value="yes"
+                control={<Radio />}
+                label="Yes"
+                disabled={disabled}
+              />
             </RadioGroup>
           </FormControl>
         </Grid>
@@ -79,7 +90,9 @@ export default function LoanMaturitySettings({ formik }) {
             <FormControl
               component="fieldset"
               fullWidth
-              disabled={formik.values.extendLoanAfterMaturity !== "yes"}
+              disabled={
+                disabled || formik.values.extendLoanAfterMaturity !== "yes"
+              }
             >
               <FormLabel component="legend">
                 <span
@@ -95,6 +108,7 @@ export default function LoanMaturitySettings({ formik }) {
                 name="interestTypeMaturity"
                 value={formik.values.interestTypeMaturity || "percentage"}
                 onChange={formik.handleChange}
+                disabled={disabled}
               >
                 <FormControlLabel
                   value="percentage"
@@ -136,7 +150,9 @@ export default function LoanMaturitySettings({ formik }) {
           <Grid size={{ xs: 12, md: 12 }}>
             <FormControl
               fullWidth
-              disabled={formik.values.extendLoanAfterMaturity !== "yes"}
+              disabled={
+                disabled || formik.values.extendLoanAfterMaturity !== "yes"
+              }
             >
               <FormLabel htmlFor="calculateInterestOn">
                 <span
@@ -163,7 +179,9 @@ export default function LoanMaturitySettings({ formik }) {
                       : `1px solid ${colors.grey[200]}`,
                   width: "100%",
                 }}
-                disabled={formik.values.extendLoanAfterMaturity !== "yes"}
+                disabled={
+                  disabled || formik.values.extendLoanAfterMaturity !== "yes"
+                }
               >
                 <MenuItem value="" disabled>
                   <em>Select an option</em>
@@ -212,6 +230,9 @@ export default function LoanMaturitySettings({ formik }) {
               size="small"
               value={formik.values.loanInterestRateAfterMaturity || ""}
               onChange={formik.handleChange}
+              disabled={
+                disabled || formik.values.extendLoanAfterMaturity !== "yes"
+              }
               sx={{
                 border:
                   formik.touched.calculateInterestOn &&
@@ -221,7 +242,6 @@ export default function LoanMaturitySettings({ formik }) {
                 width: "100%",
               }}
               inputProps={{ min: 0, step: "any" }}
-              disabled={formik.values.extendLoanAfterMaturity !== "yes"}
             />
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>
@@ -242,6 +262,9 @@ export default function LoanMaturitySettings({ formik }) {
               onChange={formik.handleChange}
               size="small"
               fullWidth
+              disabled={
+                disabled || formik.values.extendLoanAfterMaturity !== "yes"
+              }
               sx={{
                 border:
                   formik.touched.calculateInterestOn &&
@@ -250,7 +273,6 @@ export default function LoanMaturitySettings({ formik }) {
                     : `1px solid ${colors.grey[200]}`,
                 width: "100%",
               }}
-              disabled={formik.values.extendLoanAfterMaturity !== "yes"}
             >
               <MenuItem value="" disabled>
                 <em>-</em>

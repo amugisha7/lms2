@@ -10,6 +10,7 @@ import DeleteDialog from "../../ComponentAssets/DeleteDialog";
 import { useTheme } from "@mui/material/styles";
 import ClickableText from "../../ComponentAssets/ClickableText";
 import EditLoanProductForm from "./EditLoanProductForm";
+import CreateLoanProductFormOptimized from "./CreateLoanProductFormOptimized";
 
 export default function LoanProducts() {
   const [loanProducts, setLoanProducts] = React.useState([]);
@@ -333,7 +334,7 @@ export default function LoanProducts() {
         maxWidth="md"
         fullWidth
       >
-        <EditLoanProductForm
+        <CreateLoanProductFormOptimized
           onClose={handleCreateDialogClose}
           onCreateSuccess={handleCreateSuccess}
           isViewMode={false}

@@ -31,7 +31,7 @@ const REPAYMENT_FREQUENCY_OPTIONS = [
 const REPAYMENT_ORDER_OPTIONS = ["Penalty", "Fees", "Interest", "Principal"];
 
 const RepaymentSettings = forwardRef(function RepaymentSettings(
-  { formik },
+  { formik, disabled = false },
   ref
 ) {
   const theme = useTheme();
@@ -81,6 +81,7 @@ const RepaymentSettings = forwardRef(function RepaymentSettings(
           onChange={formik.handleChange}
           size="small"
           fullWidth
+          disabled={disabled}
           renderValue={(selected) => {
             if (!selected) return "Select Repayment Frequency";
             const found = REPAYMENT_FREQUENCY_OPTIONS.find(
@@ -137,9 +138,7 @@ const RepaymentSettings = forwardRef(function RepaymentSettings(
             <List
               dense
               sx={{
-                // maxHeight: 160,
                 height: 105,
-                // overflow: "auto",
                 padding: 0,
                 "& .MuiListItem-root": {
                   paddingTop: "0px",
@@ -151,32 +150,34 @@ const RepaymentSettings = forwardRef(function RepaymentSettings(
                 <ListItem
                   key={`${item}-${idx}`}
                   secondaryAction={
-                    <>
-                      <IconButton
-                        edge="end"
-                        aria-label="up"
-                        onClick={() => moveOrderUp(idx)}
-                        disabled={idx === 0}
-                        size="small"
-                      >
-                        <ArrowUpward
-                          sx={{ color: colors.blueAccent[400] }}
-                          fontSize="inherit"
-                        />
-                      </IconButton>
-                      <IconButton
-                        edge="end"
-                        aria-label="down"
-                        onClick={() => moveOrderDown(idx)}
-                        disabled={idx === repaymentOrder.length - 1}
-                        size="small"
-                      >
-                        <ArrowDownward
-                          sx={{ color: colors.blueAccent[400] }}
-                          fontSize="inherit"
-                        />
-                      </IconButton>
-                    </>
+                    !disabled && (
+                      <>
+                        <IconButton
+                          edge="end"
+                          aria-label="up"
+                          onClick={() => moveOrderUp(idx)}
+                          disabled={idx === 0}
+                          size="small"
+                        >
+                          <ArrowUpward
+                            sx={{ color: colors.blueAccent[400] }}
+                            fontSize="inherit"
+                          />
+                        </IconButton>
+                        <IconButton
+                          edge="end"
+                          aria-label="down"
+                          onClick={() => moveOrderDown(idx)}
+                          disabled={idx === repaymentOrder.length - 1}
+                          size="small"
+                        >
+                          <ArrowDownward
+                            sx={{ color: colors.blueAccent[400] }}
+                            fontSize="inherit"
+                          />
+                        </IconButton>
+                      </>
+                    )
                   }
                   sx={{ color: colors.grey[200] }}
                 >

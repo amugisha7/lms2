@@ -41,7 +41,7 @@ const INTEREST_PERIOD_OPTIONS = [
   { value: "per_loan", label: "Per Loan" },
 ];
 
-export default function InterestSettings({ formik }) {
+export default function InterestSettings({ formik, disabled = false }) {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   return (
@@ -84,6 +84,7 @@ export default function InterestSettings({ formik }) {
           onChange={formik.handleChange}
           size="small"
           fullWidth
+          disabled={disabled}
           renderValue={(selected) => {
             if (!selected) return "Select Interest Method";
             const method = INTEREST_METHODS.find((m) => m.value === selected);
@@ -120,6 +121,7 @@ export default function InterestSettings({ formik }) {
           onChange={formik.handleChange}
           size="small"
           fullWidth
+          disabled={disabled}
           renderValue={(selected) => {
             if (!selected) return "Select Interest Type";
             const type = INTEREST_TYPE_OPTIONS.find(
@@ -158,6 +160,7 @@ export default function InterestSettings({ formik }) {
           onChange={formik.handleChange}
           size="small"
           fullWidth
+          disabled={disabled}
           renderValue={(selected) => {
             if (!selected) return "Select Interest Period";
             const found = INTEREST_PERIOD_OPTIONS.find(
@@ -197,6 +200,7 @@ export default function InterestSettings({ formik }) {
           size="small"
           value={formik.values.minInterest}
           onChange={formik.handleChange}
+          disabled={disabled}
           sx={{
             border:
               formik.touched.minInterest && formik.errors.minInterest
@@ -225,6 +229,7 @@ export default function InterestSettings({ formik }) {
           size="small"
           value={formik.values.defaultInterest}
           onChange={formik.handleChange}
+          disabled={disabled}
           sx={{
             border:
               formik.touched.defaultInterest && formik.errors.defaultInterest
@@ -254,6 +259,7 @@ export default function InterestSettings({ formik }) {
           size="small"
           value={formik.values.maxInterest}
           onChange={formik.handleChange}
+          disabled={disabled}
           sx={{
             border:
               formik.touched.maxInterest && formik.errors.maxInterest

@@ -12,7 +12,7 @@ import { tokens } from "../../../theme";
 import Grid from "@mui/material/Grid";
 import { Typography } from "@mui/material";
 
-export default function LoanBranchesSelect({ formik }) {
+export default function LoanBranchesSelect({ formik, disabled = false }) {
   const [branches, setBranches] = useState([]);
   const [loading, setLoading] = useState(true);
   const { userDetails } = useContext(UserContext);
@@ -71,6 +71,7 @@ export default function LoanBranchesSelect({ formik }) {
             onChange={formik.handleChange}
             input={<OutlinedInput label="Branch" />}
             size="small"
+            disabled={disabled}
             renderValue={(selected) =>
               branches
                 .filter((b) => selected.includes(b.id))

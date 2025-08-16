@@ -6,7 +6,7 @@ import Typography from "@mui/material/Typography";
 import { useTheme } from "@mui/material/styles";
 import { tokens } from "../../../theme";
 
-export default function PrincipalSettings({ formik }) {
+export default function PrincipalSettings({ formik, disabled = false }) {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
 
@@ -26,6 +26,7 @@ export default function PrincipalSettings({ formik }) {
           size="small"
           value={formik.values.minPrincipal}
           onChange={formik.handleChange}
+          disabled={disabled}
           sx={{
             border:
               formik.touched.minPrincipal && formik.errors.minPrincipal
@@ -56,6 +57,7 @@ export default function PrincipalSettings({ formik }) {
           size="small"
           value={formik.values.defaultPrincipal}
           onChange={formik.handleChange}
+          disabled={disabled}
           sx={{
             border:
               formik.touched.defaultPrincipal && formik.errors.defaultPrincipal
@@ -85,6 +87,7 @@ export default function PrincipalSettings({ formik }) {
           size="small"
           value={formik.values.maxPrincipal}
           onChange={formik.handleChange}
+          disabled={disabled}
           sx={{
             border:
               formik.touched.maxPrincipal && formik.errors.maxPrincipal

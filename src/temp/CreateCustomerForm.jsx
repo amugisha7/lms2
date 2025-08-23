@@ -11,6 +11,7 @@ import DateInput from "../Resources/FormComponents/DateInput";
 import FileUpload from "../Resources/FormComponents/FileUpload";
 import TextArea from "../Resources/FormComponents/TextArea";
 import NumberInput from "../Resources/FormComponents/NumberInput";
+import CreateFormButtons from "../ComponentAssets/CreateFormButtons";
 
 // Styled FormGrid component for consistent layout
 const FormGrid = styled(Grid)(({ theme }) => ({
@@ -56,7 +57,7 @@ const CreateCustomerForm = () => {
       label: field.label,
       required: field.required,
       helperText: field.helperText,
-      editing: false,
+      //   editing: false,
     };
 
     switch (field.type) {
@@ -99,7 +100,7 @@ const CreateCustomerForm = () => {
         validationSchema={validationSchema}
         onSubmit={handleSubmit}
       >
-        {({ isSubmitting }) => (
+        {(formik) => (
           <Form>
             <Grid container spacing={1}>
               {createCustomer.map((field) => (
@@ -112,32 +113,8 @@ const CreateCustomerForm = () => {
                 </FormGrid>
               ))}
 
-              <Grid item xs={12}>
-                <Box
-                  sx={{
-                    display: "flex",
-                    gap: 2,
-                    justifyContent: "flex-end",
-                    mt: 2,
-                  }}
-                >
-                  <Button
-                    variant="outlined"
-                    size="large"
-                    sx={{ minWidth: 120 }}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    variant="contained"
-                    size="large"
-                    disabled={isSubmitting}
-                    sx={{ minWidth: 120 }}
-                  >
-                    {isSubmitting ? "Creating..." : "Create Customer"}
-                  </Button>
-                </Box>
+              <Grid size={{ xs: 12 }}>
+                <CreateFormButtons formik={formik} />
               </Grid>
             </Grid>
           </Form>

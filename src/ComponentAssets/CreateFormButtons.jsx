@@ -60,7 +60,7 @@ const CreateFormButtons = ({
         <Button
           type="submit"
           variant="contained"
-          disabled={formik.isSubmitting || !formik.values.name}
+          disabled={formik.isSubmitting}
           sx={{
             minWidth: 120,
             fontWeight: 600,

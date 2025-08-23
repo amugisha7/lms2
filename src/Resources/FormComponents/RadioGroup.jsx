@@ -1,7 +1,7 @@
 import React from "react";
 import {
-  FormControl,
-  FormLabel,
+  Box,
+  Typography,
   RadioGroup as MuiRadioGroup,
   FormControlLabel,
   Radio,
@@ -15,32 +15,67 @@ const RadioGroup = ({
   options,
   helperText,
   required,
+  editing = true,
+  readOnly = false,
   ...props
 }) => {
   const [field, meta] = useField(name);
+  const isReadOnly = readOnly || editing === false;
 
   return (
-    <FormControl
-      component="fieldset"
-      error={meta.touched && Boolean(meta.error)}
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: { xs: "column", sm: "row" },
+        alignItems: { xs: "stretch", sm: "center" },
+        gap: { xs: 0, sm: 1 },
+        borderBottom: (theme) =>
+          `1.5px dotted ${
+            theme.palette.mode === "dark"
+              ? theme.palette.grey[500]
+              : theme.palette.grey[400]
+          }`,
+        pb: editing ? 1 : 0,
+      }}
     >
-      <FormLabel component="legend" required={required}>
+      <Typography
+        sx={{
+          fontSize: 12,
+          width: { xs: "100%", sm: "100px" },
+        }}
+      >
         {label}
-      </FormLabel>
-      <MuiRadioGroup {...field} {...props} row>
-        {options?.map((option) => (
-          <FormControlLabel
-            key={option.value}
-            value={option.value}
-            control={<Radio />}
-            label={option.label}
-          />
-        ))}
-      </MuiRadioGroup>
-      <FormHelperText>
-        {meta.touched && meta.error ? meta.error : helperText}
-      </FormHelperText>
-    </FormControl>
+        {required && <span style={{ color: "#d32f2f" }}> *</span>}
+      </Typography>
+      <Box
+        sx={{
+          flex: { xs: "unset", sm: "1 1 auto" },
+          width: { xs: "100%", sm: "auto" },
+          minWidth: 0,
+        }}
+      >
+        <MuiRadioGroup {...field} {...props} column>
+          {options?.map((option) => (
+            <FormControlLabel
+              key={option.value}
+              value={option.value}
+              control={
+                <Radio
+                  slotProps={{
+                    input: { readOnly: isReadOnly },
+                  }}
+                  size="small"
+                />
+              }
+              label={option.label}
+            />
+          ))}
+        </MuiRadioGroup>
+        <FormHelperText error={meta.touched && Boolean(meta.error)}>
+          {meta.touched && meta.error ? meta.error : helperText}
+        </FormHelperText>
+      </Box>
+    </Box>
   );
 };
 

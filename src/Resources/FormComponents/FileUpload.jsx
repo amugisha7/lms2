@@ -1,15 +1,17 @@
 import React from "react";
-import {
-  Button,
-  FormControl,
-  FormHelperText,
-  Typography,
-  Box,
-} from "@mui/material";
+import { Button, FormHelperText, Typography, Box } from "@mui/material";
 import { CloudUpload } from "@mui/icons-material";
 import { useField } from "formik";
 
-const FileUpload = ({ label, name, helperText, required, ...props }) => {
+const FileUpload = ({
+  label,
+  name,
+  helperText,
+  required,
+  readOnly = false,
+  editing = true,
+  ...props
+}) => {
   const [field, meta, helpers] = useField(name);
 
   const handleFileChange = (event) => {
@@ -18,11 +20,36 @@ const FileUpload = ({ label, name, helperText, required, ...props }) => {
   };
 
   return (
-    <FormControl fullWidth error={meta.touched && Boolean(meta.error)}>
-      <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
-        {label} {required && "*"}
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: { xs: "column", sm: "row" },
+        alignItems: { xs: "stretch", sm: "center" },
+        gap: { xs: 0, sm: 1 },
+        borderBottom: (theme) =>
+          `1.5px dotted ${
+            theme.palette.mode === "dark"
+              ? theme.palette.grey[500]
+              : theme.palette.grey[400]
+          }`,
+        pb: editing ? 1 : 0,
+      }}
+    >
+      <Typography
+        sx={{
+          fontSize: 12,
+          width: { xs: "100%", sm: "100px" },
+        }}
+      >
+        {label} {required && <span style={{ color: "#d32f2f" }}>*</span>}
       </Typography>
-      <Box>
+      <Box
+        sx={{
+          flex: { xs: "unset", sm: "1 1 auto" },
+          width: { xs: "100%", sm: "auto" },
+          minWidth: 0,
+        }}
+      >
         <Button
           component="label"
           variant="outlined"
@@ -34,15 +61,16 @@ const FileUpload = ({ label, name, helperText, required, ...props }) => {
             py: 2,
             width: "100%",
           }}
+          disabled={readOnly || editing === false}
         >
           {field.value ? field.value.name : "Choose File"}
           <input type="file" hidden onChange={handleFileChange} {...props} />
         </Button>
+        <FormHelperText error={meta.touched && Boolean(meta.error)}>
+          {meta.touched && meta.error ? meta.error : helperText}
+        </FormHelperText>
       </Box>
-      <FormHelperText>
-        {meta.touched && meta.error ? meta.error : helperText}
-      </FormHelperText>
-    </FormControl>
+    </Box>
   );
 };
 

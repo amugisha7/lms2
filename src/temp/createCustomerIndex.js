@@ -77,7 +77,9 @@ const createCustomer = [
         type: 'radio',
         options: [
             { label: 'Admin', value: 'admin' },
-            { label: 'Customer', value: 'customer' }
+            { label: 'Customer', value: 'customer' },
+            { label: 'Guest', value: 'guest' },
+            { label: 'Super Admin', value: 'super_admin' }
         ],
         required: true,
         span: 6,

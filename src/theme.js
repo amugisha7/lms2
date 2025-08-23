@@ -366,7 +366,7 @@ export const themeSettings = (mode) => {
     },
     spacing: 8,
     shape: {
-      borderRadius: 8,
+      // borderRadius: 8,
     },
     shadows: isDark
       ? [
@@ -494,7 +494,7 @@ export const themeSettings = (mode) => {
       MuiCard: {
         styleOverrides: {
           root: {
-            borderRadius: '8px',
+            // borderRadius: '8px',
             backgroundColor: isDark ? colors.primary[600] : '#ffffff',
             transition: 'all 0.2s ease-in-out',
             '&:hover': {

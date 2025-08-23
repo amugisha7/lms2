@@ -20,6 +20,7 @@ import OutlinedInput from "@mui/material/OutlinedInput";
 import { tokens } from "../../theme";
 import LoanFeesSettings from "./EditLoanProductFormSections/LoanFeesSettings";
 import { generateClient } from "aws-amplify/api";
+import CustomEditFormButtons from "../../ComponentAssets/CustomEditFormButtons";
 
 const StyledOutlinedInput = styled(OutlinedInput)(({ error, theme }) => {
   const colors = tokens(theme.palette.mode);
@@ -229,55 +230,61 @@ export default function EditLoanProductForm(props) {
   const repaymentOrderRef = React.useRef();
   const client = generateClient();
 
-  // Helper to build payload for API
+  // Helper to build payload for API (for both create and update)
   const buildLoanProductInput = (
     values,
     repaymentOrder,
     selectedLoanFees,
-    userDetails
-  ) => ({
-    name: values.name,
-    description: "",
-    principalAmountMin: values.minPrincipal
-      ? Number(values.minPrincipal)
-      : null,
-    principalAmountMax: values.maxPrincipal
-      ? Number(values.maxPrincipal)
-      : null,
-    principalAmountDefault: values.defaultPrincipal
-      ? Number(values.defaultPrincipal)
-      : null,
-    interestRateMin: values.minInterest ? Number(values.minInterest) : null,
-    interestRateMax: values.maxInterest ? Number(values.maxInterest) : null,
-    interestRateDefault: values.defaultInterest
-      ? Number(values.defaultInterest)
-      : null,
-    //modify after appsync
-    // interestCalculationMethod: values.interestMethod || null,
-    interestType: values.interestType || null,
-    interestPeriod: values.interestPeriod || null,
-    termDurationMin: values.minDuration ? Number(values.minDuration) : null,
-    termDurationMax: values.maxDuration ? Number(values.maxDuration) : null,
-    termDurationDefault: values.defaultDuration
-      ? Number(values.defaultDuration)
-      : null,
-    durationPeriod: values.durationPeriod || null,
-    repaymentFrequency: values.repaymentFrequency || null,
-    repaymentOrder: repaymentOrder ? JSON.stringify(repaymentOrder) : null,
-    extendLoanAfterMaturity:
-      values.extendLoanAfterMaturity === ""
-        ? null
-        : values.extendLoanAfterMaturity === "true" ||
-          values.extendLoanAfterMaturity === true,
-    interestTypeMaturity: values.interestTypeMaturity || null,
-    calculateInterestOn: values.calculateInterestOn || null,
-    loanInterestRateAfterMaturity: values.loanInterestRateAfterMaturity
-      ? Number(values.loanInterestRateAfterMaturity)
-      : null,
-    recurringPeriodAfterMaturityUnit:
-      values.recurringPeriodAfterMaturityUnit || null,
-    institutionLoanProductsId: userDetails?.institutionUsersId || null, // <-- required institution id
-  });
+    userDetails,
+    isUpdate = false
+  ) => {
+    const input = {
+      name: values.name,
+      description: "",
+      principalAmountMin: values.minPrincipal
+        ? Number(values.minPrincipal)
+        : null,
+      principalAmountMax: values.maxPrincipal
+        ? Number(values.maxPrincipal)
+        : null,
+      principalAmountDefault: values.defaultPrincipal
+        ? Number(values.defaultPrincipal)
+        : null,
+      interestRateMin: values.minInterest ? Number(values.minInterest) : null,
+      interestRateMax: values.maxInterest ? Number(values.maxInterest) : null,
+      interestRateDefault: values.defaultInterest
+        ? Number(values.defaultInterest)
+        : null,
+      interestCalculationMethod: values.interestMethod || null,
+      interestType: values.interestType || null,
+      interestPeriod: values.interestPeriod || null,
+      termDurationMin: values.minDuration ? Number(values.minDuration) : null,
+      termDurationMax: values.maxDuration ? Number(values.maxDuration) : null,
+      termDurationDefault: values.defaultDuration
+        ? Number(values.defaultDuration)
+        : null,
+      durationPeriod: values.durationPeriod || null,
+      repaymentFrequency: values.repaymentFrequency || null,
+      repaymentOrder: repaymentOrder ? JSON.stringify(repaymentOrder) : null,
+      extendLoanAfterMaturity:
+        values.extendLoanAfterMaturity === "yes" ? true : false,
+      interestTypeMaturity: values.interestTypeMaturity || null,
+      calculateInterestOn: values.calculateInterestOn || null,
+      loanInterestRateAfterMaturity: values.loanInterestRateAfterMaturity
+        ? Number(values.loanInterestRateAfterMaturity)
+        : null,
+      recurringPeriodAfterMaturityUnit:
+        values.recurringPeriodAfterMaturityUnit || null,
+    };
+
+    if (isUpdate) {
+      input.id = initialValues.id;
+    } else {
+      input.institutionLoanProductsId = userDetails?.institutionUsersId || null;
+    }
+
+    return input;
+  };
 
   // Transform initial values from API format to form format
   const getFormInitialValues = (apiValues) => {
@@ -348,36 +355,122 @@ export default function EditLoanProductForm(props) {
       setSubmitError("");
       setSubmitSuccess("");
       setSubmitting(true);
+
       try {
+        const isUpdate = initialValues && initialValues.id;
         const input = buildLoanProductInput(
           values,
           repaymentOrder,
           selectedLoanFees,
-          userDetails
+          userDetails,
+          isUpdate
         );
-        console.log("Submitting to AppSync:", input);
-        const result = await client.graphql({
-          query: `
-            mutation CreateLoanProduct($input: CreateLoanProductInput!) {
-              createLoanProduct(input: $input) {
-                id
-                name
-              }
-            }
-          `,
-          variables: { input },
-        });
-        const loanProductId =
-          result?.data?.createLoanProduct?.id ||
-          result?.data?.createLoanProduct?.loanProduct?.id;
 
-        // --- Associate branches if any ---
-        if (
-          loanProductId &&
-          values.branch &&
-          Array.isArray(values.branch) &&
-          values.branch.length > 0
-        ) {
+        console.log("Submitting to AppSync:", input);
+
+        let result;
+        if (isUpdate) {
+          // Update existing loan product
+          result = await client.graphql({
+            query: `
+              mutation UpdateLoanProduct($input: UpdateLoanProductInput!) {
+                updateLoanProduct(input: $input) {
+                  id
+                  name
+                  principalAmountMin
+                  principalAmountMax
+                  principalAmountDefault
+                  interestRateMin
+                  interestRateMax
+                  interestRateDefault
+                  interestCalculationMethod
+                  interestType
+                  interestPeriod
+                  termDurationMin
+                  termDurationMax
+                  termDurationDefault
+                  durationPeriod
+                  repaymentFrequency
+                  repaymentOrder
+                  extendLoanAfterMaturity
+                  interestTypeMaturity
+                  calculateInterestOn
+                  loanInterestRateAfterMaturity
+                  recurringPeriodAfterMaturityUnit
+                }
+              }
+            `,
+            variables: { input },
+          });
+
+          setSubmitSuccess("Loan product updated successfully!");
+          if (onEditSuccess && result?.data?.updateLoanProduct) {
+            onEditSuccess(result.data.updateLoanProduct);
+          }
+        } else {
+          // Create new loan product
+          result = await client.graphql({
+            query: `
+              mutation CreateLoanProduct($input: CreateLoanProductInput!) {
+                createLoanProduct(input: $input) {
+                  id
+                  name
+                }
+              }
+            `,
+            variables: { input },
+          });
+
+          setSubmitSuccess("Loan product created successfully!");
+        }
+
+        const loanProductId =
+          result?.data?.updateLoanProduct?.id ||
+          result?.data?.createLoanProduct?.id;
+
+        // Handle branch associations (for both create and update)
+        if (loanProductId && values.branch && Array.isArray(values.branch)) {
+          // For updates, we might want to remove existing associations first
+          if (isUpdate) {
+            // Remove existing branch associations
+            try {
+              await client
+                .graphql({
+                  query: `
+                  query ListBranchLoanProducts($loanProductId: ID!) {
+                    listBranchLoanProducts(
+                      filter: { loanProductId: { eq: $loanProductId } }
+                    ) {
+                      items {
+                        id
+                      }
+                    }
+                  }
+                `,
+                  variables: { loanProductId },
+                })
+                .then(async (existingResult) => {
+                  const existing =
+                    existingResult.data.listBranchLoanProducts.items || [];
+                  for (const item of existing) {
+                    await client.graphql({
+                      query: `
+                      mutation DeleteBranchLoanProduct($input: DeleteBranchLoanProductInput!) {
+                        deleteBranchLoanProduct(input: $input) {
+                          id
+                        }
+                      }
+                    `,
+                      variables: { input: { id: item.id } },
+                    });
+                  }
+                });
+            } catch (err) {
+              console.log("Error removing existing branches:", err);
+            }
+          }
+
+          // Add new branch associations
           for (const branch of values.branch) {
             const branchId = typeof branch === "object" ? branch.value : branch;
             if (branchId) {
@@ -400,46 +493,91 @@ export default function EditLoanProductForm(props) {
           }
         }
 
-        // --- Associate loan fees if any ---
-        let loanFeeIds = [];
-        if (selectedLoanFees && selectedLoanFees.length > 0) {
-          if (Array.isArray(selectedLoanFees)) {
-            loanFeeIds = selectedLoanFees.map((f) =>
-              typeof f === "object" ? f.value : f
-            );
-          } else if (typeof selectedLoanFees === "string") {
-            loanFeeIds = selectedLoanFees.split(",");
+        // Handle loan fees associations (similar pattern)
+        if (loanProductId) {
+          let loanFeeIds = [];
+          if (selectedLoanFees && selectedLoanFees.length > 0) {
+            if (Array.isArray(selectedLoanFees)) {
+              loanFeeIds = selectedLoanFees.map((f) =>
+                typeof f === "object" ? f.value : f
+              );
+            } else if (typeof selectedLoanFees === "string") {
+              loanFeeIds = selectedLoanFees.split(",");
+            }
           }
-        }
-        for (const loanFeesId of loanFeeIds) {
-          if (loanFeesId) {
-            await client.graphql({
-              query: `
-                mutation CreateLoanProductLoanFees($input: CreateLoanProductLoanFeesInput!) {
-                  createLoanProductLoanFees(input: $input) {
-                    id
+
+          // For updates, remove existing loan fee associations first
+          if (isUpdate) {
+            try {
+              await client
+                .graphql({
+                  query: `
+                  query ListLoanProductLoanFees($loanProductId: ID!) {
+                    listLoanProductLoanFees(
+                      filter: { loanProductId: { eq: $loanProductId } }
+                    ) {
+                      items {
+                        id
+                      }
+                    }
                   }
-                }
-              `,
-              variables: {
-                input: {
-                  loanFeesId,
-                  loanProductId,
+                `,
+                  variables: { loanProductId },
+                })
+                .then(async (existingResult) => {
+                  const existing =
+                    existingResult.data.listLoanProductLoanFees.items || [];
+                  for (const item of existing) {
+                    await client.graphql({
+                      query: `
+                      mutation DeleteLoanProductLoanFees($input: DeleteLoanProductLoanFeesInput!) {
+                        deleteLoanProductLoanFees(input: $input) {
+                          id
+                        }
+                      }
+                    `,
+                      variables: { input: { id: item.id } },
+                    });
+                  }
+                });
+            } catch (err) {
+              console.log("Error removing existing loan fees:", err);
+            }
+          }
+
+          // Add new loan fee associations
+          for (const loanFeesId of loanFeeIds) {
+            if (loanFeesId) {
+              await client.graphql({
+                query: `
+                  mutation CreateLoanProductLoanFees($input: CreateLoanProductLoanFeesInput!) {
+                    createLoanProductLoanFees(input: $input) {
+                      id
+                    }
+                  }
+                `,
+                variables: {
+                  input: {
+                    loanFeesId,
+                    loanProductId,
+                  },
                 },
-              },
-            });
+              });
+            }
           }
         }
 
-        setSubmitSuccess("Loan product created successfully!");
         setSubmitting(false);
-        resetForm();
-        // setTimeout(() => {
-        //   navigate("/loanProducts");
-        // }, 1500);
+        if (!isUpdate) {
+          resetForm();
+        }
       } catch (err) {
         console.log("err::: ", err);
-        setSubmitError("Failed to create loan product. Please try again.");
+        setSubmitError(
+          `Failed to ${
+            initialValues?.id ? "update" : "create"
+          } loan product. Please try again.`
+        );
         setSubmitting(false);
       }
     },
@@ -476,6 +614,24 @@ export default function EditLoanProductForm(props) {
         flex: 1,
       }}
     >
+      {editMode && (
+        <CustomEditFormButtons
+          formik={formik}
+          setEditMode={setEditMode}
+          setSubmitError={setSubmitError}
+          setSubmitSuccess={setSubmitSuccess}
+        />
+      )}
+      {submitError && (
+        <Typography color="error" sx={{ mt: 2 }}>
+          {submitError}
+        </Typography>
+      )}
+      {submitSuccess && (
+        <Typography color="primary" sx={{ mt: 2 }}>
+          {submitSuccess}
+        </Typography>
+      )}
       <Grid container spacing={3}>
         <FormGrid size={{ xs: 12, md: 6 }}>
           <FormLabel htmlFor="name">Loan Product Name*</FormLabel>
@@ -513,36 +669,6 @@ export default function EditLoanProductForm(props) {
           />
         </FormGrid>
       </Grid>
-      {editMode && !isViewMode && (
-        <Box
-          sx={{
-            mt: 4,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "flex-end",
-          }}
-        >
-          {submitError && (
-            <Typography color="error" sx={{ mb: 1 }}>
-              {submitError}
-            </Typography>
-          )}
-          {submitSuccess && (
-            <Typography color="primary" sx={{ mb: 1 }}>
-              {submitSuccess}
-            </Typography>
-          )}
-          <Button
-            type="submit"
-            variant="contained"
-            color="secondary"
-            disabled={!formik.values.name || formik.isSubmitting}
-            sx={{ mb: 6 }}
-          >
-            {formik.isSubmitting ? "Updating..." : "Update Loan Product"}
-          </Button>
-        </Box>
-      )}
     </Box>
   );
 }

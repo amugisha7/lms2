@@ -40,6 +40,20 @@ const RepaymentSettings = forwardRef(function RepaymentSettings(
     REPAYMENT_ORDER_OPTIONS
   );
 
+  // Initialize repayment order from formik values if available
+  React.useEffect(() => {
+    if (formik.values.repaymentOrder) {
+      try {
+        const parsedOrder = JSON.parse(formik.values.repaymentOrder);
+        if (Array.isArray(parsedOrder)) {
+          setRepaymentOrder(parsedOrder);
+        }
+      } catch (err) {
+        console.log("Error parsing repayment order:", err);
+      }
+    }
+  }, [formik.values.repaymentOrder]);
+
   useImperativeHandle(ref, () => ({
     getRepaymentOrder: () => [...repaymentOrder],
   }));

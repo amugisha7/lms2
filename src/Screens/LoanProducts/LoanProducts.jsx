@@ -345,8 +345,13 @@ export default function LoanProducts() {
         open={viewDialogOpen}
         onClose={handleViewDialogClose}
         title={viewDialogRow ? `${viewDialogRow.name}` : "Loan Product Details"}
-        showEdit={false}
-        showDelete={false}
+        showEdit={true}
+        showDelete={true}
+        onEdit={() => handleEditDialogOpen(viewDialogRow)}
+        onDelete={() => {
+          setViewDialogOpen(false);
+          handleDeleteDialogOpen(viewDialogRow);
+        }}
         maxWidth="md"
         fullWidth
       >

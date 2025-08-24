@@ -6,7 +6,7 @@ import {
 } from "react-router-dom";
 import Onboarding from "./Screens/Onboarding/Onboarding";
 import MainGrid from "./muiTemplates/dashboard/components/MainGrid";
-import CreateBorrower from "./Screens/Borrowers/CreateBorrower";
+import CreateBorrower from "./Screens/Borrowers/CreateBorrower/CreateBorrower";
 import AllBorrowers from "./Screens/Borrowers/AllBorrowers";
 import ViewBorrower from "./Screens/Borrowers/ViewBorrower/ViewBorrower";
 import CustomFieldsManager from "./Screens/AdminScreens/CustomFields/CustomFieldsManager";
@@ -18,7 +18,7 @@ import LoanFees from "./Screens/LoanFees/LoanFees"; // Add this import
 import CreateBranchesForm from "./Screens/Branches/CreateBranchesForm";
 import Branches from "./Screens/Branches/Branches";
 import LoanProducts from "./Screens/LoanProducts/LoanProducts";
-import CreateCustomerForm from "./temp/CreateCustomerForm";
+import FormTemplate from "./temp/FormTemplate";
 
 export default function AppRoutes({ userExists }) {
   return (
@@ -62,8 +62,8 @@ export default function AppRoutes({ userExists }) {
 
               {/* Admin main page route */}
               <Route path="admin" element={<AdminPage />} />
-              {/* Add the /c1 route for CreateCustomerForm */}
-              <Route path="c1" element={<CreateCustomerForm />} />
+              {/* Add the /c1 route for FormTemplate */}
+              <Route path="c1" element={<FormTemplate />} />
             </>
           )}
         </Route>

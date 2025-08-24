@@ -3,7 +3,7 @@ import { Formik, Form } from "formik";
 import * as Yup from "yup";
 import { Grid, Typography, Button, Box } from "@mui/material";
 import { styled } from "@mui/material/styles";
-import createCustomer from "./createCustomerIndex";
+import createCustomer from "./tempForm";
 import TextInput from "../Resources/FormComponents/TextInput";
 import Dropdown from "../Resources/FormComponents/Dropdown";
 import RadioGroup from "../Resources/FormComponents/RadioGroup";
@@ -22,7 +22,7 @@ const FormGrid = styled(Grid)(({ theme }) => ({
   },
 }));
 
-const CreateCustomerForm = () => {
+const FormTemplate = () => {
   // Generate validation schema based on form fields
   const validationSchema = Yup.object().shape({
     firstName: Yup.string().required("First name is required"),
@@ -124,4 +124,4 @@ const CreateCustomerForm = () => {
   );
 };
 
-export default CreateCustomerForm;
+export default FormTemplate;

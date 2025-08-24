@@ -35,10 +35,16 @@ const DateInput = ({
       <Typography
         sx={{
           fontSize: 12,
-          width: { xs: "100%", sm: "100px" },
+          minWidth: { xs: "100%", sm: "120px" },
+          maxWidth: { xs: "100%", sm: "120px" },
         }}
       >
         {label}
+        {required && (
+          <Box component="span" sx={{ color: "error.main", ml: 0.5 }}>
+            *
+          </Box>
+        )}
       </Typography>
       <TextField
         {...props}

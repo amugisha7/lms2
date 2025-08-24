@@ -10,10 +10,26 @@ const TextInput = ({
   required,
   readOnly = false,
   editing = true,
+  inputProps, // explicitly accept inputProps
+  minLength, // <-- accept minLength
+  maxLength, // <-- accept maxLength
+  slotProps: incomingSlotProps, // <-- accept incoming slotProps for merging
   ...props
 }) => {
   const [field, meta] = useField(name);
   const isReadOnly = readOnly || editing === false;
+
+  // Merge consumer-provided slotProps with our readOnly and inputProps, plus min/max length
+  const mergedSlotProps = {
+    ...incomingSlotProps,
+    input: {
+      ...(incomingSlotProps?.input || {}),
+      ...(inputProps || {}),
+      ...(minLength !== undefined ? { minLength } : {}),
+      ...(maxLength !== undefined ? { maxLength } : {}),
+      readOnly: isReadOnly,
+    },
+  };
 
   return (
     <Box
@@ -34,11 +50,16 @@ const TextInput = ({
       <Typography
         sx={{
           fontSize: 12,
-          //   flex: { xs: "unset", sm: 1 },
-          width: { xs: "100%", sm: "100px" },
+          minWidth: { xs: "100%", sm: "120px" },
+          maxWidth: { xs: "100%", sm: "120px" },
         }}
       >
         {label}
+        {required && (
+          <Box component="span" sx={{ color: "error.main", ml: 0.5 }}>
+            *
+          </Box>
+        )}
       </Typography>
       <TextField
         {...field}
@@ -46,36 +67,46 @@ const TextInput = ({
         // label={label}
         type={type}
         fullWidth
-        variant="outlined"
+        variant="filled"
         required={required}
-        error={meta.touched && Boolean(meta.error)}
-        helperText={meta.touched && meta.error ? meta.error : helperText}
+        error={isReadOnly ? false : meta.touched && Boolean(meta.error)} // hide error state when read-only
+        helperText={
+          isReadOnly
+            ? undefined
+            : meta.touched && meta.error
+            ? meta.error
+            : helperText // hide helper text when read-only
+        }
         size="small"
-        slotProps={{
-          input: { readOnly: isReadOnly },
-        }}
+        // inputProps removed; moved into slotProps.input
+        slotProps={mergedSlotProps}
         sx={{
-          flex: { xs: "unset", sm: "1 1 auto" }, // grow to fill remaining space
-          width: { xs: "100%", sm: "auto" }, // full width on mobile
-          minWidth: 0, // prevent overflow in flex
-          "& .MuiOutlinedInput-root": {
-            padding: 0,
-            "& .MuiOutlinedInput-notchedOutline": {
-              borderColor: isReadOnly
-                ? "transparent"
-                : (theme) =>
-                    theme.palette.mode === "dark"
-                      ? theme.palette.grey[500]
-                      : theme.palette.grey[400],
+          flex: { xs: "unset", sm: "1 1 auto" },
+          width: { xs: "100%", sm: "auto" },
+          minWidth: 0,
+          "& .MuiFilledInput-input": {
+            paddingTop: 0.5,
+            paddingBottom: 0.5,
+            borderRadius: 0,
+          },
+          "& .MuiFilledInput-root": {
+            backgroundColor: isReadOnly ? "transparent" : undefined, // transparent when read-only
+            "&:hover": {
+              backgroundColor: isReadOnly ? "transparent" : undefined, // keep transparent on hover
             },
-            "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-              borderColor: isReadOnly
+            "&.Mui-focused": {
+              backgroundColor: isReadOnly ? "transparent" : undefined, // keep transparent on focus
+            },
+            "&:before, &:after": {
+              borderBottomColor: isReadOnly ? "transparent" : undefined,
+            },
+            "&.Mui-focused:after": {
+              borderBottomColor: isReadOnly
                 ? "transparent"
                 : (theme) =>
                     theme.palette.mode === "dark"
                       ? "#90caf9"
                       : theme.palette.primary.main,
-              borderWidth: isReadOnly ? 1 : 2,
             },
           },
           "& .MuiInputLabel-root": {

@@ -33,13 +33,18 @@ const Dropdown = ({
     };
   });
 
+  // Find the label for the current value
+  const selectedOption = options?.find(
+    (option) => option.value === field.value
+  );
+
   return (
     <Box
       sx={{
         display: "flex",
         flexDirection: { xs: "column", sm: "row" },
         alignItems: { xs: "stretch", sm: "center" },
-        gap: 1,
+        gap: { xs: 0, sm: 1 },
         borderBottom: (theme) =>
           `1.5px dotted ${
             theme.palette.mode === "dark"
@@ -59,14 +64,9 @@ const Dropdown = ({
       >
         <Typography
           sx={{
-            fontSize: { xs: 14, sm: 12 },
-            fontWeight: 500,
-            color: (theme) =>
-              theme.palette.mode === "dark"
-                ? theme.palette.grey[200]
-                : theme.palette.text.primary,
-            width: "100%",
-            wordBreak: "break-word",
+            fontSize: 12,
+            minWidth: { xs: "100%", sm: "120px" },
+            maxWidth: { xs: "100%", sm: "120px" },
           }}
         >
           {label}
@@ -77,46 +77,63 @@ const Dropdown = ({
           )}
         </Typography>
       </Box>
-      <FormControl
-        fullWidth
-        variant="outlined"
-        error={meta.touched && Boolean(meta.error)}
-        sx={{
-          flex: { xs: "unset", sm: 3 },
-          width: { xs: "100%", sm: "auto" },
-        }}
-      >
-        <Select
-          {...field}
-          {...props}
-          size="small"
-          displayEmpty
-          input={<StyledOutlinedInput label={label} />}
-          slotProps={{
-            input: { readOnly: isReadOnly },
+      {editing ? (
+        <FormControl
+          fullWidth
+          variant="filled"
+          error={meta.touched && Boolean(meta.error)}
+          sx={{
+            flex: { xs: "unset", sm: 3 },
+            width: { xs: "100%", sm: "auto" },
           }}
         >
-          <MenuItem value="">
-            <em>Select {label}</em>
-          </MenuItem>
-          {options?.map((option) => (
-            <MenuItem
-              key={option.value}
-              value={option.value}
-              sx={{
-                "&:hover": {
-                  color: "white",
-                },
-              }}
-            >
-              {option.label}
+          <Select
+            {...field}
+            {...props}
+            size="small"
+            displayEmpty
+            input={<StyledOutlinedInput label={label} />}
+            slotProps={{
+              input: { readOnly: isReadOnly },
+            }}
+          >
+            <MenuItem value="">
+              <em>Select {label}</em>
             </MenuItem>
-          ))}
-        </Select>
-        <FormHelperText>
-          {meta.touched && meta.error ? meta.error : helperText}
-        </FormHelperText>
-      </FormControl>
+            {options?.map((option) => (
+              <MenuItem
+                key={option.value}
+                value={option.value}
+                sx={{
+                  "&:hover": {
+                    color: "white",
+                  },
+                }}
+              >
+                {option.label}
+              </MenuItem>
+            ))}
+          </Select>
+          <FormHelperText>
+            {meta.touched && meta.error ? meta.error : helperText}
+          </FormHelperText>
+        </FormControl>
+      ) : (
+        <Typography
+          sx={{
+            flex: { xs: "unset", sm: 3 },
+            width: { xs: "100%", sm: "auto" },
+            display: "flex",
+            alignItems: "center",
+            // minHeight: 40,
+            pl: 1.5,
+            // fontSize: 14,
+            // color: "text.primary",
+          }}
+        >
+          {selectedOption ? selectedOption.label : ""}
+        </Typography>
+      )}
     </Box>
   );
 };

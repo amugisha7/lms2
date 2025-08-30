@@ -1,0 +1,55 @@
+const createBranchesForm = [
+  {
+    label: "Branch Name",
+    name: "name",
+    type: "text",
+    required: true,
+    span: 6,
+    placeholder: "Branch Name",
+    validationType: "string",
+    validationPattern: /^[^,"'!{}]+$/,
+    validationMessage: "Name contains invalid characters",
+    maxLength: 100,
+        helperText: "Branch Name is required",
+
+  },
+  {
+    label: "Branch Code",
+    name: "branchCode",
+    type: "text",
+    required: false,
+    span: 6,
+    placeholder: "Branch Code (optional)",
+    validationType: "string",
+    validationPattern: /^[^,"'!{}]+$/,
+    validationMessage: "Code contains invalid characters",
+    maxLength: 20,
+  },
+  {
+    label: "Address",
+    name: "address",
+    type: "textarea",
+    required: false,
+    span: 12,
+    placeholder: "Branch Address (optional)",
+    rows: 2,
+    validationType: "string",
+    validationPattern: /^[^,"'!{}]+$/,
+    validationMessage: "Address contains invalid characters",
+    maxLength: 200,
+  },
+  {
+    label: "Status",
+    name: "status",
+    type: "radio",
+    required: false,
+    span: 6,
+    options: [
+      { value: "active", label: "Active" },
+      { value: "inactive", label: "Inactive" },
+    ],
+    showOnlyInEditMode: true,
+  },
+];
+
+export default createBranchesForm;

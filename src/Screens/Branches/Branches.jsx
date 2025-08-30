@@ -1,8 +1,7 @@
 import React from "react";
 import { UserContext } from "../../App";
-import EditBranchesForm from "./EditBranchesForm";
 import ClickableText from "../../ComponentAssets/ClickableText";
-import CreateBranchesForm from "./CreateBranchesForm";
+import CreateBranches from "./CreateBranches/CreateBranches";
 import { useTheme } from "@mui/material/styles";
 import CollectionsTemplate from "../../ComponentAssets/CollectionsTemplate";
 import { useCrudOperations } from "../../hooks/useCrudOperations";
@@ -28,6 +27,18 @@ const DELETE_BRANCH_MUTATION = `
   mutation DeleteBranch($input: DeleteBranchInput!) {
     deleteBranch(input: $input) {
       id
+    }
+  }
+`;
+
+const UPDATE_BRANCH_MUTATION = `
+  mutation UpdateBranch($input: UpdateBranchInput!) {
+    updateBranch(input: $input) {
+      id
+      name
+      branchCode
+      address
+      status
     }
   }
 `;
@@ -62,7 +73,7 @@ export default function Branches() {
     "Branch",
     LIST_BRANCHES_QUERY,
     null, // create mutation
-    null, // update mutation
+    UPDATE_BRANCH_MUTATION, // update mutation
     DELETE_BRANCH_MUTATION,
     "listBranches" // Explicitly specify the query key
   );
@@ -75,10 +86,10 @@ export default function Branches() {
     }
   }, [userDetails?.institutionUsersId, fetchBranches]);
 
-  const handleEditClick = () => {
-    if (formRef.current) {
-      formRef.current.toggleEdit();
-      setEditMode(formRef.current.getEditMode());
+  const handleEditClick = (form) => {
+    if (form) {
+      form.toggleEdit();
+      setEditMode(form.getEditMode());
     }
   };
 
@@ -136,7 +147,7 @@ export default function Branches() {
       createDialogOpen={createDialogOpen}
       onCreateDialogClose={handleCreateDialogClose}
       createDialogTitle="Create Branch"
-      CreateFormComponent={CreateBranchesForm}
+      CreateFormComponent={CreateBranches}
       createFormProps={{
         onClose: handleCreateDialogClose,
         onCreateSuccess: handleCreateSuccess,
@@ -145,11 +156,11 @@ export default function Branches() {
       editDialogOpen={editDialogOpen}
       editDialogRow={editDialogRow}
       onEditDialogClose={handleEditDialogClose}
-      EditFormComponent={EditBranchesForm}
+      EditFormComponent={CreateBranches}
       editFormProps={{
         onClose: handleEditDialogClose,
         onEditSuccess: handleEditSuccess,
-        isEditMode: false,
+        isEditMode: true,
       }}
       onEditClick={handleEditClick}
       onPopupDeleteClick={handlePopupDeleteClick}

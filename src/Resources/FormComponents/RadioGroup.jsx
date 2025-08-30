@@ -20,7 +20,7 @@ const RadioGroup = ({
   ...props
 }) => {
   const [field, meta] = useField(name);
-  const isReadOnly = readOnly || editing === false;
+  const isReadOnly = readOnly || !editing;
 
   return (
     <Box
@@ -54,20 +54,14 @@ const RadioGroup = ({
           minWidth: 0,
         }}
       >
-        <MuiRadioGroup {...field} {...props} column>
+        <MuiRadioGroup {...field} {...props} row>
           {options?.map((option) => (
             <FormControlLabel
               key={option.value}
               value={option.value}
-              control={
-                <Radio
-                  slotProps={{
-                    input: { readOnly: isReadOnly },
-                  }}
-                  size="small"
-                />
-              }
+              control={<Radio disabled={isReadOnly} size="small" />}
               label={option.label}
+              disabled={isReadOnly}
             />
           ))}
         </MuiRadioGroup>

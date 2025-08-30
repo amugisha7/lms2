@@ -61,7 +61,7 @@ export default function CollectionsTemplate({
 
   const handleEditClick = () => {
     if (formRef.current && onEditClick) {
-      onEditClick();
+      onEditClick(formRef.current);
     }
   };
 

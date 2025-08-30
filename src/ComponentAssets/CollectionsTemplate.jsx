@@ -4,9 +4,9 @@ import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import { useTheme } from "@mui/material/styles";
-import CustomPopUp from "../ComponentAssets/CustomPopUp";
-import CustomDataGrid from "../ComponentAssets/CustomDataGrid";
-import DeleteDialog from "../ComponentAssets/DeleteDialog";
+import CustomPopUp from "./CustomPopUp";
+import CustomDataGrid from "./CustomDataGrid";
+import DeleteDialog from "./DeleteDialog";
 
 export default function CollectionsTemplate({
   title,

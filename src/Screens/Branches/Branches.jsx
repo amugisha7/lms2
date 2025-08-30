@@ -4,7 +4,7 @@ import EditBranchesForm from "./EditBranchesForm";
 import ClickableText from "../../ComponentAssets/ClickableText";
 import CreateBranchesForm from "./CreateBranchesForm";
 import { useTheme } from "@mui/material/styles";
-import CollectionsTemplate from "../../temp/CollectionsTemplate";
+import CollectionsTemplate from "../../ComponentAssets/CollectionsTemplate";
 import { useCrudOperations } from "../../hooks/useCrudOperations";
 
 const LIST_BRANCHES_QUERY = `

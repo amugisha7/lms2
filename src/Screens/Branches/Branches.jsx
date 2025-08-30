@@ -1,135 +1,79 @@
 import React from "react";
-import { generateClient } from "aws-amplify/api";
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
 import { UserContext } from "../../App";
 import EditBranchesForm from "./EditBranchesForm";
 import ClickableText from "../../ComponentAssets/ClickableText";
-import CustomDataGrid from "../../ComponentAssets/CustomDataGrid";
-import CustomPopUp from "../../ComponentAssets/CustomPopUp";
-import DeleteDialog from "../../ComponentAssets/DeleteDialog";
 import CreateBranchesForm from "./CreateBranchesForm";
 import { useTheme } from "@mui/material/styles";
+import CollectionsTemplate from "../../temp/CollectionsTemplate";
+import { useCrudOperations } from "../../hooks/useCrudOperations";
+
+const LIST_BRANCHES_QUERY = `
+  query ListBranches($institutionId: ID!) {
+    listBranches(
+      filter: { institutionBranchesId: { eq: $institutionId } }
+      limit: 100
+    ) {
+      items {
+        id
+        name
+        branchCode
+        address
+        status
+      }
+    }
+  }
+`;
+
+const DELETE_BRANCH_MUTATION = `
+  mutation DeleteBranch($input: DeleteBranchInput!) {
+    deleteBranch(input: $input) {
+      id
+    }
+  }
+`;
 
 export default function Branches() {
-  const [branches, setBranches] = React.useState([]);
-  const [loading, setLoading] = React.useState(true);
-  const [search] = React.useState("");
-  const [editDialogOpen, setEditDialogOpen] = React.useState(false);
-  const [editDialogRow, setEditDialogRow] = React.useState(null);
-  const [createDialogOpen, setCreateDialogOpen] = React.useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
-  const [deleteDialogRow, setDeleteDialogRow] = React.useState(null);
-  const [deleteLoading, setDeleteLoading] = React.useState(false);
-  const [deleteError, setDeleteError] = React.useState("");
   const [editMode, setEditMode] = React.useState(false);
   const formRef = React.useRef();
   const { userDetails } = React.useContext(UserContext);
   const theme = useTheme();
 
+  const {
+    items: branches,
+    loading,
+    editDialogOpen,
+    editDialogRow,
+    createDialogOpen,
+    deleteDialogOpen,
+    deleteDialogRow,
+    deleteLoading,
+    deleteError,
+    fetchItems: fetchBranches,
+    handleEditDialogOpen,
+    handleEditDialogClose,
+    handleEditSuccess,
+    handleDeleteDialogOpen,
+    handleDeleteDialogClose,
+    handleDeleteConfirm,
+    handleCreateDialogOpen,
+    handleCreateDialogClose,
+    handleCreateSuccess,
+  } = useCrudOperations(
+    "Branch",
+    LIST_BRANCHES_QUERY,
+    null, // create mutation
+    null, // update mutation
+    DELETE_BRANCH_MUTATION,
+    "listBranches" // Explicitly specify the query key
+  );
+
   React.useEffect(() => {
-    const fetchBranches = async () => {
-      setLoading(true);
-      try {
-        const client = generateClient();
-        if (!userDetails?.institutionUsersId) {
-          setBranches([]);
-          setLoading(false);
-          return;
-        }
-        const result = await client.graphql({
-          query: `
-            query ListBranches($institutionId: ID!) {
-              listBranches(
-                filter: { institutionBranchesId: { eq: $institutionId } }
-                limit: 100
-              ) {
-                items {
-                  id
-                  name
-                  branchCode
-                  address
-                  status
-                }
-              }
-            }
-          `,
-          variables: {
-            institutionId: userDetails.institutionUsersId,
-          },
-        });
-        setBranches(result.data.listBranches.items || []);
-      } catch (err) {
-        console.log("err::: ", err);
-        setBranches([]);
-      } finally {
-        setLoading(false);
-      }
-    };
     if (userDetails?.institutionUsersId) {
-      fetchBranches();
-    }
-  }, [userDetails?.institutionUsersId]);
-
-  const handleEditDialogOpen = (row) => {
-    setEditDialogRow(row);
-    setEditDialogOpen(true);
-  };
-
-  const handleEditDialogClose = () => {
-    setEditDialogOpen(false);
-    setEditDialogRow(null);
-  };
-
-  const handleEditSuccess = (updatedRow) => {
-    setBranches((prev) =>
-      prev.map((row) =>
-        row.id === updatedRow.id ? { ...row, ...updatedRow } : row
-      )
-    );
-    handleEditDialogClose();
-  };
-
-  const handleDeleteDialogOpen = (row) => {
-    setDeleteDialogRow(row);
-    setDeleteDialogOpen(true);
-    setDeleteError("");
-  };
-
-  const handleDeleteDialogClose = () => {
-    setDeleteDialogOpen(false);
-    setDeleteDialogRow(null);
-    setDeleteError("");
-  };
-
-  const handleDeleteConfirm = async () => {
-    setDeleteLoading(true);
-    setDeleteError("");
-    try {
-      const client = generateClient();
-      await client.graphql({
-        query: `
-          mutation DeleteBranch($input: DeleteBranchInput!) {
-            deleteBranch(input: $input) {
-              id
-            }
-          }
-        `,
-        variables: {
-          input: { id: deleteDialogRow.id },
-        },
+      fetchBranches({
+        institutionId: userDetails.institutionUsersId,
       });
-      setBranches((prev) =>
-        prev.filter((row) => row.id !== deleteDialogRow.id)
-      );
-      handleDeleteDialogClose();
-    } catch (err) {
-      setDeleteError("Failed to delete. Please try again.");
-    } finally {
-      setDeleteLoading(false);
     }
-  };
+  }, [userDetails?.institutionUsersId, fetchBranches]);
 
   const handleEditClick = () => {
     if (formRef.current) {
@@ -139,23 +83,10 @@ export default function Branches() {
   };
 
   const handlePopupDeleteClick = () => {
-    setEditDialogOpen(false);
+    handleEditDialogClose();
     if (editDialogRow) {
       handleDeleteDialogOpen(editDialogRow);
     }
-  };
-
-  const handleCreateDialogOpen = () => {
-    setCreateDialogOpen(true);
-  };
-
-  const handleCreateDialogClose = () => {
-    setCreateDialogOpen(false);
-  };
-
-  const handleCreateSuccess = (newBranch) => {
-    setBranches((prev) => [...prev, newBranch]);
-    handleCreateDialogClose();
   };
 
   const columns = [
@@ -191,121 +122,48 @@ export default function Branches() {
   ];
 
   return (
-    <Box
-      sx={{
-        mx: { xs: 0, sm: "auto" },
-        mt: { xs: 0, sm: 0 },
-        p: { xs: 0, sm: 0 },
-        borderRadius: 1,
-        display: "flex",
-        flexDirection: "column",
-        maxWidth: { xs: "100%", md: 1000 },
-        width: "100%",
-        flex: 1,
-        mb: 6,
+    <CollectionsTemplate
+      title="Branches"
+      createButtonText="Create Branch"
+      onCreateClick={handleCreateDialogOpen}
+      // Data props
+      items={branches}
+      loading={loading}
+      columns={columns}
+      searchFields={["name", "branchCode", "address"]}
+      noDataMessage="No branches found. Please create a branch to get started."
+      // Create dialog props
+      createDialogOpen={createDialogOpen}
+      onCreateDialogClose={handleCreateDialogClose}
+      createDialogTitle="Create Branch"
+      CreateFormComponent={CreateBranchesForm}
+      createFormProps={{
+        onClose: handleCreateDialogClose,
+        onCreateSuccess: handleCreateSuccess,
       }}
-    >
-      <Box
-        sx={{
-          mb: 2,
-          display: "flex",
-          flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <Typography
-          variant="h4"
-          sx={{ mb: 2, fontWeight: 600, my: 2, textTransform: "none" }}
-        >
-          Branches{" "}
-          <Typography variant="caption" sx={{ color: "#90a4ae" }}>
-            Help
-          </Typography>
-        </Typography>
-        <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-          <Button
-            variant="contained"
-            color="success"
-            onClick={handleCreateDialogOpen}
-          >
-            Add Branch
-          </Button>
-        </Box>
-      </Box>
-      <Box sx={{ width: "100%" }}>
-        {/* Show info text if no branches */}
-        {!loading && branches.length === 0 && (
-          <Typography
-            sx={{ mb: 2, color: theme.palette.blueText?.main || "#1976d2" }}
-          >
-            No branches found. Please create a branch to get started.
-          </Typography>
-        )}
-        {loading ? (
-          <Typography sx={{ mt: 4 }}>Loading branches...</Typography>
-        ) : (
-          <CustomDataGrid
-            rows={
-              search
-                ? branches.filter((row) =>
-                    row.name?.toLowerCase().includes(search.toLowerCase())
-                  )
-                : branches
-            }
-            columns={columns}
-            getRowId={(row) => row.id}
-            pageSize={25}
-            pageSizeOptions={[25, 50, 100]}
-            loading={loading}
-          />
-        )}
-      </Box>
-
-      <CustomPopUp
-        open={createDialogOpen}
-        onClose={handleCreateDialogClose}
-        title="Create Branch"
-        showEdit={false}
-        showDelete={false}
-        maxWidth="md"
-        fullWidth
-      >
-        <CreateBranchesForm
-          onClose={handleCreateDialogClose}
-          onCreateSuccess={handleCreateSuccess}
-        />
-      </CustomPopUp>
-
-      <CustomPopUp
-        open={editDialogOpen}
-        onClose={handleEditDialogClose}
-        title={editDialogRow ? `${editDialogRow.name}` : "Branch Details"}
-        onEdit={handleEditClick}
-        onDelete={handlePopupDeleteClick}
-        maxWidth="md"
-        fullWidth
-        editMode={editMode}
-      >
-        {editDialogRow && (
-          <EditBranchesForm
-            ref={formRef}
-            initialValues={editDialogRow}
-            onClose={handleEditDialogClose}
-            onEditSuccess={handleEditSuccess}
-            isEditMode={false}
-          />
-        )}
-      </CustomPopUp>
-
-      <DeleteDialog
-        open={deleteDialogOpen}
-        onClose={handleDeleteDialogClose}
-        onConfirm={handleDeleteConfirm}
-        loading={deleteLoading}
-        error={deleteError}
-        name={deleteDialogRow?.name}
-      />
-    </Box>
+      // Edit dialog props
+      editDialogOpen={editDialogOpen}
+      editDialogRow={editDialogRow}
+      onEditDialogClose={handleEditDialogClose}
+      EditFormComponent={EditBranchesForm}
+      editFormProps={{
+        onClose: handleEditDialogClose,
+        onEditSuccess: handleEditSuccess,
+        isEditMode: false,
+      }}
+      onEditClick={handleEditClick}
+      onPopupDeleteClick={handlePopupDeleteClick}
+      editMode={editMode}
+      // Delete dialog props
+      deleteDialogOpen={deleteDialogOpen}
+      onDeleteDialogClose={handleDeleteDialogClose}
+      onDeleteConfirm={handleDeleteConfirm}
+      deleteLoading={deleteLoading}
+      deleteError={deleteError}
+      deleteDialogRow={deleteDialogRow}
+      // Search props
+      enableSearch={true}
+      searchPlaceholder="Search branches..."
+    />
   );
 }

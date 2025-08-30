@@ -162,7 +162,7 @@ const CustomDataGrid = ({
     "& .MuiDataGrid-cell": {
       borderBottom: `1px solid ${isDark ? "#333333" : "#e8e8e8"}`,
       padding: "0px 16px 16px 12px",
-      fontSize: "0.875rem",
+      fontSize: "0.82rem",
       color: isDark ? "#e8e6e3" : "#393a3d",
       "&:focus": {
         outline: "none",

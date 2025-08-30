@@ -16,7 +16,7 @@ export default function ClickableText({
         display: "inline-block", // Add this to enable transform
         cursor: "pointer",
         color: theme.palette.blueText?.main || "primary.main",
-        fontWeight: "bold",
+        // fontWeight: "bold",
         fontSize: "inherit",
         textAlign: "left",
         textTransform: "none",

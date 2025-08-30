@@ -26,3 +26,75 @@ code {
   font-size: 12px;/* Material Blue 700, good contrast on light/dark */
 }
 
+/* Print styles for popup */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  
+  #printable-popup, 
+  #printable-popup * {
+    visibility: visible;
+  }
+  
+  .popup-actions {
+    display: none !important;
+  }
+  
+  .popup-header {
+    border-bottom: 1px solid #000 !important;
+  }
+  
+  .popup-content > * {
+    border: none !important;
+    background-color: white !important;
+    color: black !important;
+  }
+  
+  .popup-content * {
+    color: black !important;
+  }
+  
+  #printable-popup {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    background-color: white !important;
+  }
+  
+  .MuiDialog-paper {
+    box-shadow: none !important;
+    margin: 0 !important;
+    max-width: none !important;
+    width: 100% !important;
+  }
+  
+  .MuiBackdrop-root {
+    display: none !important;
+  }
+}
+
+/* Style adjustments for printing mode */
+body.printing-active .action-icon {
+  display: none !important;
+}
+
+body.printing-active .popup-content > * {
+  background-color: white !important;
+  border-color: #e0e0e0 !important;
+}
+
+body.printing-active .popup-content * {
+  color: black !important;
+}
+
+body.printing-active .MuiDialog-paper {
+  background-color: white !important;
+  color: black !important;
+}
+
+body.printing-active .MuiBackdrop-root {
+  display: none !important;
+}
+

@@ -1,13 +1,17 @@
-import React from "react";
+import React, { useState } from "react";
 import { Formik, Form } from "formik";
 import * as Yup from "yup";
 import { Grid, Typography } from "@mui/material";
 import { styled } from "@mui/material/styles";
+import { Link as RouterLink } from "react-router-dom";
+import Link from "@mui/material/Link";
+
 import createBorrowerForm from "./createBorrowerForm";
 import TextInput from "../../../Resources/FormComponents/TextInput";
 import Dropdown from "../../../Resources/FormComponents/Dropdown";
 import DateInput from "../../../Resources/FormComponents/DateInput";
 import CreateFormButtons from "../../../ComponentAssets/CreateFormButtons";
+import CustomFields from "../../AdminScreens/CustomFields/CustomFields";
 
 // Styled FormGrid component for consistent layout
 const FormGrid = styled(Grid)(({ theme }) => ({
@@ -19,7 +23,7 @@ const FormGrid = styled(Grid)(({ theme }) => ({
 }));
 
 // Build initialValues dynamically from createBorrowerForm
-const initialValues = createBorrowerForm.reduce((acc, field) => {
+const baseInitialValues = createBorrowerForm.reduce((acc, field) => {
   acc[field.name] = "";
   return acc;
 }, {});
@@ -85,7 +89,7 @@ validationShape.businessName = validationShape.businessName.test(
   }
 );
 
-const validationSchema = Yup.object().shape(validationShape);
+const baseValidationSchema = Yup.object().shape(validationShape);
 
 const renderFormField = (field) => {
   switch (field.type) {
@@ -105,11 +109,32 @@ const renderFormField = (field) => {
 };
 
 const CreateBorrower = () => {
+  const [initialValues, setInitialValues] = useState(baseInitialValues);
+  const [dynamicValidationSchema, setDynamicValidationSchema] =
+    useState(baseValidationSchema);
+
   const handleSubmit = (values, { setSubmitting }) => {
     console.log("Form values:", values);
     setTimeout(() => {
       setSubmitting(false);
     }, 1000);
+  };
+
+  // Handle custom fields loading
+  const handleCustomFieldsLoaded = (customFieldsInitialValues) => {
+    const newInitialValues = {
+      ...baseInitialValues,
+      ...customFieldsInitialValues,
+    };
+    setInitialValues(newInitialValues);
+  };
+
+  // Handle validation schema changes from custom fields
+  const handleValidationSchemaChange = (customFieldsValidation) => {
+    const newValidationSchema = baseValidationSchema.shape(
+      customFieldsValidation
+    );
+    setDynamicValidationSchema(newValidationSchema);
   };
 
   return (
@@ -119,8 +144,9 @@ const CreateBorrower = () => {
       </Typography>
       <Formik
         initialValues={initialValues}
-        validationSchema={validationSchema}
+        validationSchema={dynamicValidationSchema}
         onSubmit={handleSubmit}
+        enableReinitialize={true}
       >
         {(formik) => (
           <Form>
@@ -134,6 +160,17 @@ const CreateBorrower = () => {
                   {renderFormField({ ...field, editing: true })}
                 </FormGrid>
               ))}
+
+              {/* Custom Fields Component */}
+              <FormGrid size={{ xs: 12 }}>
+                <CustomFields
+                  formKey="CreateBorrowerForm"
+                  formik={formik}
+                  onFieldsLoaded={handleCustomFieldsLoaded}
+                  onValidationSchemaChange={handleValidationSchemaChange}
+                />
+              </FormGrid>
+
               <Grid size={{ xs: 12 }}>
                 <CreateFormButtons formik={formik} />
               </Grid>
@@ -141,6 +178,13 @@ const CreateBorrower = () => {
           </Form>
         )}
       </Formik>
+      <Link
+        component={RouterLink}
+        to="/customFields"
+        sx={{ display: "block", textAlign: "center", pb: "60px" }}
+      >
+        Need to add custom fields? <b>Click here to manage custom fields</b>
+      </Link>
     </>
   );
 };

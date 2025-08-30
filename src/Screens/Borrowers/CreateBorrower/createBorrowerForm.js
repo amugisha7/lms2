@@ -1,3 +1,5 @@
+import { countries } from "../../../Resources/listOfCountries";
+
 const createBorrowerForm = [
   {
     label: "First Name:",
@@ -119,6 +121,7 @@ const createBorrowerForm = [
     type: "select",
     required: false,
     span: 6,
+    options: countries.map(c => ({ value: c, label: c })),
   },
   {
     label: "Address:",

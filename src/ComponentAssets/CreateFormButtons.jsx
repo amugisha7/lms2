@@ -8,6 +8,7 @@ const CreateFormButtons = ({
   setSubmitError,
   setSubmitSuccess,
   onClose, // add onClose prop
+  hideCancel, // new prop
 }) => {
   const theme = useTheme();
 
@@ -24,39 +25,41 @@ const CreateFormButtons = ({
           gap: 16,
         }}
       >
-        <Button
-          type="button"
-          variant="outlined"
-          color="error"
-          disabled={formik.isSubmitting}
-          onClick={() => {
-            formik.resetForm();
-            setEditMode(false);
-            setSubmitError("");
-            setSubmitSuccess("");
-            if (onClose) onClose();
-          }}
-          sx={{
-            minWidth: 120,
-            fontWeight: 600,
-            borderColor: theme.palette.error.main,
-            color: theme.palette.error.main,
-            backgroundColor:
-              theme.palette.mode === "dark"
-                ? "rgba(244,67,54,0.08)"
-                : "rgba(244,67,54,0.04)",
-            "&:hover": {
-              borderColor: theme.palette.error.dark,
-              color: theme.palette.error.dark,
+        {!hideCancel && (
+          <Button
+            type="button"
+            variant="outlined"
+            color="error"
+            disabled={formik.isSubmitting}
+            onClick={() => {
+              formik.resetForm();
+              setEditMode(false);
+              setSubmitError("");
+              setSubmitSuccess("");
+              if (onClose) onClose();
+            }}
+            sx={{
+              minWidth: 120,
+              fontWeight: 600,
+              borderColor: theme.palette.error.main,
+              color: theme.palette.error.main,
               backgroundColor:
                 theme.palette.mode === "dark"
-                  ? "rgba(244,67,54,0.18)"
-                  : "rgba(244,67,54,0.12)",
-            },
-          }}
-        >
-          Cancel
-        </Button>
+                  ? "rgba(244,67,54,0.08)"
+                  : "rgba(244,67,54,0.04)",
+              "&:hover": {
+                borderColor: theme.palette.error.dark,
+                color: theme.palette.error.dark,
+                backgroundColor:
+                  theme.palette.mode === "dark"
+                    ? "rgba(244,67,54,0.18)"
+                    : "rgba(244,67,54,0.12)",
+              },
+            }}
+          >
+            Cancel
+          </Button>
+        )}
         <Button
           type="submit"
           variant="contained"

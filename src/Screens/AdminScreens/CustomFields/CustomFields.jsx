@@ -22,10 +22,12 @@ import Dropdown from "../../../Resources/FormComponents/Dropdown";
 import DateInput from "../../../Resources/FormComponents/DateInput";
 import TextArea from "../../../Resources/FormComponents/TextArea";
 
-const FormGrid = styled(Grid)(() => ({
+const FormGrid = styled(Grid)(({ theme }) => ({
   display: "flex",
   flexDirection: "column",
-  marginTop: "1rem",
+  [theme.breakpoints.up("md")]: {
+    paddingRight: "20px",
+  },
 }));
 
 const CustomFields = ({
@@ -232,9 +234,9 @@ const CustomFields = ({
     <FormikProvider value={formik}>
       <>
         {/* Custom Fields Section Header */}
-        <Grid container spacing={2}>
+        <Grid container spacing={1}>
           <FormGrid size={{ xs: 12 }}>
-            <Typography variant="h6" sx={{ mt: 2, fontWeight: "bold" }}>
+            <Typography variant="h5" sx={{ my: 2, fontWeight: "bold" }}>
               ADDITONAL INFORMATION (Custom Fields)
             </Typography>
           </FormGrid>

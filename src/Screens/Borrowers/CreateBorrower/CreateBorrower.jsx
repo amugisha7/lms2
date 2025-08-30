@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { Formik, Form } from "formik";
 import * as Yup from "yup";
-import { Grid, Typography } from "@mui/material";
+import { Box, Grid, Typography } from "@mui/material";
 import { styled } from "@mui/material/styles";
-import { Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
 import Link from "@mui/material/Link";
+import { generateClient } from "aws-amplify/api";
 
 import createBorrowerForm from "./createBorrowerForm";
 import TextInput from "../../../Resources/FormComponents/TextInput";
@@ -12,6 +13,7 @@ import Dropdown from "../../../Resources/FormComponents/Dropdown";
 import DateInput from "../../../Resources/FormComponents/DateInput";
 import CreateFormButtons from "../../../ComponentAssets/CreateFormButtons";
 import CustomFields from "../../AdminScreens/CustomFields/CustomFields";
+import { UserContext } from "../../../App";
 
 // Styled FormGrid component for consistent layout
 const FormGrid = styled(Grid)(({ theme }) => ({
@@ -112,12 +114,107 @@ const CreateBorrower = () => {
   const [initialValues, setInitialValues] = useState(baseInitialValues);
   const [dynamicValidationSchema, setDynamicValidationSchema] =
     useState(baseValidationSchema);
+  const client = generateClient();
+  const navigate = useNavigate();
+  const { userDetails } = React.useContext(UserContext);
+  const [submitError, setSubmitError] = useState("");
+  const [submitSuccess, setSubmitSuccess] = useState("");
 
-  const handleSubmit = (values, { setSubmitting }) => {
-    console.log("Form values:", values);
-    setTimeout(() => {
+  const handleSubmit = async (values, { setSubmitting, resetForm }) => {
+    setSubmitError("");
+    setSubmitSuccess("");
+    setSubmitting(true);
+
+    try {
+      // Check if branchUsersId exists
+      if (!userDetails?.branchUsersId) {
+        setSubmitError("Error: Please try refreshing the page.");
+        setSubmitting(false);
+        return;
+      }
+
+      // Create the base input object with standard fields
+      const input = {
+        firstname: values.firstname?.trim() || null,
+        othername: values.othername?.trim() || null,
+        businessName: values.businessName?.trim() || null,
+        typeOfBusiness: values.typeOfBusiness?.trim() || null,
+        uniqueIdNumber: values.uniqueNumber?.trim() || null,
+        phoneNumber: values.mobile?.trim() || null,
+        otherPhoneNumber: values.altPhone?.trim() || null,
+        email: values.email?.trim() || null,
+        gender: values.gender || null,
+        dateOfBirth: values.dob || null,
+        nationality: values.country || null,
+        address: values.address?.trim() || null,
+        city: values.city?.trim() || null,
+        state: values.province?.trim() || null,
+        zipcode: values.zipcode?.trim() || null,
+        employmentStatus: values.workingStatus || null,
+        employerName: values.employerName?.trim() || null,
+        creditScore: values.creditScore?.trim() || null,
+      };
+
+      // Extract custom fields data
+      const customFieldsData = {};
+      Object.keys(values).forEach((key) => {
+        if (key.startsWith("custom_")) {
+          const fieldId = key.replace("custom_", "");
+          customFieldsData[fieldId] = {
+            fieldId: fieldId,
+            value:
+              typeof values[key] === "string"
+                ? values[key].trim() || null
+                : values[key] || null,
+          };
+        }
+      });
+
+      // Add custom fields data to input if any exist
+      if (Object.keys(customFieldsData).length > 0) {
+        input.customFieldsData = JSON.stringify(customFieldsData);
+      }
+
+      const result = await client.graphql({
+        query: `
+          mutation CreateBorrower($input: CreateBorrowerInput!) {
+            createBorrower(input: $input) {
+              id
+              firstname
+              businessName
+              phoneNumber
+              email
+              customFieldsData
+              branchBorrowersId
+              createdAt
+              updatedAt
+            }
+          }
+        `,
+        variables: {
+          input: {
+            ...input,
+            branchBorrowersId: userDetails.branchUsersId, // Add branch ID from context
+          },
+        },
+      });
+
+      const newBorrowerId = result?.data?.createBorrower?.id;
+      setSubmitSuccess("Borrower created successfully!");
+      resetForm();
+
+      // Navigate to ViewBorrower page after 1 second delay
+      if (newBorrowerId) {
+        setTimeout(() => {
+          navigate(`/viewBorrower/${newBorrowerId}`);
+        }, 1000);
+      }
+    } catch (err) {
+      console.error("Error creating borrower:", err);
+      setSubmitError("Failed to create borrower. Please try again.");
+    } finally {
       setSubmitting(false);
-    }, 1000);
+    }
   };
 
   // Handle custom fields loading
@@ -162,18 +259,35 @@ const CreateBorrower = () => {
               ))}
 
               {/* Custom Fields Component */}
-              <FormGrid size={{ xs: 12 }}>
+              <Box sx={{ display: "flex" }}>
                 <CustomFields
                   formKey="CreateBorrowerForm"
                   formik={formik}
                   onFieldsLoaded={handleCustomFieldsLoaded}
                   onValidationSchemaChange={handleValidationSchemaChange}
                 />
-              </FormGrid>
+              </Box>
 
-              <Grid size={{ xs: 12 }}>
-                <CreateFormButtons formik={formik} />
-              </Grid>
+              <Box
+                sx={{
+                  display: "flex",
+                  pr: 2,
+                  justifyContent: { xs: "center", md: "flex-end" },
+                  width: "100%",
+                }}
+              >
+                <CreateFormButtons formik={formik} hideCancel />
+              </Box>
+              {submitError && (
+                <Typography color="error" sx={{ mt: 2 }}>
+                  {submitError}
+                </Typography>
+              )}
+              {submitSuccess && (
+                <Typography color="primary" sx={{ mt: 2 }}>
+                  {submitSuccess}
+                </Typography>
+              )}
             </Grid>
           </Form>
         )}

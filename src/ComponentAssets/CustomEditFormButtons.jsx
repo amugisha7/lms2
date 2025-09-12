@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useContext } from "react";
 import Button from "@mui/material/Button";
 import { useTheme } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
+import { EditClickedContext } from "./CollectionsTemplate";
 
 const CustomEditFormButtons = ({
   formik,
@@ -11,6 +12,7 @@ const CustomEditFormButtons = ({
   setSubmitSuccess,
 }) => {
   const theme = useTheme();
+  const { setEditClicked } = useContext(EditClickedContext) || {};
 
   return (
     <div className="action-icon">
@@ -83,6 +85,9 @@ const CustomEditFormButtons = ({
             setEditMode(false);
             setSubmitError("");
             setSubmitSuccess("");
+            if (setEditClicked) {
+              setEditClicked(false);
+            }
           }}
           sx={{
             minWidth: 120,

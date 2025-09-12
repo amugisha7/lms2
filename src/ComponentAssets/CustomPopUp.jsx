@@ -9,6 +9,7 @@ import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import ClickableText from "./ClickableText";
 import { useTheme } from "@mui/material/styles";
 import { ColorModeContext } from "../theme";
+import { EditClickedContext } from "./CollectionsTemplate";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 
@@ -229,6 +230,7 @@ export default function CustomPopUp({
 }) {
   const theme = useTheme();
   const colorMode = useContext(ColorModeContext);
+  const { editClicked, setEditClicked } = useContext(EditClickedContext) || {};
   const printableRef = useRef(null);
 
   return (
@@ -279,7 +281,7 @@ export default function CustomPopUp({
           }}
           className="popup-actions"
         >
-          {showDelete && onDelete && (
+          {showDelete && onDelete && !editClicked && (
             <ClickableText
               className="action-icon"
               onClick={onDelete}
@@ -295,7 +297,7 @@ export default function CustomPopUp({
               Delete
             </ClickableText>
           )}
-          {showEdit && onEdit && (
+          {showEdit && onEdit && !editClicked && (
             <ClickableText
               className="action-icon"
               onClick={onEdit}
@@ -305,7 +307,7 @@ export default function CustomPopUp({
             </ClickableText>
           )}
 
-          {!editMode && (
+          {showEdit && onEdit && !editClicked && (
             <IconButton
               onClick={() =>
                 downloadPdf(printableRef, colorMode, theme.palette.mode)

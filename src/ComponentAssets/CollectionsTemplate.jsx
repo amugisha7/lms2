@@ -8,6 +8,12 @@ import CustomPopUp from "./CustomPopUp";
 import CustomDataGrid from "./CustomDataGrid";
 import DeleteDialog from "./DeleteDialog";
 
+// Create context for edit state
+const EditClickedContext = React.createContext();
+
+// Export the context so it can be used by child components
+export { EditClickedContext };
+
 export default function CollectionsTemplate({
   title,
   createButtonText = "Create",
@@ -47,6 +53,7 @@ export default function CollectionsTemplate({
 }) {
   const theme = useTheme();
   const [search, setSearch] = React.useState("");
+  const [editClicked, setEditClicked] = React.useState(false);
   const formRef = React.useRef();
 
   const filteredItems = React.useMemo(() => {
@@ -59,112 +66,125 @@ export default function CollectionsTemplate({
     );
   }, [items, search, searchFields, enableSearch]);
 
+  // Reset editClicked when dialog opens
+  React.useEffect(() => {
+    if (editDialogOpen) {
+      setEditClicked(false);
+    }
+  }, [editDialogOpen]);
+
   const handleEditClick = () => {
+    setEditClicked(true);
     if (formRef.current && onEditClick) {
       onEditClick(formRef.current);
     }
   };
 
   return (
-    <Box>
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          mb: 2,
-        }}
-      >
-        <Typography variant="h4" sx={{ fontWeight: 600 }}>
-          {title}
-        </Typography>
-        <Button
-          variant="outlined"
-          onClick={onCreateClick}
+    <EditClickedContext.Provider value={{ editClicked, setEditClicked }}>
+      <Box>
+        <Box
           sx={{
-            borderColor: theme.palette.blueText.main,
-            color: theme.palette.blueText.main,
-            backgroundColor: "transparent",
-            "&:hover": {
-              backgroundColor: "transparent",
-              borderColor: theme.palette.blueText.main,
-              borderWidth: "2px",
-            },
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            mb: 2,
           }}
         >
-          {createButtonText}
-        </Button>
-      </Box>
-
-      {/* Default data grid if no children provided */}
-      {!children && (
-        <Box sx={{ width: "100%" }}>
-          {!loading && items.length === 0 && (
-            <Typography
-              sx={{ mb: 2, color: theme.palette.blueText?.main || "#1976d2" }}
-            >
-              {noDataMessage}
-            </Typography>
-          )}
-          {loading ? (
-            <Typography sx={{ mt: 4 }}>Loading...</Typography>
-          ) : (
-            <CustomDataGrid
-              rows={filteredItems}
-              columns={columns}
-              getRowId={(row) => row.id}
-              pageSize={25}
-              pageSizeOptions={[25, 50, 100]}
-              loading={loading}
-            />
-          )}
+          <Typography variant="h4" sx={{ fontWeight: 600 }}>
+            {title}
+          </Typography>
+          <Button
+            variant="outlined"
+            onClick={onCreateClick}
+            sx={{
+              borderColor: theme.palette.blueText.main,
+              color: theme.palette.blueText.main,
+              backgroundColor: "transparent",
+              "&:hover": {
+                backgroundColor: "transparent",
+                borderColor: theme.palette.blueText.main,
+                borderWidth: "2px",
+              },
+            }}
+          >
+            {createButtonText}
+          </Button>
         </Box>
-      )}
 
-      {/* Create Dialog */}
-      {CreateFormComponent && (
-        <CustomPopUp
-          open={createDialogOpen}
-          onClose={onCreateDialogClose}
-          title={createDialogTitle}
-          showEdit={false}
-          showDelete={false}
-          maxWidth="md"
-          fullWidth
-        >
-          <CreateFormComponent {...createFormProps} />
-        </CustomPopUp>
-      )}
+        {/* Default data grid if no children provided */}
+        {!children && (
+          <Box sx={{ width: "100%" }}>
+            {!loading && items.length === 0 && (
+              <Typography
+                sx={{ mb: 2, color: theme.palette.blueText?.main || "#1976d2" }}
+              >
+                {noDataMessage}
+              </Typography>
+            )}
+            {loading ? (
+              <Typography sx={{ mt: 4 }}>Loading...</Typography>
+            ) : (
+              <CustomDataGrid
+                rows={filteredItems}
+                columns={columns}
+                getRowId={(row) => row.id}
+                pageSize={25}
+                pageSizeOptions={[25, 50, 100]}
+                loading={loading}
+              />
+            )}
+          </Box>
+        )}
 
-      {/* Edit Dialog */}
-      {EditFormComponent && editDialogRow && (
-        <CustomPopUp
-          open={editDialogOpen}
-          onClose={onEditDialogClose}
-          title={editDialogRow.name || "Details"}
-          onEdit={handleEditClick}
-          onDelete={onPopupDeleteClick}
-          maxWidth="md"
-          fullWidth
-          editMode={editMode}
-        >
-          <EditFormComponent
-            ref={formRef}
-            initialValues={editDialogRow}
-            {...editFormProps}
-          />
-        </CustomPopUp>
-      )}
+        {/* Create Dialog */}
+        {CreateFormComponent && (
+          <CustomPopUp
+            open={createDialogOpen}
+            onClose={onCreateDialogClose}
+            title={createDialogTitle}
+            showEdit={false}
+            showDelete={false}
+            maxWidth="md"
+            fullWidth
+          >
+            <CreateFormComponent {...createFormProps} />
+          </CustomPopUp>
+        )}
 
-      {/* Delete Dialog */}
-      <DeleteDialog
-        open={deleteDialogOpen}
-        onClose={onDeleteDialogClose}
-        onConfirm={onDeleteConfirm}
-        loading={deleteLoading}
-        error={deleteError}
-        name={deleteDialogRow?.name}
-      />
-    </Box>
+        {/* Edit Dialog */}
+        {EditFormComponent && editDialogRow && (
+          <CustomPopUp
+            open={editDialogOpen}
+            onClose={() => {
+              setEditClicked(false);
+              onEditDialogClose();
+            }}
+            title={editDialogRow.name || "Details"}
+            onEdit={handleEditClick}
+            onDelete={onPopupDeleteClick}
+            maxWidth="md"
+            fullWidth
+            editMode={editMode}
+          >
+            <EditFormComponent
+              ref={formRef}
+              initialValues={editDialogRow}
+              {...editFormProps}
+            />
+          </CustomPopUp>
+        )}
+
+        {/* Delete Dialog */}
+        <DeleteDialog
+          open={deleteDialogOpen}
+          onClose={onDeleteDialogClose}
+          onConfirm={onDeleteConfirm}
+          loading={deleteLoading}
+          error={deleteError}
+          name={deleteDialogRow?.name}
+        />
+      </Box>
+    </EditClickedContext.Provider>
   );
 }

@@ -5,8 +5,9 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import IconButton from "@mui/material/IconButton";
 import CloseIcon from "@mui/icons-material/Close";
-import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import ClickableText from "./ClickableText";
+import { Button } from "@mui/material";
+import DownloadIcon from "@mui/icons-material/Download";
 import { useTheme } from "@mui/material/styles";
 import { ColorModeContext } from "../theme";
 import { EditClickedContext } from "./CollectionsTemplate";
@@ -308,20 +309,32 @@ export default function CustomPopUp({
           )}
 
           {showEdit && onEdit && !editClicked && (
-            <IconButton
+            <Button
               onClick={() =>
                 downloadPdf(printableRef, colorMode, theme.palette.mode)
               }
               size="small"
               aria-label="Download PDF"
+              startIcon={<DownloadIcon sx={{ mr: -0.7 }} />}
               sx={{
                 mr: 1,
                 fontSize: "0.9rem",
+                minWidth: "auto",
+                padding: "2px 8px",
+                textTransform: "none",
+                lineHeight: 1.2,
+                backgroundColor: "transparent",
+                color: theme.palette.mode === "dark" ? "#ebebeb" : "#2b2d2f",
+                // border: `1px solid ${
+                //   theme.palette.mode === "dark" ? "#76B1D3" : "#1976d2"
+                // }`,
+                borderRadius: "4px",
+                boxShadow: "none",
               }}
               className="action-icon"
             >
-              <PictureAsPdfIcon />
-            </IconButton>
+              PDF
+            </Button>
           )}
 
           <IconButton

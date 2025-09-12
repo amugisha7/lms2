@@ -13,7 +13,7 @@ const CustomEditFormButtons = ({
   const theme = useTheme();
 
   return (
-    <>
+    <div className="action-icon">
       <Box
         sx={{
           mb: 2,
@@ -127,7 +127,7 @@ const CustomEditFormButtons = ({
           {formik.isSubmitting ? "Saving..." : "Save Changes"}
         </Button>
       </div>
-    </>
+    </div>
   );
 };
 

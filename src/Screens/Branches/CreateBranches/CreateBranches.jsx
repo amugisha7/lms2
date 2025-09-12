@@ -76,6 +76,7 @@ const CreateBranchesForm = forwardRef(
       onEditSuccess,
       initialValues: propInitialValues,
       isEditMode = false,
+      hideCancel,
     },
     ref
   ) => {
@@ -236,6 +237,7 @@ const CreateBranchesForm = forwardRef(
                   setSubmitError={setSubmitError}
                   setSubmitSuccess={setSubmitSuccess}
                   onClose={onClose}
+                  hideCancel={hideCancel}
                 />
               ) : null}
 

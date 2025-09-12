@@ -22,11 +22,16 @@ const downloadPdf = async (printableRef, colorMode, originalMode) => {
   // Add print-only class for styling
   document.body.classList.add("printing-active");
 
+  // Declare variables outside try block for proper scope
+  let dialogElement = null;
+  let originalStyles = null;
+  let originalBodyStyles = null;
+
   // Wait for the DOM to update with light mode styles
   setTimeout(async () => {
     try {
       // Target only the dialog paper element (the actual popup without background)
-      const dialogElement =
+      dialogElement =
         printableRef.current?.querySelector(".MuiDialog-paper") ||
         printableRef.current;
 
@@ -34,8 +39,8 @@ const downloadPdf = async (printableRef, colorMode, originalMode) => {
         throw new Error("Dialog content not found");
       }
 
-      // Temporarily style the dialog for PDF generation
-      const originalStyles = {
+      // Store original styles
+      originalStyles = {
         position: dialogElement.style.position,
         transform: dialogElement.style.transform,
         margin: dialogElement.style.margin,
@@ -45,16 +50,60 @@ const downloadPdf = async (printableRef, colorMode, originalMode) => {
         overflow: dialogElement.style.overflow,
       };
 
-      // Set styles for PDF capture
+      // Store original body styles
+      originalBodyStyles = {
+        width: document.body.style.width,
+        minWidth: document.body.style.minWidth,
+        overflow: document.body.style.overflow,
+      };
+
+      // Force desktop layout for PDF generation
+      Object.assign(document.body.style, {
+        width: "1200px", // Force desktop width
+        minWidth: "1200px",
+        overflow: "visible",
+      });
+
+      // Set styles for PDF capture - force desktop layout
       Object.assign(dialogElement.style, {
         position: "static",
         transform: "none",
         margin: "0",
-        maxWidth: "none",
-        width: "210mm", // A4 width
+        maxWidth: "900px", // Desktop maxWidth for 'md'
+        width: "900px", // Fixed desktop width
         height: "auto",
         overflow: "visible",
       });
+
+      // Force all responsive elements to desktop view
+      const responsiveElements = dialogElement.querySelectorAll("*");
+      const originalElementStyles = [];
+
+      responsiveElements.forEach((element, index) => {
+        const computed = window.getComputedStyle(element);
+        originalElementStyles[index] = {
+          fontSize: element.style.fontSize,
+          padding: element.style.padding,
+          margin: element.style.margin,
+          width: element.style.width,
+          flexDirection: element.style.flexDirection,
+          flexWrap: element.style.flexWrap,
+          order: element.style.order,
+          display: element.style.display,
+        };
+
+        // Force desktop styles
+        if (element.classList.contains("popup-header")) {
+          element.style.flexWrap = "nowrap";
+        }
+
+        // Reset any mobile-specific overrides
+        element.style.fontSize = computed.fontSize;
+        element.style.order = "0";
+      });
+
+      // Wait for layout to settle
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
       // Get canvas of the dialog element only
       const canvas = await html2canvas(dialogElement, {
@@ -62,12 +111,22 @@ const downloadPdf = async (printableRef, colorMode, originalMode) => {
         useCORS: true,
         logging: false,
         backgroundColor: "#ffffff",
-        width: dialogElement.offsetWidth,
-        height: dialogElement.offsetHeight,
+        width: 900, // Fixed desktop width
+        height: dialogElement.scrollHeight,
+        windowWidth: 1200, // Force desktop viewport
+        windowHeight: 800,
+      });
+
+      // Restore all element styles
+      responsiveElements.forEach((element, index) => {
+        if (originalElementStyles[index]) {
+          Object.assign(element.style, originalElementStyles[index]);
+        }
       });
 
       // Restore original styles
       Object.assign(dialogElement.style, originalStyles);
+      Object.assign(document.body.style, originalBodyStyles);
 
       const imgData = canvas.toDataURL("image/jpeg", 1.0);
 
@@ -83,13 +142,13 @@ const downloadPdf = async (printableRef, colorMode, originalMode) => {
       const pageHeight = pdf.internal.pageSize.getHeight();
 
       // Add attribution text at the top
-      pdf.setFontSize(10);
-      pdf.setTextColor(100, 100, 100); // Gray color
+      pdf.setFontSize(9);
+      pdf.setTextColor(25, 118, 210); // Material blue 700 (hex #1976d2)
 
       const attributionText =
         "Created using Loan Management Software from www.LoanTabs.com";
       const textWidth =
-        (pdf.getStringUnitWidth(attributionText) * 10) /
+        (pdf.getStringUnitWidth(attributionText) * 9) /
         pdf.internal.scaleFactor;
       const textXPos = (pageWidth - textWidth) / 2;
       const attributionYPos = 15; // 15mm from top
@@ -97,7 +156,7 @@ const downloadPdf = async (printableRef, colorMode, originalMode) => {
       pdf.text(attributionText, textXPos, attributionYPos);
 
       // Calculate available space for content (with proper spacing and padding)
-      const contentStartY = attributionYPos + 5; // 10mm spacing after attribution
+      const contentStartY = attributionYPos + 5; // 5mm spacing after attribution
       const leftPadding = 10; // 10mm left padding
       const rightPadding = 10; // 10mm right padding
       const bottomPadding = 10; // 10mm bottom padding
@@ -139,6 +198,15 @@ const downloadPdf = async (printableRef, colorMode, originalMode) => {
       console.error("Error generating PDF:", error);
       // Clean up even if there's an error
       document.body.classList.remove("printing-active");
+
+      // Restore styles in case of error
+      if (dialogElement && originalStyles) {
+        Object.assign(dialogElement.style, originalStyles);
+      }
+      if (originalBodyStyles) {
+        Object.assign(document.body.style, originalBodyStyles);
+      }
+
       if (originalMode === "dark") {
         colorMode.toggleColorMode();
       }

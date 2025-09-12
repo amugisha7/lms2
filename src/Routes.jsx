@@ -58,7 +58,10 @@ export default function AppRoutes({ userExists }) {
 
               {/* Branches routes */}
               <Route path="admin/branches" element={<Branches />} />
-              <Route path="admin/add-branch" element={<CreateBranches />} />
+              <Route
+                path="admin/add-branch"
+                element={<CreateBranches hideCancel />}
+              />
 
               {/* Admin main page route */}
               <Route path="admin" element={<AdminPage />} />

@@ -75,7 +75,12 @@ code {
   }
 }
 
-/* Style adjustments for printing mode */
+/* Enhanced style adjustments for printing mode */
+body.printing-active {
+  width: 1200px !important;
+  min-width: 1200px !important;
+}
+
 body.printing-active .action-icon {
   display: none !important;
 }
@@ -92,9 +97,33 @@ body.printing-active .popup-content * {
 body.printing-active .MuiDialog-paper {
   background-color: white !important;
   color: black !important;
+  max-width: 900px !important;
+  width: 900px !important;
 }
 
 body.printing-active .MuiBackdrop-root {
   display: none !important;
+}
+
+/* Force desktop layout during PDF generation */
+body.printing-active .popup-header {
+  flex-wrap: nowrap !important;
+}
+
+body.printing-active .popup-header > * {
+  order: 0 !important;
+  width: auto !important;
+  margin-top: 0 !important;
+}
+
+/* Ensure consistent typography during PDF generation */
+body.printing-active * {
+  font-size: inherit !important;
+}
+
+/* Hide mobile-specific positioning during PDF generation */
+body.printing-active .MuiIconButton-root {
+  position: static !important;
+  margin-left: inherit !important;
 }
 

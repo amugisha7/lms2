@@ -19,6 +19,10 @@ import CreateBranches from "./Screens/Branches/CreateBranches/CreateBranches";
 import Branches from "./Screens/Branches/Branches";
 import LoanProducts from "./Screens/LoanProducts/LoanProducts";
 import FormTemplate from "./temp/FormTemplate";
+import Securities from "./Screens/Securities/Securities";
+import CreateSecurities from "./Screens/Securities/CreateSecurities/CreateSecurities";
+import Borrowers from "./Screens/Borrowers/Borrowers";
+import Temp from "./temp/Temp";
 
 export default function AppRoutes({ userExists }) {
   return (
@@ -33,6 +37,7 @@ export default function AppRoutes({ userExists }) {
 
               {/* Borrowers routes */}
               <Route path="allBorrowers" element={<AllBorrowers />} />
+              <Route path="borrowers" element={<Borrowers />} />
               <Route path="addBorrower" element={<CreateBorrower />} />
               <Route
                 path="viewBorrower/:borrowerId"
@@ -63,10 +68,19 @@ export default function AppRoutes({ userExists }) {
                 element={<CreateBranches hideCancel />}
               />
 
+              {/* Securities routes */}
+              <Route path="admin/securities" element={<Securities />} />
+              <Route
+                path="admin/add-security"
+                element={<CreateSecurities hideCancel />}
+              />
+
               {/* Admin main page route */}
               <Route path="admin" element={<AdminPage />} />
               {/* Add the /c1 route for FormTemplate */}
               <Route path="c1" element={<FormTemplate />} />
+              {/* Add Temp route */}
+              <Route path="temp" element={<Temp />} />
             </>
           )}
         </Route>

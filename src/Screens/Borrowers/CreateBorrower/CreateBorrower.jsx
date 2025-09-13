@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, forwardRef, useImperativeHandle } from "react";
 import { Formik, Form } from "formik";
 import * as Yup from "yup";
 import { Box, Grid, Typography } from "@mui/material";
@@ -12,6 +12,7 @@ import TextInput from "../../../Resources/FormComponents/TextInput";
 import Dropdown from "../../../Resources/FormComponents/Dropdown";
 import DateInput from "../../../Resources/FormComponents/DateInput";
 import CreateFormButtons from "../../../ComponentAssets/CreateFormButtons";
+import CustomEditFormButtons from "../../../ComponentAssets/CustomEditFormButtons";
 import CustomFields from "../../AdminScreens/CustomFields/CustomFields";
 import { UserContext } from "../../../App";
 
@@ -110,197 +111,315 @@ const renderFormField = (field) => {
   }
 };
 
-const CreateBorrower = () => {
-  const [initialValues, setInitialValues] = useState(baseInitialValues);
-  const [dynamicValidationSchema, setDynamicValidationSchema] =
-    useState(baseValidationSchema);
-  const client = generateClient();
-  const navigate = useNavigate();
-  const { userDetails } = React.useContext(UserContext);
-  const [submitError, setSubmitError] = useState("");
-  const [submitSuccess, setSubmitSuccess] = useState("");
+const CreateBorrower = forwardRef(
+  (
+    {
+      onClose,
+      onCreateSuccess,
+      onEditSuccess,
+      initialValues: propInitialValues,
+      isEditMode = false,
+      hideCancel,
+    },
+    ref
+  ) => {
+    const [initialValues, setInitialValues] = useState(baseInitialValues);
+    const [dynamicValidationSchema, setDynamicValidationSchema] =
+      useState(baseValidationSchema);
+    const client = generateClient();
+    const navigate = useNavigate();
+    const { userDetails } = React.useContext(UserContext);
+    const [submitError, setSubmitError] = useState("");
+    const [submitSuccess, setSubmitSuccess] = useState("");
+    const [editMode, setEditMode] = useState(!isEditMode);
 
-  const handleSubmit = async (values, { setSubmitting, resetForm }) => {
-    setSubmitError("");
-    setSubmitSuccess("");
-    setSubmitting(true);
-
-    try {
-      // Check if branchUsersId exists
-      if (!userDetails?.branchUsersId) {
-        setSubmitError("Error: Please try refreshing the page.");
-        setSubmitting(false);
-        return;
-      }
-
-      // Create the base input object with standard fields
-      const input = {
-        firstname: values.firstname?.trim() || null,
-        othername: values.othername?.trim() || null,
-        businessName: values.businessName?.trim() || null,
-        typeOfBusiness: values.typeOfBusiness?.trim() || null,
-        uniqueIdNumber: values.uniqueNumber?.trim() || null,
-        phoneNumber: values.mobile?.trim() || null,
-        otherPhoneNumber: values.altPhone?.trim() || null,
-        email: values.email?.trim() || null,
-        gender: values.gender || null,
-        dateOfBirth: values.dob || null,
-        nationality: values.country || null,
-        address: values.address?.trim() || null,
-        city: values.city?.trim() || null,
-        state: values.province?.trim() || null,
-        zipcode: values.zipcode?.trim() || null,
-        employmentStatus: values.workingStatus || null,
-        employerName: values.employerName?.trim() || null,
-        creditScore: values.creditScore?.trim() || null,
-      };
-
-      // Extract custom fields data
-      const customFieldsData = {};
-      Object.keys(values).forEach((key) => {
-        if (key.startsWith("custom_")) {
-          const fieldId = key.replace("custom_", "");
-          customFieldsData[fieldId] = {
-            fieldId: fieldId,
-            value:
-              typeof values[key] === "string"
-                ? values[key].trim() || null
-                : values[key] || null,
-          };
+    // Use prop initialValues if provided, otherwise use default
+    const formInitialValues = propInitialValues
+      ? {
+          ...baseInitialValues,
+          ...propInitialValues,
         }
-      });
+      : initialValues;
 
-      // Add custom fields data to input if any exist
-      if (Object.keys(customFieldsData).length > 0) {
-        input.customFieldsData = JSON.stringify(customFieldsData);
-      }
+    useImperativeHandle(ref, () => ({
+      toggleEdit: () => {
+        setEditMode((prev) => !prev);
+      },
+      getEditMode: () => editMode,
+    }));
 
-      const result = await client.graphql({
-        query: `
-          mutation CreateBorrower($input: CreateBorrowerInput!) {
-            createBorrower(input: $input) {
-              id
-              firstname
-              businessName
-              phoneNumber
-              email
-              customFieldsData
-              branchBorrowersId
-              createdAt
-              updatedAt
+    const handleSubmit = async (values, { setSubmitting, resetForm }) => {
+      setSubmitError("");
+      setSubmitSuccess("");
+      setSubmitting(true);
+      try {
+        if (!userDetails?.branchUsersId) {
+          setSubmitError("Error: Please try refreshing the page.");
+          setSubmitting(false);
+          return;
+        }
+        if (isEditMode && propInitialValues) {
+          // Update existing borrower
+          const input = {
+            id: propInitialValues.id,
+            firstname: values.firstname?.trim() || null,
+            othername: values.othername?.trim() || null,
+            businessName: values.businessName?.trim() || null,
+            typeOfBusiness: values.typeOfBusiness?.trim() || null,
+            uniqueIdNumber: values.uniqueNumber?.trim() || null,
+            phoneNumber: values.mobile?.trim() || null,
+            otherPhoneNumber: values.altPhone?.trim() || null,
+            email: values.email?.trim() || null,
+            gender: values.gender || null,
+            dateOfBirth: values.dob || null,
+            nationality: values.country || null,
+            address: values.address?.trim() || null,
+            city: values.city?.trim() || null,
+            state: values.province?.trim() || null,
+            zipcode: values.zipcode?.trim() || null,
+            employmentStatus: values.workingStatus || null,
+            employerName: values.employerName?.trim() || null,
+            creditScore: values.creditScore?.trim() || null,
+            branchBorrowersId: userDetails.branchUsersId,
+          };
+
+          // Extract custom fields data
+          const customFieldsData = {};
+          Object.keys(values).forEach((key) => {
+            if (key.startsWith("custom_")) {
+              const fieldId = key.replace("custom_", "");
+              customFieldsData[fieldId] = {
+                fieldId: fieldId,
+                value:
+                  typeof values[key] === "string"
+                    ? values[key].trim() || null
+                    : values[key] || null,
+              };
             }
+          });
+
+          // Add custom fields data to input if any exist
+          if (Object.keys(customFieldsData).length > 0) {
+            input.customFieldsData = JSON.stringify(customFieldsData);
           }
-        `,
-        variables: {
-          input: {
-            ...input,
-            branchBorrowersId: userDetails.branchUsersId, // Add branch ID from context
-          },
-        },
-      });
 
-      const newBorrowerId = result?.data?.createBorrower?.id;
-      setSubmitSuccess("Borrower created successfully!");
-      resetForm();
-
-      // Navigate to ViewBorrower page after 1 second delay
-      if (newBorrowerId) {
-        setTimeout(() => {
-          navigate(`/viewBorrower/${newBorrowerId}`);
-        }, 1000);
+          const result = await client.graphql({
+            query: `
+              mutation UpdateBorrower($input: UpdateBorrowerInput!) {
+                updateBorrower(input: $input) {
+                  id
+                  firstname
+                  businessName
+                  phoneNumber
+                  email
+                  customFieldsData
+                  branchBorrowersId
+                  createdAt
+                  updatedAt
+                }
+              }
+            `,
+            variables: { input },
+          });
+          setSubmitSuccess("Borrower updated successfully!");
+          setEditMode(false);
+          if (onEditSuccess) {
+            onEditSuccess(result.data.updateBorrower);
+          }
+        } else {
+          // Create new borrower
+          const input = {
+            firstname: values.firstname?.trim() || null,
+            othername: values.othername?.trim() || null,
+            businessName: values.businessName?.trim() || null,
+            typeOfBusiness: values.typeOfBusiness?.trim() || null,
+            uniqueIdNumber: values.uniqueNumber?.trim() || null,
+            phoneNumber: values.mobile?.trim() || null,
+            otherPhoneNumber: values.altPhone?.trim() || null,
+            email: values.email?.trim() || null,
+            gender: values.gender || null,
+            dateOfBirth: values.dob || null,
+            nationality: values.country || null,
+            address: values.address?.trim() || null,
+            city: values.city?.trim() || null,
+            state: values.province?.trim() || null,
+            zipcode: values.zipcode?.trim() || null,
+            employmentStatus: values.workingStatus || null,
+            employerName: values.employerName?.trim() || null,
+            creditScore: values.creditScore?.trim() || null,
+          };
+          const customFieldsData = {};
+          Object.keys(values).forEach((key) => {
+            if (key.startsWith("custom_")) {
+              const fieldId = key.replace("custom_", "");
+              customFieldsData[fieldId] = {
+                fieldId: fieldId,
+                value:
+                  typeof values[key] === "string"
+                    ? values[key].trim() || null
+                    : values[key] || null,
+              };
+            }
+          });
+          if (Object.keys(customFieldsData).length > 0) {
+            input.customFieldsData = JSON.stringify(customFieldsData);
+          }
+          const result = await client.graphql({
+            query: `
+              mutation CreateBorrower($input: CreateBorrowerInput!) {
+                createBorrower(input: $input) {
+                  id
+                  firstname
+                  businessName
+                  phoneNumber
+                  email
+                  customFieldsData
+                  branchBorrowersId
+                  createdAt
+                  updatedAt
+                }
+              }
+            `,
+            variables: {
+              input: {
+                ...input,
+                branchBorrowersId: userDetails.branchUsersId,
+              },
+            },
+          });
+          const newBorrowerId = result?.data?.createBorrower?.id;
+          setSubmitSuccess("Borrower created successfully!");
+          resetForm();
+          if (onCreateSuccess) {
+            onCreateSuccess(result.data.createBorrower);
+          }
+          if (newBorrowerId) {
+            setTimeout(() => {
+              navigate(`/viewBorrower/${newBorrowerId}`);
+            }, 1000);
+          }
+        }
+      } catch (err) {
+        console.error("Error creating/updating borrower:", err);
+        setSubmitError(
+          `Failed to ${
+            isEditMode ? "update" : "create"
+          } borrower. Please try again.`
+        );
+      } finally {
+        setSubmitting(false);
       }
-    } catch (err) {
-      console.error("Error creating borrower:", err);
-      setSubmitError("Failed to create borrower. Please try again.");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  // Handle custom fields loading
-  const handleCustomFieldsLoaded = (customFieldsInitialValues) => {
-    const newInitialValues = {
-      ...baseInitialValues,
-      ...customFieldsInitialValues,
     };
-    setInitialValues(newInitialValues);
-  };
 
-  // Handle validation schema changes from custom fields
-  const handleValidationSchemaChange = (customFieldsValidation) => {
-    const newValidationSchema = baseValidationSchema.shape(
-      customFieldsValidation
-    );
-    setDynamicValidationSchema(newValidationSchema);
-  };
+    // Handle custom fields loading
+    const handleCustomFieldsLoaded = (customFieldsInitialValues) => {
+      const newInitialValues = {
+        ...baseInitialValues,
+        ...customFieldsInitialValues,
+      };
+      setInitialValues(newInitialValues);
+    };
 
-  return (
-    <>
-      <Typography variant="h3" component="h1" align="center" sx={{ mb: 4 }}>
-        Create Borrower
-      </Typography>
-      <Formik
-        initialValues={initialValues}
-        validationSchema={dynamicValidationSchema}
-        onSubmit={handleSubmit}
-        enableReinitialize={true}
-      >
-        {(formik) => (
-          <Form>
-            <Grid container spacing={1}>
-              {createBorrowerForm.map((field) => (
-                <FormGrid
-                  item
-                  size={{ xs: 12, md: field.span }}
-                  key={field.name}
-                >
-                  {renderFormField({ ...field, editing: true })}
-                </FormGrid>
-              ))}
+    // Handle validation schema changes from custom fields
+    const handleValidationSchemaChange = (customFieldsValidation) => {
+      const newValidationSchema = baseValidationSchema.shape(
+        customFieldsValidation
+      );
+      setDynamicValidationSchema(newValidationSchema);
+    };
 
-              {/* Custom Fields Component */}
-              <Box sx={{ display: "flex" }}>
-                <CustomFields
-                  formKey="CreateBorrowerForm"
-                  formik={formik}
-                  onFieldsLoaded={handleCustomFieldsLoaded}
-                  onValidationSchemaChange={handleValidationSchemaChange}
-                />
-              </Box>
-
+    return (
+      <>
+        <Formik
+          initialValues={formInitialValues}
+          validationSchema={dynamicValidationSchema}
+          onSubmit={handleSubmit}
+          enableReinitialize={true}
+        >
+          {(formik) => (
+            <Form>
               <Box
                 sx={{
                   display: "flex",
-                  pr: 2,
-                  justifyContent: { xs: "center", md: "flex-end" },
+                  flexDirection: "column",
                   width: "100%",
+                  flex: 1,
                 }}
               >
-                <CreateFormButtons formik={formik} hideCancel />
+                {isEditMode && editMode ? (
+                  <CustomEditFormButtons
+                    formik={formik}
+                    setEditMode={setEditMode}
+                    setSubmitError={setSubmitError}
+                    setSubmitSuccess={setSubmitSuccess}
+                  />
+                ) : null}
+                <Grid container spacing={1}>
+                  {createBorrowerForm.map((field) => (
+                    <FormGrid
+                      item
+                      size={{ xs: 12, md: field.span }}
+                      key={field.name}
+                    >
+                      {renderFormField({ ...field, editing: editMode })}
+                    </FormGrid>
+                  ))}
+
+                  {/* Custom Fields Component */}
+                  <Box sx={{ display: "flex" }}>
+                    <CustomFields
+                      formKey="CreateBorrowerForm"
+                      formik={formik}
+                      onFieldsLoaded={handleCustomFieldsLoaded}
+                      onValidationSchemaChange={handleValidationSchemaChange}
+                    />
+                  </Box>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      pr: 2,
+                      justifyContent: { xs: "center", md: "flex-end" },
+                      width: "100%",
+                    }}
+                  >
+                    {!isEditMode ? (
+                      <CreateFormButtons
+                        formik={formik}
+                        setEditMode={setEditMode}
+                        setSubmitError={setSubmitError}
+                        setSubmitSuccess={setSubmitSuccess}
+                        onClose={onClose}
+                        hideCancel={hideCancel}
+                      />
+                    ) : null}
+                  </Box>
+                  {submitError && (
+                    <Typography color="error" sx={{ mt: 2 }}>
+                      {submitError}
+                    </Typography>
+                  )}
+                  {submitSuccess && (
+                    <Typography color="primary" sx={{ mt: 2 }}>
+                      {submitSuccess}
+                    </Typography>
+                  )}
+                </Grid>
               </Box>
-              {submitError && (
-                <Typography color="error" sx={{ mt: 2 }}>
-                  {submitError}
-                </Typography>
-              )}
-              {submitSuccess && (
-                <Typography color="primary" sx={{ mt: 2 }}>
-                  {submitSuccess}
-                </Typography>
-              )}
-            </Grid>
-          </Form>
-        )}
-      </Formik>
-      <Link
-        component={RouterLink}
-        to="/customFields"
-        sx={{ display: "block", textAlign: "center", pb: "60px" }}
-      >
-        Need to add custom fields? <b>Click here to manage custom fields</b>
-      </Link>
-    </>
-  );
-};
+            </Form>
+          )}
+        </Formik>
+        <Link
+          component={RouterLink}
+          to="/customFields"
+          sx={{ display: "block", textAlign: "center", pb: "60px" }}
+        >
+          Need to add custom fields? <b>Click here to manage custom fields</b>
+        </Link>
+      </>
+    );
+  }
+);
+
+CreateBorrower.displayName = "CreateBorrower";
 
 export default CreateBorrower;

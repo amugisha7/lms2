@@ -4,7 +4,7 @@ import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import { useTheme } from "@mui/material/styles";
-import CustomPopUp from "./CustomPopUp";
+import CustomSlider from "./CustomSlider";
 import CustomDataGrid from "./CustomDataGrid";
 import DeleteDialog from "./DeleteDialog";
 
@@ -139,22 +139,20 @@ export default function CollectionsTemplate({
 
         {/* Create Dialog */}
         {CreateFormComponent && (
-          <CustomPopUp
+          <CustomSlider
             open={createDialogOpen}
             onClose={onCreateDialogClose}
             title={createDialogTitle}
             showEdit={false}
             showDelete={false}
-            maxWidth="md"
-            fullWidth
           >
             <CreateFormComponent {...createFormProps} />
-          </CustomPopUp>
+          </CustomSlider>
         )}
 
         {/* Edit Dialog */}
         {EditFormComponent && editDialogRow && (
-          <CustomPopUp
+          <CustomSlider
             open={editDialogOpen}
             onClose={() => {
               setEditClicked(false);
@@ -163,8 +161,6 @@ export default function CollectionsTemplate({
             title={editDialogRow.name || "Details"}
             onEdit={handleEditClick}
             onDelete={onPopupDeleteClick}
-            maxWidth="md"
-            fullWidth
             editMode={editMode}
           >
             <EditFormComponent
@@ -172,7 +168,7 @@ export default function CollectionsTemplate({
               initialValues={editDialogRow}
               {...editFormProps}
             />
-          </CustomPopUp>
+          </CustomSlider>
         )}
 
         {/* Delete Dialog */}

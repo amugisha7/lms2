@@ -1,6 +1,5 @@
 import React, { useRef, useContext } from "react";
-import Dialog from "@mui/material/Dialog";
-import DialogContent from "@mui/material/DialogContent";
+import Drawer from "@mui/material/Drawer";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import IconButton from "@mui/material/IconButton";
@@ -25,31 +24,31 @@ const downloadPdf = async (printableRef, colorMode, originalMode) => {
   document.body.classList.add("printing-active");
 
   // Declare variables outside try block for proper scope
-  let dialogElement = null;
+  let drawerElement = null;
   let originalStyles = null;
   let originalBodyStyles = null;
 
   // Wait for the DOM to update with light mode styles
   setTimeout(async () => {
     try {
-      // Target only the dialog paper element (the actual popup without background)
-      dialogElement =
-        printableRef.current?.querySelector(".MuiDialog-paper") ||
+      // Target only the drawer paper element (the actual slider without background)
+      drawerElement =
+        printableRef.current?.querySelector(".MuiDrawer-paper") ||
         printableRef.current;
 
-      if (!dialogElement) {
-        throw new Error("Dialog content not found");
+      if (!drawerElement) {
+        throw new Error("Drawer content not found");
       }
 
       // Store original styles
       originalStyles = {
-        position: dialogElement.style.position,
-        transform: dialogElement.style.transform,
-        margin: dialogElement.style.margin,
-        maxWidth: dialogElement.style.maxWidth,
-        width: dialogElement.style.width,
-        height: dialogElement.style.height,
-        overflow: dialogElement.style.overflow,
+        position: drawerElement.style.position,
+        transform: drawerElement.style.transform,
+        margin: drawerElement.style.margin,
+        maxWidth: drawerElement.style.maxWidth,
+        width: drawerElement.style.width,
+        height: drawerElement.style.height,
+        overflow: drawerElement.style.overflow,
       };
 
       // Store original body styles
@@ -67,18 +66,18 @@ const downloadPdf = async (printableRef, colorMode, originalMode) => {
       });
 
       // Set styles for PDF capture - force desktop layout
-      Object.assign(dialogElement.style, {
+      Object.assign(drawerElement.style, {
         position: "static",
         transform: "none",
         margin: "0",
-        maxWidth: "900px", // Desktop maxWidth for 'md'
+        maxWidth: "900px", // Desktop maxWidth
         width: "900px", // Fixed desktop width
         height: "auto",
         overflow: "visible",
       });
 
       // Force all responsive elements to desktop view
-      const responsiveElements = dialogElement.querySelectorAll("*");
+      const responsiveElements = drawerElement.querySelectorAll("*");
       const originalElementStyles = [];
 
       responsiveElements.forEach((element, index) => {
@@ -95,7 +94,7 @@ const downloadPdf = async (printableRef, colorMode, originalMode) => {
         };
 
         // Force desktop styles
-        if (element.classList.contains("popup-header")) {
+        if (element.classList.contains("slider-header")) {
           element.style.flexWrap = "nowrap";
         }
 
@@ -107,14 +106,14 @@ const downloadPdf = async (printableRef, colorMode, originalMode) => {
       // Wait for layout to settle
       await new Promise((resolve) => setTimeout(resolve, 200));
 
-      // Get canvas of the dialog element only
-      const canvas = await html2canvas(dialogElement, {
+      // Get canvas of the drawer element only
+      const canvas = await html2canvas(drawerElement, {
         scale: 2,
         useCORS: true,
         logging: false,
         backgroundColor: "#ffffff",
         width: 900, // Fixed desktop width
-        height: dialogElement.scrollHeight,
+        height: drawerElement.scrollHeight,
         windowWidth: 1200, // Force desktop viewport
         windowHeight: 800,
       });
@@ -127,7 +126,7 @@ const downloadPdf = async (printableRef, colorMode, originalMode) => {
       });
 
       // Restore original styles
-      Object.assign(dialogElement.style, originalStyles);
+      Object.assign(drawerElement.style, originalStyles);
       Object.assign(document.body.style, originalBodyStyles);
 
       const imgData = canvas.toDataURL("image/jpeg", 1.0);
@@ -202,8 +201,8 @@ const downloadPdf = async (printableRef, colorMode, originalMode) => {
       document.body.classList.remove("printing-active");
 
       // Restore styles in case of error
-      if (dialogElement && originalStyles) {
-        Object.assign(dialogElement.style, originalStyles);
+      if (drawerElement && originalStyles) {
+        Object.assign(drawerElement.style, originalStyles);
       }
       if (originalBodyStyles) {
         Object.assign(document.body.style, originalBodyStyles);
@@ -216,7 +215,7 @@ const downloadPdf = async (printableRef, colorMode, originalMode) => {
   }, 300);
 };
 
-export default function CustomPopUp({
+export default function CustomSlider({
   open,
   onClose,
   title,
@@ -225,8 +224,6 @@ export default function CustomPopUp({
   onDelete,
   showEdit = true,
   showDelete = true,
-  maxWidth = "md",
-  fullWidth = true,
   editMode = false,
 }) {
   const theme = useTheme();
@@ -235,17 +232,19 @@ export default function CustomPopUp({
   const printableRef = useRef(null);
 
   return (
-    <Dialog
+    <Drawer
       open={open}
       onClose={onClose}
-      maxWidth={maxWidth}
-      fullWidth={fullWidth}
-      disableScrollLock
-      id="printable-popup"
+      anchor="right"
+      variant="temporary"
+      ModalProps={{
+        disableScrollLock: true,
+      }}
+      id="printable-slider"
       ref={printableRef}
       sx={{
-        "& .MuiDialog-paper": {
-          // Ensure the dialog paper has consistent styling for PDF generation
+        "& .MuiDrawer-paper": {
+          width: { xs: "90%", sm: 600, md: 800, lg: 1000 }, // Responsive widths: full on mobile, increasing on larger screens
           minHeight: "auto",
         },
       }}
@@ -257,17 +256,17 @@ export default function CustomPopUp({
           alignItems: "center",
           p: 2,
           borderBottom: "1px solid #e0e0e0",
-          position: "relative", // for absolute positioning of close button on mobile
-          flexWrap: { xs: "wrap", sm: "nowrap" }, // allow wrapping on mobile
+          position: "relative",
+          flexWrap: { xs: "wrap", sm: "nowrap" },
         }}
-        className="popup-header"
+        className="slider-header"
       >
         <Typography
           variant="h5"
           sx={{
             fontWeight: 600,
             textTransform: "none",
-            width: { xs: "90%", sm: "auto" }, // 90% width on mobile
+            width: { xs: "90%", sm: "auto" },
             pr: { xs: 2, sm: 0 },
           }}
         >
@@ -277,11 +276,11 @@ export default function CustomPopUp({
           sx={{
             display: "flex",
             alignItems: "center",
-            order: { xs: 1, sm: 0 }, // move to next line on mobile
-            width: { xs: "100%", sm: "auto" }, // full width on mobile
-            mt: { xs: 1, sm: 0 }, // margin top on mobile
+            order: { xs: 1, sm: 0 },
+            width: { xs: "100%", sm: "auto" },
+            mt: { xs: 1, sm: 0 },
           }}
-          className="popup-actions"
+          className="slider-actions"
         >
           {showDelete && onDelete && !editClicked && (
             <ClickableText
@@ -326,9 +325,6 @@ export default function CustomPopUp({
                 lineHeight: 1.2,
                 backgroundColor: "transparent",
                 color: theme.palette.mode === "dark" ? "#ebebeb" : "#2b2d2f",
-                // border: `1px solid ${
-                //   theme.palette.mode === "dark" ? "#76B1D3" : "#1976d2"
-                // }`,
                 borderRadius: "4px",
                 boxShadow: "none",
               }}
@@ -345,7 +341,7 @@ export default function CustomPopUp({
               position: { xs: "absolute", sm: "static" },
               top: { xs: 16, sm: "auto" },
               right: { xs: 16, sm: "auto" },
-              ml: { xs: 0, sm: "60px" }, // add left margin except on mobile
+              ml: { xs: 0, sm: "60px" },
             }}
             className="action-icon"
           >
@@ -393,10 +389,10 @@ export default function CustomPopUp({
               : {},
           },
         }}
-        className="popup-content"
+        className="slider-content"
       >
         {children}
       </Box>
-    </Dialog>
+    </Drawer>
   );
 }

@@ -29,6 +29,7 @@ export default function AdminPage() {
       category: "Borrowers",
       links: [
         { label: "Create Borrower", href: "/addBorrower" },
+        { label: "Borrowers", href: "/borrowers" },
         { label: "View Borrowers", href: "/allBorrowers" },
         { label: "Custom Fields", href: "/customFields" },
       ],
@@ -38,6 +39,14 @@ export default function AdminPage() {
       links: [
         { label: "Reports", href: "/reports" },
         { label: "Settings", href: "/settings" },
+        { label: "Temp", href: "/temp" }, // Added Temp link
+      ],
+    },
+    {
+      category: "Securities",
+      links: [
+        { label: "Securities List", href: "/admin/securities" },
+        { label: "Add Security", href: "/admin/add-security" },
       ],
     },
   ];

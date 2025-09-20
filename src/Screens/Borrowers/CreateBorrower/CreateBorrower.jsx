@@ -221,7 +221,7 @@ const CreateBorrower = forwardRef(
             `,
             variables: { input },
           });
-          setSubmitSuccess("Borrower updated successfully!");
+          setSubmitSuccess("Borrower updated!");
           setEditMode(false);
           if (onEditSuccess) {
             onEditSuccess(result.data.updateBorrower);
@@ -287,16 +287,10 @@ const CreateBorrower = forwardRef(
               },
             },
           });
-          const newBorrowerId = result?.data?.createBorrower?.id;
-          setSubmitSuccess("Borrower created successfully!");
+          setSubmitSuccess("Borrower created!");
           resetForm();
           if (onCreateSuccess) {
             onCreateSuccess(result.data.createBorrower);
-          }
-          if (newBorrowerId) {
-            setTimeout(() => {
-              navigate(`/viewBorrower/${newBorrowerId}`);
-            }, 1000);
           }
         }
       } catch (err) {
@@ -367,12 +361,12 @@ const CreateBorrower = forwardRef(
 
                   {/* Custom Fields Component */}
                   <Box sx={{ display: "flex" }}>
-                    <CustomFields
+                    {/* <CustomFields
                       formKey="CreateBorrowerForm"
                       formik={formik}
                       onFieldsLoaded={handleCustomFieldsLoaded}
                       onValidationSchemaChange={handleValidationSchemaChange}
-                    />
+                    /> */}
                   </Box>
                   <Box
                     sx={{

@@ -244,7 +244,7 @@ export default function CustomSlider({
       ref={printableRef}
       sx={{
         "& .MuiDrawer-paper": {
-          width: { xs: "90%", sm: 600, md: 800, lg: 1000 }, // Responsive widths: full on mobile, increasing on larger screens
+          width: { xs: "90%", sm: 500, md: 850, lg: 1000 }, // Responsive widths: full on mobile, increasing on larger screens
           minHeight: "auto",
         },
       }}

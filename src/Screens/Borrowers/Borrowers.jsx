@@ -14,11 +14,13 @@ const LIST_BORROWERS_QUERY = `
     ) {
       items {
         id
-        firstname
-        businessName
-        phoneNumber
-        email
-        status
+                  firstname
+                  othername
+                  businessName
+                  phoneNumber
+                  otherPhoneNumber
+                  email
+                  borrowerStatus
       }
     }
   }
@@ -36,11 +38,13 @@ const UPDATE_BORROWER_MUTATION = `
   mutation UpdateBorrower($input: UpdateBorrowerInput!) {
     updateBorrower(input: $input) {
       id
-      firstname
-      businessName
-      phoneNumber
-      email
-      status
+                  firstname
+                  othername
+                  businessName
+                  phoneNumber
+                  otherPhoneNumber
+                  email
+                  borrowerStatus
     }
   }
 `;
@@ -50,6 +54,7 @@ export default function Borrowers() {
   const formRef = useRef();
   const { userDetails } = React.useContext(UserContext);
   const theme = useTheme();
+  const [processedBorrowers, setProcessedBorrowers] = React.useState([]);
 
   const {
     items: borrowers,
@@ -86,6 +91,29 @@ export default function Borrowers() {
     }
   }, [userDetails?.branchUsersId, fetchBorrowers]);
 
+  React.useEffect(() => {
+    if (borrowers && Array.isArray(borrowers)) {
+      const allBorrowers = borrowers;
+      const processed = allBorrowers.map((borrower) => ({
+        ...borrower,
+        combinedName:
+          borrower.firstname || borrower.othername
+            ? `${[borrower.firstname, borrower.othername]
+                .filter(Boolean)
+                .join(" ")}${
+                borrower.businessName ? ` (${borrower.businessName})` : ""
+              }`
+            : borrower.businessName || "",
+      }));
+      processed.sort((a, b) =>
+        a.combinedName.localeCompare(b.combinedName, undefined, {
+          sensitivity: "base",
+        })
+      );
+      setProcessedBorrowers(processed);
+    }
+  }, [borrowers]);
+
   const handleEditClick = (form) => {
     if (form) {
       form.toggleEdit();
@@ -102,9 +130,9 @@ export default function Borrowers() {
 
   const columns = [
     {
-      field: "firstname",
-      headerName: "First Name",
-      width: 180,
+      field: "combinedName",
+      headerName: "Full Name / Business Name",
+      width: 280,
       renderCell: (params) => (
         <ClickableText onClick={() => handleEditDialogOpen(params.row)}>
           {params.value}
@@ -112,29 +140,29 @@ export default function Borrowers() {
       ),
     },
     {
-      field: "businessName",
-      headerName: "Business Name",
-      width: 200,
+      field: "phoneNumber",
+      headerName: "Phone No.",
+      width: 140,
     },
     {
-      field: "phoneNumber",
-      headerName: "Phone Number",
-      width: 160,
+      field: "otherPhoneNumber",
+      headerName: "Alt. Phone No.",
+      width: 140,
     },
     {
       field: "email",
       headerName: "Email",
-      width: 220,
+      width: 240,
     },
-    {
-      field: "status",
-      headerName: "Status",
-      width: 100,
-      renderCell: (params) =>
-        params.value
-          ? params.value.charAt(0).toUpperCase() + params.value.slice(1)
-          : "",
-    },
+    // {
+    //   field: "status",
+    //   headerName: "Status",
+    //   width: 100,
+    //   renderCell: (params) =>
+    //     params.value
+    //       ? params.value.charAt(0).toUpperCase() + params.value.slice(1)
+    //       : "",
+    // },
   ];
 
   return (
@@ -142,7 +170,7 @@ export default function Borrowers() {
       title="Borrowers"
       createButtonText="Create Borrower"
       onCreateClick={handleCreateDialogOpen}
-      items={borrowers}
+      items={processedBorrowers}
       loading={loading}
       columns={columns}
       searchFields={["firstname", "businessName", "phoneNumber", "email"]}

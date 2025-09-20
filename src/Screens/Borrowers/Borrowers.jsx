@@ -5,23 +5,59 @@ import CreateBorrower from "./CreateBorrower/CreateBorrower";
 import { useTheme } from "@mui/material/styles";
 import CollectionsTemplate from "../../ComponentAssets/CollectionsTemplate";
 import { useCrudOperations } from "../../hooks/useCrudOperations";
+import { generateClient } from "aws-amplify/api";
 
 const LIST_BORROWERS_QUERY = `
-  query ListBorrowers($branchId: ID!) {
+  query ListBorrowers($branchId: ID!, $nextToken: String) {
     listBorrowers(
       filter: { branchBorrowersId: { eq: $branchId } }
       limit: 100
+      nextToken: $nextToken
     ) {
       items {
         id
-                  firstname
-                  othername
-                  businessName
-                  phoneNumber
-                  otherPhoneNumber
-                  email
-                  borrowerStatus
+        firstname
+        othername
+        businessName
+        typeOfBusiness
+        uniqueIdNumber
+        phoneNumber
+        otherPhoneNumber
+        email
+        gender
+        dateOfBirth
+        nationality
+        address
+        city
+        state
+        title
+        zipcode
+        employmentStatus
+        employerName
+        creditScore
+        customFieldsData
+        createdAt
+        updatedAt
       }
+      nextToken
+    }
+  }
+`;
+
+const CREATE_BORROWER_MUTATION = `
+  mutation CreateBorrower($input: CreateBorrowerInput!) {
+    createBorrower(input: $input) {
+      id
+      firstname
+      othername
+      businessName
+      phoneNumber
+      otherPhoneNumber
+      email
+      title
+      customFieldsData
+      createdAt
+      updatedAt
     }
   }
 `;
@@ -38,13 +74,16 @@ const UPDATE_BORROWER_MUTATION = `
   mutation UpdateBorrower($input: UpdateBorrowerInput!) {
     updateBorrower(input: $input) {
       id
-                  firstname
-                  othername
-                  businessName
-                  phoneNumber
-                  otherPhoneNumber
-                  email
-                  borrowerStatus
+      firstname
+      othername
+      businessName
+      phoneNumber
+      otherPhoneNumber
+      email
+      title
+      customFieldsData
+      createdAt
+      updatedAt
     }
   }
 `;
@@ -55,6 +94,9 @@ export default function Borrowers() {
   const { userDetails } = React.useContext(UserContext);
   const theme = useTheme();
   const [processedBorrowers, setProcessedBorrowers] = React.useState([]);
+  const [allBorrowers, setAllBorrowers] = React.useState([]);
+  const [borrowersLoading, setBorrowersLoading] = React.useState(true);
+  const client = generateClient();
 
   const {
     items: borrowers,
@@ -66,16 +108,16 @@ export default function Borrowers() {
     deleteDialogRow,
     deleteLoading,
     deleteError,
-    fetchItems: fetchBorrowers,
+    fetchItems: originalFetchBorrowers,
     handleEditDialogOpen,
     handleEditDialogClose,
-    handleEditSuccess,
+    handleEditSuccess: originalHandleEditSuccess,
     handleDeleteDialogOpen,
     handleDeleteDialogClose,
-    handleDeleteConfirm,
+    handleDeleteConfirm: originalHandleDeleteConfirm,
     handleCreateDialogOpen,
     handleCreateDialogClose,
-    handleCreateSuccess,
+    handleCreateSuccess: originalHandleCreateSuccess,
   } = useCrudOperations(
     "Borrower",
     LIST_BORROWERS_QUERY,
@@ -85,6 +127,217 @@ export default function Borrowers() {
     "listBorrowers"
   );
 
+  // Custom fetch function with pagination support
+  const fetchBorrowers = React.useCallback(
+    async (variables = {}) => {
+      console.log("Fetching borrowers with pagination...");
+      setBorrowersLoading(true);
+      try {
+        let allBorrowersList = [];
+        let nextToken = null;
+        let hasMoreData = true;
+
+        while (hasMoreData) {
+          const queryVariables = {
+            ...variables,
+            ...(nextToken && { nextToken }),
+          };
+
+          console.log(`Fetching batch with nextToken: ${nextToken || "null"}`);
+
+          const result = await client.graphql({
+            query: LIST_BORROWERS_QUERY,
+            variables: queryVariables,
+          });
+
+          const batchItems = result.data.listBorrowers?.items || [];
+          allBorrowersList = [...allBorrowersList, ...batchItems];
+
+          nextToken = result.data.listBorrowers?.nextToken;
+          hasMoreData = !!nextToken;
+
+          console.log(
+            `Fetched ${batchItems.length} borrowers in this batch. Total: ${allBorrowersList.length}. Has more: ${hasMoreData}`
+          );
+        }
+
+        console.log(
+          `Finished fetching all borrowers. Total count: ${allBorrowersList.length}`
+        );
+
+        // Update the state with all fetched borrowers
+        setAllBorrowers(allBorrowersList);
+        return allBorrowersList;
+      } catch (err) {
+        console.error("Error fetching borrowers with pagination:", err);
+        setAllBorrowers([]);
+        throw err;
+      } finally {
+        setBorrowersLoading(false);
+      }
+    },
+    [client]
+  );
+
+  // API handler for creating borrower
+  const handleCreateBorrowerAPI = async (values) => {
+    if (!userDetails?.branchUsersId) {
+      throw new Error("Error: Please try refreshing the page.");
+    }
+
+    const input = {
+      firstname: values.firstname?.trim() || null,
+      othername: values.othername?.trim() || null,
+      businessName: values.businessName?.trim() || null,
+      typeOfBusiness: values.typeOfBusiness?.trim() || null,
+      uniqueIdNumber: values.uniqueNumber?.trim() || null,
+      phoneNumber: values.mobile?.trim() || null,
+      otherPhoneNumber: values.altPhone?.trim() || null,
+      email: values.email?.trim() || null,
+      gender: values.gender || null,
+      dateOfBirth: values.dob || null,
+      nationality: values.country || null,
+      address: values.address?.trim() || null,
+      city: values.city?.trim() || null,
+      state: values.province?.trim() || null,
+      title: values.title || null,
+      zipcode: values.zipcode?.trim() || null,
+      employmentStatus: values.workingStatus || null,
+      employerName: values.employerName?.trim() || null,
+      creditScore: values.creditScore?.trim() || null,
+      branchBorrowersId: userDetails.branchUsersId,
+    };
+
+    const customFieldsData = {};
+    Object.keys(values).forEach((key) => {
+      if (key.startsWith("custom_")) {
+        const fieldId = key.replace("custom_", "");
+        customFieldsData[fieldId] = {
+          fieldId: fieldId,
+          value:
+            typeof values[key] === "string"
+              ? values[key].trim() || null
+              : values[key] || null,
+        };
+      }
+    });
+    if (Object.keys(customFieldsData).length > 0) {
+      input.customFieldsData = JSON.stringify(customFieldsData);
+    }
+
+    const result = await client.graphql({
+      query: CREATE_BORROWER_MUTATION,
+      variables: { input },
+    });
+
+    return result.data.createBorrower;
+  };
+
+  // API handler for updating borrower
+  const handleUpdateBorrowerAPI = async (values, initialValues) => {
+    const input = {
+      id: initialValues.id,
+      firstname: values.firstname?.trim() || null,
+      othername: values.othername?.trim() || null,
+      businessName: values.businessName?.trim() || null,
+      typeOfBusiness: values.typeOfBusiness?.trim() || null,
+      uniqueIdNumber: values.uniqueNumber?.trim() || null,
+      phoneNumber: values.mobile?.trim() || null,
+      otherPhoneNumber: values.altPhone?.trim() || null,
+      email: values.email?.trim() || null,
+      gender: values.gender || null,
+      dateOfBirth: values.dob || null,
+      nationality: values.country || null,
+      address: values.address?.trim() || null,
+      city: values.city?.trim() || null,
+      state: values.province?.trim() || null,
+      title: values.title || null,
+      zipcode: values.zipcode?.trim() || null,
+      employmentStatus: values.workingStatus || null,
+      employerName: values.employerName?.trim() || null,
+      creditScore: values.creditScore?.trim() || null,
+    };
+
+    // Extract custom fields data
+    const customFieldsData = {};
+    Object.keys(values).forEach((key) => {
+      if (key.startsWith("custom_")) {
+        const fieldId = key.replace("custom_", "");
+        customFieldsData[fieldId] = {
+          fieldId: fieldId,
+          value:
+            typeof values[key] === "string"
+              ? values[key].trim() || null
+              : values[key] || null,
+        };
+      }
+    });
+
+    // Add custom fields data to input if any exist
+    if (Object.keys(customFieldsData).length > 0) {
+      input.customFieldsData = JSON.stringify(customFieldsData);
+    }
+
+    const result = await client.graphql({
+      query: UPDATE_BORROWER_MUTATION,
+      variables: { input },
+    });
+
+    return result.data.updateBorrower;
+  };
+
+  // Custom handleCreateSuccess to update allBorrowers state
+  const handleCreateSuccess = (newBorrower) => {
+    // Add the new borrower to allBorrowers state
+    setAllBorrowers((prev) => [...prev, newBorrower]);
+
+    // Call the original handleCreateSuccess
+    originalHandleCreateSuccess(newBorrower);
+  };
+
+  // Custom handleDeleteConfirm to update allBorrowers state
+  const handleDeleteConfirm = async () => {
+    try {
+      await originalHandleDeleteConfirm();
+      // Remove the deleted borrower from allBorrowers state
+      if (deleteDialogRow) {
+        setAllBorrowers((prev) =>
+          prev.filter((borrower) => borrower.id !== deleteDialogRow.id)
+        );
+      }
+    } catch (error) {
+      console.error("Error deleting borrower:", error);
+    }
+  };
+
+  // Custom handleEditSuccess to update the combinedName
+  const handleEditSuccess = (updatedBorrower) => {
+    // Update the borrower with combinedName
+    const borrowerWithCombinedName = {
+      ...updatedBorrower,
+      combinedName:
+        updatedBorrower.firstname || updatedBorrower.othername
+          ? `${[updatedBorrower.firstname, updatedBorrower.othername]
+              .filter(Boolean)
+              .join(" ")}${
+              updatedBorrower.businessName
+                ? ` (${updatedBorrower.businessName})`
+                : ""
+            }`
+          : updatedBorrower.businessName || "",
+    };
+
+    // Update allBorrowers state as well
+    setAllBorrowers((prev) =>
+      prev.map((borrower) =>
+        borrower.id === updatedBorrower.id ? updatedBorrower : borrower
+      )
+    );
+
+    // Call the original handleEditSuccess with the updated data
+    originalHandleEditSuccess(borrowerWithCombinedName);
+  };
+
   React.useEffect(() => {
     if (userDetails?.branchUsersId) {
       fetchBorrowers({ branchId: userDetails.branchUsersId });
@@ -92,8 +345,7 @@ export default function Borrowers() {
   }, [userDetails?.branchUsersId, fetchBorrowers]);
 
   React.useEffect(() => {
-    if (borrowers && Array.isArray(borrowers)) {
-      const allBorrowers = borrowers;
+    if (allBorrowers && Array.isArray(allBorrowers)) {
       const processed = allBorrowers.map((borrower) => ({
         ...borrower,
         combinedName:
@@ -112,7 +364,7 @@ export default function Borrowers() {
       );
       setProcessedBorrowers(processed);
     }
-  }, [borrowers]);
+  }, [allBorrowers]);
 
   const handleEditClick = (form) => {
     if (form) {
@@ -179,7 +431,7 @@ export default function Borrowers() {
       createButtonText="Create Borrower"
       onCreateClick={handleCreateDialogOpen}
       items={processedBorrowers}
-      loading={loading}
+      loading={borrowersLoading}
       columns={columns}
       searchFields={["firstname", "businessName", "phoneNumber", "email"]}
       noDataMessage="No borrowers found. Please create a borrower to get started."
@@ -190,6 +442,7 @@ export default function Borrowers() {
       createFormProps={{
         onClose: handleCreateDialogClose,
         onCreateSuccess: handleCreateSuccess,
+        onCreateBorrowerAPI: handleCreateBorrowerAPI,
         ref: formRef,
         isEditMode: false,
       }}
@@ -200,6 +453,7 @@ export default function Borrowers() {
       editFormProps={{
         onClose: handleEditDialogClose,
         onEditSuccess: handleEditSuccess,
+        onUpdateBorrowerAPI: handleUpdateBorrowerAPI,
         initialValues: editDialogRow,
         isEditMode: true,
         ref: formRef,

@@ -11,7 +11,6 @@ import { Box, Grid, Typography } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import Link from "@mui/material/Link";
-import { generateClient } from "aws-amplify/api";
 
 import createBorrowerForm from "./createBorrowerForm";
 import TextInput from "../../../Resources/FormComponents/TextInput";
@@ -136,6 +135,8 @@ const CreateBorrower = forwardRef(
       onClose,
       onCreateSuccess,
       onEditSuccess,
+      onCreateBorrowerAPI,
+      onUpdateBorrowerAPI,
       initialValues: propInitialValues,
       isEditMode = false,
       hideCancel,
@@ -145,7 +146,6 @@ const CreateBorrower = forwardRef(
     const [initialValues, setInitialValues] = useState(baseInitialValues);
     const [dynamicValidationSchema, setDynamicValidationSchema] =
       useState(baseValidationSchema);
-    const client = generateClient();
     const navigate = useNavigate();
     const { userDetails } = React.useContext(UserContext);
     const [submitError, setSubmitError] = useState("");
@@ -153,11 +153,55 @@ const CreateBorrower = forwardRef(
     const [editMode, setEditMode] = useState(!isEditMode);
     const editClickedContext = useContext(EditClickedContext); // <-- get context
 
+    // Map database field names to form field names
+    const mapDbFieldsToFormFields = (dbData) => {
+      if (!dbData) return {};
+
+      return {
+        firstname: dbData.firstname || "",
+        othername: dbData.othername || "",
+        businessName: dbData.businessName || "",
+        typeOfBusiness: dbData.typeOfBusiness || "",
+        uniqueNumber: dbData.uniqueIdNumber || "",
+        mobile: dbData.phoneNumber || "",
+        altPhone: dbData.otherPhoneNumber || "",
+        email: dbData.email || "",
+        gender: dbData.gender || "",
+        dob: dbData.dateOfBirth || "",
+        country: dbData.nationality || "",
+        address: dbData.address || "",
+        city: dbData.city || "",
+        province: dbData.state || "",
+        title: dbData.title || "",
+        zipcode: dbData.zipcode || "",
+        workingStatus: dbData.employmentStatus || "",
+        employerName: dbData.employerName || "",
+        creditScore: dbData.creditScore || "",
+        // Handle custom fields if they exist
+        ...(dbData.customFieldsData
+          ? (() => {
+              try {
+                const customFields = JSON.parse(dbData.customFieldsData);
+                const mappedCustomFields = {};
+                Object.keys(customFields).forEach((fieldId) => {
+                  mappedCustomFields[`custom_${fieldId}`] =
+                    customFields[fieldId].value || "";
+                });
+                return mappedCustomFields;
+              } catch (e) {
+                console.warn("Error parsing custom fields data:", e);
+                return {};
+              }
+            })()
+          : {}),
+      };
+    };
+
     // Use prop initialValues if provided, otherwise use default
     const formInitialValues = propInitialValues
       ? {
           ...baseInitialValues,
-          ...propInitialValues,
+          ...mapDbFieldsToFormFields(propInitialValues),
         }
       : initialValues;
 
@@ -179,166 +223,37 @@ const CreateBorrower = forwardRef(
       setSubmitError("");
       setSubmitSuccess("");
       setSubmitting(true);
+
       try {
-        if (!userDetails?.branchUsersId) {
-          setSubmitError("Error: Please try refreshing the page.");
-          setSubmitting(false);
-          return;
-        }
-        if (isEditMode && propInitialValues) {
-          // Update existing borrower
-          const input = {
-            id: propInitialValues.id,
-            firstname: values.firstname?.trim() || null,
-            othername: values.othername?.trim() || null,
-            typeOfBusiness: values.typeOfBusiness?.trim() || null,
-            uniqueIdNumber: values.uniqueNumber?.trim() || null,
-            phoneNumber: values.mobile?.trim() || null,
-            otherPhoneNumber: values.altPhone?.trim() || null,
-            gender: values.gender || null,
-            dateOfBirth: values.dob || null,
-            nationality: values.country || null,
-            address: values.address?.trim() || null,
-            city: values.city?.trim() || null,
-            state: values.province?.trim() || null,
-            zipcode: values.zipcode?.trim() || null,
-            employmentStatus: values.workingStatus || null,
-            employerName: values.employerName?.trim() || null,
-            creditScore: values.creditScore?.trim() || null,
-            branchBorrowersId: userDetails.branchUsersId,
-          };
-          // Only add businessName if present
-          if (values.businessName && values.businessName.trim() !== "") {
-            input.businessName = values.businessName.trim();
-          }
-          // Only add email if present
-          if (values.email && values.email.trim() !== "") {
-            input.email = values.email.trim();
-          }
-
-          // Extract custom fields data
-          const customFieldsData = {};
-          Object.keys(values).forEach((key) => {
-            if (key.startsWith("custom_")) {
-              const fieldId = key.replace("custom_", "");
-              customFieldsData[fieldId] = {
-                fieldId: fieldId,
-                value:
-                  typeof values[key] === "string"
-                    ? values[key].trim() || null
-                    : values[key] || null,
-              };
-            }
-          });
-
-          // Add custom fields data to input if any exist
-          if (Object.keys(customFieldsData).length > 0) {
-            input.customFieldsData = JSON.stringify(customFieldsData);
-          }
-
-          const result = await client.graphql({
-            query: `
-              mutation UpdateBorrower($input: UpdateBorrowerInput!) {
-                updateBorrower(input: $input) {
-                  id
-                  firstname
-                  businessName
-                  phoneNumber
-                  email
-                  customFieldsData
-                  branchBorrowersId
-                  createdAt
-                  updatedAt
-                }
-              }
-            `,
-            variables: { input },
-          });
+        if (isEditMode && propInitialValues && onUpdateBorrowerAPI) {
+          // Update existing borrower using parent-provided API function
+          const result = await onUpdateBorrowerAPI(values, propInitialValues);
           setSubmitSuccess("Borrower updated!");
           setEditMode(false);
-          setTimeout(() => setSubmitSuccess(""), 2000); // Optional: clear success after a short delay
+          setTimeout(() => setSubmitSuccess(""), 2000);
           if (onEditSuccess) {
-            onEditSuccess(result.data.updateBorrower);
+            onEditSuccess(result);
           }
-        } else {
-          // Create new borrower
-          const input = {
-            firstname: values.firstname?.trim() || null,
-            othername: values.othername?.trim() || null,
-            typeOfBusiness: values.typeOfBusiness?.trim() || null,
-            uniqueIdNumber: values.uniqueNumber?.trim() || null,
-            phoneNumber: values.mobile?.trim() || null,
-            otherPhoneNumber: values.altPhone?.trim() || null,
-            gender: values.gender || null,
-            dateOfBirth: values.dob || null,
-            nationality: values.country || null,
-            address: values.address?.trim() || null,
-            city: values.city?.trim() || null,
-            state: values.province?.trim() || null,
-            zipcode: values.zipcode?.trim() || null,
-            employmentStatus: values.workingStatus || null,
-            employerName: values.employerName?.trim() || null,
-            creditScore: values.creditScore?.trim() || null,
-          };
-          // Only add businessName if present
-          if (values.businessName && values.businessName.trim() !== "") {
-            input.businessName = values.businessName.trim();
-          }
-          // Only add email if present
-          if (values.email && values.email.trim() !== "") {
-            input.email = values.email.trim();
-          }
-          const customFieldsData = {};
-          Object.keys(values).forEach((key) => {
-            if (key.startsWith("custom_")) {
-              const fieldId = key.replace("custom_", "");
-              customFieldsData[fieldId] = {
-                fieldId: fieldId,
-                value:
-                  typeof values[key] === "string"
-                    ? values[key].trim() || null
-                    : values[key] || null,
-              };
-            }
-          });
-          if (Object.keys(customFieldsData).length > 0) {
-            input.customFieldsData = JSON.stringify(customFieldsData);
-          }
-          const result = await client.graphql({
-            query: `
-              mutation CreateBorrower($input: CreateBorrowerInput!) {
-                createBorrower(input: $input) {
-                  id
-                  firstname
-                  businessName
-                  phoneNumber
-                  email
-                  customFieldsData
-                  branchBorrowersId
-                  createdAt
-                  updatedAt
-                }
-              }
-            `,
-            variables: {
-              input: {
-                ...input,
-                branchBorrowersId: userDetails.branchUsersId,
-              },
-            },
-          });
+        } else if (!isEditMode && onCreateBorrowerAPI) {
+          // Create new borrower using parent-provided API function
+          const result = await onCreateBorrowerAPI(values);
           setSubmitSuccess("Borrower created!");
           resetForm();
           if (onCreateSuccess) {
-            onCreateSuccess(result.data.createBorrower);
+            onCreateSuccess(result);
           }
+        } else {
+          setSubmitError(
+            "API handler function not available. Please try again."
+          );
         }
       } catch (err) {
         console.error("Error creating/updating borrower:", err);
         setSubmitError(
-          `Failed to ${
-            isEditMode ? "update" : "create"
-          } borrower. Please try again.`
+          err.message ||
+            `Failed to ${
+              isEditMode ? "update" : "create"
+            } borrower. Please try again.`
         );
       } finally {
         setSubmitting(false);

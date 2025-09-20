@@ -129,62 +129,99 @@ const downloadPdf = async (printableRef, colorMode, originalMode) => {
       Object.assign(drawerElement.style, originalStyles);
       Object.assign(document.body.style, originalBodyStyles);
 
-      const imgData = canvas.toDataURL("image/jpeg", 1.0);
-
-      // Create a new PDF in A4 portrait format
+      // Create PDF with multi-page support
       const pdf = new jsPDF({
         orientation: "portrait",
         unit: "mm",
         format: "a4",
       });
 
-      // A4 dimensions: 210mm x 297mm
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
 
-      // Add attribution text at the top
+      // Attribution only on first page
       pdf.setFontSize(9);
-      pdf.setTextColor(25, 118, 210); // Material blue 700 (hex #1976d2)
-
+      pdf.setTextColor(25, 118, 210);
       const attributionText =
         "Created using Loan Management Software from www.LoanTabs.com";
       const textWidth =
         (pdf.getStringUnitWidth(attributionText) * 9) /
         pdf.internal.scaleFactor;
       const textXPos = (pageWidth - textWidth) / 2;
-      const attributionYPos = 15; // 15mm from top
-
+      const attributionYPos = 15;
       pdf.text(attributionText, textXPos, attributionYPos);
 
-      // Calculate available space for content (with proper spacing and padding)
-      const contentStartY = attributionYPos + 5; // 5mm spacing after attribution
-      const leftPadding = 10; // 10mm left padding
-      const rightPadding = 10; // 10mm right padding
-      const bottomPadding = 10; // 10mm bottom padding
+      // Layout metrics
+      const contentStartYFirstPage = attributionYPos + 5;
+      const topMarginOtherPages = 10;
+      const leftPadding = 10;
+      const rightPadding = 10;
+      const bottomPadding = 10;
 
       const availableWidth = pageWidth - leftPadding - rightPadding;
-      const availableHeight = pageHeight - contentStartY - bottomPadding;
+      const availableHeightFirst =
+        pageHeight - contentStartYFirstPage - bottomPadding;
+      const availableHeightOther =
+        pageHeight - topMarginOtherPages - bottomPadding;
 
-      // Calculate dimensions to fit content in available space
-      const canvasAspectRatio = canvas.width / canvas.height;
-      let finalWidth = availableWidth;
-      let finalHeight = availableWidth / canvasAspectRatio;
+      // Fit width; derive px-per-mm
+      const pxPerMm = canvas.width / availableWidth;
+      const totalHeightMm = canvas.height / pxPerMm;
+      const firstPageCapacityMm = availableHeightFirst;
 
-      // If the image is taller than available space, scale it down
-      if (finalHeight > availableHeight) {
-        finalHeight = availableHeight;
-        finalWidth = finalHeight * canvasAspectRatio;
+      const addSlice = (sliceTopPx, sliceHeightPx, isFirstPage) => {
+        const sliceCanvas = document.createElement("canvas");
+        sliceCanvas.width = canvas.width;
+        sliceCanvas.height = sliceHeightPx;
+        const ctx = sliceCanvas.getContext("2d");
+        ctx.drawImage(
+          canvas,
+          0,
+          sliceTopPx,
+          canvas.width,
+          sliceHeightPx,
+          0,
+          0,
+          canvas.width,
+          sliceHeightPx
+        );
+        const sliceImg = sliceCanvas.toDataURL("image/jpeg", 1.0);
+        const sliceHeightMm = (sliceHeightPx / canvas.width) * availableWidth;
+        const yPos = isFirstPage ? contentStartYFirstPage : topMarginOtherPages;
+        const xPos = leftPadding;
+        pdf.addImage(
+          sliceImg,
+          "JPEG",
+          xPos,
+          yPos,
+          availableWidth,
+          sliceHeightMm
+        );
+      };
+
+      if (totalHeightMm <= firstPageCapacityMm) {
+        addSlice(0, canvas.height, true);
+      } else {
+        let remainingPx = canvas.height;
+        let offsetPx = 0;
+
+        const firstPageHeightPx = Math.floor(availableHeightFirst * pxPerMm);
+        addSlice(0, firstPageHeightPx, true);
+        remainingPx -= firstPageHeightPx;
+        offsetPx += firstPageHeightPx;
+
+        const otherPageCapacityPx = Math.floor(availableHeightOther * pxPerMm);
+
+        while (remainingPx > 0) {
+          pdf.addPage();
+          const sliceHeightPx = Math.min(otherPageCapacityPx, remainingPx);
+          addSlice(offsetPx, sliceHeightPx, false);
+          offsetPx += sliceHeightPx;
+          remainingPx -= sliceHeightPx;
+        }
       }
 
-      // Center the image horizontally within the available space
-      const xPos = leftPadding + (availableWidth - finalWidth) / 2;
-      const yPos = contentStartY;
-
-      // Add the content image
-      pdf.addImage(imgData, "JPEG", xPos, yPos, finalWidth, finalHeight);
-
-      // Save the PDF
-      pdf.save("document.pdf");
+      pdf.save("document222.pdf");
 
       // Remove print-only class
       document.body.classList.remove("printing-active");

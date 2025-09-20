@@ -134,7 +134,15 @@ export default function Borrowers() {
       headerName: "Full Name / Business Name",
       width: 280,
       renderCell: (params) => (
-        <ClickableText onClick={() => handleEditDialogOpen(params.row)}>
+        <ClickableText
+          onClick={() => {
+            // Set name to combinedName before opening edit dialog
+            handleEditDialogOpen({
+              ...params.row,
+              name: `Borrower: ${params.row.combinedName}`,
+            });
+          }}
+        >
           {params.value}
         </ClickableText>
       ),

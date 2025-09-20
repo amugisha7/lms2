@@ -1,4 +1,10 @@
-import React, { useState, forwardRef, useImperativeHandle } from "react";
+import React, {
+  useState,
+  forwardRef,
+  useImperativeHandle,
+  useEffect,
+  useContext,
+} from "react";
 import { Formik, Form } from "formik";
 import * as Yup from "yup";
 import { Box, Grid, Typography } from "@mui/material";
@@ -15,6 +21,7 @@ import CreateFormButtons from "../../../ComponentAssets/CreateFormButtons";
 import CustomEditFormButtons from "../../../ComponentAssets/CustomEditFormButtons";
 import CustomFields from "../../AdminScreens/CustomFields/CustomFields";
 import { UserContext } from "../../../App";
+import { EditClickedContext } from "../../../ComponentAssets/CollectionsTemplate"; // <-- import context
 
 // Styled FormGrid component for consistent layout
 const FormGrid = styled(Grid)(({ theme }) => ({
@@ -34,30 +41,42 @@ const baseInitialValues = createBorrowerForm.reduce((acc, field) => {
 // Build validation schema dynamically using field validation properties
 const validationShape = {};
 createBorrowerForm.forEach((field) => {
-  let validator = Yup.string();
+  let validator = Yup.string().nullable();
 
   // Apply validation based on validationType
   if (field.validationType === "email") {
-    validator = Yup.string().email(field.validationMessage || "Invalid email");
+    validator = Yup.string()
+      .nullable()
+      .email(field.validationMessage || "Invalid email");
   } else if (field.validationType === "date") {
     validator = Yup.date().nullable();
   } else if (field.validationType === "string") {
-    validator = Yup.string();
+    validator = Yup.string().nullable();
 
     // Apply pattern validation if specified
     if (field.validationPattern) {
-      validator = validator.matches(
-        field.validationPattern,
-        field.validationMessage
+      validator = validator.test(
+        "pattern-validation",
+        field.validationMessage,
+        function (value) {
+          if (!value || value.trim() === "") return true; // Allow empty values
+          return field.validationPattern.test(value);
+        }
       );
     }
 
     // Apply min/max length if specified
     if (field.minLength) {
-      validator = validator.min(field.minLength, "Too short");
+      validator = validator.test("min-length", "Too short", function (value) {
+        if (!value || value.trim() === "") return true; // Allow empty values
+        return value.length >= field.minLength;
+      });
     }
     if (field.maxLength) {
-      validator = validator.max(field.maxLength, "Too long");
+      validator = validator.test("max-length", "Too long", function (value) {
+        if (!value || value.trim() === "") return true; // Allow empty values
+        return value.length <= field.maxLength;
+      });
     }
   }
 
@@ -79,7 +98,7 @@ validationShape.firstname = validationShape.firstname.test(
   "Either First Name or Business Name is required",
   function (value) {
     const { businessName } = this.parent;
-    return !!(value || businessName);
+    return !!(value?.trim() || businessName?.trim());
   }
 );
 
@@ -88,7 +107,7 @@ validationShape.businessName = validationShape.businessName.test(
   "Either Business Name or First Name is required",
   function (value) {
     const { firstname } = this.parent;
-    return !!(value || firstname);
+    return !!(value?.trim() || firstname?.trim());
   }
 );
 
@@ -132,6 +151,7 @@ const CreateBorrower = forwardRef(
     const [submitError, setSubmitError] = useState("");
     const [submitSuccess, setSubmitSuccess] = useState("");
     const [editMode, setEditMode] = useState(!isEditMode);
+    const editClickedContext = useContext(EditClickedContext); // <-- get context
 
     // Use prop initialValues if provided, otherwise use default
     const formInitialValues = propInitialValues
@@ -147,6 +167,13 @@ const CreateBorrower = forwardRef(
       },
       getEditMode: () => editMode,
     }));
+
+    // Add effect to respond to editClicked from context (like CreateBranches)
+    useEffect(() => {
+      if (editClickedContext?.editClicked && isEditMode && !editMode) {
+        setEditMode(true);
+      }
+    }, [editClickedContext?.editClicked, isEditMode, editMode]);
 
     const handleSubmit = async (values, { setSubmitting, resetForm }) => {
       setSubmitError("");
@@ -164,12 +191,10 @@ const CreateBorrower = forwardRef(
             id: propInitialValues.id,
             firstname: values.firstname?.trim() || null,
             othername: values.othername?.trim() || null,
-            businessName: values.businessName?.trim() || null,
             typeOfBusiness: values.typeOfBusiness?.trim() || null,
             uniqueIdNumber: values.uniqueNumber?.trim() || null,
             phoneNumber: values.mobile?.trim() || null,
             otherPhoneNumber: values.altPhone?.trim() || null,
-            email: values.email?.trim() || null,
             gender: values.gender || null,
             dateOfBirth: values.dob || null,
             nationality: values.country || null,
@@ -182,6 +207,14 @@ const CreateBorrower = forwardRef(
             creditScore: values.creditScore?.trim() || null,
             branchBorrowersId: userDetails.branchUsersId,
           };
+          // Only add businessName if present
+          if (values.businessName && values.businessName.trim() !== "") {
+            input.businessName = values.businessName.trim();
+          }
+          // Only add email if present
+          if (values.email && values.email.trim() !== "") {
+            input.email = values.email.trim();
+          }
 
           // Extract custom fields data
           const customFieldsData = {};
@@ -223,6 +256,7 @@ const CreateBorrower = forwardRef(
           });
           setSubmitSuccess("Borrower updated!");
           setEditMode(false);
+          setTimeout(() => setSubmitSuccess(""), 2000); // Optional: clear success after a short delay
           if (onEditSuccess) {
             onEditSuccess(result.data.updateBorrower);
           }
@@ -231,12 +265,10 @@ const CreateBorrower = forwardRef(
           const input = {
             firstname: values.firstname?.trim() || null,
             othername: values.othername?.trim() || null,
-            businessName: values.businessName?.trim() || null,
             typeOfBusiness: values.typeOfBusiness?.trim() || null,
             uniqueIdNumber: values.uniqueNumber?.trim() || null,
             phoneNumber: values.mobile?.trim() || null,
             otherPhoneNumber: values.altPhone?.trim() || null,
-            email: values.email?.trim() || null,
             gender: values.gender || null,
             dateOfBirth: values.dob || null,
             nationality: values.country || null,
@@ -248,6 +280,14 @@ const CreateBorrower = forwardRef(
             employerName: values.employerName?.trim() || null,
             creditScore: values.creditScore?.trim() || null,
           };
+          // Only add businessName if present
+          if (values.businessName && values.businessName.trim() !== "") {
+            input.businessName = values.businessName.trim();
+          }
+          // Only add email if present
+          if (values.email && values.email.trim() !== "") {
+            input.email = values.email.trim();
+          }
           const customFieldsData = {};
           Object.keys(values).forEach((key) => {
             if (key.startsWith("custom_")) {

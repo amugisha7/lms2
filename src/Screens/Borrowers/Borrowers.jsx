@@ -1,3 +1,5 @@
+// Guard to ensure we only fetch borrowers once per page load (even under React StrictMode)
+
 import React, { useRef } from "react";
 import { UserContext } from "../../App";
 import ClickableText from "../../ComponentAssets/ClickableText";
@@ -6,6 +8,8 @@ import { useTheme } from "@mui/material/styles";
 import CollectionsTemplate from "../../ComponentAssets/CollectionsTemplate";
 import { useCrudOperations } from "../../hooks/useCrudOperations";
 import { generateClient } from "aws-amplify/api";
+
+let __borrowersFetchedOnce = false;
 
 const LIST_BORROWERS_QUERY = `
   query ListBorrowers($branchId: ID!, $nextToken: String) {
@@ -96,7 +100,7 @@ export default function Borrowers() {
   const [processedBorrowers, setProcessedBorrowers] = React.useState([]);
   const [allBorrowers, setAllBorrowers] = React.useState([]);
   const [borrowersLoading, setBorrowersLoading] = React.useState(true);
-  const client = generateClient();
+  const client = React.useMemo(() => generateClient(), []); // stabilize client so effect does not re-trigger infinitely
 
   const {
     items: borrowers,
@@ -135,37 +139,53 @@ export default function Borrowers() {
       try {
         let allBorrowersList = [];
         let nextToken = null;
-        let hasMoreData = true;
-
-        while (hasMoreData) {
+        let iteration = 0;
+        while (true) {
           const queryVariables = {
             ...variables,
             ...(nextToken && { nextToken }),
           };
-
-          console.log(`Fetching batch with nextToken: ${nextToken || "null"}`);
-
+          console.log(
+            `Fetching batch ${iteration + 1} with nextToken: ${
+              nextToken || "null"
+            }`
+          );
           const result = await client.graphql({
             query: LIST_BORROWERS_QUERY,
             variables: queryVariables,
           });
-
-          const batchItems = result.data.listBorrowers?.items || [];
-          allBorrowersList = [...allBorrowersList, ...batchItems];
-
-          nextToken = result.data.listBorrowers?.nextToken;
-          hasMoreData = !!nextToken;
-
+          // Defensive: handle unexpected shapes
+          const listResult = result?.data?.listBorrowers || {};
+          const batchItems = Array.isArray(listResult.items)
+            ? listResult.items
+            : [];
+          allBorrowersList.push(...batchItems);
+          const newNextToken = listResult.nextToken || null;
           console.log(
-            `Fetched ${batchItems.length} borrowers in this batch. Total: ${allBorrowersList.length}. Has more: ${hasMoreData}`
+            `Fetched ${batchItems.length} borrowers in this batch. Total: ${allBorrowersList.length}. NextToken: ${newNextToken}`
           );
+          // Break conditions
+          if (!newNextToken) {
+            console.log("No nextToken returned. Pagination complete.");
+            break;
+          }
+          if (newNextToken === nextToken) {
+            console.warn(
+              "Next token did not advance. Stopping to prevent infinite loop."
+            );
+            break;
+          }
+          if (++iteration > 50) {
+            console.warn(
+              "Safety cap (50 iterations) reached. Stopping pagination."
+            );
+            break;
+          }
+          nextToken = newNextToken;
         }
-
         console.log(
           `Finished fetching all borrowers. Total count: ${allBorrowersList.length}`
         );
-
-        // Update the state with all fetched borrowers
         setAllBorrowers(allBorrowersList);
         return allBorrowersList;
       } catch (err) {
@@ -213,7 +233,7 @@ export default function Borrowers() {
       if (key.startsWith("custom_")) {
         const fieldId = key.replace("custom_", "");
         customFieldsData[fieldId] = {
-          fieldId: fieldId,
+          fieldId,
           value:
             typeof values[key] === "string"
               ? values[key].trim() || null
@@ -230,7 +250,11 @@ export default function Borrowers() {
       variables: { input },
     });
 
-    return result.data.createBorrower;
+    const apiBorrower = result.data.createBorrower || {};
+    // Merge full input fields (excluding branchBorrowersId if you don't want it in list state)
+    const { branchBorrowersId, ...restInput } = input;
+    const enrichedBorrower = { ...restInput, ...apiBorrower };
+    return enrichedBorrower;
   };
 
   // API handler for updating borrower
@@ -258,13 +282,12 @@ export default function Borrowers() {
       creditScore: values.creditScore?.trim() || null,
     };
 
-    // Extract custom fields data
     const customFieldsData = {};
     Object.keys(values).forEach((key) => {
       if (key.startsWith("custom_")) {
         const fieldId = key.replace("custom_", "");
         customFieldsData[fieldId] = {
-          fieldId: fieldId,
+          fieldId,
           value:
             typeof values[key] === "string"
               ? values[key].trim() || null
@@ -272,8 +295,6 @@ export default function Borrowers() {
         };
       }
     });
-
-    // Add custom fields data to input if any exist
     if (Object.keys(customFieldsData).length > 0) {
       input.customFieldsData = JSON.stringify(customFieldsData);
     }
@@ -283,7 +304,10 @@ export default function Borrowers() {
       variables: { input },
     });
 
-    return result.data.updateBorrower;
+    const apiBorrower = result.data.updateBorrower || {};
+    // Enrich with full input so local state has all fields (API returns subset)
+    const enrichedBorrower = { ...input, ...apiBorrower };
+    return enrichedBorrower;
   };
 
   // Custom handleCreateSuccess to update allBorrowers state
@@ -339,7 +363,8 @@ export default function Borrowers() {
   };
 
   React.useEffect(() => {
-    if (userDetails?.branchUsersId) {
+    if (userDetails?.branchUsersId && !__borrowersFetchedOnce) {
+      __borrowersFetchedOnce = true;
       fetchBorrowers({ branchId: userDetails.branchUsersId });
     }
   }, [userDetails?.branchUsersId, fetchBorrowers]);

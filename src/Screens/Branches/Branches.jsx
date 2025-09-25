@@ -6,6 +6,7 @@ import { useTheme } from "@mui/material/styles";
 import CollectionsTemplate from "../../ComponentAssets/CollectionsTemplate";
 import { useCrudOperations } from "../../hooks/useCrudOperations";
 import { generateClient } from "aws-amplify/api";
+import NotificationBar from "../../ComponentAssets/NotificationBar";
 
 // Guard to ensure we only fetch branches once per page load (even under React StrictMode)
 let __branchesFetchedOnce = false;
@@ -75,6 +76,10 @@ export default function Branches() {
   const [processedBranches, setProcessedBranches] = React.useState([]);
   const [allBranches, setAllBranches] = React.useState([]);
   const [branchesLoading, setBranchesLoading] = React.useState(true);
+  const [notification, setNotification] = React.useState({
+    message: "",
+    color: "green",
+  });
   const client = React.useMemo(() => generateClient(), []); // stabilize client so effect does not re-trigger infinitely
 
   const {
@@ -214,40 +219,45 @@ export default function Branches() {
     return result.data.updateBranch;
   };
 
-  // Custom handleCreateSuccess to update allBranches state
+  // Custom handleCreateSuccess to update allBranches state and show notification
   const handleCreateSuccess = (newBranch) => {
-    // Add the new branch to allBranches state
     setAllBranches((prev) => [...prev, newBranch]);
-
-    // Call the original handleCreateSuccess
+    setNotification({
+      message: `${newBranch.name} created successfully!`,
+      color: "green",
+    });
     originalHandleCreateSuccess(newBranch);
   };
 
-  // Custom handleDeleteConfirm to update allBranches state
+  // Custom handleDeleteConfirm to update allBranches state and show notification
   const handleDeleteConfirm = async () => {
     try {
       await originalHandleDeleteConfirm();
-      // Remove the deleted branch from allBranches state
       if (deleteDialogRow) {
         setAllBranches((prev) =>
           prev.filter((branch) => branch.id !== deleteDialogRow.id)
         );
+        setNotification({
+          message: `${deleteDialogRow.name} deleted successfully!`,
+          color: "green",
+        });
       }
     } catch (error) {
       console.error("Error deleting branch:", error);
     }
   };
 
-  // Custom handleEditSuccess
+  // Custom handleEditSuccess to update allBranches state and show notification
   const handleEditSuccess = (updatedBranch) => {
-    // Update allBranches state as well
     setAllBranches((prev) =>
       prev.map((branch) =>
         branch.id === updatedBranch.id ? updatedBranch : branch
       )
     );
-
-    // Call the original handleEditSuccess
+    setNotification({
+      message: `${updatedBranch.name} updated successfully!`,
+      color: "green",
+    });
     originalHandleEditSuccess(updatedBranch);
   };
 
@@ -317,54 +327,62 @@ export default function Branches() {
   ];
 
   return (
-    <CollectionsTemplate
-      title="Branches"
-      createButtonText="Create Branch"
-      onCreateClick={handleCreateDialogOpen}
-      // Data props
-      items={processedBranches}
-      loading={branchesLoading}
-      columns={columns}
-      searchFields={["name", "branchCode", "address"]}
-      noDataMessage="No branches found. Please create a branch to get started."
-      // Create dialog props
-      createDialogOpen={createDialogOpen}
-      onCreateDialogClose={handleCreateDialogClose}
-      createDialogTitle="Create Branch"
-      CreateFormComponent={CreateBranches}
-      createFormProps={{
-        onClose: handleCreateDialogClose,
-        onCreateSuccess: handleCreateSuccess,
-        onCreateBranchAPI: handleCreateBranchAPI,
-        ref: formRef,
-        isEditMode: false,
-      }}
-      // Edit dialog props
-      editDialogOpen={editDialogOpen}
-      editDialogRow={editDialogRow}
-      onEditDialogClose={handleEditDialogClose}
-      EditFormComponent={CreateBranches}
-      editFormProps={{
-        onClose: handleEditDialogClose,
-        onEditSuccess: handleEditSuccess,
-        onUpdateBranchAPI: handleUpdateBranchAPI,
-        initialValues: editDialogRow,
-        isEditMode: true,
-        ref: formRef,
-      }}
-      onEditClick={handleEditClick}
-      onPopupDeleteClick={handlePopupDeleteClick}
-      editMode={editMode}
-      // Delete dialog props
-      deleteDialogOpen={deleteDialogOpen}
-      onDeleteDialogClose={handleDeleteDialogClose}
-      onDeleteConfirm={handleDeleteConfirm}
-      deleteLoading={deleteLoading}
-      deleteError={deleteError}
-      deleteDialogRow={deleteDialogRow}
-      // Search props
-      enableSearch={true}
-      searchPlaceholder="Search branches..."
-    />
+    <>
+      <NotificationBar
+        message={notification.message}
+        color={notification.color}
+      />
+      <CollectionsTemplate
+        title="Branches"
+        createButtonText="Create Branch"
+        onCreateClick={handleCreateDialogOpen}
+        // Data props
+        items={processedBranches}
+        loading={branchesLoading}
+        columns={columns}
+        searchFields={["name", "branchCode", "address"]}
+        noDataMessage="No branches found. Please create a branch to get started."
+        // Create dialog props
+        createDialogOpen={createDialogOpen}
+        onCreateDialogClose={handleCreateDialogClose}
+        createDialogTitle="Create Branch"
+        CreateFormComponent={CreateBranches}
+        createFormProps={{
+          onClose: handleCreateDialogClose,
+          onCreateSuccess: handleCreateSuccess,
+          onCreateBranchAPI: handleCreateBranchAPI,
+          ref: formRef,
+          isEditMode: false,
+          setNotification, // pass down if needed
+        }}
+        // Edit dialog props
+        editDialogOpen={editDialogOpen}
+        editDialogRow={editDialogRow}
+        onEditDialogClose={handleEditDialogClose}
+        EditFormComponent={CreateBranches}
+        editFormProps={{
+          onClose: handleEditDialogClose,
+          onEditSuccess: handleEditSuccess,
+          onUpdateBranchAPI: handleUpdateBranchAPI,
+          initialValues: editDialogRow,
+          isEditMode: true,
+          ref: formRef,
+          setNotification, // pass down if needed
+        }}
+        onEditClick={handleEditClick}
+        onPopupDeleteClick={handlePopupDeleteClick}
+        editMode={editMode}
+        // Delete dialog props
+        deleteDialogOpen={deleteDialogOpen}
+        onDeleteDialogClose={handleDeleteDialogClose}
+        onDeleteConfirm={handleDeleteConfirm}
+        deleteLoading={deleteLoading}
+        deleteError={deleteError}
+        deleteDialogRow={deleteDialogRow}
+        // Search props
+        enableSearch={true}
+        searchPlaceholder="Search branches..."
+      />
+    </>
   );
 }

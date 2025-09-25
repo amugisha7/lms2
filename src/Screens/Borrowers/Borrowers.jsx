@@ -8,6 +8,7 @@ import { useTheme } from "@mui/material/styles";
 import CollectionsTemplate from "../../ComponentAssets/CollectionsTemplate";
 import { useCrudOperations } from "../../hooks/useCrudOperations";
 import { generateClient } from "aws-amplify/api";
+import NotificationBar from "../../ComponentAssets/NotificationBar";
 
 let __borrowersFetchedOnce = false;
 
@@ -124,6 +125,10 @@ export default function Borrowers() {
   const [processedBorrowers, setProcessedBorrowers] = React.useState([]);
   const [allBorrowers, setAllBorrowers] = React.useState([]);
   const [borrowersLoading, setBorrowersLoading] = React.useState(true);
+  const [notification, setNotification] = React.useState({
+    message: "",
+    color: "green",
+  });
   const client = React.useMemo(() => generateClient(), []); // stabilize client so effect does not re-trigger infinitely
 
   const {
@@ -327,16 +332,25 @@ export default function Borrowers() {
     return result.data.updateBorrower;
   };
 
-  // Custom handleCreateSuccess to update allBorrowers state
+  // Custom handleCreateSuccess to update allBorrowers state and show notification
   const handleCreateSuccess = (newBorrower) => {
-    // Add the new borrower to allBorrowers state
     setAllBorrowers((prev) => [...prev, newBorrower]);
-
-    // Call the original handleCreateSuccess
+    const combinedName =
+      newBorrower.firstname || newBorrower.othername
+        ? `${[newBorrower.firstname, newBorrower.othername]
+            .filter(Boolean)
+            .join(" ")}${
+            newBorrower.businessName ? ` (${newBorrower.businessName})` : ""
+          }`
+        : newBorrower.businessName || "";
+    setNotification({
+      message: `${combinedName} created successfully!`,
+      color: "green",
+    });
     originalHandleCreateSuccess(newBorrower);
   };
 
-  // Custom handleDeleteConfirm to update allBorrowers state
+  // Custom handleDeleteConfirm to update allBorrowers state and show notification
   const handleDeleteConfirm = async () => {
     try {
       await originalHandleDeleteConfirm();
@@ -345,15 +359,28 @@ export default function Borrowers() {
         setAllBorrowers((prev) =>
           prev.filter((borrower) => borrower.id !== deleteDialogRow.id)
         );
+        const combinedName =
+          deleteDialogRow.firstname || deleteDialogRow.othername
+            ? `${[deleteDialogRow.firstname, deleteDialogRow.othername]
+                .filter(Boolean)
+                .join(" ")}${
+                deleteDialogRow.businessName
+                  ? ` (${deleteDialogRow.businessName})`
+                  : ""
+              }`
+            : deleteDialogRow.businessName || "";
+        setNotification({
+          message: `${combinedName} deleted successfully!`,
+          color: "green",
+        });
       }
     } catch (error) {
       console.error("Error deleting borrower:", error);
     }
   };
 
-  // Custom handleEditSuccess to update the combinedName
+  // Custom handleEditSuccess to update the combinedName and show notification
   const handleEditSuccess = (updatedBorrower) => {
-    // Update the borrower with combinedName
     const borrowerWithCombinedName = {
       ...updatedBorrower,
       combinedName:
@@ -367,15 +394,15 @@ export default function Borrowers() {
             }`
           : updatedBorrower.businessName || "",
     };
-
-    // Update allBorrowers state as well
     setAllBorrowers((prev) =>
       prev.map((borrower) =>
         borrower.id === updatedBorrower.id ? updatedBorrower : borrower
       )
     );
-
-    // Call the original handleEditSuccess with the updated data
+    setNotification({
+      message: `${borrowerWithCombinedName.combinedName} updated successfully!`,
+      color: "green",
+    });
     originalHandleEditSuccess(borrowerWithCombinedName);
   };
 
@@ -468,49 +495,57 @@ export default function Borrowers() {
   ];
 
   return (
-    <CollectionsTemplate
-      title="Borrowers"
-      createButtonText="Create Borrower"
-      onCreateClick={handleCreateDialogOpen}
-      items={processedBorrowers}
-      loading={borrowersLoading}
-      columns={columns}
-      searchFields={["firstname", "businessName", "phoneNumber", "email"]}
-      noDataMessage="No borrowers found. Please create a borrower to get started."
-      createDialogOpen={createDialogOpen}
-      onCreateDialogClose={handleCreateDialogClose}
-      createDialogTitle="Create Borrower"
-      CreateFormComponent={CreateBorrower}
-      createFormProps={{
-        onClose: handleCreateDialogClose,
-        onCreateSuccess: handleCreateSuccess,
-        onCreateBorrowerAPI: handleCreateBorrowerAPI,
-        ref: formRef,
-        isEditMode: false,
-      }}
-      editDialogOpen={editDialogOpen}
-      editDialogRow={editDialogRow}
-      onEditDialogClose={handleEditDialogClose}
-      EditFormComponent={CreateBorrower}
-      editFormProps={{
-        onClose: handleEditDialogClose,
-        onEditSuccess: handleEditSuccess,
-        onUpdateBorrowerAPI: handleUpdateBorrowerAPI,
-        initialValues: editDialogRow,
-        isEditMode: true,
-        ref: formRef,
-      }}
-      onEditClick={handleEditClick}
-      onPopupDeleteClick={handlePopupDeleteClick}
-      editMode={editMode}
-      deleteDialogOpen={deleteDialogOpen}
-      onDeleteDialogClose={handleDeleteDialogClose}
-      onDeleteConfirm={handleDeleteConfirm}
-      deleteLoading={deleteLoading}
-      deleteError={deleteError}
-      deleteDialogRow={deleteDialogRow}
-      enableSearch={true}
-      searchPlaceholder="Search borrowers..."
-    />
+    <>
+      <NotificationBar
+        message={notification.message}
+        color={notification.color}
+      />
+      <CollectionsTemplate
+        title="Borrowers"
+        createButtonText="Create Borrower"
+        onCreateClick={handleCreateDialogOpen}
+        items={processedBorrowers}
+        loading={borrowersLoading}
+        columns={columns}
+        searchFields={["firstname", "businessName", "phoneNumber", "email"]}
+        noDataMessage="No borrowers found. Please create a borrower to get started."
+        createDialogOpen={createDialogOpen}
+        onCreateDialogClose={handleCreateDialogClose}
+        createDialogTitle="Create Borrower"
+        CreateFormComponent={CreateBorrower}
+        createFormProps={{
+          onClose: handleCreateDialogClose,
+          onCreateSuccess: handleCreateSuccess,
+          onCreateBorrowerAPI: handleCreateBorrowerAPI,
+          ref: formRef,
+          isEditMode: false,
+          setNotification, // pass down if needed
+        }}
+        editDialogOpen={editDialogOpen}
+        editDialogRow={editDialogRow}
+        onEditDialogClose={handleEditDialogClose}
+        EditFormComponent={CreateBorrower}
+        editFormProps={{
+          onClose: handleEditDialogClose,
+          onEditSuccess: handleEditSuccess,
+          onUpdateBorrowerAPI: handleUpdateBorrowerAPI,
+          initialValues: editDialogRow,
+          isEditMode: true,
+          ref: formRef,
+          setNotification, // pass down if needed
+        }}
+        onEditClick={handleEditClick}
+        onPopupDeleteClick={handlePopupDeleteClick}
+        editMode={editMode}
+        deleteDialogOpen={deleteDialogOpen}
+        onDeleteDialogClose={handleDeleteDialogClose}
+        onDeleteConfirm={handleDeleteConfirm}
+        deleteLoading={deleteLoading}
+        deleteError={deleteError}
+        deleteDialogRow={deleteDialogRow}
+        enableSearch={true}
+        searchPlaceholder="Search borrowers..."
+      />
+    </>
   );
 }

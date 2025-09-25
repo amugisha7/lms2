@@ -13,7 +13,7 @@ import CreateLoanFeesForm from "./Screens/LoanFees/CreateLoanFeesForm"; // Add t
 import CreateLoanProductFormOptimized from "./Screens/LoanProducts/CreateLoanProductFormOptimized"; // Add this import
 import AdminPage from "./Screens/AdminScreens/AdminPage";
 import LoanFees from "./Screens/LoanFees/LoanFees"; // Add this import
-import CreateBranches from "./Screens/Branches/CreateBranches/CreateBranches";
+import CreateBranches from "./Screens/Branches/CreateBranches/CreateBranch";
 import Branches from "./Screens/Branches/Branches";
 import LoanProducts from "./Screens/LoanProducts/LoanProducts";
 import FormTemplate from "./temp/FormTemplate";

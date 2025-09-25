@@ -1,4 +1,4 @@
-const createBranchesForm = [
+const createBranchForm = [
   {
     label: "Branch Name",
     name: "name",
@@ -52,4 +52,4 @@ const createBranchesForm = [
   },
 ];
 
-export default createBranchesForm;
+export default createBranchForm;

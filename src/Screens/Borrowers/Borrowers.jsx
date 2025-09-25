@@ -55,10 +55,22 @@ const CREATE_BORROWER_MUTATION = `
       firstname
       othername
       businessName
+      typeOfBusiness
+      uniqueIdNumber
       phoneNumber
       otherPhoneNumber
       email
+      gender
+      dateOfBirth
+      nationality
+      address
+      city
+      state
       title
+      zipcode
+      employmentStatus
+      employerName
+      creditScore
       customFieldsData
       createdAt
       updatedAt
@@ -81,10 +93,22 @@ const UPDATE_BORROWER_MUTATION = `
       firstname
       othername
       businessName
+      typeOfBusiness
+      uniqueIdNumber
       phoneNumber
       otherPhoneNumber
       email
+      gender
+      dateOfBirth
+      nationality
+      address
+      city
+      state
       title
+      zipcode
+      employmentStatus
+      employerName
+      creditScore
       customFieldsData
       createdAt
       updatedAt
@@ -250,11 +274,7 @@ export default function Borrowers() {
       variables: { input },
     });
 
-    const apiBorrower = result.data.createBorrower || {};
-    // Merge full input fields (excluding branchBorrowersId if you don't want it in list state)
-    const { branchBorrowersId, ...restInput } = input;
-    const enrichedBorrower = { ...restInput, ...apiBorrower };
-    return enrichedBorrower;
+    return result.data.createBorrower;
   };
 
   // API handler for updating borrower
@@ -304,10 +324,7 @@ export default function Borrowers() {
       variables: { input },
     });
 
-    const apiBorrower = result.data.updateBorrower || {};
-    // Enrich with full input so local state has all fields (API returns subset)
-    const enrichedBorrower = { ...input, ...apiBorrower };
-    return enrichedBorrower;
+    return result.data.updateBorrower;
   };
 
   // Custom handleCreateSuccess to update allBorrowers state

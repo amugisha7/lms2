@@ -1,16 +1,21 @@
-import React from "react";
+import React, { useRef } from "react";
 import { UserContext } from "../../App";
 import ClickableText from "../../ComponentAssets/ClickableText";
-import CreateBranches from "./CreateBranches/CreateBranches";
+import CreateBranches from "./CreateBranches/CreateBranch";
 import { useTheme } from "@mui/material/styles";
 import CollectionsTemplate from "../../ComponentAssets/CollectionsTemplate";
 import { useCrudOperations } from "../../hooks/useCrudOperations";
+import { generateClient } from "aws-amplify/api";
+
+// Guard to ensure we only fetch branches once per page load (even under React StrictMode)
+let __branchesFetchedOnce = false;
 
 const LIST_BRANCHES_QUERY = `
-  query ListBranches($institutionId: ID!) {
+  query ListBranches($institutionId: ID!, $nextToken: String) {
     listBranches(
       filter: { institutionBranchesId: { eq: $institutionId } }
       limit: 100
+      nextToken: $nextToken
     ) {
       items {
         id
@@ -18,7 +23,24 @@ const LIST_BRANCHES_QUERY = `
         branchCode
         address
         status
+        createdAt
+        updatedAt
       }
+      nextToken
+    }
+  }
+`;
+
+const CREATE_BRANCH_MUTATION = `
+  mutation CreateBranch($input: CreateBranchInput!) {
+    createBranch(input: $input) {
+      id
+      name
+      branchCode
+      address
+      status
+      createdAt
+      updatedAt
     }
   }
 `;
@@ -39,15 +61,21 @@ const UPDATE_BRANCH_MUTATION = `
       branchCode
       address
       status
+      createdAt
+      updatedAt
     }
   }
 `;
 
 export default function Branches() {
   const [editMode, setEditMode] = React.useState(false);
-  const formRef = React.useRef();
+  const formRef = useRef();
   const { userDetails } = React.useContext(UserContext);
   const theme = useTheme();
+  const [processedBranches, setProcessedBranches] = React.useState([]);
+  const [allBranches, setAllBranches] = React.useState([]);
+  const [branchesLoading, setBranchesLoading] = React.useState(true);
+  const client = React.useMemo(() => generateClient(), []); // stabilize client so effect does not re-trigger infinitely
 
   const {
     items: branches,
@@ -59,32 +87,188 @@ export default function Branches() {
     deleteDialogRow,
     deleteLoading,
     deleteError,
-    fetchItems: fetchBranches,
+    fetchItems: originalFetchBranches,
     handleEditDialogOpen,
     handleEditDialogClose,
-    handleEditSuccess,
+    handleEditSuccess: originalHandleEditSuccess,
     handleDeleteDialogOpen,
     handleDeleteDialogClose,
-    handleDeleteConfirm,
+    handleDeleteConfirm: originalHandleDeleteConfirm,
     handleCreateDialogOpen,
     handleCreateDialogClose,
-    handleCreateSuccess,
+    handleCreateSuccess: originalHandleCreateSuccess,
   } = useCrudOperations(
     "Branch",
     LIST_BRANCHES_QUERY,
-    null, // create mutation
-    UPDATE_BRANCH_MUTATION, // update mutation
+    null,
+    UPDATE_BRANCH_MUTATION,
     DELETE_BRANCH_MUTATION,
-    "listBranches" // Explicitly specify the query key
+    "listBranches"
   );
 
+  // Custom fetch function with pagination support
+  const fetchBranches = React.useCallback(
+    async (variables = {}) => {
+      console.log("Fetching branches with pagination...");
+      setBranchesLoading(true);
+      try {
+        let allBranchesList = [];
+        let nextToken = null;
+        let iteration = 0;
+        while (true) {
+          const queryVariables = {
+            ...variables,
+            ...(nextToken && { nextToken }),
+          };
+          console.log(
+            `Fetching batch ${iteration + 1} with nextToken: ${
+              nextToken || "null"
+            }`
+          );
+          const result = await client.graphql({
+            query: LIST_BRANCHES_QUERY,
+            variables: queryVariables,
+          });
+          // Defensive: handle unexpected shapes
+          const listResult = result?.data?.listBranches || {};
+          const batchItems = Array.isArray(listResult.items)
+            ? listResult.items
+            : [];
+          allBranchesList.push(...batchItems);
+          const newNextToken = listResult.nextToken || null;
+          console.log(
+            `Fetched ${batchItems.length} branches in this batch. Total: ${allBranchesList.length}. NextToken: ${newNextToken}`
+          );
+          // Break conditions
+          if (!newNextToken) {
+            console.log("No nextToken returned. Pagination complete.");
+            break;
+          }
+          if (newNextToken === nextToken) {
+            console.warn(
+              "Next token did not advance. Stopping to prevent infinite loop."
+            );
+            break;
+          }
+          if (++iteration > 50) {
+            console.warn(
+              "Safety cap (50 iterations) reached. Stopping pagination."
+            );
+            break;
+          }
+          nextToken = newNextToken;
+        }
+        console.log(
+          `Finished fetching all branches. Total count: ${allBranchesList.length}`
+        );
+        setAllBranches(allBranchesList);
+        return allBranchesList;
+      } catch (err) {
+        console.error("Error fetching branches with pagination:", err);
+        setAllBranches([]);
+        throw err;
+      } finally {
+        setBranchesLoading(false);
+      }
+    },
+    [client]
+  );
+
+  // API handler for creating branch
+  const handleCreateBranchAPI = async (values) => {
+    if (!userDetails?.institutionUsersId) {
+      throw new Error("Error: Please try refreshing the page.");
+    }
+
+    const input = {
+      name: values.name?.trim() || null,
+      branchCode: values.branchCode?.trim() || null,
+      address: values.address?.trim() || null,
+      status: values.status || "active",
+      institutionBranchesId: userDetails.institutionUsersId,
+    };
+
+    const result = await client.graphql({
+      query: CREATE_BRANCH_MUTATION,
+      variables: { input },
+    });
+
+    return result.data.createBranch;
+  };
+
+  // API handler for updating branch
+  const handleUpdateBranchAPI = async (values, initialValues) => {
+    const input = {
+      id: initialValues.id,
+      name: values.name?.trim() || null,
+      branchCode: values.branchCode?.trim() || null,
+      address: values.address?.trim() || null,
+      status: values.status || "active",
+    };
+
+    const result = await client.graphql({
+      query: UPDATE_BRANCH_MUTATION,
+      variables: { input },
+    });
+
+    return result.data.updateBranch;
+  };
+
+  // Custom handleCreateSuccess to update allBranches state
+  const handleCreateSuccess = (newBranch) => {
+    // Add the new branch to allBranches state
+    setAllBranches((prev) => [...prev, newBranch]);
+
+    // Call the original handleCreateSuccess
+    originalHandleCreateSuccess(newBranch);
+  };
+
+  // Custom handleDeleteConfirm to update allBranches state
+  const handleDeleteConfirm = async () => {
+    try {
+      await originalHandleDeleteConfirm();
+      // Remove the deleted branch from allBranches state
+      if (deleteDialogRow) {
+        setAllBranches((prev) =>
+          prev.filter((branch) => branch.id !== deleteDialogRow.id)
+        );
+      }
+    } catch (error) {
+      console.error("Error deleting branch:", error);
+    }
+  };
+
+  // Custom handleEditSuccess
+  const handleEditSuccess = (updatedBranch) => {
+    // Update allBranches state as well
+    setAllBranches((prev) =>
+      prev.map((branch) =>
+        branch.id === updatedBranch.id ? updatedBranch : branch
+      )
+    );
+
+    // Call the original handleEditSuccess
+    originalHandleEditSuccess(updatedBranch);
+  };
+
   React.useEffect(() => {
-    if (userDetails?.institutionUsersId) {
-      fetchBranches({
-        institutionId: userDetails.institutionUsersId,
-      });
+    if (userDetails?.institutionUsersId && !__branchesFetchedOnce) {
+      __branchesFetchedOnce = true;
+      fetchBranches({ institutionId: userDetails.institutionUsersId });
     }
   }, [userDetails?.institutionUsersId, fetchBranches]);
+
+  React.useEffect(() => {
+    if (allBranches && Array.isArray(allBranches)) {
+      const processed = [...allBranches];
+      processed.sort((a, b) =>
+        a.name.localeCompare(b.name, undefined, {
+          sensitivity: "base",
+        })
+      );
+      setProcessedBranches(processed);
+    }
+  }, [allBranches]);
 
   const handleEditClick = (form) => {
     if (form) {
@@ -138,8 +322,8 @@ export default function Branches() {
       createButtonText="Create Branch"
       onCreateClick={handleCreateDialogOpen}
       // Data props
-      items={branches}
-      loading={loading}
+      items={processedBranches}
+      loading={branchesLoading}
       columns={columns}
       searchFields={["name", "branchCode", "address"]}
       noDataMessage="No branches found. Please create a branch to get started."
@@ -151,6 +335,9 @@ export default function Branches() {
       createFormProps={{
         onClose: handleCreateDialogClose,
         onCreateSuccess: handleCreateSuccess,
+        onCreateBranchAPI: handleCreateBranchAPI,
+        ref: formRef,
+        isEditMode: false,
       }}
       // Edit dialog props
       editDialogOpen={editDialogOpen}
@@ -160,7 +347,10 @@ export default function Branches() {
       editFormProps={{
         onClose: handleEditDialogClose,
         onEditSuccess: handleEditSuccess,
+        onUpdateBranchAPI: handleUpdateBranchAPI,
+        initialValues: editDialogRow,
         isEditMode: true,
+        ref: formRef,
       }}
       onEditClick={handleEditClick}
       onPopupDeleteClick={handlePopupDeleteClick}

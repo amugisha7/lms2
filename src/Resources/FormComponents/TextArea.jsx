@@ -10,17 +10,27 @@ const TextArea = ({
   rows = 2,
   readOnly = false,
   editing = true,
+  slotProps: incomingSlotProps,
   ...props
 }) => {
   const [field, meta] = useField(name);
   const isReadOnly = readOnly || editing === false;
+
+  // Merge consumer-provided slotProps with our readOnly setting
+  const mergedSlotProps = {
+    ...incomingSlotProps,
+    input: {
+      ...(incomingSlotProps?.input || {}),
+      readOnly: isReadOnly,
+    },
+  };
 
   return (
     <Box
       sx={{
         display: "flex",
         flexDirection: { xs: "column", sm: "row" },
-        // alignItems: { xs: "stretch", sm: "center" },
+        alignItems: { xs: "stretch", sm: "center" },
         gap: { xs: 0, sm: 1 },
         borderBottom: (theme) =>
           `1.5px dotted ${
@@ -34,10 +44,16 @@ const TextArea = ({
       <Typography
         sx={{
           fontSize: 12,
-          width: { xs: "100%", sm: "100px" },
+          minWidth: { xs: "100%", sm: "120px" },
+          maxWidth: { xs: "100%", sm: "120px" },
         }}
       >
         {label}
+        {required && (
+          <Box component="span" sx={{ color: "error.main", ml: 0.5 }}>
+            *
+          </Box>
+        )}
       </Typography>
       <TextField
         {...field}
@@ -45,36 +61,45 @@ const TextArea = ({
         fullWidth
         multiline
         rows={rows}
-        variant="outlined"
+        variant="filled"
         required={required}
-        error={meta.touched && Boolean(meta.error)}
-        helperText={meta.touched && meta.error ? meta.error : helperText}
+        error={isReadOnly ? false : meta.touched && Boolean(meta.error)}
+        helperText={
+          isReadOnly
+            ? undefined
+            : meta.touched && meta.error
+            ? meta.error
+            : helperText
+        }
         size="small"
-        slotProps={{
-          input: { readOnly: isReadOnly },
-        }}
+        slotProps={mergedSlotProps}
         sx={{
           flex: { xs: "unset", sm: "1 1 auto" },
           width: { xs: "100%", sm: "auto" },
           minWidth: 0,
-          "& .MuiOutlinedInput-root": {
-            padding: 0,
-            "& .MuiOutlinedInput-notchedOutline": {
-              borderColor: isReadOnly
-                ? "transparent"
-                : (theme) =>
-                    theme.palette.mode === "dark"
-                      ? theme.palette.grey[500]
-                      : theme.palette.grey[400],
+          "& .MuiFilledInput-input": {
+            paddingTop: 0,
+            paddingBottom: 0.5,
+            borderRadius: 0,
+          },
+          "& .MuiFilledInput-root": {
+            backgroundColor: isReadOnly ? "transparent" : undefined,
+            "&:hover": {
+              backgroundColor: isReadOnly ? "transparent" : undefined,
             },
-            "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-              borderColor: isReadOnly
+            "&.Mui-focused": {
+              backgroundColor: isReadOnly ? "transparent" : undefined,
+            },
+            "&:before, &:after": {
+              borderBottomColor: isReadOnly ? "transparent" : undefined,
+            },
+            "&.Mui-focused:after": {
+              borderBottomColor: isReadOnly
                 ? "transparent"
                 : (theme) =>
                     theme.palette.mode === "dark"
                       ? "#90caf9"
                       : theme.palette.primary.main,
-              borderWidth: isReadOnly ? 1 : 2,
             },
           },
           "& .MuiInputLabel-root": {

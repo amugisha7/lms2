@@ -30,7 +30,7 @@ export const menuItems = [
       {
         name: "View Borrowers",
         icon: <ListAltIcon sx={{ color: "white" }} />,
-        route: "/allBorrowers",
+        route: "/borrowers",
       },
     ],
   },

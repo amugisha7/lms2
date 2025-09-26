@@ -14,6 +14,7 @@ const TextInput = ({
   minLength, // <-- accept minLength
   maxLength, // <-- accept maxLength
   slotProps: incomingSlotProps, // <-- accept incoming slotProps for merging
+  validationMessage, // <-- extract validationMessage to prevent it from reaching DOM
   ...props
 }) => {
   const [field, meta] = useField(name);

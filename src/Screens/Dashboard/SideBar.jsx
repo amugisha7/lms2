@@ -3,7 +3,7 @@ import {
   Box,
   Typography,
   List,
-  ListItem,
+  ListItemButton,
   ListItemIcon,
   ListItemText,
   Collapse,
@@ -92,8 +92,7 @@ const SideBar = ({ open = true, onClose }) => {
 
               return (
                 <React.Fragment key={item.name}>
-                  <ListItem
-                    button
+                  <ListItemButton
                     onClick={() => handleToggleExpand(item.name)}
                     sx={{
                       mb: 0.5,
@@ -117,13 +116,12 @@ const SideBar = ({ open = true, onClose }) => {
                     ) : (
                       <ExpandMore sx={{ color: "white" }} />
                     )}
-                  </ListItem>
+                  </ListItemButton>
                   <Collapse in={isExpanded} timeout="auto" unmountOnExit>
                     <List component="div" disablePadding dense>
                       {item.children.map((child, childIndex) => (
-                        <ListItem
+                        <ListItemButton
                           key={child.name}
-                          button
                           onClick={() => child.route && navigate(child.route)}
                           sx={{
                             pl: 6,
@@ -143,7 +141,7 @@ const SideBar = ({ open = true, onClose }) => {
                               sx: { color: "white" },
                             }}
                           />
-                        </ListItem>
+                        </ListItemButton>
                       ))}
                     </List>
                   </Collapse>
@@ -152,9 +150,8 @@ const SideBar = ({ open = true, onClose }) => {
             }
 
             return (
-              <ListItem
+              <ListItemButton
                 key={item.name}
-                button
                 onClick={() => item.route && navigate(item.route)}
                 sx={{
                   mb: 0.5,
@@ -173,7 +170,7 @@ const SideBar = ({ open = true, onClose }) => {
                     sx: { color: "white" },
                   }}
                 />
-              </ListItem>
+              </ListItemButton>
             );
           })}
         </List>

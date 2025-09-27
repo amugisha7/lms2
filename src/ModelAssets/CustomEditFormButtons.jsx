@@ -10,23 +10,9 @@ const CustomEditFormButtons = ({
   setEditMode,
   setSubmitError,
   setSubmitSuccess,
-  onCancel, // Add onCancel prop
 }) => {
   const theme = useTheme();
   const { setEditClicked } = useContext(EditClickedContext) || {};
-
-  const handleCancel = () => {
-    formik.resetForm();
-    setEditMode(false);
-    setSubmitError("");
-    setSubmitSuccess("");
-    if (setEditClicked) {
-      setEditClicked(false);
-    }
-    if (onCancel) {
-      onCancel(); // Call onCancel if provided
-    }
-  };
 
   return (
     <div className="action-icon">
@@ -94,7 +80,15 @@ const CustomEditFormButtons = ({
           variant="outlined"
           color="error"
           disabled={formik.isSubmitting}
-          onClick={handleCancel}
+          onClick={() => {
+            formik.resetForm();
+            setEditMode(false);
+            setSubmitError("");
+            setSubmitSuccess("");
+            if (setEditClicked) {
+              setEditClicked(false);
+            }
+          }}
           sx={{
             minWidth: 120,
             fontWeight: 600,

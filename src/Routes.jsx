@@ -19,11 +19,13 @@ import LoanProducts from "./Screens/LoanProducts/LoanProducts";
 import FormTemplate from "./temp/FormTemplate";
 import Securities from "./Screens/Securities/Securities";
 import CreateSecurities from "./Screens/Securities/CreateSecurities/CreateSecurities";
-import Borrowers from "./Screens/Borrowers/Borrowers";
+// import Borrowers from "./Screens/Borrowers/Borrowers";
+import Borrowers from "./Models/Borrowers/Borrowers";
 import Temp from "./temp/Temp";
 import EmployeeDataGrid from "./Screens/Employees/EmployeeDataGrid";
 import CreateEmployeePage from "./Screens/Employees/CreateEmployeePage";
 import EmployeeManagement from "./Screens/Employees/EmployeeManagement";
+import BorrowerManagement from "./Models/Borrowers/BorrowerManagement";
 
 export default function AppRoutes({ userExists }) {
   return (
@@ -38,6 +40,10 @@ export default function AppRoutes({ userExists }) {
 
               {/* Borrowers routes */}
               <Route path="borrowers" element={<Borrowers />} />
+              <Route
+                path="borrowers/:borrowerId"
+                element={<BorrowerManagement />}
+              />
 
               {/* Employee routes */}
               <Route path="employees" element={<EmployeeDataGrid />} />

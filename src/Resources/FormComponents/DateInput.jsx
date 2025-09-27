@@ -10,6 +10,7 @@ const DateInput = ({
   required,
   readOnly = false,
   editing = true,
+  validationType, // <-- destructure and ignore
   ...props
 }) => {
   const [field, meta, helpers] = useField(name);
@@ -47,7 +48,7 @@ const DateInput = ({
         )}
       </Typography>
       <TextField
-        {...props}
+        {...props} // validationType is not included here
         type="date"
         fullWidth
         variant="outlined"
@@ -57,7 +58,7 @@ const DateInput = ({
         error={meta.touched && Boolean(meta.error)}
         helperText={meta.touched && meta.error ? meta.error : helperText}
         size="small"
-        autoFocus
+        // autoFocus
         slotProps={{
           input: { readOnly: isReadOnly },
         }}

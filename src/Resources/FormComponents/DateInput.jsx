@@ -58,7 +58,6 @@ const DateInput = ({
         error={meta.touched && Boolean(meta.error)}
         helperText={meta.touched && meta.error ? meta.error : helperText}
         size="small"
-        // autoFocus
         slotProps={{
           input: { readOnly: isReadOnly },
         }}

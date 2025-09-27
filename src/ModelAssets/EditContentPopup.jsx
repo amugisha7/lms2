@@ -16,6 +16,7 @@ export default function EditContentPopup({
   fullWidth = true,
 }) {
   const theme = useTheme();
+  const colors = tokens(theme.palette.mode);
 
   return (
     <Dialog
@@ -60,10 +61,10 @@ export default function EditContentPopup({
         <IconButton
           onClick={onClose}
           size="small"
+          color="inherit"
           sx={{
-            color: theme.palette.text.secondary,
-            "&:hover": {
-              backgroundColor: theme.palette.action.hover,
+            "& svg": {
+              color: colors.grey[200],
             },
           }}
         >

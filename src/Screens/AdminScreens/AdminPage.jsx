@@ -27,12 +27,7 @@ export default function AdminPage() {
     },
     {
       category: "Borrowers",
-      links: [
-        { label: "Create Borrower", href: "/addBorrower" },
-        { label: "Borrowers", href: "/borrowers" },
-        { label: "View Borrowers", href: "/allBorrowers" },
-        { label: "Custom Fields", href: "/customFields" },
-      ],
+      links: [{ label: "Borrowers", href: "/simpleBorrowers" }],
     },
     {
       category: "General",

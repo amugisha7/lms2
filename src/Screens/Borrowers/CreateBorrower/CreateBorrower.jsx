@@ -153,6 +153,11 @@ const CreateBorrower = forwardRef(
     const [editMode, setEditMode] = useState(!isEditMode);
     const editClickedContext = useContext(EditClickedContext); // <-- get context
 
+    // Scroll to top on component mount
+    useEffect(() => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }, []);
+
     // Map database field names to form field names
     const mapDbFieldsToFormFields = (dbData) => {
       if (!dbData) return {};

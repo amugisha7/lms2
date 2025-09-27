@@ -9,6 +9,8 @@ import {
   PersonAdd as PersonAddIcon,
   ListAlt as ListAltIcon,
   AdminPanelSettings as AdminPanelSettingsIcon,
+  Badge as BadgeIcon,
+  Work as WorkIcon,
 } from "@mui/icons-material";
 
 export const menuItems = [
@@ -43,6 +45,28 @@ export const menuItems = [
     name: "Team",
     icon: <GroupIcon sx={{ color: "white" }} />,
     expandable: true,
+  },
+  {
+    name: "Employees",
+    icon: <BadgeIcon sx={{ color: "white" }} />,
+    expandable: true,
+    children: [
+      {
+        name: "View Employees",
+        icon: <ListAltIcon sx={{ color: "white" }} />,
+        route: "/employees",
+      },
+      {
+        name: "Add Employee",
+        icon: <PersonAddIcon sx={{ color: "white" }} />,
+        route: "/employees/create",
+      },
+      {
+        name: "Employee Management",
+        icon: <WorkIcon sx={{ color: "white" }} />,
+        route: "/employees/manage",
+      },
+    ],
   },
   {
     name: "Accounts",

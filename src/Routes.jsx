@@ -21,6 +21,9 @@ import Securities from "./Screens/Securities/Securities";
 import CreateSecurities from "./Screens/Securities/CreateSecurities/CreateSecurities";
 import Borrowers from "./Screens/Borrowers/Borrowers";
 import Temp from "./temp/Temp";
+import EmployeeDataGrid from "./Screens/Employees/EmployeeDataGrid";
+import CreateEmployeePage from "./Screens/Employees/CreateEmployeePage";
+import EmployeeManagement from "./Screens/Employees/EmployeeManagement";
 
 export default function AppRoutes({ userExists }) {
   return (
@@ -35,6 +38,11 @@ export default function AppRoutes({ userExists }) {
 
               {/* Borrowers routes */}
               <Route path="borrowers" element={<Borrowers />} />
+
+              {/* Employee routes */}
+              <Route path="employees" element={<EmployeeDataGrid />} />
+              <Route path="employees/create" element={<CreateEmployeePage />} />
+              <Route path="employees/manage" element={<EmployeeManagement />} />
 
               <Route path="customFields" element={<CustomFieldsManager />} />
               {/* Add more routes as needed */}

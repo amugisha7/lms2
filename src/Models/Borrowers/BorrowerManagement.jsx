@@ -142,25 +142,27 @@ export default function BorrowerManagement() {
 
   // API handler for updating borrower
   const handleUpdateBorrowerAPI = async (values, initialValues) => {
+    console.log("UpdateBorrower Form Values:", values); // <-- Add this log
+
     const input = {
       id: initialValues.id,
       firstname: values.firstname?.trim() || null,
       othername: values.othername?.trim() || null,
       businessName: values.businessName?.trim() || null,
       typeOfBusiness: values.typeOfBusiness?.trim() || null,
-      uniqueIdNumber: values.uniqueNumber?.trim() || null,
-      phoneNumber: values.mobile?.trim() || null,
-      otherPhoneNumber: values.altPhone?.trim() || null,
+      uniqueIdNumber: values.uniqueIdNumber?.trim() || null,
+      phoneNumber: values.phoneNumber?.trim() || null,
+      otherPhoneNumber: values.otherPhoneNumber?.trim() || null,
       email: values.email?.trim() || null,
       gender: values.gender || null,
-      dateOfBirth: values.dob || null,
-      nationality: values.country || null,
+      dateOfBirth: values.dateOfBirth || null,
+      nationality: values.nationality || null,
       address: values.address?.trim() || null,
       city: values.city?.trim() || null,
-      state: values.province?.trim() || null,
+      state: values.state?.trim() || null,
       title: values.title || null,
       zipcode: values.zipcode?.trim() || null,
-      employmentStatus: values.workingStatus || null,
+      employmentStatus: values.employmentStatus || null,
       employerName: values.employerName?.trim() || null,
       creditScore: values.creditScore?.trim() || null,
     };

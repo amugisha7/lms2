@@ -26,7 +26,6 @@ import EmployeeDataGrid from "./Screens/Employees/EmployeeDataGrid";
 import CreateEmployeePage from "./Screens/Employees/CreateEmployeePage";
 import EmployeeManagement from "./Screens/Employees/EmployeeManagement";
 import BorrowerManagement from "./Models/Borrowers/BorrowerManagement";
-import SimplifiedBorrowers from "./Models/Borrowers/SimplifiedBorrowers";
 
 export default function AppRoutes({ userExists }) {
   return (
@@ -41,7 +40,6 @@ export default function AppRoutes({ userExists }) {
 
               {/* Borrowers routes */}
               <Route path="borrowers" element={<Borrowers />} />
-              <Route path="simpleBorrowers" element={<SimplifiedBorrowers />} />
               <Route
                 path="borrowers/:borrowerId"
                 element={<BorrowerManagement />}

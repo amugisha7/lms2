@@ -37,7 +37,7 @@ const createBorrowerForm = [
   },
   {
     label: "Unique Identification Number:",
-    name: "uniqueNumber",
+    name: "uniqueIdNumber", // updated
     type: "text",
     required: false,
     span: 12,
@@ -48,7 +48,7 @@ const createBorrowerForm = [
   },
   {
     label: "Mobile Number:",
-    name: "mobile",
+    name: "phoneNumber", // updated
     type: "tel",
     required: false,
     span: 6,
@@ -63,7 +63,7 @@ const createBorrowerForm = [
   },
   {
     label: "Alternative Phone Number:",
-    name: "altPhone",
+    name: "otherPhoneNumber", // updated
     type: "tel",
     required: false,
     span: 6,
@@ -117,7 +117,7 @@ const createBorrowerForm = [
   },
   {
     label: "Country:",
-    name: "country",
+    name: "nationality", // updated
     type: "select",
     required: false,
     span: 6,
@@ -145,7 +145,7 @@ const createBorrowerForm = [
   },
   {
     label: "Province / State:",
-    name: "province",
+    name: "state", // updated
     type: "text",
     required: false,
     span: 6,
@@ -165,7 +165,7 @@ const createBorrowerForm = [
   },
   {
     label: "Date of Birth:",
-    name: "dob",
+    name: "dateOfBirth", // updated
     type: "date",
     required: false,
     span: 6,
@@ -173,7 +173,7 @@ const createBorrowerForm = [
   },
   {
     label: "Working Status:",
-    name: "workingStatus",
+    name: "employmentStatus", // updated
     type: "select",
     required: false,
     span: 6,

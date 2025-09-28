@@ -170,19 +170,19 @@ const CreateBorrower = forwardRef(
         othername: dbData.othername || "",
         businessName: dbData.businessName || "",
         typeOfBusiness: dbData.typeOfBusiness || "",
-        uniqueNumber: dbData.uniqueIdNumber || "",
-        mobile: dbData.phoneNumber || "",
-        altPhone: dbData.otherPhoneNumber || "",
+        uniqueIdNumber: dbData.uniqueIdNumber || "",
+        phoneNumber: dbData.phoneNumber || "",
+        otherPhoneNumber: dbData.otherPhoneNumber || "",
         email: dbData.email || "",
         gender: dbData.gender || "",
-        dob: dbData.dateOfBirth || "",
-        country: dbData.nationality || "",
+        dateOfBirth: dbData.dateOfBirth || "",
+        nationality: dbData.nationality || "",
         address: dbData.address || "",
         city: dbData.city || "",
-        province: dbData.state || "",
+        state: dbData.state || "",
         title: dbData.title || "",
         zipcode: dbData.zipcode || "",
-        workingStatus: dbData.employmentStatus || "",
+        employmentStatus: dbData.employmentStatus || "",
         employerName: dbData.employerName || "",
         creditScore: dbData.creditScore || "",
         // Handle custom fields if they exist
@@ -232,6 +232,8 @@ const CreateBorrower = forwardRef(
       setSubmitError("");
       setSubmitSuccess("");
       setSubmitting(true);
+
+      console.log("CreateBorrower Form Values:", values); // <-- Add this log
 
       try {
         if (isEditMode && propInitialValues && onUpdateBorrowerAPI) {
@@ -316,7 +318,6 @@ const CreateBorrower = forwardRef(
                 <Grid container spacing={1}>
                   {createBorrowerForm.map((field) => (
                     <FormGrid
-                      item
                       size={{ xs: 12, md: field.span }}
                       key={field.name}
                     >
@@ -375,3 +376,7 @@ const CreateBorrower = forwardRef(
 CreateBorrower.displayName = "CreateBorrower";
 
 export default CreateBorrower;
+
+// All references to phone fields use phoneNumber and otherPhoneNumber.
+// No further changes needed for mobile/altPhone.
+// No further changes needed for mobile/altPhone.

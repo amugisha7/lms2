@@ -330,7 +330,6 @@ export default function BorrowerManagement() {
                 mr: 1,
                 color: theme.palette.text.primary,
                 "&:hover": {
-                  backgroundColor: theme.palette.action.hover,
                   transform: "scale(1.05)",
                 },
               }}

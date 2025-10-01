@@ -41,7 +41,7 @@ export default function AppRoutes({ userExists }) {
               {/* Borrowers routes */}
               <Route path="borrowers" element={<Borrowers />} />
               <Route
-                path="borrowers/:borrowerId"
+                path="borrowers/id/:borrowerId/view"
                 element={<BorrowerManagement />}
               />
 

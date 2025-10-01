@@ -200,7 +200,9 @@ export default function Borrowers() {
       headerName: "Full Name / Business Name",
       width: 280,
       renderCell: (params) => (
-        <ClickableText onClick={() => navigate(`/borrowers/${params.row.id}`)}>
+        <ClickableText
+          onClick={() => navigate(`/borrowers/id/${params.row.id}/view`)}
+        >
           {params.value}
         </ClickableText>
       ),

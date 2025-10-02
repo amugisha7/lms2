@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState, useRef } from "react";
 import {
   FormControl,
   FormHelperText,
@@ -42,6 +42,7 @@ const CustomFields = ({
   const branchId = userDetails?.branchUsersId;
   const [customFields, setCustomFields] = useState([]);
   const [loading, setLoading] = useState(true);
+  const hasFetched = useRef(false);
   const client = generateClient();
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
@@ -53,7 +54,15 @@ const CustomFields = ({
         return;
       }
 
+      // Prevent multiple API calls
+      if (hasFetched.current) {
+        return;
+      }
+
+      hasFetched.current = true;
+
       try {
+        console.log("API Call: Fetching custom fields"); // <-- Add this log
         const res = await client.graphql({
           query: `
             query ListCustomFormFields(
@@ -177,7 +186,7 @@ const CustomFields = ({
     };
 
     fetchCustomFields();
-  }, [institutionId, branchId, formKey]);
+  }, [institutionId, branchId, formKey]); // Keep only essential dependencies
 
   const renderCustomField = (field) => {
     const fieldName = field.fieldName;
@@ -235,11 +244,11 @@ const CustomFields = ({
       <>
         {/* Custom Fields Section Header */}
         <Grid container spacing={1}>
-          <FormGrid size={{ xs: 12 }}>
+          {/* <FormGrid size={{ xs: 12 }}>
             <Typography variant="h5" sx={{ my: 2, fontWeight: "bold" }}>
               ADDITONAL INFORMATION (Custom Fields)
             </Typography>
-          </FormGrid>
+          </FormGrid> */}
           {/* Render Custom Fields */}
           {customFields.map((field) => (
             <FormGrid key={field.id} size={{ xs: 12, md: 6 }}>

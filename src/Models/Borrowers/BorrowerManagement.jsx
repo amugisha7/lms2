@@ -17,6 +17,8 @@ import CreateBorrower from "./CreateBorrower/CreateBorrower";
 import NotificationBar from "../../ComponentAssets/NotificationBar";
 import ClickableText from "../../ComponentAssets/ClickableText";
 import EditContentPopup from "../../ModelAssets/EditContentPopup";
+import CustomFields from "../../Screens/AdminScreens/CustomFields/CustomFields"; // <-- Add this import
+import { Formik } from "formik"; // <-- Add this import
 
 const GET_BORROWER_QUERY = `
   query GetBorrower($id: ID!) {
@@ -91,6 +93,50 @@ function TabPanel({ children, value, index, ...other }) {
     </div>
   );
 }
+
+// Add this helper function to map borrower data to form values (reused from CreateBorrower.jsx)
+const mapBorrowerToFormValues = (borrower) => {
+  if (!borrower) return {};
+
+  return {
+    firstname: borrower.firstname || "",
+    othername: borrower.othername || "",
+    businessName: borrower.businessName || "",
+    typeOfBusiness: borrower.typeOfBusiness || "",
+    uniqueIdNumber: borrower.uniqueIdNumber || "",
+    phoneNumber: borrower.phoneNumber || "",
+    otherPhoneNumber: borrower.otherPhoneNumber || "",
+    email: borrower.email || "",
+    gender: borrower.gender || "",
+    dateOfBirth: borrower.dateOfBirth || "",
+    nationality: borrower.nationality || "",
+    address: borrower.address || "",
+    city: borrower.city || "",
+    state: borrower.state || "",
+    title: borrower.title || "",
+    zipcode: borrower.zipcode || "",
+    employmentStatus: borrower.employmentStatus || "",
+    employerName: borrower.employerName || "",
+    creditScore: borrower.creditScore || "",
+    // Handle custom fields if they exist
+    ...(borrower.customFieldsData
+      ? (() => {
+          try {
+            const customFields = JSON.parse(borrower.customFieldsData);
+            const mappedCustomFields = {};
+            Object.keys(customFields).forEach((fieldId) => {
+              mappedCustomFields[`custom_${fieldId}`] =
+                customFields[fieldId].value || "";
+            });
+            return mappedCustomFields;
+          } catch (e) {
+            console.warn("Error parsing custom fields data:", e);
+            return {};
+          }
+        })()
+      : {}),
+  };
+};
 
 export default function BorrowerManagement() {
   const { borrowerId } = useParams();
@@ -443,7 +489,7 @@ export default function BorrowerManagement() {
               }}
             >
               <Tab label="Details" id="borrower-tab-0" />
-              <Tab label="Loans" id="borrower-tab-1" />
+              <Tab label="Custom Fields" id="borrower-tab-1" />
               <Tab label="Documents" id="borrower-tab-2" />
             </Tabs>
           </Box>
@@ -461,25 +507,18 @@ export default function BorrowerManagement() {
           </TabPanel>
 
           <TabPanel value={tabValue} index={1}>
-            <Typography
-              variant="h6"
-              sx={{
-                mb: 2,
-                color: theme.palette.text.primary,
-                fontFamily: theme.typography.h6.fontFamily,
-              }}
+            <Formik
+              initialValues={mapBorrowerToFormValues(borrower)}
+              enableReinitialize
             >
-              Loan History
-            </Typography>
-            <Typography
-              color="text.secondary"
-              sx={{
-                fontStyle: "italic",
-                fontSize: "0.875rem",
-              }}
-            >
-              Loan management features coming soon...
-            </Typography>
+              {(formik) => (
+                <CustomFields
+                  formKey="CreateBorrowerForm"
+                  formik={formik}
+                  editing={false}
+                />
+              )}
+            </Formik>
           </TabPanel>
 
           <TabPanel value={tabValue} index={2}>

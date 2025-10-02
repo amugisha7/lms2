@@ -370,7 +370,7 @@ export default function BorrowerManagement() {
           sx={{
             display: "flex",
             alignItems: "center",
-            mb: 3,
+            mb: 1,
             justifyContent: "space-between",
             flexWrap: "wrap",
           }}
@@ -408,16 +408,7 @@ export default function BorrowerManagement() {
               flexShrink: 0,
             }}
           >
-            <ClickableText
-              onClick={handleEdit}
-              sx={{
-                color: theme.palette.blueText.main,
-                // fontWeight: 500,
-                fontSize: "0.9rem",
-              }}
-            >
-              Edit
-            </ClickableText>
+            {/* Removed Edit button from header */}
             <ClickableText
               onClick={handleDelete}
               sx={{
@@ -427,16 +418,6 @@ export default function BorrowerManagement() {
               }}
             >
               Delete
-            </ClickableText>
-            <ClickableText
-              onClick={handlePrint}
-              sx={{
-                color: theme.palette.secondary.main,
-                // fontWeight: 500,
-                fontSize: "0.9rem",
-              }}
-            >
-              Print
             </ClickableText>
           </Box>
         </Box>
@@ -496,6 +477,35 @@ export default function BorrowerManagement() {
 
           {/* Tab Panels */}
           <TabPanel value={tabValue} index={0}>
+            {/* Right-aligned Edit button */}
+            <Box
+              sx={{
+                mb: 1,
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: 3,
+              }}
+            >
+              <ClickableText
+                onClick={handleEdit}
+                sx={{
+                  color: theme.palette.blueText.main,
+                  fontSize: "0.9rem",
+                }}
+              >
+                Edit
+              </ClickableText>
+              <ClickableText
+                onClick={handlePrint}
+                sx={{
+                  color: theme.palette.secondary.main,
+                  // fontWeight: 500,
+                  fontSize: "0.9rem",
+                }}
+              >
+                Print
+              </ClickableText>
+            </Box>
             <CreateBorrower
               initialValues={borrower}
               isEditMode={true}

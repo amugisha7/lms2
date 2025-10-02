@@ -107,6 +107,7 @@ export default function BorrowerManagement() {
   });
   const [editPopupOpen, setEditPopupOpen] = useState(false);
   const client = React.useMemo(() => generateClient(), []);
+  const fetchedBorrowerIdRef = React.useRef();
 
   // Fetch borrower data
   useEffect(() => {
@@ -119,6 +120,7 @@ export default function BorrowerManagement() {
 
       try {
         setLoading(true);
+        console.log("API Call: Fetching borrower details"); // <-- Added
         const result = await client.graphql({
           query: GET_BORROWER_QUERY,
           variables: { id: borrowerId },
@@ -137,12 +139,16 @@ export default function BorrowerManagement() {
       }
     };
 
-    fetchBorrower();
+    if (borrowerId && borrowerId !== fetchedBorrowerIdRef.current) {
+      fetchBorrower();
+      fetchedBorrowerIdRef.current = borrowerId;
+    }
   }, [borrowerId, client]);
 
   // API handler for updating borrower
   const handleUpdateBorrowerAPI = async (values, initialValues) => {
-    console.log("UpdateBorrower Form Values:", values); // <-- Add this log
+    console.log("UpdateBorrower Form Values:", values); // <-- existing log
+    console.log("API Call: Updating borrower"); // <-- Added
 
     const input = {
       id: initialValues.id,

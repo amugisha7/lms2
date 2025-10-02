@@ -47,6 +47,9 @@ export default function Borrowers() {
   const [borrowerToDelete, setBorrowerToDelete] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
+  // Ref to track fetched branch ID
+  const hasFetchedRef = React.useRef();
+
   // Fetch borrowers
   const fetchBorrowers = async () => {
     if (!userDetails?.branchUsersId) return;
@@ -57,6 +60,7 @@ export default function Borrowers() {
       let nextToken = null;
 
       do {
+        console.log("API Call: Fetching borrowers"); // <-- Added
         const result = await client.graphql({
           query: LIST_BORROWERS_QUERY,
           variables: {
@@ -105,7 +109,7 @@ export default function Borrowers() {
         branchBorrowersId: userDetails.branchUsersId,
       };
 
-      console.log("CreateBorrower API Input:", input); // <-- Add this log
+      console.log("API Call: Creating borrower"); // <-- Added
 
       const result = await client.graphql({
         query: CREATE_BORROWER_MUTATION,
@@ -136,6 +140,7 @@ export default function Borrowers() {
         ...formData,
       };
 
+      console.log("API Call: Updating borrower"); // <-- Added
       const result = await client.graphql({
         query: UPDATE_BORROWER_MUTATION,
         variables: { input },
@@ -163,6 +168,7 @@ export default function Borrowers() {
   const handleDelete = async () => {
     setDeleteLoading(true);
     try {
+      console.log("API Call: Deleting borrower"); // <-- Added
       await client.graphql({
         query: DELETE_BORROWER_MUTATION,
         variables: { input: { id: borrowerToDelete.id } },
@@ -226,7 +232,13 @@ export default function Borrowers() {
 
   // Effects
   useEffect(() => {
-    fetchBorrowers();
+    if (
+      userDetails?.branchUsersId &&
+      userDetails.branchUsersId !== hasFetchedRef.current
+    ) {
+      fetchBorrowers();
+      hasFetchedRef.current = userDetails.branchUsersId;
+    }
   }, [userDetails?.branchUsersId]);
 
   return (

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Box,
   Button,
@@ -11,7 +11,7 @@ import {
 import { useTheme } from "@mui/material/styles";
 import { CloudUpload, Cancel } from "@mui/icons-material";
 import { Formik } from "formik";
-import TextInput from "../../../Resources/FormComponents/TextInput";
+import TextInput from "../Resources/FormComponents/TextInput";
 
 const BorrowerUploadDialog = ({
   open,
@@ -24,6 +24,35 @@ const BorrowerUploadDialog = ({
   loading,
 }) => {
   const theme = useTheme();
+  const [isDragOver, setIsDragOver] = useState(false);
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      const file = files[0];
+      const acceptedTypes = [
+        "image/",
+        ".pdf",
+        ".doc",
+        ".docx",
+        ".txt",
+        ".xls",
+        ".xlsx",
+        ".ppt",
+        ".pptx",
+      ];
+      const isAccepted = acceptedTypes.some(
+        (type) =>
+          file.type.startsWith(type) ||
+          file.name.endsWith(type.replace(".", ""))
+      );
+      if (isAccepted) {
+        setUploadFileData({ ...uploadFileData, file });
+      }
+    }
+  };
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -36,7 +65,20 @@ const BorrowerUploadDialog = ({
       >
         {(formik) => (
           <form onSubmit={formik.handleSubmit}>
-            <DialogContent>
+            <DialogContent
+              onDragOver={(e) => {
+                e.preventDefault();
+                setIsDragOver(true);
+              }}
+              onDragLeave={() => setIsDragOver(false)}
+              onDrop={handleDrop}
+              sx={{
+                ...(isDragOver && {
+                  border: `2px dashed ${theme.palette.primary.main}`,
+                  backgroundColor: theme.palette.action.hover,
+                }),
+              }}
+            >
               <Box>
                 {uploadMode === "file" ? (
                   <>
@@ -45,7 +87,7 @@ const BorrowerUploadDialog = ({
                       variant="outlined"
                       sx={{
                         width: "100%",
-                        py: 2,
+                        py: 3,
                         mb: 3,
                         borderStyle: "dashed",
                         borderColor: theme.palette.blueText.main,

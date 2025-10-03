@@ -5,13 +5,12 @@ import {
   Typography,
   Tabs,
   Tab,
-  Paper,
   IconButton,
   CircularProgress,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useTheme } from "@mui/material/styles";
-import { generateClient } from "aws-amplify/api";
+import { Formik } from "formik";
 import { UserContext } from "../../App";
 import CreateBorrower from "./CreateBorrower/CreateBorrower";
 import NotificationBar from "../../ComponentAssets/NotificationBar";
@@ -28,7 +27,7 @@ import {
   fetchBorrowerById,
   updateBorrowerById,
 } from "./CreateBorrower/createBorrowerHelpers";
-import { Formik } from "formik"; // <-- Add this import
+import BorrowerFiles from "./BorrowerFiles/BorrowerFiles";
 
 function TabPanel({ children, value, index, ...other }) {
   return (
@@ -62,7 +61,6 @@ export default function BorrowerManagement() {
   const [customFieldsLoading, setCustomFieldsLoading] = useState(true);
   const [editCustomFieldsPopupOpen, setEditCustomFieldsPopupOpen] =
     useState(false);
-  const client = React.useMemo(() => generateClient(), []);
   const fetchedBorrowerIdRef = React.useRef();
   const fetchedCustomFieldsRef = React.useRef({
     institutionUsersId: null,
@@ -486,25 +484,11 @@ export default function BorrowerManagement() {
           </TabPanel>
 
           <TabPanel value={tabValue} index={1}>
-            <Typography
-              variant="h6"
-              sx={{
-                mb: 2,
-                color: theme.palette.text.primary,
-                fontFamily: theme.typography.h6.fontFamily,
-              }}
-            >
-              Files
-            </Typography>
-            <Typography
-              color="text.secondary"
-              sx={{
-                fontStyle: "italic",
-                fontSize: "0.875rem",
-              }}
-            >
-              Document management features coming soon...
-            </Typography>
+            <BorrowerFiles
+              borrower={borrower}
+              setBorrower={setBorrower}
+              setNotification={setNotification}
+            />
           </TabPanel>
         </Box>
       </Box>

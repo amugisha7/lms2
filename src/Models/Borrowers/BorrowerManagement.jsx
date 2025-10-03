@@ -78,7 +78,9 @@ export default function BorrowerManagement() {
 
       try {
         setLoading(true);
+        console.log("API Call: Fetching borrower by ID", borrowerId);
         const borrowerData = await fetchBorrowerById(borrowerId); // <-- Use helper
+        console.log("API Call: Borrower fetched successfully", borrowerData);
         setBorrower(borrowerData);
       } catch (err) {
         console.error("Error fetching borrower:", err);
@@ -104,10 +106,15 @@ export default function BorrowerManagement() {
 
       try {
         setCustomFieldsLoading(true);
+        console.log("API Call: Fetching custom fields for borrower", {
+          institutionUsersId: userDetails.institutionUsersId,
+          branchUsersId: userDetails.branchUsersId,
+        });
         const fields = await fetchCustomFieldsForBorrower(
           userDetails.institutionUsersId,
           userDetails.branchUsersId
         );
+        console.log("API Call: Custom fields fetched successfully", fields);
         setCustomFields(fields);
       } catch (error) {
         console.error("Error fetching custom fields:", error);
@@ -135,7 +142,10 @@ export default function BorrowerManagement() {
 
   // API handler for updating borrower
   const handleUpdateBorrowerAPI = async (values, initialValues) => {
-    return await updateBorrowerById(values, initialValues); // <-- Use helper
+    console.log("API Call: Updating borrower", { values, initialValues });
+    const result = await updateBorrowerById(values, initialValues); // <-- Use helper
+    console.log("API Call: Borrower updated successfully", result);
+    return result;
   };
 
   const handleEditSuccess = (updatedBorrower) => {
@@ -218,7 +228,18 @@ export default function BorrowerManagement() {
   };
 
   const handleUpdateCustomFieldsAPI = async (values) => {
-    return await updateBorrowerCustomFields(borrowerId, customFields, values);
+    console.log("API Call: Updating borrower custom fields", {
+      borrowerId,
+      customFields,
+      values,
+    });
+    const result = await updateBorrowerCustomFields(
+      borrowerId,
+      customFields,
+      values
+    );
+    console.log("API Call: Custom fields updated successfully", result);
+    return result;
   };
 
   const handleCustomFieldsUpdateSuccess = (updatedData) => {

@@ -38,7 +38,8 @@ const downloadPdf = async (
   printableRef,
   colorMode,
   originalMode,
-  filename = "document.pdf"
+  filename = "document.pdf",
+  heading = ""
 ) => {
   // Switch to light mode before generating PDF
   if (originalMode === "dark") {
@@ -153,8 +154,21 @@ const downloadPdf = async (
       const attributionYPos = 15;
       pdf.text(attributionText, textXPos, attributionYPos);
 
-      // Layout metrics
-      const contentStartYFirstPage = attributionYPos + 5; // first page starts below attribution
+      // Heading (if provided)
+      let contentStartYFirstPage = attributionYPos + 5;
+      if (heading) {
+        pdf.setFont("helvetica", "bold");
+        pdf.setFontSize(15);
+        pdf.setTextColor(0, 0, 0);
+        const headingWidth =
+          (pdf.getStringUnitWidth(heading) * 15) / pdf.internal.scaleFactor;
+        const headingXPos = (pageWidth - headingWidth) / 2;
+        const headingYPos = attributionYPos + 10;
+        pdf.text(heading, headingXPos, headingYPos);
+        contentStartYFirstPage = headingYPos + 10;
+      } else {
+        contentStartYFirstPage = attributionYPos + 5;
+      }
       const topMarginOtherPages = 10; // top margin on subsequent pages
       const leftPadding = 10;
       const rightPadding = 10;
@@ -422,7 +436,9 @@ export default function BorrowerManagement() {
     setNotification({ message: "Delete action triggered", color: "red" });
   };
   const handlePrint = () => {
-    downloadPdf(printableRef, colorMode, theme.palette.mode);
+    const heading = `Borrower Details - ${getBorrowerName()}`;
+    const filename = heading.replace(/ /g, "_") + ".pdf";
+    downloadPdf(printableRef, colorMode, theme.palette.mode, filename, heading);
   };
 
   const handleEditPopupClose = () => {
@@ -454,11 +470,14 @@ export default function BorrowerManagement() {
   };
 
   const handleCustomFieldsPrint = () => {
+    const heading = `Borrower Details (custom fields) - ${getBorrowerName()}`;
+    const filename = heading.replace(/ /g, "_") + ".pdf";
     downloadPdf(
       customFieldsPrintableRef,
       colorMode,
       theme.palette.mode,
-      "borrower-custom-fields.pdf"
+      filename,
+      heading
     );
   };
 

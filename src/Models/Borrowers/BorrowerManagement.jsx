@@ -23,68 +23,12 @@ import {
   fetchCustomFieldsForBorrower,
   mapCustomFieldsToFormValues,
   updateBorrowerCustomFields,
-} from "./customFieldsHelpers";
+} from "./CustomBorrowerFields/customFieldsHelpers";
+import {
+  fetchBorrowerById,
+  updateBorrowerById,
+} from "./CreateBorrower/createBorrowerHelpers";
 import { Formik } from "formik"; // <-- Add this import
-
-const GET_BORROWER_QUERY = `
-  query GetBorrower($id: ID!) {
-    getBorrower(id: $id) {
-      id
-      firstname
-      othername
-      businessName
-      typeOfBusiness
-      uniqueIdNumber
-      phoneNumber
-      otherPhoneNumber
-      email
-      gender
-      dateOfBirth
-      nationality
-      address
-      city
-      state
-      title
-      zipcode
-      employmentStatus
-      employerName
-      creditScore
-      customFieldsData
-      createdAt
-      updatedAt
-    }
-  }
-`;
-
-const UPDATE_BORROWER_MUTATION = `
-  mutation UpdateBorrower($input: UpdateBorrowerInput!) {
-    updateBorrower(input: $input) {
-      id
-      firstname
-      othername
-      businessName
-      typeOfBusiness
-      uniqueIdNumber
-      phoneNumber
-      otherPhoneNumber
-      email
-      gender
-      dateOfBirth
-      nationality
-      address
-      city
-      state
-      title
-      zipcode
-      employmentStatus
-      employerName
-      creditScore
-      customFieldsData
-      createdAt
-      updatedAt
-    }
-  }
-`;
 
 function TabPanel({ children, value, index, ...other }) {
   return (
@@ -132,20 +76,11 @@ export default function BorrowerManagement() {
 
       try {
         setLoading(true);
-        console.log("API Call: Fetching borrower details"); // <-- Added
-        const result = await client.graphql({
-          query: GET_BORROWER_QUERY,
-          variables: { id: borrowerId },
-        });
-
-        if (result.data.getBorrower) {
-          setBorrower(result.data.getBorrower);
-        } else {
-          setError("Borrower not found");
-        }
+        const borrowerData = await fetchBorrowerById(borrowerId); // <-- Use helper
+        setBorrower(borrowerData);
       } catch (err) {
         console.error("Error fetching borrower:", err);
-        setError("Failed to load borrower details");
+        setError(err.message || "Failed to load borrower details");
       } finally {
         setLoading(false);
       }
@@ -155,7 +90,7 @@ export default function BorrowerManagement() {
       fetchBorrower();
       fetchedBorrowerIdRef.current = borrowerId;
     }
-  }, [borrowerId, client]);
+  }, [borrowerId]);
 
   // Fetch custom fields
   useEffect(() => {
@@ -184,55 +119,7 @@ export default function BorrowerManagement() {
 
   // API handler for updating borrower
   const handleUpdateBorrowerAPI = async (values, initialValues) => {
-    console.log("UpdateBorrower Form Values:", values); // <-- existing log
-    console.log("API Call: Updating borrower"); // <-- Added
-
-    const input = {
-      id: initialValues.id,
-      firstname: values.firstname?.trim() || null,
-      othername: values.othername?.trim() || null,
-      businessName: values.businessName?.trim() || null,
-      typeOfBusiness: values.typeOfBusiness?.trim() || null,
-      uniqueIdNumber: values.uniqueIdNumber?.trim() || null,
-      phoneNumber: values.phoneNumber?.trim() || null,
-      otherPhoneNumber: values.otherPhoneNumber?.trim() || null,
-      email: values.email?.trim() || null,
-      gender: values.gender || null,
-      dateOfBirth: values.dateOfBirth || null,
-      nationality: values.nationality || null,
-      address: values.address?.trim() || null,
-      city: values.city?.trim() || null,
-      state: values.state?.trim() || null,
-      title: values.title || null,
-      zipcode: values.zipcode?.trim() || null,
-      employmentStatus: values.employmentStatus || null,
-      employerName: values.employerName?.trim() || null,
-      creditScore: values.creditScore?.trim() || null,
-    };
-
-    const customFieldsData = {};
-    Object.keys(values).forEach((key) => {
-      if (key.startsWith("custom_")) {
-        const fieldId = key.replace("custom_", "");
-        customFieldsData[fieldId] = {
-          fieldId,
-          value:
-            typeof values[key] === "string"
-              ? values[key].trim() || null
-              : values[key] || null,
-        };
-      }
-    });
-    if (Object.keys(customFieldsData).length > 0) {
-      input.customFieldsData = JSON.stringify(customFieldsData);
-    }
-
-    const result = await client.graphql({
-      query: UPDATE_BORROWER_MUTATION,
-      variables: { input },
-    });
-
-    return result.data.updateBorrower;
+    return await updateBorrowerById(values, initialValues); // <-- Use helper
   };
 
   const handleEditSuccess = (updatedBorrower) => {

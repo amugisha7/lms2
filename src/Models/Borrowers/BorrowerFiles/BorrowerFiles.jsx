@@ -281,7 +281,7 @@ const BorrowerFiles = ({ borrower, setBorrower, setNotification }) => {
     try {
       // Remove from S3 only if it's an uploaded file
       if (fileToDelete.s3Key) {
-        await remove({ path: fileToDelete.s3Key });
+        await remove({ key: fileToDelete.s3Key });
       }
 
       // Update files array

@@ -118,6 +118,7 @@ const CustomBorrowerFields = ({
               color: theme.palette.blueText.main,
               fontSize: "0.9rem",
             }}
+            className="pdf-hide"
           >
             Edit
           </ClickableText>
@@ -127,8 +128,9 @@ const CustomBorrowerFields = ({
               color: theme.palette.secondary.main,
               fontSize: "0.9rem",
             }}
+            className="pdf-hide"
           >
-            Print
+            Export PDF
           </ClickableText>
         </Box>
 
@@ -152,6 +154,7 @@ const CustomBorrowerFields = ({
               textDecoration: "underline",
               // mt: 2,
             }}
+            className="pdf-hide"
           >
             Manage Custom Fields
           </ClickableText>

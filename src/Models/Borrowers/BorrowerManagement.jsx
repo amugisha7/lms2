@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Box,
@@ -29,6 +29,237 @@ import {
 } from "./CreateBorrower/createBorrowerHelpers";
 import BorrowerFiles from "./BorrowerFiles/BorrowerFiles";
 
+import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
+import { ColorModeContext } from "../../theme";
+
+// Modified function to download PDF using jsPDF and html2canvas
+const downloadPdf = async (
+  printableRef,
+  colorMode,
+  originalMode,
+  filename = "document.pdf"
+) => {
+  // Switch to light mode before generating PDF
+  if (originalMode === "dark") {
+    colorMode.toggleColorMode();
+  }
+
+  // Add print-only class for styling
+  document.body.classList.add("printing-active");
+
+  // Declare variables outside try block for proper scope
+  let dialogElement = null;
+  let originalStyles = null;
+  let originalBodyStyles = null;
+
+  // Wait for the DOM to update with light mode styles
+  setTimeout(async () => {
+    try {
+      // Target the printable element
+      dialogElement = printableRef.current;
+
+      if (!dialogElement) {
+        throw new Error("Printable content not found");
+      }
+
+      // Store original styles
+      originalStyles = {
+        position: dialogElement.style.position,
+        transform: dialogElement.style.transform,
+        margin: dialogElement.style.margin,
+        maxWidth: dialogElement.style.maxWidth,
+        width: dialogElement.style.width,
+        height: dialogElement.style.height,
+        overflow: dialogElement.style.overflow,
+      };
+
+      // Store original body styles
+      originalBodyStyles = {
+        width: document.body.style.width,
+        minWidth: document.body.style.minWidth,
+        overflow: document.body.style.overflow,
+      };
+
+      // Force desktop layout for PDF generation
+      Object.assign(document.body.style, {
+        width: "1200px", // Force desktop width
+        minWidth: "1200px",
+        overflow: "visible",
+      });
+
+      // Set styles for PDF capture
+      Object.assign(dialogElement.style, {
+        position: "static",
+        transform: "none",
+        margin: "0",
+        maxWidth: "900px", // Desktop maxWidth
+        width: "900px", // Fixed desktop width
+        height: "auto",
+        overflow: "visible",
+      });
+
+      // Hide elements that should not appear in PDF
+      const hideElements = dialogElement.querySelectorAll(".pdf-hide");
+      const originalDisplays = [];
+      hideElements.forEach((el, index) => {
+        originalDisplays[index] = el.style.display;
+        el.style.display = "none";
+      });
+
+      // Wait for layout to settle
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
+      // Get canvas of the element
+      const canvas = await html2canvas(dialogElement, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: "#ffffff",
+        width: 900,
+        height: dialogElement.scrollHeight,
+        windowWidth: 1200,
+        windowHeight: 800,
+      });
+
+      // Restore hidden elements
+      hideElements.forEach((el, index) => {
+        el.style.display = originalDisplays[index];
+      });
+
+      // Restore original styles
+      Object.assign(dialogElement.style, originalStyles);
+      Object.assign(document.body.style, originalBodyStyles);
+
+      // Create PDF (multi-page support)
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
+
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+
+      // Attribution (only first page)
+      pdf.setFontSize(9);
+      pdf.setTextColor(25, 118, 210);
+      const attributionText =
+        "Created using Loan Management Software from www.LoanTabs.com";
+      const textWidth =
+        (pdf.getStringUnitWidth(attributionText) * 9) /
+        pdf.internal.scaleFactor;
+      const textXPos = (pageWidth - textWidth) / 2;
+      const attributionYPos = 15;
+      pdf.text(attributionText, textXPos, attributionYPos);
+
+      // Layout metrics
+      const contentStartYFirstPage = attributionYPos + 5; // first page starts below attribution
+      const topMarginOtherPages = 10; // top margin on subsequent pages
+      const leftPadding = 10;
+      const rightPadding = 10;
+      const bottomPadding = 10;
+
+      const availableWidth = pageWidth - leftPadding - rightPadding;
+      const availableHeightFirst =
+        pageHeight - contentStartYFirstPage - bottomPadding;
+      const availableHeightOther =
+        pageHeight - topMarginOtherPages - bottomPadding;
+
+      // Scale factor (px per mm) based on width fit
+      const pxPerMm = canvas.width / availableWidth;
+
+      // Determine if single-page fits
+      const totalHeightMm = canvas.height / pxPerMm;
+      const firstPageCapacityMm = availableHeightFirst;
+
+      // Helper to add a slice
+      const addSlice = (sliceTopPx, sliceHeightPx, isFirstPage) => {
+        const sliceCanvas = document.createElement("canvas");
+        sliceCanvas.width = canvas.width;
+        sliceCanvas.height = sliceHeightPx;
+        const ctx = sliceCanvas.getContext("2d");
+        ctx.drawImage(
+          canvas,
+          0,
+          sliceTopPx,
+          canvas.width,
+          sliceHeightPx,
+          0,
+          0,
+          canvas.width,
+          sliceHeightPx
+        );
+        const sliceImg = sliceCanvas.toDataURL("image/jpeg", 1.0);
+        const sliceHeightMm = (sliceHeightPx / canvas.width) * availableWidth;
+        const yPos = isFirstPage ? contentStartYFirstPage : topMarginOtherPages;
+        const xPos = leftPadding + (availableWidth - availableWidth) / 2; // stays left-aligned within padded area
+        pdf.addImage(
+          sliceImg,
+          "JPEG",
+          xPos,
+          yPos,
+          availableWidth,
+          sliceHeightMm
+        );
+      };
+
+      if (totalHeightMm <= firstPageCapacityMm) {
+        // Single page case
+        addSlice(0, canvas.height, true);
+      } else {
+        // Multi-page slicing
+        let remainingPx = canvas.height;
+        let offsetPx = 0;
+
+        // First page slice height in px
+        const firstPageHeightPx = Math.floor(availableHeightFirst * pxPerMm);
+        addSlice(0, firstPageHeightPx, true);
+        remainingPx -= firstPageHeightPx;
+        offsetPx += firstPageHeightPx;
+
+        const otherPageCapacityPx = Math.floor(availableHeightOther * pxPerMm);
+
+        while (remainingPx > 0) {
+          pdf.addPage();
+          const sliceHeightPx = Math.min(otherPageCapacityPx, remainingPx);
+          addSlice(offsetPx, sliceHeightPx, false);
+          offsetPx += sliceHeightPx;
+          remainingPx -= sliceHeightPx;
+        }
+      }
+
+      pdf.save(filename);
+
+      // Remove print-only class
+      document.body.classList.remove("printing-active");
+
+      // Switch back to original mode
+      if (originalMode === "dark") {
+        setTimeout(() => {
+          colorMode.toggleColorMode();
+        }, 100);
+      }
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      // Clean up even if there's an error
+      document.body.classList.remove("printing-active");
+
+      // Restore styles in case of error
+      if (dialogElement && originalStyles) {
+        Object.assign(dialogElement.style, originalStyles);
+      }
+      if (originalBodyStyles) {
+        Object.assign(document.body.style, originalBodyStyles);
+      }
+
+      if (originalMode === "dark") {
+        colorMode.toggleColorMode();
+      }
+    }
+  }, 300);
+};
+
 function TabPanel({ children, value, index, ...other }) {
   return (
     <div
@@ -47,6 +278,9 @@ export default function BorrowerManagement() {
   const { borrowerId } = useParams();
   const navigate = useNavigate();
   const theme = useTheme();
+  const colorMode = useContext(ColorModeContext);
+  const printableRef = useRef(null);
+  const customFieldsPrintableRef = useRef(null);
   const { userDetails } = useContext(UserContext);
   const [tabValue, setTabValue] = useState(0);
   const [borrower, setBorrower] = useState(null);
@@ -188,7 +422,7 @@ export default function BorrowerManagement() {
     setNotification({ message: "Delete action triggered", color: "red" });
   };
   const handlePrint = () => {
-    window.print();
+    downloadPdf(printableRef, colorMode, theme.palette.mode);
   };
 
   const handleEditPopupClose = () => {
@@ -220,7 +454,12 @@ export default function BorrowerManagement() {
   };
 
   const handleCustomFieldsPrint = () => {
-    window.print();
+    downloadPdf(
+      customFieldsPrintableRef,
+      colorMode,
+      theme.palette.mode,
+      "borrower-custom-fields.pdf"
+    );
   };
 
   const handleEditCustomFieldsPopupClose = () => {
@@ -433,77 +672,80 @@ export default function BorrowerManagement() {
               <Tab label="Custom Fields" id="borrower-tab-1" />
             </Tabs>
           </Box>
-
           {/* Tab Panels */}
           <TabPanel value={tabValue} index={0}>
-            {/* Right-aligned Edit button */}
-            <Box
-              sx={{
-                mb: 1,
-                display: "flex",
-                justifyContent: "flex-end",
-                gap: 3,
-              }}
-            >
-              <ClickableText
-                onClick={handleEdit}
+            <div ref={printableRef}>
+              {/* Right-aligned Edit button */}
+              <Box
                 sx={{
-                  color: theme.palette.blueText.main,
-                  fontSize: "0.9rem",
+                  mb: 1,
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  gap: 3,
                 }}
               >
-                Edit
-              </ClickableText>
-              <ClickableText
-                onClick={handlePrint}
-                sx={{
-                  color: theme.palette.secondary.main,
-                  // fontWeight: 500,
-                  fontSize: "0.9rem",
-                }}
-              >
-                Print
-              </ClickableText>
-            </Box>
-            <CreateBorrower
-              initialValues={borrower}
-              isEditMode={true}
-              forceEditMode={false}
-              onEditSuccess={handleEditSuccess}
-              onUpdateBorrowerAPI={handleUpdateBorrowerAPI}
-              setNotification={setNotification}
-            />
-          </TabPanel>
-
-          <TabPanel value={tabValue} index={2}>
-            {customFieldsLoading ? (
-              <Box sx={{ textAlign: "center", py: 4 }}>
-                <CircularProgress size={24} />
-                <Typography variant="body2" sx={{ mt: 1 }}>
-                  Loading custom fields...
-                </Typography>
+                <ClickableText
+                  onClick={handleEdit}
+                  sx={{
+                    color: theme.palette.blueText.main,
+                    fontSize: "0.9rem",
+                  }}
+                  className="pdf-hide"
+                >
+                  Edit
+                </ClickableText>
+                <ClickableText
+                  onClick={handlePrint}
+                  sx={{
+                    color: theme.palette.secondary.main,
+                    // fontWeight: 500,
+                    fontSize: "0.9rem",
+                  }}
+                  className="pdf-hide"
+                >
+                  Export PDF
+                </ClickableText>
               </Box>
-            ) : (
-              <Formik
-                initialValues={mapCustomFieldsToFormValues(
-                  borrower,
-                  customFields
-                )}
-                enableReinitialize
-              >
-                {(formik) => (
-                  <CustomBorrowerFields
-                    customFields={customFields}
-                    formik={formik}
-                    editing={false}
-                    onEdit={handleEditCustomFields}
-                    onPrint={handleCustomFieldsPrint}
-                  />
-                )}
-              </Formik>
-            )}
+              <CreateBorrower
+                initialValues={borrower}
+                isEditMode={true}
+                forceEditMode={false}
+                onEditSuccess={handleEditSuccess}
+                onUpdateBorrowerAPI={handleUpdateBorrowerAPI}
+                setNotification={setNotification}
+              />
+            </div>
           </TabPanel>
-
+          <TabPanel value={tabValue} index={2}>
+            <div ref={customFieldsPrintableRef}>
+              {customFieldsLoading ? (
+                <Box sx={{ textAlign: "center", py: 4 }}>
+                  <CircularProgress size={24} />
+                  <Typography variant="body2" sx={{ mt: 1 }}>
+                    Loading custom fields...
+                  </Typography>
+                </Box>
+              ) : (
+                <Formik
+                  initialValues={mapCustomFieldsToFormValues(
+                    borrower,
+                    customFields
+                  )}
+                  enableReinitialize
+                >
+                  {(formik) => (
+                    <CustomBorrowerFields
+                      customFields={customFields}
+                      formik={formik}
+                      editing={false}
+                      onEdit={handleEditCustomFields}
+                      onPrint={handleCustomFieldsPrint}
+                    />
+                  )}
+                </Formik>
+              )}
+            </div>
+          </TabPanel>{" "}
           <TabPanel value={tabValue} index={1}>
             <BorrowerFiles
               borrower={borrower}

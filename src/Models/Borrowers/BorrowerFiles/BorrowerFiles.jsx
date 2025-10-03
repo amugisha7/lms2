@@ -1,23 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
-import {
-  Box,
-  Button,
-  Typography,
-  CircularProgress,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  IconButton,
-} from "@mui/material";
+import { Box, Button, Typography, CircularProgress } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import {
-  CloudUpload,
-  Add,
-  Description,
-  Cancel,
-  Delete,
-} from "@mui/icons-material";
+import { CloudUpload, Add } from "@mui/icons-material";
 import {
   uploadData as amplifyUploadData,
   getUrl,
@@ -26,11 +10,11 @@ import {
 import { generateClient } from "aws-amplify/api";
 import { updateBorrower } from "../../../graphql/mutations";
 import CustomDataGrid from "../../../ModelAssets/CustomDataGrid";
-import ClickableText from "../../../ComponentAssets/ClickableText";
 import DeleteDialog from "../../../ComponentAssets/DeleteDialog";
 import { UserContext } from "../../../App";
-import { Formik } from "formik";
-import TextInput from "../../../Resources/FormComponents/TextInput";
+import BorrowerUploadDialog from "./BorrowerUploadDialog";
+import { formatFileSize, formatDate } from "./fileUtils";
+import { getBorrowerFilesColumns } from "./borrowerFilesColumns";
 
 const BorrowerFiles = ({ borrower, setBorrower, setNotification }) => {
   const theme = useTheme();
@@ -325,128 +309,14 @@ const BorrowerFiles = ({ borrower, setBorrower, setNotification }) => {
     setDeleteDialogOpen(true);
   };
 
-  const formatFileSize = (bytes) => {
-    if (bytes === undefined || bytes === null) return "N/A";
-    if (bytes === 0) return "0 Bytes";
-    const k = 1024;
-    const sizes = ["Bytes", "KB", "MB", "GB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
-  };
-
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
   // Data grid columns
-  const columns = [
-    {
-      field: "fileName",
-      headerName: "File Name",
-      width: 300,
-      renderCell: (params) => {
-        if (params.row.type === "link") {
-          const url = params.value.startsWith("http")
-            ? params.value
-            : `http://${params.value}`;
-          return (
-            <a
-              href={url}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                color: theme.palette.blueText.main,
-                textDecoration: "underline",
-                cursor: "pointer",
-              }}
-            >
-              {params.value}
-            </a>
-          );
-        } else {
-          return (
-            <ClickableText
-              onClick={() => handleDownload(params.row)}
-              sx={{
-                color: theme.palette.blueText.main,
-                textDecoration: "underline",
-                cursor: "pointer",
-                "&:hover": {
-                  color: theme.palette.blueText.dark,
-                },
-              }}
-            >
-              {params.value}
-            </ClickableText>
-          );
-        }
-      },
-    },
-    {
-      field: "description",
-      headerName: "Description",
-      width: 205,
-    },
-    {
-      field: "fileSize",
-      headerName: "Size",
-      width: 70,
-      renderCell: (params) => (
-        <Typography
-          sx={{
-            fontSize: "0.75rem",
-            display: "flex",
-            alignItems: "center",
-            height: "100%",
-          }}
-        >
-          {formatFileSize(params.value)}
-        </Typography>
-      ),
-    },
-    {
-      field: "uploadDate",
-      headerName: "Upload Date",
-      width: 150,
-      renderCell: (params) => (
-        <Typography
-          sx={{
-            fontSize: "0.75rem",
-            display: "flex",
-            alignItems: "center",
-            height: "100%",
-          }}
-        >
-          {formatDate(params.value)}
-        </Typography>
-      ),
-    },
-    {
-      field: "actions",
-      headerName: "",
-      width: 50,
-      sortable: false,
-      renderCell: (params) => (
-        <IconButton onClick={() => openDeleteDialog(params.row)}>
-          <Delete
-            sx={{
-              color: theme.palette.error.main,
-              "&:hover": {
-                color: theme.palette.error.dark,
-              },
-              fontSize: 20,
-            }}
-          />
-        </IconButton>
-      ),
-    },
-  ];
+  const columns = getBorrowerFilesColumns(
+    theme,
+    handleDownload,
+    openDeleteDialog,
+    formatFileSize,
+    formatDate
+  );
 
   return (
     <>
@@ -530,6 +400,11 @@ const BorrowerFiles = ({ borrower, setBorrower, setNotification }) => {
             getRowId={(row) => row.id}
             pageSize={25}
             pageSizeOptions={[25, 50, 100]}
+            initialState={{
+              sorting: {
+                sortModel: [{ field: "uploadDate", sort: "desc" }],
+              },
+            }}
           />
         ) : (
           <Box
@@ -555,181 +430,16 @@ const BorrowerFiles = ({ borrower, setBorrower, setNotification }) => {
       </Box>
 
       {/* Upload Dialog */}
-      <Dialog
+      <BorrowerUploadDialog
         open={uploadDialogOpen}
         onClose={() => setUploadDialogOpen(false)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>Upload File or Add Link</DialogTitle>
-        <Formik
-          initialValues={{ description: "", url: "" }}
-          onSubmit={handleUpload}
-        >
-          {(formik) => (
-            <form onSubmit={formik.handleSubmit}>
-              <DialogContent>
-                <Box sx={{ mt: 1 }}>
-                  <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
-                    <Button
-                      variant={uploadMode === "file" ? "contained" : "outlined"}
-                      onClick={() => {
-                        setUploadMode("file");
-                        formik.resetForm();
-                        setUploadFileData({ file: null, description: "" });
-                      }}
-                      sx={{ flex: 1 }}
-                    >
-                      Upload File
-                    </Button>
-                    <Button
-                      variant={uploadMode === "link" ? "contained" : "outlined"}
-                      onClick={() => {
-                        setUploadMode("link");
-                        formik.resetForm();
-                        setUploadFileData({ file: null, description: "" });
-                      }}
-                      sx={{ flex: 1 }}
-                    >
-                      Add Link
-                    </Button>
-                  </Box>
-                  {uploadMode === "file" ? (
-                    <>
-                      <Button
-                        component="label"
-                        variant="outlined"
-                        sx={{
-                          width: "100%",
-                          py: 2,
-                          mb: 3,
-                          borderStyle: "dashed",
-                          borderColor: theme.palette.blueText.main,
-                          color: theme.palette.blueText.main,
-                          backgroundColor: "transparent",
-                          "&:hover": {
-                            backgroundColor: theme.palette.background.paper,
-                            color: theme.palette.blueText.dark, // darken on hover
-                            borderColor: theme.palette.blueText.dark, // darken on hover
-                            borderWidth: "2px",
-                          },
-                        }}
-                      >
-                        {uploadFileData.file ? (
-                          <>
-                            {uploadFileData.file.name}
-                            <Cancel
-                              sx={{ ml: 1, cursor: "pointer" }}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setUploadFileData({
-                                  ...uploadFileData,
-                                  file: null,
-                                });
-                              }}
-                            />
-                          </>
-                        ) : (
-                          <>
-                            Choose File
-                            <CloudUpload sx={{ ml: 1 }} />
-                          </>
-                        )}
-                        <input
-                          type="file"
-                          hidden
-                          onChange={handleFileSelect}
-                          accept="image/*,.pdf,.doc,.docx,.txt,.xls,.xlsx,.ppt,.pptx"
-                        />
-                      </Button>
-                      <TextInput
-                        name="description"
-                        label="Description"
-                        rows={1}
-                        required
-                      />
-                    </>
-                  ) : (
-                    <>
-                      <TextInput name="url" label="URL" required />
-                      <TextInput
-                        name="description"
-                        label="Description"
-                        rows={1}
-                        required
-                      />
-                    </>
-                  )}
-                </Box>
-              </DialogContent>
-              <DialogActions sx={{ px: 3, pb: 2 }}>
-                <Button
-                  onClick={() => setUploadDialogOpen(false)}
-                  disabled={loading}
-                  type="button"
-                  variant="outlined"
-                  color="error"
-                  sx={{
-                    minWidth: 120,
-                    fontWeight: 600,
-                    borderColor: theme.palette.error.main,
-                    color: theme.palette.error.main,
-                    backgroundColor:
-                      theme.palette.mode === "dark"
-                        ? "rgba(244,67,54,0.08)"
-                        : "rgba(244,67,54,0.04)",
-                    "&:hover": {
-                      borderColor: theme.palette.error.dark,
-                      color: theme.palette.error.dark,
-                      backgroundColor:
-                        theme.palette.mode === "dark"
-                          ? "rgba(244,67,54,0.18)"
-                          : "rgba(244,67,54,0.12)",
-                    },
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  variant="contained"
-                  disabled={
-                    loading ||
-                    (uploadMode === "file" &&
-                      (!uploadFileData.file ||
-                        !formik.values.description.trim())) ||
-                    (uploadMode === "link" &&
-                      (!formik.values.url.trim() ||
-                        !formik.values.description.trim()))
-                  }
-                  sx={{
-                    minWidth: 120,
-                    fontWeight: 600,
-                    boxShadow:
-                      theme.palette.mode === "dark"
-                        ? "0 2px 8px rgba(118, 177, 211, 0.3)"
-                        : "0 2px 8px rgba(25, 118, 210, 0.3)",
-                    "&:hover": {
-                      boxShadow:
-                        theme.palette.mode === "dark"
-                          ? "0 4px 12px rgba(118, 177, 211, 0.4)"
-                          : "0 4px 12px rgba(25, 118, 210, 0.4)",
-                    },
-                  }}
-                >
-                  {loading ? (
-                    <CircularProgress size={20} />
-                  ) : uploadMode === "file" ? (
-                    "Upload"
-                  ) : (
-                    "Add Link"
-                  )}
-                </Button>
-              </DialogActions>
-            </form>
-          )}
-        </Formik>
-      </Dialog>
+        uploadMode={uploadMode}
+        uploadFileData={uploadFileData}
+        setUploadFileData={setUploadFileData}
+        handleFileSelect={handleFileSelect}
+        handleUpload={handleUpload}
+        loading={loading}
+      />
 
       {/* Delete Dialog */}
       <DeleteDialog

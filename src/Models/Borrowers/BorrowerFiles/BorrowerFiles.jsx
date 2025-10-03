@@ -8,10 +8,9 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import { CloudUpload, Add, Description } from "@mui/icons-material";
+import { CloudUpload, Add, Description, Cancel } from "@mui/icons-material";
 import {
   uploadData as amplifyUploadData,
   getUrl,
@@ -23,11 +22,15 @@ import CustomDataGrid from "../../../ModelAssets/CustomDataGrid";
 import ClickableText from "../../../ComponentAssets/ClickableText";
 import DeleteDialog from "../../../ComponentAssets/DeleteDialog";
 import { UserContext } from "../../../App";
+import { Formik } from "formik";
+import TextInput from "../../../Resources/FormComponents/TextInput";
 
 const BorrowerFiles = ({ borrower, setBorrower, setNotification }) => {
   const theme = useTheme();
   const { userDetails } = useContext(UserContext);
   const client = React.useMemo(() => generateClient(), []);
+
+  const maxFileSize = 10 * 1024 * 1024; // 10MB
 
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -43,13 +46,11 @@ const BorrowerFiles = ({ borrower, setBorrower, setNotification }) => {
   // Initialize files from borrower data
   useEffect(() => {
     if (borrower?.borrowerDocuments) {
-      try {
-        const parsedFiles = JSON.parse(borrower.borrowerDocuments);
-        setFiles(Array.isArray(parsedFiles) ? parsedFiles : []);
-      } catch (error) {
-        console.error("Error parsing borrower documents:", error);
-        setFiles([]);
-      }
+      setFiles(
+        Array.isArray(borrower.borrowerDocuments)
+          ? borrower.borrowerDocuments
+          : []
+      );
     } else {
       setFiles([]);
     }
@@ -62,10 +63,44 @@ const BorrowerFiles = ({ borrower, setBorrower, setNotification }) => {
     }
   };
 
-  const handleUpload = async () => {
-    if (!uploadFileData.file || !uploadFileData.description.trim()) {
+  const handleUpload = async (values) => {
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/gif",
+      "image/bmp",
+      "image/tiff",
+      "image/svg+xml",
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "text/plain",
+      "application/vnd.ms-excel",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "application/vnd.ms-powerpoint",
+      "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    ];
+
+    if (!uploadFileData.file) {
       setNotification({
-        message: "Please select a file and provide a description",
+        message: "Please select a file",
+        color: "red",
+      });
+      return;
+    }
+
+    if (!allowedTypes.includes(uploadFileData.file.type)) {
+      setNotification({
+        message:
+          "File type not allowed. Please select a document or image file.",
+        color: "red",
+      });
+      return;
+    }
+
+    if (uploadFileData.file.size > maxFileSize) {
+      setNotification({
+        message: "File size exceeds 10MB limit.",
         color: "red",
       });
       return;
@@ -90,7 +125,7 @@ const BorrowerFiles = ({ borrower, setBorrower, setNotification }) => {
       const newFile = {
         id: timestamp.toString(),
         fileName: uploadFileData.file.name,
-        description: uploadFileData.description.trim(),
+        description: values.description?.trim() || "",
         uploadDate: new Date().toISOString(),
         uploadedBy:
           userDetails?.firstName && userDetails?.lastName
@@ -341,7 +376,7 @@ const BorrowerFiles = ({ borrower, setBorrower, setNotification }) => {
           </Typography>
           <Button
             variant="outlined"
-            startIcon={<Add />}
+            startIcon={<Add sx={{ color: theme.palette.blueText.main }} />}
             onClick={() => setUploadDialogOpen(true)}
             sx={{
               borderColor: theme.palette.blueText.main,
@@ -349,8 +384,9 @@ const BorrowerFiles = ({ borrower, setBorrower, setNotification }) => {
               backgroundColor: "transparent",
               "&:hover": {
                 backgroundColor: "transparent",
-                borderColor: theme.palette.blueText.main,
+                borderColor: theme.palette.blueText.dark, // darken on hover
                 borderWidth: "2px",
+                color: theme.palette.blueText.dark, // darken on hover
               },
             }}
           >
@@ -376,48 +412,21 @@ const BorrowerFiles = ({ borrower, setBorrower, setNotification }) => {
           <Box
             sx={{
               textAlign: "center",
-              py: 6,
+              py: 2,
               backgroundColor: theme.palette.background.paper,
               borderRadius: "8px",
-              border: `1px solid ${theme.palette.divider}`,
+              //   border: `1px solid ${theme.palette.divider}`,
             }}
           >
-            <Description
-              sx={{
-                fontSize: 48,
-                color: theme.palette.text.secondary,
-                mb: 2,
-              }}
-            />
             <Typography
               variant="h6"
               sx={{
                 color: theme.palette.text.secondary,
-                mb: 1,
+                // mb: 1,
               }}
             >
               No files uploaded yet
             </Typography>
-            <Typography
-              variant="body2"
-              sx={{
-                color: theme.palette.text.secondary,
-                mb: 3,
-              }}
-            >
-              Upload documents and files related to this borrower
-            </Typography>
-            <Button
-              variant="outlined"
-              startIcon={<CloudUpload />}
-              onClick={() => setUploadDialogOpen(true)}
-              sx={{
-                borderColor: theme.palette.blueText.main,
-                color: theme.palette.blueText.main,
-              }}
-            >
-              Upload First File
-            </Button>
           </Box>
         )}
       </Box>
@@ -430,72 +439,124 @@ const BorrowerFiles = ({ borrower, setBorrower, setNotification }) => {
         fullWidth
       >
         <DialogTitle>Upload File</DialogTitle>
-        <DialogContent>
-          <Box sx={{ mt: 1 }}>
-            <Button
-              component="label"
-              variant="outlined"
-              startIcon={<CloudUpload />}
-              sx={{
-                width: "100%",
-                py: 3,
-                mb: 3,
-                borderStyle: "dashed",
-                borderColor: theme.palette.divider,
-                backgroundColor: theme.palette.background.default,
-                "&:hover": {
-                  backgroundColor: theme.palette.action.hover,
-                },
-              }}
-            >
-              {uploadFileData.file ? uploadFileData.file.name : "Choose File"}
-              <input
-                type="file"
-                hidden
-                onChange={handleFileSelect}
-                accept="*/*"
-              />
-            </Button>
+        <Formik initialValues={{ description: "" }} onSubmit={handleUpload}>
+          {(formik) => (
+            <form onSubmit={formik.handleSubmit}>
+              <DialogContent>
+                <Box sx={{ mt: 1 }}>
+                  <Button
+                    component="label"
+                    variant="outlined"
+                    sx={{
+                      width: "100%",
+                      py: 2,
+                      mb: 3,
+                      borderStyle: "dashed",
+                      borderColor: theme.palette.blueText.main,
+                      color: theme.palette.blueText.main,
+                      backgroundColor: "transparent",
+                      "&:hover": {
+                        backgroundColor: theme.palette.background.paper,
+                        color: theme.palette.blueText.dark, // darken on hover
+                        borderColor: theme.palette.blueText.dark, // darken on hover
+                        borderWidth: "2px",
+                      },
+                    }}
+                  >
+                    {uploadFileData.file ? (
+                      <>
+                        {uploadFileData.file.name}
+                        <Cancel
+                          sx={{ ml: 1, cursor: "pointer" }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setUploadFileData({
+                              ...uploadFileData,
+                              file: null,
+                            });
+                          }}
+                        />
+                      </>
+                    ) : (
+                      <>
+                        Choose File
+                        <CloudUpload sx={{ ml: 1 }} />
+                      </>
+                    )}
+                    <input
+                      type="file"
+                      hidden
+                      onChange={handleFileSelect}
+                      accept="image/*,.pdf,.doc,.docx,.txt,.xls,.xlsx,.ppt,.pptx"
+                    />
+                  </Button>
 
-            <TextField
-              fullWidth
-              label="Description *"
-              value={uploadFileData.description}
-              onChange={(e) =>
-                setUploadFileData({
-                  ...uploadFileData,
-                  description: e.target.value,
-                })
-              }
-              placeholder="Enter a description for this file"
-              multiline
-              rows={3}
-              variant="outlined"
-            />
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setUploadDialogOpen(false)} disabled={loading}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleUpload}
-            variant="contained"
-            disabled={
-              loading ||
-              !uploadFileData.file ||
-              !uploadFileData.description.trim()
-            }
-            sx={{
-              backgroundColor: theme.palette.blueText.main,
-              "&:hover": {
-                backgroundColor: theme.palette.blueText.dark,
-              },
-            }}
-          >
-            {loading ? <CircularProgress size={20} /> : "Upload"}
-          </Button>
-        </DialogActions>
+                  <TextInput
+                    name="description"
+                    label="Description"
+                    // multiline
+                    rows={1}
+                    required
+                  />
+                </Box>
+              </DialogContent>
+              <DialogActions sx={{ px: 3, pb: 2 }}>
+                <Button
+                  onClick={() => setUploadDialogOpen(false)}
+                  disabled={loading}
+                  ype="button"
+                  variant="outlined"
+                  color="error"
+                  sx={{
+                    minWidth: 120,
+                    fontWeight: 600,
+                    borderColor: theme.palette.error.main,
+                    color: theme.palette.error.main,
+                    backgroundColor:
+                      theme.palette.mode === "dark"
+                        ? "rgba(244,67,54,0.08)"
+                        : "rgba(244,67,54,0.04)",
+                    "&:hover": {
+                      borderColor: theme.palette.error.dark,
+                      color: theme.palette.error.dark,
+                      backgroundColor:
+                        theme.palette.mode === "dark"
+                          ? "rgba(244,67,54,0.18)"
+                          : "rgba(244,67,54,0.12)",
+                    },
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  disabled={
+                    loading ||
+                    !uploadFileData.file ||
+                    !formik.values.description.trim()
+                  }
+                  sx={{
+                    minWidth: 120,
+                    fontWeight: 600,
+                    boxShadow:
+                      theme.palette.mode === "dark"
+                        ? "0 2px 8px rgba(118, 177, 211, 0.3)"
+                        : "0 2px 8px rgba(25, 118, 210, 0.3)",
+                    "&:hover": {
+                      boxShadow:
+                        theme.palette.mode === "dark"
+                          ? "0 4px 12px rgba(118, 177, 211, 0.4)"
+                          : "0 4px 12px rgba(25, 118, 210, 0.4)",
+                    },
+                  }}
+                >
+                  {loading ? <CircularProgress size={20} /> : "Upload"}
+                </Button>
+              </DialogActions>
+            </form>
+          )}
+        </Formik>
       </Dialog>
 
       {/* Delete Dialog */}

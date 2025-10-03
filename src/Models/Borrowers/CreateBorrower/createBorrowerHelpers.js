@@ -29,6 +29,7 @@ export const fetchBorrowerById = async (borrowerId) => {
         employerName
         creditScore
         customFieldsData
+        borrowerDocuments
         createdAt
         updatedAt
       }
@@ -42,7 +43,18 @@ export const fetchBorrowerById = async (borrowerId) => {
   });
 
   if (result.data.getBorrower) {
-    return result.data.getBorrower;
+    // Parse borrowerDocuments if present
+    const borrower = result.data.getBorrower;
+    if (borrower.borrowerDocuments) {
+      try {
+        borrower.borrowerDocuments = JSON.parse(borrower.borrowerDocuments);
+      } catch (e) {
+        borrower.borrowerDocuments = [];
+      }
+    } else {
+      borrower.borrowerDocuments = [];
+    }
+    return borrower;
   } else {
     throw new Error("Borrower not found");
   }

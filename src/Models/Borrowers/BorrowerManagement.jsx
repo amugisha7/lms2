@@ -17,7 +17,13 @@ import CreateBorrower from "./CreateBorrower/CreateBorrower";
 import NotificationBar from "../../ComponentAssets/NotificationBar";
 import ClickableText from "../../ComponentAssets/ClickableText";
 import EditContentPopup from "../../ModelAssets/EditContentPopup";
-import CustomFields from "../../Screens/AdminScreens/CustomFields/CustomFields"; // <-- Add this import
+import CustomBorrowerFields from "./CustomBorrowerFields/CustomBorrowerFields";
+import EditableCustomBorrowerFields from "./CustomBorrowerFields/EditableCustomBorrowerFields";
+import {
+  fetchCustomFieldsForBorrower,
+  mapCustomFieldsToFormValues,
+  updateBorrowerCustomFields,
+} from "./customFieldsHelpers";
 import { Formik } from "formik"; // <-- Add this import
 
 const GET_BORROWER_QUERY = `
@@ -94,50 +100,6 @@ function TabPanel({ children, value, index, ...other }) {
   );
 }
 
-// Add this helper function to map borrower data to form values (reused from CreateBorrower.jsx)
-const mapBorrowerToFormValues = (borrower) => {
-  if (!borrower) return {};
-
-  return {
-    firstname: borrower.firstname || "",
-    othername: borrower.othername || "",
-    businessName: borrower.businessName || "",
-    typeOfBusiness: borrower.typeOfBusiness || "",
-    uniqueIdNumber: borrower.uniqueIdNumber || "",
-    phoneNumber: borrower.phoneNumber || "",
-    otherPhoneNumber: borrower.otherPhoneNumber || "",
-    email: borrower.email || "",
-    gender: borrower.gender || "",
-    dateOfBirth: borrower.dateOfBirth || "",
-    nationality: borrower.nationality || "",
-    address: borrower.address || "",
-    city: borrower.city || "",
-    state: borrower.state || "",
-    title: borrower.title || "",
-    zipcode: borrower.zipcode || "",
-    employmentStatus: borrower.employmentStatus || "",
-    employerName: borrower.employerName || "",
-    creditScore: borrower.creditScore || "",
-    // Handle custom fields if they exist
-    ...(borrower.customFieldsData
-      ? (() => {
-          try {
-            const customFields = JSON.parse(borrower.customFieldsData);
-            const mappedCustomFields = {};
-            Object.keys(customFields).forEach((fieldId) => {
-              mappedCustomFields[`custom_${fieldId}`] =
-                customFields[fieldId].value || "";
-            });
-            return mappedCustomFields;
-          } catch (e) {
-            console.warn("Error parsing custom fields data:", e);
-            return {};
-          }
-        })()
-      : {}),
-  };
-};
-
 export default function BorrowerManagement() {
   const { borrowerId } = useParams();
   const navigate = useNavigate();
@@ -152,6 +114,10 @@ export default function BorrowerManagement() {
     color: "green",
   });
   const [editPopupOpen, setEditPopupOpen] = useState(false);
+  const [customFields, setCustomFields] = useState([]);
+  const [customFieldsLoading, setCustomFieldsLoading] = useState(true);
+  const [editCustomFieldsPopupOpen, setEditCustomFieldsPopupOpen] =
+    useState(false);
   const client = React.useMemo(() => generateClient(), []);
   const fetchedBorrowerIdRef = React.useRef();
 
@@ -190,6 +156,31 @@ export default function BorrowerManagement() {
       fetchedBorrowerIdRef.current = borrowerId;
     }
   }, [borrowerId, client]);
+
+  // Fetch custom fields
+  useEffect(() => {
+    const fetchCustomFields = async () => {
+      if (!userDetails?.institutionUsersId || !userDetails?.branchUsersId) {
+        setCustomFieldsLoading(false);
+        return;
+      }
+
+      try {
+        setCustomFieldsLoading(true);
+        const fields = await fetchCustomFieldsForBorrower(
+          userDetails.institutionUsersId,
+          userDetails.branchUsersId
+        );
+        setCustomFields(fields);
+      } catch (error) {
+        console.error("Error fetching custom fields:", error);
+      } finally {
+        setCustomFieldsLoading(false);
+      }
+    };
+
+    fetchCustomFields();
+  }, [userDetails?.institutionUsersId, userDetails?.branchUsersId]);
 
   // API handler for updating borrower
   const handleUpdateBorrowerAPI = async (values, initialValues) => {
@@ -310,6 +301,33 @@ export default function BorrowerManagement() {
     setEditPopupOpen(false);
   };
 
+  // Custom fields handlers
+  const handleEditCustomFields = () => {
+    setEditCustomFieldsPopupOpen(true);
+  };
+
+  const handleCustomFieldsPrint = () => {
+    window.print();
+  };
+
+  const handleEditCustomFieldsPopupClose = () => {
+    setEditCustomFieldsPopupOpen(false);
+  };
+
+  const handleUpdateCustomFieldsAPI = async (values) => {
+    return await updateBorrowerCustomFields(borrowerId, customFields, values);
+  };
+
+  const handleCustomFieldsUpdateSuccess = (updatedData) => {
+    // Update the borrower state with new custom fields data
+    setBorrower((prevBorrower) => ({
+      ...prevBorrower,
+      customFieldsData: updatedData.customFieldsData,
+      updatedAt: updatedData.updatedAt,
+    }));
+    setEditCustomFieldsPopupOpen(false);
+  };
+
   if (loading) {
     return (
       <Box
@@ -361,6 +379,23 @@ export default function BorrowerManagement() {
           onUpdateBorrowerAPI={handleUpdateBorrowerAPI}
           setNotification={setNotification}
           onCancel={handleEditPopupClose}
+        />
+      </EditContentPopup>
+
+      {/* Edit Custom Fields Popup */}
+      <EditContentPopup
+        open={editCustomFieldsPopupOpen}
+        onClose={handleEditCustomFieldsPopupClose}
+        title={`Edit Custom Fields - ${getBorrowerName()}`}
+        maxWidth="lg"
+      >
+        <EditableCustomBorrowerFields
+          customFields={customFields}
+          initialValues={mapCustomFieldsToFormValues(borrower, customFields)}
+          onUpdateSuccess={handleCustomFieldsUpdateSuccess}
+          onUpdateCustomFieldsAPI={handleUpdateCustomFieldsAPI}
+          onCancel={handleEditCustomFieldsPopupClose}
+          setNotification={setNotification}
         />
       </EditContentPopup>
 
@@ -517,18 +552,32 @@ export default function BorrowerManagement() {
           </TabPanel>
 
           <TabPanel value={tabValue} index={1}>
-            <Formik
-              initialValues={mapBorrowerToFormValues(borrower)}
-              enableReinitialize
-            >
-              {(formik) => (
-                <CustomFields
-                  formKey="CreateBorrowerForm"
-                  formik={formik}
-                  editing={false}
-                />
-              )}
-            </Formik>
+            {customFieldsLoading ? (
+              <Box sx={{ textAlign: "center", py: 4 }}>
+                <CircularProgress size={24} />
+                <Typography variant="body2" sx={{ mt: 1 }}>
+                  Loading custom fields...
+                </Typography>
+              </Box>
+            ) : (
+              <Formik
+                initialValues={mapCustomFieldsToFormValues(
+                  borrower,
+                  customFields
+                )}
+                enableReinitialize
+              >
+                {(formik) => (
+                  <CustomBorrowerFields
+                    customFields={customFields}
+                    formik={formik}
+                    editing={false}
+                    onEdit={handleEditCustomFields}
+                    onPrint={handleCustomFieldsPrint}
+                  />
+                )}
+              </Formik>
+            )}
           </TabPanel>
 
           <TabPanel value={tabValue} index={2}>

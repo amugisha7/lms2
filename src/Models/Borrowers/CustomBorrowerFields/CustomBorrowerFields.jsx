@@ -148,7 +148,7 @@ const CustomBorrowerFields = ({
             sx={{
               // color: theme.palette.blueText.main,
               // fontWeight: 500,
-              fontSize: "0.9rem",
+              fontSize: "0.8rem",
               textDecoration: "underline",
               // mt: 2,
             }}

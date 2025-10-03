@@ -1,0 +1,16 @@
+{
+  "resourceName": "lms2Storage",
+  "policyUUID": "54595204",
+  "bucketName": "lms2storage2bucket",
+  "storageAccess": "authAndGuest",
+  "guestAccess": [
+    "READ"
+  ],
+  "authAccess": [
+    "CREATE_AND_UPDATE",
+    "READ",
+    "DELETE"
+  ],
+  "triggerFunction": "S3Trigger3f2463e0",
+  "groupAccess": {}
+}

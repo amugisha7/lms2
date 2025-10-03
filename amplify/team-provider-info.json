@@ -17,6 +17,15 @@
       },
       "auth": {
         "lms2": {}
+      },
+      "function": {
+        "S3Trigger3f2463e0": {
+          "deploymentBucketName": "amplify-lms2-dev-b93de-deployment",
+          "s3Key": "amplify-builds/S3Trigger3f2463e0-3069654d39332f787668-build.zip"
+        }
+      },
+      "storage": {
+        "lms2Storage": {}
       }
     }
   }

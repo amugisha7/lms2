@@ -410,8 +410,8 @@ export default function BorrowerManagement() {
               }}
             >
               <Tab label="Details" id="borrower-tab-0" />
+              <Tab label="Files" id="borrower-tab-2" />
               <Tab label="Custom Fields" id="borrower-tab-1" />
-              <Tab label="Documents" id="borrower-tab-2" />
             </Tabs>
           </Box>
 
@@ -456,7 +456,7 @@ export default function BorrowerManagement() {
             />
           </TabPanel>
 
-          <TabPanel value={tabValue} index={1}>
+          <TabPanel value={tabValue} index={2}>
             {customFieldsLoading ? (
               <Box sx={{ textAlign: "center", py: 4 }}>
                 <CircularProgress size={24} />
@@ -485,7 +485,7 @@ export default function BorrowerManagement() {
             )}
           </TabPanel>
 
-          <TabPanel value={tabValue} index={2}>
+          <TabPanel value={tabValue} index={1}>
             <Typography
               variant="h6"
               sx={{
@@ -494,7 +494,7 @@ export default function BorrowerManagement() {
                 fontFamily: theme.typography.h6.fontFamily,
               }}
             >
-              Documents
+              Files
             </Typography>
             <Typography
               color="text.secondary"

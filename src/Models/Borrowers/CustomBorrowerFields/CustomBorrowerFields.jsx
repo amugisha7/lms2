@@ -16,6 +16,7 @@ import { useTheme } from "@mui/material";
 import { tokens } from "../../../theme";
 import { FormikProvider } from "formik";
 import ClickableText from "../../../ComponentAssets/ClickableText";
+import { useNavigate } from "react-router-dom"; // <-- Add this import
 
 // Import custom form components
 import TextInput from "../../../Resources/FormComponents/TextInput";
@@ -42,6 +43,7 @@ const CustomBorrowerFields = ({
   const { userDetails } = useContext(UserContext);
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
+  const navigate = useNavigate(); // <-- Add this
 
   const renderCustomField = (field) => {
     const fieldName = field.fieldName;
@@ -138,6 +140,22 @@ const CustomBorrowerFields = ({
             </FormGrid>
           ))}
         </Grid>
+
+        {/* ClickableText for managing custom fields */}
+        <Box sx={{ my: 4, textAlign: "center" }}>
+          <ClickableText
+            onClick={() => navigate("/customFields")}
+            sx={{
+              // color: theme.palette.blueText.main,
+              // fontWeight: 500,
+              fontSize: "0.9rem",
+              textDecoration: "underline",
+              // mt: 2,
+            }}
+          >
+            Manage Custom Fields
+          </ClickableText>
+        </Box>
       </>
     </FormikProvider>
   );

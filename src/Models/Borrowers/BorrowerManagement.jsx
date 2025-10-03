@@ -64,6 +64,10 @@ export default function BorrowerManagement() {
     useState(false);
   const client = React.useMemo(() => generateClient(), []);
   const fetchedBorrowerIdRef = React.useRef();
+  const fetchedCustomFieldsRef = React.useRef({
+    institutionUsersId: null,
+    branchUsersId: null,
+  }); // <-- Add ref
 
   // Fetch borrower data
   useEffect(() => {
@@ -114,7 +118,21 @@ export default function BorrowerManagement() {
       }
     };
 
-    fetchCustomFields();
+    // Only fetch if institutionUsersId or branchUsersId changed
+    if (
+      userDetails?.institutionUsersId &&
+      userDetails?.branchUsersId &&
+      (fetchedCustomFieldsRef.current.institutionUsersId !==
+        userDetails.institutionUsersId ||
+        fetchedCustomFieldsRef.current.branchUsersId !==
+          userDetails.branchUsersId)
+    ) {
+      fetchCustomFields();
+      fetchedCustomFieldsRef.current = {
+        institutionUsersId: userDetails.institutionUsersId,
+        branchUsersId: userDetails.branchUsersId,
+      };
+    }
   }, [userDetails?.institutionUsersId, userDetails?.branchUsersId]);
 
   // API handler for updating borrower

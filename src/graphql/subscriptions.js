@@ -1208,18 +1208,7 @@ export const onCreateBorrower = /* GraphQL */ `
       creditScore
       additionalNote1
       additionalNote2
-      borrowerDocument1
-      borrowerDocument1URL
-      borrowerDocument2
-      borrowerDocument2URL
-      borrowerDocument3
-      borrowerDocument3URL
-      borrowerDocument4
-      borrowerDocument4URL
-      borrowerStatus
-      borrowertype
-      borrowerAttribute1
-      borrowerAttribute2
+      borrowerDocuments
       customFieldsData
       status
       branch {
@@ -1307,18 +1296,7 @@ export const onUpdateBorrower = /* GraphQL */ `
       creditScore
       additionalNote1
       additionalNote2
-      borrowerDocument1
-      borrowerDocument1URL
-      borrowerDocument2
-      borrowerDocument2URL
-      borrowerDocument3
-      borrowerDocument3URL
-      borrowerDocument4
-      borrowerDocument4URL
-      borrowerStatus
-      borrowertype
-      borrowerAttribute1
-      borrowerAttribute2
+      borrowerDocuments
       customFieldsData
       status
       branch {
@@ -1406,18 +1384,7 @@ export const onDeleteBorrower = /* GraphQL */ `
       creditScore
       additionalNote1
       additionalNote2
-      borrowerDocument1
-      borrowerDocument1URL
-      borrowerDocument2
-      borrowerDocument2URL
-      borrowerDocument3
-      borrowerDocument3URL
-      borrowerDocument4
-      borrowerDocument4URL
-      borrowerStatus
-      borrowertype
-      borrowerAttribute1
-      borrowerAttribute2
+      borrowerDocuments
       customFieldsData
       status
       branch {
@@ -1516,18 +1483,7 @@ export const onCreateGuarantor = /* GraphQL */ `
         creditScore
         additionalNote1
         additionalNote2
-        borrowerDocument1
-        borrowerDocument1URL
-        borrowerDocument2
-        borrowerDocument2URL
-        borrowerDocument3
-        borrowerDocument3URL
-        borrowerDocument4
-        borrowerDocument4URL
-        borrowerStatus
-        borrowertype
-        borrowerAttribute1
-        borrowerAttribute2
+        borrowerDocuments
         customFieldsData
         status
         createdAt
@@ -1592,18 +1548,7 @@ export const onUpdateGuarantor = /* GraphQL */ `
         creditScore
         additionalNote1
         additionalNote2
-        borrowerDocument1
-        borrowerDocument1URL
-        borrowerDocument2
-        borrowerDocument2URL
-        borrowerDocument3
-        borrowerDocument3URL
-        borrowerDocument4
-        borrowerDocument4URL
-        borrowerStatus
-        borrowertype
-        borrowerAttribute1
-        borrowerAttribute2
+        borrowerDocuments
         customFieldsData
         status
         createdAt
@@ -1668,18 +1613,7 @@ export const onDeleteGuarantor = /* GraphQL */ `
         creditScore
         additionalNote1
         additionalNote2
-        borrowerDocument1
-        borrowerDocument1URL
-        borrowerDocument2
-        borrowerDocument2URL
-        borrowerDocument3
-        borrowerDocument3URL
-        borrowerDocument4
-        borrowerDocument4URL
-        borrowerStatus
-        borrowertype
-        borrowerAttribute1
-        borrowerAttribute2
+        borrowerDocuments
         customFieldsData
         status
         createdAt
@@ -1740,18 +1674,7 @@ export const onCreateSecurity = /* GraphQL */ `
         creditScore
         additionalNote1
         additionalNote2
-        borrowerDocument1
-        borrowerDocument1URL
-        borrowerDocument2
-        borrowerDocument2URL
-        borrowerDocument3
-        borrowerDocument3URL
-        borrowerDocument4
-        borrowerDocument4URL
-        borrowerStatus
-        borrowertype
-        borrowerAttribute1
-        borrowerAttribute2
+        borrowerDocuments
         customFieldsData
         status
         createdAt
@@ -1804,18 +1727,7 @@ export const onUpdateSecurity = /* GraphQL */ `
         creditScore
         additionalNote1
         additionalNote2
-        borrowerDocument1
-        borrowerDocument1URL
-        borrowerDocument2
-        borrowerDocument2URL
-        borrowerDocument3
-        borrowerDocument3URL
-        borrowerDocument4
-        borrowerDocument4URL
-        borrowerStatus
-        borrowertype
-        borrowerAttribute1
-        borrowerAttribute2
+        borrowerDocuments
         customFieldsData
         status
         createdAt
@@ -1868,18 +1780,7 @@ export const onDeleteSecurity = /* GraphQL */ `
         creditScore
         additionalNote1
         additionalNote2
-        borrowerDocument1
-        borrowerDocument1URL
-        borrowerDocument2
-        borrowerDocument2URL
-        borrowerDocument3
-        borrowerDocument3URL
-        borrowerDocument4
-        borrowerDocument4URL
-        borrowerStatus
-        borrowertype
-        borrowerAttribute1
-        borrowerAttribute2
+        borrowerDocuments
         customFieldsData
         status
         createdAt
@@ -2331,18 +2232,7 @@ export const onCreateCreditScore = /* GraphQL */ `
         creditScore
         additionalNote1
         additionalNote2
-        borrowerDocument1
-        borrowerDocument1URL
-        borrowerDocument2
-        borrowerDocument2URL
-        borrowerDocument3
-        borrowerDocument3URL
-        borrowerDocument4
-        borrowerDocument4URL
-        borrowerStatus
-        borrowertype
-        borrowerAttribute1
-        borrowerAttribute2
+        borrowerDocuments
         customFieldsData
         status
         createdAt
@@ -2452,18 +2342,7 @@ export const onUpdateCreditScore = /* GraphQL */ `
         creditScore
         additionalNote1
         additionalNote2
-        borrowerDocument1
-        borrowerDocument1URL
-        borrowerDocument2
-        borrowerDocument2URL
-        borrowerDocument3
-        borrowerDocument3URL
-        borrowerDocument4
-        borrowerDocument4URL
-        borrowerStatus
-        borrowertype
-        borrowerAttribute1
-        borrowerAttribute2
+        borrowerDocuments
         customFieldsData
         status
         createdAt
@@ -2573,18 +2452,7 @@ export const onDeleteCreditScore = /* GraphQL */ `
         creditScore
         additionalNote1
         additionalNote2
-        borrowerDocument1
-        borrowerDocument1URL
-        borrowerDocument2
-        borrowerDocument2URL
-        borrowerDocument3
-        borrowerDocument3URL
-        borrowerDocument4
-        borrowerDocument4URL
-        borrowerStatus
-        borrowertype
-        borrowerAttribute1
-        borrowerAttribute2
+        borrowerDocuments
         customFieldsData
         status
         createdAt
@@ -2998,18 +2866,7 @@ export const onCreateContract = /* GraphQL */ `
         creditScore
         additionalNote1
         additionalNote2
-        borrowerDocument1
-        borrowerDocument1URL
-        borrowerDocument2
-        borrowerDocument2URL
-        borrowerDocument3
-        borrowerDocument3URL
-        borrowerDocument4
-        borrowerDocument4URL
-        borrowerStatus
-        borrowertype
-        borrowerAttribute1
-        borrowerAttribute2
+        borrowerDocuments
         customFieldsData
         status
         createdAt
@@ -3079,18 +2936,7 @@ export const onUpdateContract = /* GraphQL */ `
         creditScore
         additionalNote1
         additionalNote2
-        borrowerDocument1
-        borrowerDocument1URL
-        borrowerDocument2
-        borrowerDocument2URL
-        borrowerDocument3
-        borrowerDocument3URL
-        borrowerDocument4
-        borrowerDocument4URL
-        borrowerStatus
-        borrowertype
-        borrowerAttribute1
-        borrowerAttribute2
+        borrowerDocuments
         customFieldsData
         status
         createdAt
@@ -3160,18 +3006,7 @@ export const onDeleteContract = /* GraphQL */ `
         creditScore
         additionalNote1
         additionalNote2
-        borrowerDocument1
-        borrowerDocument1URL
-        borrowerDocument2
-        borrowerDocument2URL
-        borrowerDocument3
-        borrowerDocument3URL
-        borrowerDocument4
-        borrowerDocument4URL
-        borrowerStatus
-        borrowertype
-        borrowerAttribute1
-        borrowerAttribute2
+        borrowerDocuments
         customFieldsData
         status
         createdAt
@@ -3246,18 +3081,7 @@ export const onCreateApplication = /* GraphQL */ `
         creditScore
         additionalNote1
         additionalNote2
-        borrowerDocument1
-        borrowerDocument1URL
-        borrowerDocument2
-        borrowerDocument2URL
-        borrowerDocument3
-        borrowerDocument3URL
-        borrowerDocument4
-        borrowerDocument4URL
-        borrowerStatus
-        borrowertype
-        borrowerAttribute1
-        borrowerAttribute2
+        borrowerDocuments
         customFieldsData
         status
         createdAt
@@ -3425,18 +3249,7 @@ export const onUpdateApplication = /* GraphQL */ `
         creditScore
         additionalNote1
         additionalNote2
-        borrowerDocument1
-        borrowerDocument1URL
-        borrowerDocument2
-        borrowerDocument2URL
-        borrowerDocument3
-        borrowerDocument3URL
-        borrowerDocument4
-        borrowerDocument4URL
-        borrowerStatus
-        borrowertype
-        borrowerAttribute1
-        borrowerAttribute2
+        borrowerDocuments
         customFieldsData
         status
         createdAt
@@ -3604,18 +3417,7 @@ export const onDeleteApplication = /* GraphQL */ `
         creditScore
         additionalNote1
         additionalNote2
-        borrowerDocument1
-        borrowerDocument1URL
-        borrowerDocument2
-        borrowerDocument2URL
-        borrowerDocument3
-        borrowerDocument3URL
-        borrowerDocument4
-        borrowerDocument4URL
-        borrowerStatus
-        borrowertype
-        borrowerAttribute1
-        borrowerAttribute2
+        borrowerDocuments
         customFieldsData
         status
         createdAt
@@ -3787,18 +3589,7 @@ export const onCreateCollateral = /* GraphQL */ `
         creditScore
         additionalNote1
         additionalNote2
-        borrowerDocument1
-        borrowerDocument1URL
-        borrowerDocument2
-        borrowerDocument2URL
-        borrowerDocument3
-        borrowerDocument3URL
-        borrowerDocument4
-        borrowerDocument4URL
-        borrowerStatus
-        borrowertype
-        borrowerAttribute1
-        borrowerAttribute2
+        borrowerDocuments
         customFieldsData
         status
         createdAt
@@ -3873,18 +3664,7 @@ export const onUpdateCollateral = /* GraphQL */ `
         creditScore
         additionalNote1
         additionalNote2
-        borrowerDocument1
-        borrowerDocument1URL
-        borrowerDocument2
-        borrowerDocument2URL
-        borrowerDocument3
-        borrowerDocument3URL
-        borrowerDocument4
-        borrowerDocument4URL
-        borrowerStatus
-        borrowertype
-        borrowerAttribute1
-        borrowerAttribute2
+        borrowerDocuments
         customFieldsData
         status
         createdAt
@@ -3959,18 +3739,7 @@ export const onDeleteCollateral = /* GraphQL */ `
         creditScore
         additionalNote1
         additionalNote2
-        borrowerDocument1
-        borrowerDocument1URL
-        borrowerDocument2
-        borrowerDocument2URL
-        borrowerDocument3
-        borrowerDocument3URL
-        borrowerDocument4
-        borrowerDocument4URL
-        borrowerStatus
-        borrowertype
-        borrowerAttribute1
-        borrowerAttribute2
+        borrowerDocuments
         customFieldsData
         status
         createdAt
@@ -4053,18 +3822,7 @@ export const onCreateLoan = /* GraphQL */ `
         creditScore
         additionalNote1
         additionalNote2
-        borrowerDocument1
-        borrowerDocument1URL
-        borrowerDocument2
-        borrowerDocument2URL
-        borrowerDocument3
-        borrowerDocument3URL
-        borrowerDocument4
-        borrowerDocument4URL
-        borrowerStatus
-        borrowertype
-        borrowerAttribute1
-        borrowerAttribute2
+        borrowerDocuments
         customFieldsData
         status
         createdAt
@@ -4259,18 +4017,7 @@ export const onUpdateLoan = /* GraphQL */ `
         creditScore
         additionalNote1
         additionalNote2
-        borrowerDocument1
-        borrowerDocument1URL
-        borrowerDocument2
-        borrowerDocument2URL
-        borrowerDocument3
-        borrowerDocument3URL
-        borrowerDocument4
-        borrowerDocument4URL
-        borrowerStatus
-        borrowertype
-        borrowerAttribute1
-        borrowerAttribute2
+        borrowerDocuments
         customFieldsData
         status
         createdAt
@@ -4465,18 +4212,7 @@ export const onDeleteLoan = /* GraphQL */ `
         creditScore
         additionalNote1
         additionalNote2
-        borrowerDocument1
-        borrowerDocument1URL
-        borrowerDocument2
-        borrowerDocument2URL
-        borrowerDocument3
-        borrowerDocument3URL
-        borrowerDocument4
-        borrowerDocument4URL
-        borrowerStatus
-        borrowertype
-        borrowerAttribute1
-        borrowerAttribute2
+        borrowerDocuments
         customFieldsData
         status
         createdAt
@@ -9350,18 +9086,7 @@ export const onCreateBorrowerLoanOfficer = /* GraphQL */ `
         creditScore
         additionalNote1
         additionalNote2
-        borrowerDocument1
-        borrowerDocument1URL
-        borrowerDocument2
-        borrowerDocument2URL
-        borrowerDocument3
-        borrowerDocument3URL
-        borrowerDocument4
-        borrowerDocument4URL
-        borrowerStatus
-        borrowertype
-        borrowerAttribute1
-        borrowerAttribute2
+        borrowerDocuments
         customFieldsData
         status
         createdAt
@@ -9460,18 +9185,7 @@ export const onUpdateBorrowerLoanOfficer = /* GraphQL */ `
         creditScore
         additionalNote1
         additionalNote2
-        borrowerDocument1
-        borrowerDocument1URL
-        borrowerDocument2
-        borrowerDocument2URL
-        borrowerDocument3
-        borrowerDocument3URL
-        borrowerDocument4
-        borrowerDocument4URL
-        borrowerStatus
-        borrowertype
-        borrowerAttribute1
-        borrowerAttribute2
+        borrowerDocuments
         customFieldsData
         status
         createdAt
@@ -9570,18 +9284,7 @@ export const onDeleteBorrowerLoanOfficer = /* GraphQL */ `
         creditScore
         additionalNote1
         additionalNote2
-        borrowerDocument1
-        borrowerDocument1URL
-        borrowerDocument2
-        borrowerDocument2URL
-        borrowerDocument3
-        borrowerDocument3URL
-        borrowerDocument4
-        borrowerDocument4URL
-        borrowerStatus
-        borrowertype
-        borrowerAttribute1
-        borrowerAttribute2
+        borrowerDocuments
         customFieldsData
         status
         createdAt
@@ -9632,18 +9335,7 @@ export const onCreateBorrowerDocument = /* GraphQL */ `
         creditScore
         additionalNote1
         additionalNote2
-        borrowerDocument1
-        borrowerDocument1URL
-        borrowerDocument2
-        borrowerDocument2URL
-        borrowerDocument3
-        borrowerDocument3URL
-        borrowerDocument4
-        borrowerDocument4URL
-        borrowerStatus
-        borrowertype
-        borrowerAttribute1
-        borrowerAttribute2
+        borrowerDocuments
         customFieldsData
         status
         createdAt
@@ -9711,18 +9403,7 @@ export const onUpdateBorrowerDocument = /* GraphQL */ `
         creditScore
         additionalNote1
         additionalNote2
-        borrowerDocument1
-        borrowerDocument1URL
-        borrowerDocument2
-        borrowerDocument2URL
-        borrowerDocument3
-        borrowerDocument3URL
-        borrowerDocument4
-        borrowerDocument4URL
-        borrowerStatus
-        borrowertype
-        borrowerAttribute1
-        borrowerAttribute2
+        borrowerDocuments
         customFieldsData
         status
         createdAt
@@ -9790,18 +9471,7 @@ export const onDeleteBorrowerDocument = /* GraphQL */ `
         creditScore
         additionalNote1
         additionalNote2
-        borrowerDocument1
-        borrowerDocument1URL
-        borrowerDocument2
-        borrowerDocument2URL
-        borrowerDocument3
-        borrowerDocument3URL
-        borrowerDocument4
-        borrowerDocument4URL
-        borrowerStatus
-        borrowertype
-        borrowerAttribute1
-        borrowerAttribute2
+        borrowerDocuments
         customFieldsData
         status
         createdAt

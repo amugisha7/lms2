@@ -221,18 +221,7 @@ type Borrower @model {
   creditScore: String
   additionalNote1: String
   additionalNote2: String
-  borrowerDocument1: String
-  borrowerDocument1URL: String
-  borrowerDocument2: String
-  borrowerDocument2URL: String
-  borrowerDocument3: String
-  borrowerDocument3URL: String
-  borrowerDocument4: String
-  borrowerDocument4URL: String
-  borrowerStatus: String
-  borrowertype: String
-  borrowerAttribute1: String
-  borrowerAttribute2: String
+  borrowerDocuments: AWSJSON
   customFieldsData: AWSJSON
   status: String
   branch: Branch @belongsTo

@@ -584,18 +584,7 @@ export const getBorrower = /* GraphQL */ `
       creditScore
       additionalNote1
       additionalNote2
-      borrowerDocument1
-      borrowerDocument1URL
-      borrowerDocument2
-      borrowerDocument2URL
-      borrowerDocument3
-      borrowerDocument3URL
-      borrowerDocument4
-      borrowerDocument4URL
-      borrowerStatus
-      borrowertype
-      borrowerAttribute1
-      borrowerAttribute2
+      borrowerDocuments
       customFieldsData
       status
       branch {
@@ -688,18 +677,7 @@ export const listBorrowers = /* GraphQL */ `
         creditScore
         additionalNote1
         additionalNote2
-        borrowerDocument1
-        borrowerDocument1URL
-        borrowerDocument2
-        borrowerDocument2URL
-        borrowerDocument3
-        borrowerDocument3URL
-        borrowerDocument4
-        borrowerDocument4URL
-        borrowerStatus
-        borrowertype
-        borrowerAttribute1
-        borrowerAttribute2
+        borrowerDocuments
         customFieldsData
         status
         createdAt
@@ -752,18 +730,7 @@ export const getGuarantor = /* GraphQL */ `
         creditScore
         additionalNote1
         additionalNote2
-        borrowerDocument1
-        borrowerDocument1URL
-        borrowerDocument2
-        borrowerDocument2URL
-        borrowerDocument3
-        borrowerDocument3URL
-        borrowerDocument4
-        borrowerDocument4URL
-        borrowerStatus
-        borrowertype
-        borrowerAttribute1
-        borrowerAttribute2
+        borrowerDocuments
         customFieldsData
         status
         createdAt
@@ -850,18 +817,7 @@ export const getSecurity = /* GraphQL */ `
         creditScore
         additionalNote1
         additionalNote2
-        borrowerDocument1
-        borrowerDocument1URL
-        borrowerDocument2
-        borrowerDocument2URL
-        borrowerDocument3
-        borrowerDocument3URL
-        borrowerDocument4
-        borrowerDocument4URL
-        borrowerStatus
-        borrowertype
-        borrowerAttribute1
-        borrowerAttribute2
+        borrowerDocuments
         customFieldsData
         status
         createdAt
@@ -1142,18 +1098,7 @@ export const getCreditScore = /* GraphQL */ `
         creditScore
         additionalNote1
         additionalNote2
-        borrowerDocument1
-        borrowerDocument1URL
-        borrowerDocument2
-        borrowerDocument2URL
-        borrowerDocument3
-        borrowerDocument3URL
-        borrowerDocument4
-        borrowerDocument4URL
-        borrowerStatus
-        borrowertype
-        borrowerAttribute1
-        borrowerAttribute2
+        borrowerDocuments
         customFieldsData
         status
         createdAt
@@ -1415,18 +1360,7 @@ export const getContract = /* GraphQL */ `
         creditScore
         additionalNote1
         additionalNote2
-        borrowerDocument1
-        borrowerDocument1URL
-        borrowerDocument2
-        borrowerDocument2URL
-        borrowerDocument3
-        borrowerDocument3URL
-        borrowerDocument4
-        borrowerDocument4URL
-        borrowerStatus
-        borrowertype
-        borrowerAttribute1
-        borrowerAttribute2
+        borrowerDocuments
         customFieldsData
         status
         createdAt
@@ -1524,18 +1458,7 @@ export const getApplication = /* GraphQL */ `
         creditScore
         additionalNote1
         additionalNote2
-        borrowerDocument1
-        borrowerDocument1URL
-        borrowerDocument2
-        borrowerDocument2URL
-        borrowerDocument3
-        borrowerDocument3URL
-        borrowerDocument4
-        borrowerDocument4URL
-        borrowerStatus
-        borrowertype
-        borrowerAttribute1
-        borrowerAttribute2
+        borrowerDocuments
         customFieldsData
         status
         createdAt
@@ -1736,18 +1659,7 @@ export const getCollateral = /* GraphQL */ `
         creditScore
         additionalNote1
         additionalNote2
-        borrowerDocument1
-        borrowerDocument1URL
-        borrowerDocument2
-        borrowerDocument2URL
-        borrowerDocument3
-        borrowerDocument3URL
-        borrowerDocument4
-        borrowerDocument4URL
-        borrowerStatus
-        borrowertype
-        borrowerAttribute1
-        borrowerAttribute2
+        borrowerDocuments
         customFieldsData
         status
         createdAt
@@ -1862,18 +1774,7 @@ export const getLoan = /* GraphQL */ `
         creditScore
         additionalNote1
         additionalNote2
-        borrowerDocument1
-        borrowerDocument1URL
-        borrowerDocument2
-        borrowerDocument2URL
-        borrowerDocument3
-        borrowerDocument3URL
-        borrowerDocument4
-        borrowerDocument4URL
-        borrowerStatus
-        borrowertype
-        borrowerAttribute1
-        borrowerAttribute2
+        borrowerDocuments
         customFieldsData
         status
         createdAt
@@ -4253,18 +4154,7 @@ export const getBorrowerLoanOfficer = /* GraphQL */ `
         creditScore
         additionalNote1
         additionalNote2
-        borrowerDocument1
-        borrowerDocument1URL
-        borrowerDocument2
-        borrowerDocument2URL
-        borrowerDocument3
-        borrowerDocument3URL
-        borrowerDocument4
-        borrowerDocument4URL
-        borrowerStatus
-        borrowertype
-        borrowerAttribute1
-        borrowerAttribute2
+        borrowerDocuments
         customFieldsData
         status
         createdAt
@@ -4337,18 +4227,7 @@ export const getBorrowerDocument = /* GraphQL */ `
         creditScore
         additionalNote1
         additionalNote2
-        borrowerDocument1
-        borrowerDocument1URL
-        borrowerDocument2
-        borrowerDocument2URL
-        borrowerDocument3
-        borrowerDocument3URL
-        borrowerDocument4
-        borrowerDocument4URL
-        borrowerStatus
-        borrowertype
-        borrowerAttribute1
-        borrowerAttribute2
+        borrowerDocuments
         customFieldsData
         status
         createdAt

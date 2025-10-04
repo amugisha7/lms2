@@ -1,4 +1,5 @@
 import { generateClient } from "aws-amplify/api";
+import { remove } from "aws-amplify/storage";
 
 // Fetch borrower by ID
 export const fetchBorrowerById = async (borrowerId) => {
@@ -142,4 +143,46 @@ export const updateBorrowerById = async (values, initialValues) => {
   });
 
   return result.data.updateBorrower;
+};
+
+// Delete borrower by ID (including all associated files)
+export const deleteBorrowerById = async (borrowerId) => {
+  if (!borrowerId) throw new Error("No borrower ID provided");
+
+  const client = generateClient();
+
+  // First, fetch the borrower to get the files
+  const borrower = await fetchBorrowerById(borrowerId);
+
+  // Delete all associated files from S3
+  if (borrower.borrowerDocuments && borrower.borrowerDocuments.length > 0) {
+    const deletePromises = borrower.borrowerDocuments
+      .filter((file) => file.s3Key) // Only delete files that have an s3Key
+      .map((file) => remove({ key: file.s3Key }));
+
+    try {
+      await Promise.all(deletePromises);
+      console.log(`Deleted ${deletePromises.length} files from S3`);
+    } catch (error) {
+      console.error("Error deleting some files from S3:", error);
+      // Continue with borrower deletion even if file deletion fails
+    }
+  }
+
+  // Delete the borrower record
+  const DELETE_BORROWER_MUTATION = `
+    mutation DeleteBorrower($input: DeleteBorrowerInput!) {
+      deleteBorrower(input: $input) {
+        id
+      }
+    }
+  `;
+
+  console.log("API Call: Deleting borrower");
+  const result = await client.graphql({
+    query: DELETE_BORROWER_MUTATION,
+    variables: { input: { id: borrowerId } },
+  });
+
+  return result.data.deleteBorrower;
 };

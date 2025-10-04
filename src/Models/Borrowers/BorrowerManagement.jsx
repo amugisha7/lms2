@@ -18,6 +18,7 @@ import ClickableText from "../../ComponentAssets/ClickableText";
 import EditContentPopup from "../../ModelAssets/EditContentPopup";
 import CustomBorrowerFields from "./CustomBorrowerFields/CustomBorrowerFields";
 import EditableCustomBorrowerFields from "./CustomBorrowerFields/EditableCustomBorrowerFields";
+import DeleteDialog from "../../ModelAssets/DeleteDialog";
 import {
   fetchCustomFieldsForBorrower,
   mapCustomFieldsToFormValues,
@@ -26,6 +27,7 @@ import {
 import {
   fetchBorrowerById,
   updateBorrowerById,
+  deleteBorrowerById,
 } from "./CreateBorrower/createBorrowerHelpers";
 import BorrowerFiles from "./BorrowerFiles/BorrowerFiles";
 
@@ -309,6 +311,8 @@ export default function BorrowerManagement() {
   const [customFieldsLoading, setCustomFieldsLoading] = useState(true);
   const [editCustomFieldsPopupOpen, setEditCustomFieldsPopupOpen] =
     useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const fetchedBorrowerIdRef = React.useRef();
   const fetchedCustomFieldsRef = React.useRef({
     institutionUsersId: null,
@@ -432,8 +436,38 @@ export default function BorrowerManagement() {
     setEditPopupOpen(true);
   };
   const handleDelete = () => {
-    // Implement delete logic
-    setNotification({ message: "Delete action triggered", color: "red" });
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!borrower) return;
+
+    setDeleteLoading(true);
+    try {
+      console.log("API Call: Deleting borrower", borrowerId);
+      await deleteBorrowerById(borrowerId);
+      console.log("API Call: Borrower deleted successfully");
+
+      const combinedName = getBorrowerName();
+      setNotification({
+        message: `${combinedName} deleted successfully!`,
+        color: "green",
+      });
+
+      // Navigate back to borrowers list after a short delay
+      setTimeout(() => {
+        navigate("/borrowers");
+      }, 1500);
+    } catch (error) {
+      console.error("Error deleting borrower:", error);
+      setNotification({
+        message: "Error deleting borrower. Please try again.",
+        color: "red",
+      });
+    } finally {
+      setDeleteLoading(false);
+      setDeleteDialogOpen(false);
+    }
   };
   const handlePrint = () => {
     const heading = `Borrower Details - ${getBorrowerName()}`;
@@ -580,6 +614,15 @@ export default function BorrowerManagement() {
           setNotification={setNotification}
         />
       </EditContentPopup>
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteDialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        onConfirm={handleConfirmDelete}
+        loading={deleteLoading}
+        name={getBorrowerName()}
+      />
 
       <Box sx={{ width: "100%" }}>
         {/* Header */}

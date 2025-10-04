@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from "react";
 import {
   Box,
   Typography,
@@ -6,46 +6,56 @@ import {
   IconButton,
   AppBar,
   Toolbar,
-  useMediaQuery
-} from '@mui/material';
+  useMediaQuery,
+} from "@mui/material";
 import {
   Help as HelpIcon,
   Settings as SettingsIcon,
   Notifications as NotificationsIcon,
   Search as SearchIcon,
   Apps as AppsIcon,
-  Menu as MenuIcon
-} from '@mui/icons-material';
-import SideBar from './SideBar';
-import { Outlet } from 'react-router-dom';
-import ColorModeToggle from '../../ComponentAssets/ColorModeToggle';
-import { useTheme } from '@mui/material/styles';
-import TopBar from './TopBar';
+  Menu as MenuIcon,
+  Warning as WarningIcon,
+} from "@mui/icons-material";
+import SideBar from "./SideBar";
+import { Outlet } from "react-router-dom";
+import ColorModeToggle from "../../ComponentAssets/ColorModeToggle";
+import { useTheme } from "@mui/material/styles";
+import TopBar from "./TopBar";
+import { UserContext } from "../../App";
 
 // Main Dashboard Component
 const Dashboard = () => {
   const [drawerOpen, setDrawerOpen] = useState(true);
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const { userDetails } = useContext(UserContext);
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', 
-      bgcolor: theme.palette.primary.mainbgd }}>
+    <Box
+      sx={{
+        display: "flex",
+        minHeight: "100vh",
+        bgcolor: theme.palette.primary.mainbgd,
+      }}
+    >
       {/* Sidebar - Hidden on mobile */}
       {!isMobile && <SideBar open={drawerOpen} />}
-      
+
       {/* Main Content */}
-      <Box sx={{ 
-        flexGrow: 1, 
-        display: 'flex', 
-        flexDirection: 'column', 
-        height: '100vh',
-        minWidth: 0,
-        overflow: 'hidden'
-      }}>
+      <Box
+        sx={{
+          flexGrow: 1,
+          display: "flex",
+          flexDirection: "column",
+          height: "100vh",
+          minWidth: 0,
+          overflow: "hidden",
+        }}
+      >
         {/* Top Bar */}
         <TopBar onMenuClick={() => setDrawerOpen((prev) => !prev)} />
-        
+
         {/* Dashboard Content */}
         <Box
           sx={{
@@ -53,13 +63,37 @@ const Dashboard = () => {
             pt: { xs: 3, sm: undefined, md: undefined, lg: undefined },
             pb: 6,
             flexGrow: 1,
-            overflowX: 'auto',
-            overflowY: 'auto',
-            display: 'flex', // Add flex display
-            justifyContent: { xs: 'flex-start', sm: 'center', md: 'center', lg: 'center' }, // Center on sm and up
+            overflowX: "auto",
+            overflowY: "auto",
+            display: "flex", // Add flex display
+            justifyContent: {
+              xs: "flex-start",
+              sm: "center",
+              md: "center",
+              lg: "center",
+            }, // Center on sm and up
           }}
         >
-          <Box sx={{ width: '100%', maxWidth: 1200 }}>
+          <Box sx={{ width: "100%", maxWidth: 1200 }}>
+            {userDetails?.userType === "User" && (
+              <Box
+                sx={{
+                  mb: 2,
+                  p: 2,
+                  bgcolor: "error.main",
+                  color: "white",
+                  borderRadius: 1,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <WarningIcon sx={{ mr: 1 }} />
+                <Typography sx={{ textAlign: "center" }}>
+                  Your access is pending approval from your Admin.
+                </Typography>
+              </Box>
+            )}
             <Outlet />
           </Box>
         </Box>

@@ -9403,6 +9403,17 @@
           "isDeprecated" : false,
           "deprecationReason" : null
         }, {
+          "name" : "userPermissions",
+          "description" : null,
+          "args" : [ ],
+          "type" : {
+            "kind" : "SCALAR",
+            "name" : "AWSJSON",
+            "ofType" : null
+          },
+          "isDeprecated" : false,
+          "deprecationReason" : null
+        }, {
           "name" : "description",
           "description" : null,
           "args" : [ ],
@@ -10289,6 +10300,15 @@
           "defaultValue" : null
         }, {
           "name" : "userType",
+          "description" : null,
+          "type" : {
+            "kind" : "INPUT_OBJECT",
+            "name" : "ModelStringInput",
+            "ofType" : null
+          },
+          "defaultValue" : null
+        }, {
+          "name" : "userPermissions",
           "description" : null,
           "type" : {
             "kind" : "INPUT_OBJECT",
@@ -41829,6 +41849,15 @@
           },
           "defaultValue" : null
         }, {
+          "name" : "userPermissions",
+          "description" : null,
+          "type" : {
+            "kind" : "SCALAR",
+            "name" : "AWSJSON",
+            "ofType" : null
+          },
+          "defaultValue" : null
+        }, {
           "name" : "description",
           "description" : null,
           "type" : {
@@ -42010,6 +42039,15 @@
           "defaultValue" : null
         }, {
           "name" : "userType",
+          "description" : null,
+          "type" : {
+            "kind" : "INPUT_OBJECT",
+            "name" : "ModelStringInput",
+            "ofType" : null
+          },
+          "defaultValue" : null
+        }, {
+          "name" : "userPermissions",
           "description" : null,
           "type" : {
             "kind" : "INPUT_OBJECT",
@@ -42269,6 +42307,15 @@
           "type" : {
             "kind" : "SCALAR",
             "name" : "String",
+            "ofType" : null
+          },
+          "defaultValue" : null
+        }, {
+          "name" : "userPermissions",
+          "description" : null,
+          "type" : {
+            "kind" : "SCALAR",
+            "name" : "AWSJSON",
             "ofType" : null
           },
           "defaultValue" : null
@@ -65241,6 +65288,15 @@
           "defaultValue" : null
         }, {
           "name" : "userType",
+          "description" : null,
+          "type" : {
+            "kind" : "INPUT_OBJECT",
+            "name" : "ModelSubscriptionStringInput",
+            "ofType" : null
+          },
+          "defaultValue" : null
+        }, {
+          "name" : "userPermissions",
           "description" : null,
           "type" : {
             "kind" : "INPUT_OBJECT",

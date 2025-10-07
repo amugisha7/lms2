@@ -439,6 +439,7 @@ export const onCreateUser = /* GraphQL */ `
       nationality
       status
       userType
+      userPermissions
       description
       institution {
         id
@@ -513,6 +514,7 @@ export const onUpdateUser = /* GraphQL */ `
       nationality
       status
       userType
+      userPermissions
       description
       institution {
         id
@@ -587,6 +589,7 @@ export const onDeleteUser = /* GraphQL */ `
       nationality
       status
       userType
+      userPermissions
       description
       institution {
         id
@@ -1826,6 +1829,7 @@ export const onCreateUserNotification = /* GraphQL */ `
         nationality
         status
         userType
+        userPermissions
         description
         createdAt
         updatedAt
@@ -1871,6 +1875,7 @@ export const onUpdateUserNotification = /* GraphQL */ `
         nationality
         status
         userType
+        userPermissions
         description
         createdAt
         updatedAt
@@ -1916,6 +1921,7 @@ export const onDeleteUserNotification = /* GraphQL */ `
         nationality
         status
         userType
+        userPermissions
         description
         createdAt
         updatedAt

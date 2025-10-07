@@ -35,6 +35,14 @@ import { generateClient } from "aws-amplify/api";
 import { useNotification } from "../../ComponentAssets/NotificationContext";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSnackbar } from "../../ComponentAssets/SnackbarContext";
+import {
+  CREATE_INSTITUTION_MUTATION,
+  CREATE_BRANCH_MUTATION,
+  CREATE_USER_MUTATION,
+  GET_INSTITUTION_QUERY,
+  LIST_USERS_QUERY,
+  CREATE_USER_NOTIFICATION_MUTATION,
+} from "./onboardingQueries";
 
 const client = generateClient();
 
@@ -165,9 +173,7 @@ const AccountSettingsForm = () => {
       };
 
       const institutionRes = await client.graphql({
-        query: `mutation CreateInstitution($input: CreateInstitutionInput!) {
-          createInstitution(input: $input) { id }
-        }`,
+        query: CREATE_INSTITUTION_MUTATION,
         variables: { input: institutionInput },
       });
 
@@ -180,9 +186,7 @@ const AccountSettingsForm = () => {
       };
 
       const branchRes = await client.graphql({
-        query: `mutation CreateBranch($input: CreateBranchInput!) {
-          createBranch(input: $input) { id }
-        }`,
+        query: CREATE_BRANCH_MUTATION,
         variables: { input: branchInput },
       });
 
@@ -199,15 +203,7 @@ const AccountSettingsForm = () => {
       };
 
       const userRes = await client.graphql({
-        query: `mutation CreateUser($input: CreateUserInput!) {
-          createUser(input: $input) { 
-            id
-            userType
-            status
-            institutionUsersId
-            branchUsersId
-          }
-        }`,
+        query: CREATE_USER_MUTATION,
         variables: { input: userInput },
       });
 
@@ -234,9 +230,7 @@ const AccountSettingsForm = () => {
     try {
       // 1. Check if Institution exists
       const checkRes = await client.graphql({
-        query: `query GetInstitution($id: ID!) {
-          getInstitution(id: $id) { id }
-        }`,
+        query: GET_INSTITUTION_QUERY,
         variables: { id: businessID },
       });
 
@@ -255,17 +249,53 @@ const AccountSettingsForm = () => {
       };
 
       const userRes = await client.graphql({
-        query: `mutation CreateUser($input: CreateUserInput!) {
-          createUser(input: $input) { 
-            id
-            userType
-            status
-            institutionUsersId
-            branchUsersId
-          }
-        }`,
+        query: CREATE_USER_MUTATION,
         variables: { input: userInput },
       });
+
+      // Query for admin users in the institution
+      const adminsRes = await client.graphql({
+        query: LIST_USERS_QUERY,
+        variables: {
+          filter: {
+            institutionUsersId: { eq: businessID },
+            userType: { eq: "Admin" },
+          },
+        },
+      });
+      const admins = adminsRes.data.listUsers.items;
+
+      if (admins.length === 0) {
+        console.warn("No admins found for institution:", businessID);
+      }
+
+      // Create notifications for each admin
+      const currentDate = new Date().toISOString().split("T")[0];
+      for (const admin of admins) {
+        try {
+          await client.graphql({
+            query: CREATE_USER_NOTIFICATION_MUTATION,
+            variables: {
+              input: {
+                eventType: "user_join_request",
+                name: "New User Join Request",
+                description:
+                  "A new user has requested to join your institution.",
+                reference: userRes.data.createUser.id,
+                message: `Please review and approve the join request for ${user.signInDetails.loginId}. Joined on ${currentDate}.`,
+                status: "unread",
+                userUserNotificationsId: admin.id,
+              },
+            },
+          });
+        } catch (notifError) {
+          console.error(
+            "Error creating notification for admin:",
+            admin.id,
+            notifError
+          );
+        }
+      }
 
       // Update user context with new details
       if (setUserDetails) {

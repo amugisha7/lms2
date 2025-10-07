@@ -27,6 +27,7 @@ import CreateEmployeePage from "./Screens/Employees/CreateEmployeePage";
 import EmployeeManagement from "./Screens/Employees/EmployeeManagement";
 import BorrowerManagement from "./Models/Borrowers/BorrowerManagement";
 import UserSettings from "./Screens/AdminScreens/Settings/UserSettings";
+import NotificationsDashboard from "./Screens/Notifications/NotificationsDashboard";
 
 export default function AppRoutes({ userExists }) {
   return (
@@ -38,6 +39,10 @@ export default function AppRoutes({ userExists }) {
               <Route index element={<MainGrid />} />
               <Route path="reports" element={<MainGrid />} />
               <Route path="settings" element={<UserSettings />} />
+              <Route
+                path="notifications"
+                element={<NotificationsDashboard />}
+              />
 
               {/* Borrowers routes */}
               <Route path="borrowers" element={<Borrowers />} />

@@ -106,6 +106,7 @@ type User @model {
   nationality: String
   status: String
   userType: String
+  userPermissions: AWSJSON
   description: String
   institution: Institution @belongsTo
   branch: Branch @belongsTo

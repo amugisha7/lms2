@@ -223,6 +223,7 @@ export const getUser = /* GraphQL */ `
       nationality
       status
       userType
+      userPermissions
       description
       institution {
         id
@@ -302,6 +303,7 @@ export const listUsers = /* GraphQL */ `
         nationality
         status
         userType
+        userPermissions
         description
         createdAt
         updatedAt
@@ -885,6 +887,7 @@ export const getUserNotification = /* GraphQL */ `
         nationality
         status
         userType
+        userPermissions
         description
         createdAt
         updatedAt

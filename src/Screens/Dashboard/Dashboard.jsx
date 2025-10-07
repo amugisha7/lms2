@@ -75,7 +75,26 @@ const Dashboard = () => {
           }}
         >
           <Box sx={{ width: "100%", maxWidth: 1200 }}>
-            {userDetails?.userType === "User" && (
+            {userDetails?.status === "pending" && (
+              <Box
+                sx={{
+                  mb: 2,
+                  p: 2,
+                  bgcolor: "warning.main",
+                  color: "white",
+                  borderRadius: 1,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <WarningIcon sx={{ mr: 1 }} />
+                <Typography sx={{ textAlign: "center" }}>
+                  Your access is pending approval from your Admin.
+                </Typography>
+              </Box>
+            )}
+            {userDetails?.status === "inactive" && (
               <Box
                 sx={{
                   mb: 2,
@@ -90,7 +109,8 @@ const Dashboard = () => {
               >
                 <WarningIcon sx={{ mr: 1 }} />
                 <Typography sx={{ textAlign: "center" }}>
-                  Your access is pending approval from your Admin.
+                  Your access request has been declined. Please contact your
+                  administrator.
                 </Typography>
               </Box>
             )}

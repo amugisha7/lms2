@@ -34,6 +34,7 @@ import BorrowerFiles from "./BorrowerFiles/BorrowerFiles";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 import { ColorModeContext } from "../../theme";
+import { hasPermission } from "../../ModelAssets/Permissions/permissions";
 
 // Modified function to download PDF using jsPDF and html2canvas
 const downloadPdf = async (
@@ -318,6 +319,9 @@ export default function BorrowerManagement() {
     institutionUsersId: null,
     branchUsersId: null,
   }); // <-- Add ref
+
+  const canEditBorrower = hasPermission(userDetails, "update", "borrower");
+  const canDeleteBorrower = hasPermission(userDetails, "delete", "borrower");
 
   // Fetch borrower data
   useEffect(() => {
@@ -669,16 +673,18 @@ export default function BorrowerManagement() {
             }}
           >
             {/* Removed Edit button from header */}
-            <ClickableText
-              onClick={handleDelete}
-              sx={{
-                color: theme.palette.error.main,
-                // fontWeight: 500,
-                fontSize: "0.9rem",
-              }}
-            >
-              Delete
-            </ClickableText>
+            {canDeleteBorrower && (
+              <ClickableText
+                onClick={handleDelete}
+                sx={{
+                  color: theme.palette.error.main,
+                  // fontWeight: 500,
+                  fontSize: "0.9rem",
+                }}
+              >
+                Delete
+              </ClickableText>
+            )}
           </Box>
         </Box>
 
@@ -746,16 +752,18 @@ export default function BorrowerManagement() {
                   gap: 3,
                 }}
               >
-                <ClickableText
-                  onClick={handleEdit}
-                  sx={{
-                    color: theme.palette.blueText.main,
-                    fontSize: "0.9rem",
-                  }}
-                  className="pdf-hide"
-                >
-                  Edit
-                </ClickableText>
+                {canEditBorrower && (
+                  <ClickableText
+                    onClick={handleEdit}
+                    sx={{
+                      color: theme.palette.blueText.main,
+                      fontSize: "0.9rem",
+                    }}
+                    className="pdf-hide"
+                  >
+                    Edit
+                  </ClickableText>
+                )}
                 <ClickableText
                   onClick={handlePrint}
                   sx={{

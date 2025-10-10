@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   AppBar,
   Toolbar,
@@ -22,45 +22,16 @@ import { useTheme } from "@mui/material/styles";
 import myLogo from "../../Resources/loantabs_logo.png";
 import MobileMenu from "./MobileMenu";
 import { useNavigate } from "react-router-dom";
-import { generateClient } from "aws-amplify/api";
 
 const TopBar = ({ onMenuClick }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
-  const client = generateClient();
   const [unreadCount, setUnreadCount] = useState(0);
 
   const { userDetails } = React.useContext(require("../../App").UserContext);
   const institutionName = userDetails?.institution?.name || "Institution";
-
-  useEffect(() => {
-    const fetchUnreadCount = async () => {
-      if (!userDetails?.id) return;
-      const query = `query ListUserNotifications($filter: ModelUserNotificationFilterInput) {
-        listUserNotifications(filter: $filter) {
-          items { id }
-        }
-      }`;
-      try {
-        const res = await client.graphql({
-          query,
-          variables: {
-            filter: {
-              userUserNotificationsId: { eq: userDetails.id },
-              status: { eq: "unread" },
-            },
-          },
-        });
-        setUnreadCount(res.data.listUserNotifications.items.length);
-        console.log("res::: ", res);
-      } catch (error) {
-        console.error("Error fetching unread count:", error);
-      }
-    };
-    fetchUnreadCount();
-  }, [userDetails?.id, client]);
 
   const handleMobileMenuToggle = () => {
     setMobileMenuOpen(!mobileMenuOpen);

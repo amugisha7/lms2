@@ -3,7 +3,7 @@ import { Typography, IconButton } from "@mui/material";
 import { Delete } from "@mui/icons-material";
 import ClickableText from "../../../ComponentAssets/ClickableText";
 
-export const getBorrowerFilesColumns = (theme, handleDownload, openDeleteDialog, formatFileSize, formatDate) => [
+export const getBorrowerFilesColumns = (theme, handleDownload, openDeleteDialog, formatFileSize, formatDate, canDelete) => [
   {
     field: "fileName",
     headerName: "File Name",
@@ -85,23 +85,27 @@ export const getBorrowerFilesColumns = (theme, handleDownload, openDeleteDialog,
       </Typography>
     ),
   },
-  {
-    field: "actions",
-    headerName: "",
-    width: 50,
-    sortable: false,
-    renderCell: (params) => (
-      <IconButton onClick={() => openDeleteDialog(params.row)}>
-        <Delete
-          sx={{
-            color: theme.palette.error.main,
-            "&:hover": {
-              color: theme.palette.error.dark,
-            },
-            fontSize: 20,
-          }}
-        />
-      </IconButton>
-    ),
-  },
+  ...(canDelete
+    ? [
+        {
+          field: "actions",
+          headerName: "",
+          width: 50,
+          sortable: false,
+          renderCell: (params) => (
+            <IconButton onClick={() => openDeleteDialog(params.row)}>
+              <Delete
+                sx={{
+                  color: theme.palette.error.main,
+                  "&:hover": {
+                    color: theme.palette.error.dark,
+                  },
+                  fontSize: 20,
+                }}
+              />
+            </IconButton>
+          ),
+        },
+      ]
+    : []),
 ];

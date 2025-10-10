@@ -23,6 +23,8 @@ import {
   DELETE_BORROWER_MUTATION,
 } from "./borrowerQueries";
 
+import { hasPermission } from "../../ModelAssets/Permissions/permissions";
+
 export default function Borrowers() {
   const theme = useTheme();
   const navigate = useNavigate();
@@ -241,6 +243,8 @@ export default function Borrowers() {
     }
   }, [userDetails?.branchUsersId]);
 
+  const canCreateBorrower = hasPermission(userDetails, "create", "borrower");
+
   return (
     <>
       <NotificationBar
@@ -262,22 +266,24 @@ export default function Borrowers() {
           <Typography variant="h4" sx={{ fontWeight: 600 }}>
             Borrowers
           </Typography>
-          <Button
-            variant="outlined"
-            onClick={() => setCreateDialogOpen(true)}
-            sx={{
-              borderColor: theme.palette.blueText.main,
-              color: theme.palette.blueText.main,
-              backgroundColor: "transparent",
-              "&:hover": {
-                backgroundColor: "transparent",
+          {canCreateBorrower && (
+            <Button
+              variant="outlined"
+              onClick={() => setCreateDialogOpen(true)}
+              sx={{
                 borderColor: theme.palette.blueText.main,
-                borderWidth: "2px",
-              },
-            }}
-          >
-            Create Borrower
-          </Button>
+                color: theme.palette.blueText.main,
+                backgroundColor: "transparent",
+                "&:hover": {
+                  backgroundColor: "transparent",
+                  borderColor: theme.palette.blueText.main,
+                  borderWidth: "2px",
+                },
+              }}
+            >
+              Create Borrower
+            </Button>
+          )}
         </Box>
 
         {/* Data Grid */}

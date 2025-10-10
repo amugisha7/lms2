@@ -24,6 +24,7 @@ import NumberInput from "../../../Resources/FormComponents/NumberInput";
 import Dropdown from "../../../Resources/FormComponents/Dropdown";
 import DateInput from "../../../Resources/FormComponents/DateInput";
 import TextArea from "../../../Resources/FormComponents/TextArea";
+import { hasPermission } from "../../../ModelAssets/Permissions/permissions";
 
 const FormGrid = styled(Grid)(({ theme }) => ({
   display: "flex",
@@ -44,6 +45,8 @@ const CustomBorrowerFields = ({
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const navigate = useNavigate(); // <-- Add this
+
+  const canUpdateBorrower = hasPermission(userDetails, "update", "borrower");
 
   const renderCustomField = (field) => {
     const fieldName = field.fieldName;
@@ -112,16 +115,18 @@ const CustomBorrowerFields = ({
             gap: 3,
           }}
         >
-          <ClickableText
-            onClick={onEdit}
-            sx={{
-              color: theme.palette.blueText.main,
-              fontSize: "0.9rem",
-            }}
-            className="pdf-hide"
-          >
-            Edit
-          </ClickableText>
+          {canUpdateBorrower && (
+            <ClickableText
+              onClick={onEdit}
+              sx={{
+                color: theme.palette.blueText.main,
+                fontSize: "0.9rem",
+              }}
+              className="pdf-hide"
+            >
+              Edit
+            </ClickableText>
+          )}
           <ClickableText
             onClick={onPrint}
             sx={{

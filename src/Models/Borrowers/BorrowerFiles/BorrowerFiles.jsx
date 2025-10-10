@@ -15,6 +15,7 @@ import { UserContext } from "../../../App";
 import BorrowerUploadDialog from "../../../ModelAssets/UploadDialogBox";
 import { formatFileSize, formatDate } from "./fileUtils";
 import { getBorrowerFilesColumns } from "./borrowerFilesColumns";
+import { hasPermission } from "../../../ModelAssets/Permissions/permissions";
 
 const BorrowerFiles = ({ borrower, setBorrower, setNotification }) => {
   const theme = useTheme();
@@ -22,6 +23,17 @@ const BorrowerFiles = ({ borrower, setBorrower, setNotification }) => {
   const client = React.useMemo(() => generateClient(), []);
 
   const maxFileSize = 10 * 1024 * 1024; // 10MB
+
+  const canCreateBorrowerFiles = hasPermission(
+    userDetails,
+    "create",
+    "borrower"
+  );
+  const canDeleteBorrowerFiles = hasPermission(
+    userDetails,
+    "delete",
+    "borrower"
+  );
 
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -315,7 +327,8 @@ const BorrowerFiles = ({ borrower, setBorrower, setNotification }) => {
     handleDownload,
     openDeleteDialog,
     formatFileSize,
-    formatDate
+    formatDate,
+    canDeleteBorrowerFiles
   );
 
   return (
@@ -340,50 +353,56 @@ const BorrowerFiles = ({ borrower, setBorrower, setNotification }) => {
             Files ({files.length})
           </Typography>
           <Box sx={{ display: "flex", gap: 1 }}>
-            <Button
-              variant="outlined"
-              startIcon={
-                <CloudUpload sx={{ color: theme.palette.blueText.main }} />
-              }
-              onClick={() => {
-                setUploadMode("file");
-                setUploadDialogOpen(true);
-              }}
-              sx={{
-                borderColor: theme.palette.blueText.main,
-                color: theme.palette.blueText.main,
-                backgroundColor: "transparent",
-                "&:hover": {
-                  backgroundColor: "transparent",
-                  borderColor: theme.palette.blueText.dark,
-                  borderWidth: "2px",
-                  color: theme.palette.blueText.dark,
-                },
-              }}
-            >
-              Upload File
-            </Button>
-            <Button
-              variant="outlined"
-              startIcon={<Add sx={{ color: theme.palette.blueText.main }} />}
-              onClick={() => {
-                setUploadMode("link");
-                setUploadDialogOpen(true);
-              }}
-              sx={{
-                borderColor: theme.palette.blueText.main,
-                color: theme.palette.blueText.main,
-                backgroundColor: "transparent",
-                "&:hover": {
-                  backgroundColor: "transparent",
-                  borderColor: theme.palette.blueText.dark,
-                  borderWidth: "2px",
-                  color: theme.palette.blueText.dark,
-                },
-              }}
-            >
-              Add Link
-            </Button>
+            {canCreateBorrowerFiles && (
+              <>
+                <Button
+                  variant="outlined"
+                  startIcon={
+                    <CloudUpload sx={{ color: theme.palette.blueText.main }} />
+                  }
+                  onClick={() => {
+                    setUploadMode("file");
+                    setUploadDialogOpen(true);
+                  }}
+                  sx={{
+                    borderColor: theme.palette.blueText.main,
+                    color: theme.palette.blueText.main,
+                    backgroundColor: "transparent",
+                    "&:hover": {
+                      backgroundColor: "transparent",
+                      borderColor: theme.palette.blueText.dark,
+                      borderWidth: "2px",
+                      color: theme.palette.blueText.dark,
+                    },
+                  }}
+                >
+                  Upload File
+                </Button>
+                <Button
+                  variant="outlined"
+                  startIcon={
+                    <Add sx={{ color: theme.palette.blueText.main }} />
+                  }
+                  onClick={() => {
+                    setUploadMode("link");
+                    setUploadDialogOpen(true);
+                  }}
+                  sx={{
+                    borderColor: theme.palette.blueText.main,
+                    color: theme.palette.blueText.main,
+                    backgroundColor: "transparent",
+                    "&:hover": {
+                      backgroundColor: "transparent",
+                      borderColor: theme.palette.blueText.dark,
+                      borderWidth: "2px",
+                      color: theme.palette.blueText.dark,
+                    },
+                  }}
+                >
+                  Add Link
+                </Button>
+              </>
+            )}
           </Box>
         </Box>
 

@@ -24,7 +24,7 @@ import NumberInput from "../../../Resources/FormComponents/NumberInput";
 import Dropdown from "../../../Resources/FormComponents/Dropdown";
 import DateInput from "../../../Resources/FormComponents/DateInput";
 import TextArea from "../../../Resources/FormComponents/TextArea";
-import { hasPermission } from "../../../ModelAssets/Permissions/permissions";
+import { useHasPermission } from "../../../ModelAssets/Permissions/permissions";
 
 const FormGrid = styled(Grid)(({ theme }) => ({
   display: "flex",
@@ -46,7 +46,7 @@ const CustomBorrowerFields = ({
   const colors = tokens(theme.palette.mode);
   const navigate = useNavigate(); // <-- Add this
 
-  const canUpdateBorrower = hasPermission(userDetails, "update", "borrower");
+  const canUpdateBorrower = useHasPermission("update", "borrower");
 
   const renderCustomField = (field) => {
     const fieldName = field.fieldName;
@@ -89,17 +89,34 @@ const CustomBorrowerFields = ({
 
   if (customFields.length === 0) {
     return (
-      <Box sx={{ textAlign: "center", py: 4 }}>
-        <Typography
-          variant="body1"
-          sx={{
-            color: theme.palette.text.secondary,
-            fontStyle: "italic",
-          }}
-        >
-          No custom fields available for this borrower.
-        </Typography>
-      </Box>
+      <>
+        <Box sx={{ textAlign: "center", py: 4 }}>
+          <Typography
+            variant="body1"
+            sx={{
+              color: theme.palette.text.secondary,
+              fontStyle: "italic",
+            }}
+          >
+            You have not added any custom fields for Borrowers.
+          </Typography>
+        </Box>
+        <Box sx={{ my: 4, textAlign: "center" }}>
+          <ClickableText
+            onClick={() => navigate("/customFields")}
+            sx={{
+              // color: theme.palette.blueText.main,
+              // fontWeight: 500,
+              fontSize: "0.8rem",
+              textDecoration: "underline",
+              // mt: 2,
+            }}
+            className="pdf-hide"
+          >
+            Manage Custom Fields
+          </ClickableText>
+        </Box>
+      </>
     );
   }
 

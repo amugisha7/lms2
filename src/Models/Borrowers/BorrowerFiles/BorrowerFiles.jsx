@@ -15,7 +15,7 @@ import { UserContext } from "../../../App";
 import BorrowerUploadDialog from "../../../ModelAssets/UploadDialogBox";
 import { formatFileSize, formatDate } from "./fileUtils";
 import { getBorrowerFilesColumns } from "./borrowerFilesColumns";
-import { hasPermission } from "../../../ModelAssets/Permissions/permissions";
+import { useHasPermission } from "../../../ModelAssets/Permissions/permissions";
 
 const BorrowerFiles = ({ borrower, setBorrower, setNotification }) => {
   const theme = useTheme();
@@ -24,16 +24,8 @@ const BorrowerFiles = ({ borrower, setBorrower, setNotification }) => {
 
   const maxFileSize = 10 * 1024 * 1024; // 10MB
 
-  const canCreateBorrowerFiles = hasPermission(
-    userDetails,
-    "create",
-    "borrower"
-  );
-  const canDeleteBorrowerFiles = hasPermission(
-    userDetails,
-    "delete",
-    "borrower"
-  );
+  const canCreateBorrowerFiles = useHasPermission("create", "borrower");
+  const canDeleteBorrowerFiles = useHasPermission("delete", "borrower");
 
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(false);

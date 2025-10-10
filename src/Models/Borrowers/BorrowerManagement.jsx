@@ -34,7 +34,7 @@ import BorrowerFiles from "./BorrowerFiles/BorrowerFiles";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 import { ColorModeContext } from "../../theme";
-import { hasPermission } from "../../ModelAssets/Permissions/permissions";
+import { useHasPermission } from "../../ModelAssets/Permissions/permissions";
 
 // Modified function to download PDF using jsPDF and html2canvas
 const downloadPdf = async (
@@ -320,8 +320,8 @@ export default function BorrowerManagement() {
     branchUsersId: null,
   }); // <-- Add ref
 
-  const canEditBorrower = hasPermission(userDetails, "update", "borrower");
-  const canDeleteBorrower = hasPermission(userDetails, "delete", "borrower");
+  const canEditBorrower = useHasPermission("update", "borrower");
+  const canDeleteBorrower = useHasPermission("delete", "borrower");
 
   // Fetch borrower data
   useEffect(() => {

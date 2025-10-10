@@ -1,12 +1,16 @@
-export const hasPermission = (userDetails, action, resource) => {
+import { useContext } from 'react';
+import { UserContext } from '../../App';
+
+export const useHasPermission = (action, resource) => {
+  const { userDetails } = useContext(UserContext);
   if (!userDetails || userDetails.status !== 'active') return false;
   
   const { userType } = userDetails;
   const permissions = {
     borrower: {
-      read: ['admin', 'manager', 'user'],
-      create: ['admin', 'manager'],
-      update: ['admin', 'manager'],
+      read: ['any'],
+      create: ['admin', 'manager', 'loanOfficer'],
+      update: ['admin', 'manager', 'loanOfficer'],
       delete: ['admin'],
     },
   };

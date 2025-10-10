@@ -23,7 +23,7 @@ import {
   DELETE_BORROWER_MUTATION,
 } from "./borrowerQueries";
 
-import { hasPermission } from "../../ModelAssets/Permissions/permissions";
+import { useHasPermission } from "../../ModelAssets/Permissions/permissions";
 
 export default function Borrowers() {
   const theme = useTheme();
@@ -243,7 +243,7 @@ export default function Borrowers() {
     }
   }, [userDetails?.branchUsersId]);
 
-  const canCreateBorrower = hasPermission(userDetails, "create", "borrower");
+  const canCreateBorrower = useHasPermission("create", "borrower");
 
   return (
     <>

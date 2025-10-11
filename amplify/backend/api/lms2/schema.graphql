@@ -698,4 +698,20 @@ type LoanFeesConfig @model {
   loanFees: [LoanFees] @manyToMany(relationName: "LoanFeesLoanFeesConfig")
 }
 
+type Message @model {
+  id: ID!
+  subject: String
+  body: String!
+  messageType: String # "user_message" or "system_message"
+  systemMessageType: String # e.g., "approval_request", "notification"
+  systemMessageData: AWSJSON # Contains approval details, buttons, etc.
+  status: String # "unread", "read"
+  createdAt: AWSDateTime
+  sender: User @belongsTo(fields: ["senderUserId"])
+  senderUserId: ID! @index(name: "bySender")
+  recipient: User @belongsTo(fields: ["recipientUserId"])
+  recipientUserId: ID! @index(name: "byRecipient")
+  institutionMessagesId: ID @index(name: "byInstitution")
+}
+
 # ---------- End of Schema ----------

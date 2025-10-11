@@ -1,7 +1,7 @@
 import "./App.css";
 import { withAuthenticator } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
-import { createContext, useEffect, useState } from "react";
+import { createContext, useEffect, useState, useRef } from "react";
 import { NotificationProvider } from "./ComponentAssets/NotificationContext";
 import { SnackbarProvider } from "./ComponentAssets/SnackbarContext";
 import { generateClient } from "aws-amplify/api";
@@ -30,10 +30,16 @@ function App({ signOut, user }) {
 
   const [theme, colorMode] = useMode();
 
+  const checkedUserIds = useRef(new Set());
+  const processedUserIds = useRef(new Set());
+
   const fetchMessages = async (userId) => {
     try {
       const client = generateClient();
       // Fetch messages where user is sender
+      console.log("API Call: LIST_MESSAGES_QUERY sent messages", {
+        senderUserId: userId,
+      });
       const sentResponse = await client.graphql({
         query: LIST_MESSAGES_QUERY,
         variables: {
@@ -43,6 +49,9 @@ function App({ signOut, user }) {
       });
 
       // Fetch messages where user is recipient
+      console.log("API Call: LIST_MESSAGES_QUERY received messages", {
+        recipientUserId: userId,
+      });
       const receivedResponse = await client.graphql({
         query: LIST_MESSAGES_QUERY,
         variables: {
@@ -85,11 +94,14 @@ function App({ signOut, user }) {
   }, [allMessages, userDetails?.id]);
 
   useEffect(() => {
+    if (checkedUserIds.current.has(user.userId)) return;
+
     const checkUser = async () => {
       let retries = 3;
       while (retries > 0) {
         try {
           const client = generateClient();
+          console.log("API Call: GetUser", { id: user.userId });
           const res = await client.graphql({
             query: `query GetUser($id: ID!) { 
               getUser(id: $id) { 
@@ -111,6 +123,7 @@ function App({ signOut, user }) {
           setError(false);
           setUserExists(!!userData?.id);
           setChecking(false);
+          checkedUserIds.current.add(user.userId);
           return; // Success - exit the retry loop
         } catch (err) {
           console.log("Error fetching user:", err);
@@ -129,10 +142,14 @@ function App({ signOut, user }) {
 
   useEffect(() => {
     if (!userDetails?.id) return;
+    if (processedUserIds.current.has(userDetails.id)) return;
 
     fetchMessages(userDetails.id);
 
     const client = generateClient();
+    console.log("API Call: SUBSCRIBE_TO_NEW_MESSAGES", {
+      recipientUserId: userDetails.id,
+    });
     const subscription = client
       .graphql({
         query: SUBSCRIBE_TO_NEW_MESSAGES,
@@ -140,6 +157,10 @@ function App({ signOut, user }) {
       })
       .subscribe({
         next: ({ data }) => {
+          console.log(
+            "Subscription received new message:",
+            data.onCreateMessage
+          );
           const newMessage = data.onCreateMessage;
           setAllMessages((prev) => [newMessage, ...prev]);
         },
@@ -147,6 +168,8 @@ function App({ signOut, user }) {
           console.error("Subscription error:", error);
         },
       });
+
+    processedUserIds.current.add(userDetails.id);
 
     return () => subscription.unsubscribe();
   }, [userDetails?.id]);

@@ -111,6 +111,8 @@ type User @model {
   institution: Institution @belongsTo
   branch: Branch @belongsTo
   userNotifications: [UserNotification] @hasMany
+  sentMessages: [Message] @hasMany(indexName: "bySender", fields: ["id"])
+  receivedMessages: [Message] @hasMany(indexName: "byRecipient", fields: ["id"])
 }
 
 type Employee @model {
@@ -701,7 +703,7 @@ type LoanFeesConfig @model {
 type Message @model {
   id: ID!
   subject: String
-  body: String!
+  body: String
   messageType: String # "user_message" or "system_message"
   systemMessageType: String # e.g., "approval_request", "notification"
   systemMessageData: AWSJSON # Contains approval details, buttons, etc.

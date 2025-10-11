@@ -11,9 +11,16 @@ import {
   AdminPanelSettings as AdminPanelSettingsIcon,
   Badge as BadgeIcon,
   Work as WorkIcon,
+  Message as MessageIcon,
 } from "@mui/icons-material";
 
 export const menuItems = [
+  {
+    name: "Messages",
+    icon: <MessageIcon sx={{ color: "white" }} />,
+    route: "/messages",
+  },
+
   {
     name: "Dashboard",
     icon: <DashboardIcon sx={{ color: "white" }} />,

@@ -485,6 +485,14 @@ export const onCreateUser = /* GraphQL */ `
         nextToken
         __typename
       }
+      sentMessages {
+        nextToken
+        __typename
+      }
+      receivedMessages {
+        nextToken
+        __typename
+      }
       createdAt
       updatedAt
       institutionUsersId
@@ -560,6 +568,14 @@ export const onUpdateUser = /* GraphQL */ `
         nextToken
         __typename
       }
+      sentMessages {
+        nextToken
+        __typename
+      }
+      receivedMessages {
+        nextToken
+        __typename
+      }
       createdAt
       updatedAt
       institutionUsersId
@@ -632,6 +648,14 @@ export const onDeleteUser = /* GraphQL */ `
         __typename
       }
       userNotifications {
+        nextToken
+        __typename
+      }
+      sentMessages {
+        nextToken
+        __typename
+      }
+      receivedMessages {
         nextToken
         __typename
       }
@@ -6990,6 +7014,225 @@ export const onDeleteLoanFeesConfig = /* GraphQL */ `
       createdAt
       updatedAt
       institutionLoanFeesConfigsId
+      __typename
+    }
+  }
+`;
+export const onCreateMessage = /* GraphQL */ `
+  subscription OnCreateMessage($filter: ModelSubscriptionMessageFilterInput) {
+    onCreateMessage(filter: $filter) {
+      id
+      subject
+      body
+      messageType
+      systemMessageType
+      systemMessageData
+      status
+      createdAt
+      sender {
+        id
+        firstName
+        lastName
+        middleName
+        dateOfBirth
+        phoneNumber1
+        phoneNumber2
+        email
+        addressLine1
+        addressLine2
+        city
+        stateProvince
+        postalCode
+        nationalID
+        passportNumber
+        nationality
+        status
+        userType
+        userPermissions
+        description
+        createdAt
+        updatedAt
+        institutionUsersId
+        branchUsersId
+        __typename
+      }
+      senderUserId
+      recipient {
+        id
+        firstName
+        lastName
+        middleName
+        dateOfBirth
+        phoneNumber1
+        phoneNumber2
+        email
+        addressLine1
+        addressLine2
+        city
+        stateProvince
+        postalCode
+        nationalID
+        passportNumber
+        nationality
+        status
+        userType
+        userPermissions
+        description
+        createdAt
+        updatedAt
+        institutionUsersId
+        branchUsersId
+        __typename
+      }
+      recipientUserId
+      institutionMessagesId
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onUpdateMessage = /* GraphQL */ `
+  subscription OnUpdateMessage($filter: ModelSubscriptionMessageFilterInput) {
+    onUpdateMessage(filter: $filter) {
+      id
+      subject
+      body
+      messageType
+      systemMessageType
+      systemMessageData
+      status
+      createdAt
+      sender {
+        id
+        firstName
+        lastName
+        middleName
+        dateOfBirth
+        phoneNumber1
+        phoneNumber2
+        email
+        addressLine1
+        addressLine2
+        city
+        stateProvince
+        postalCode
+        nationalID
+        passportNumber
+        nationality
+        status
+        userType
+        userPermissions
+        description
+        createdAt
+        updatedAt
+        institutionUsersId
+        branchUsersId
+        __typename
+      }
+      senderUserId
+      recipient {
+        id
+        firstName
+        lastName
+        middleName
+        dateOfBirth
+        phoneNumber1
+        phoneNumber2
+        email
+        addressLine1
+        addressLine2
+        city
+        stateProvince
+        postalCode
+        nationalID
+        passportNumber
+        nationality
+        status
+        userType
+        userPermissions
+        description
+        createdAt
+        updatedAt
+        institutionUsersId
+        branchUsersId
+        __typename
+      }
+      recipientUserId
+      institutionMessagesId
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onDeleteMessage = /* GraphQL */ `
+  subscription OnDeleteMessage($filter: ModelSubscriptionMessageFilterInput) {
+    onDeleteMessage(filter: $filter) {
+      id
+      subject
+      body
+      messageType
+      systemMessageType
+      systemMessageData
+      status
+      createdAt
+      sender {
+        id
+        firstName
+        lastName
+        middleName
+        dateOfBirth
+        phoneNumber1
+        phoneNumber2
+        email
+        addressLine1
+        addressLine2
+        city
+        stateProvince
+        postalCode
+        nationalID
+        passportNumber
+        nationality
+        status
+        userType
+        userPermissions
+        description
+        createdAt
+        updatedAt
+        institutionUsersId
+        branchUsersId
+        __typename
+      }
+      senderUserId
+      recipient {
+        id
+        firstName
+        lastName
+        middleName
+        dateOfBirth
+        phoneNumber1
+        phoneNumber2
+        email
+        addressLine1
+        addressLine2
+        city
+        stateProvince
+        postalCode
+        nationalID
+        passportNumber
+        nationality
+        status
+        userType
+        userPermissions
+        description
+        createdAt
+        updatedAt
+        institutionUsersId
+        branchUsersId
+        __typename
+      }
+      recipientUserId
+      institutionMessagesId
+      updatedAt
       __typename
     }
   }

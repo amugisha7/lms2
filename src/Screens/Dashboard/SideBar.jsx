@@ -7,16 +7,21 @@ import {
   ListItemIcon,
   ListItemText,
   Collapse,
+  Badge,
 } from "@mui/material";
 import { ExpandLess, ExpandMore } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 
 import myLogo from "../../Resources/loantabs_logo.png";
 import { menuItems } from "./Menu";
+import { UserContext } from "../../App";
+import { useUnreadMessageCount } from "../Messaging";
 
 const SideBar = ({ open = true, onClose }) => {
   const [expandedItems, setExpandedItems] = useState({});
   const navigate = useNavigate();
+  const { user, userDetails } = React.useContext(UserContext);
+  const unreadCount = useUnreadMessageCount();
 
   const handleToggleExpand = (itemName) => {
     setExpandedItems((prev) => ({
@@ -161,7 +166,13 @@ const SideBar = ({ open = true, onClose }) => {
                 }}
               >
                 <ListItemIcon sx={{ color: "white", minWidth: 36 }}>
-                  {item.icon}
+                  {item.name === "Messages" && unreadCount > 0 ? (
+                    <Badge badgeContent={unreadCount} color="error">
+                      {item.icon}
+                    </Badge>
+                  ) : (
+                    item.icon
+                  )}
                 </ListItemIcon>
                 <ListItemText
                   primary={item.name}
@@ -174,6 +185,14 @@ const SideBar = ({ open = true, onClose }) => {
             );
           })}
         </List>
+        <Box>
+          <Typography variant="body2" sx={{ color: "white" }}>
+            Email: {user?.signInDetails?.loginId || "N/A"}
+          </Typography>
+          <Typography variant="body2" sx={{ color: "white" }}>
+            User Type: {userDetails?.userType || "N/A"}
+          </Typography>
+        </Box>
       </Box>
     </Box>
   );

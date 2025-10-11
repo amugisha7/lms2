@@ -46,7 +46,7 @@ const MessageList = ({ onSelectConversation, selectedUserId }) => {
     const subscription = client
       .graphql({
         query: SUBSCRIBE_TO_NEW_MESSAGES,
-        variables: { recipientUserId: userDetails.id },
+        variables: { filter: { recipientUserId: { eq: userDetails.id } } },
       })
       .subscribe({
         next: ({ data }) => {

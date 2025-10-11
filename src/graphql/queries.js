@@ -269,6 +269,14 @@ export const getUser = /* GraphQL */ `
         nextToken
         __typename
       }
+      sentMessages {
+        nextToken
+        __typename
+      }
+      receivedMessages {
+        nextToken
+        __typename
+      }
       createdAt
       updatedAt
       institutionUsersId
@@ -3198,6 +3206,106 @@ export const listLoanFeesConfigs = /* GraphQL */ `
         createdAt
         updatedAt
         institutionLoanFeesConfigsId
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const getMessage = /* GraphQL */ `
+  query GetMessage($id: ID!) {
+    getMessage(id: $id) {
+      id
+      subject
+      body
+      messageType
+      systemMessageType
+      systemMessageData
+      status
+      createdAt
+      sender {
+        id
+        firstName
+        lastName
+        middleName
+        dateOfBirth
+        phoneNumber1
+        phoneNumber2
+        email
+        addressLine1
+        addressLine2
+        city
+        stateProvince
+        postalCode
+        nationalID
+        passportNumber
+        nationality
+        status
+        userType
+        userPermissions
+        description
+        createdAt
+        updatedAt
+        institutionUsersId
+        branchUsersId
+        __typename
+      }
+      senderUserId
+      recipient {
+        id
+        firstName
+        lastName
+        middleName
+        dateOfBirth
+        phoneNumber1
+        phoneNumber2
+        email
+        addressLine1
+        addressLine2
+        city
+        stateProvince
+        postalCode
+        nationalID
+        passportNumber
+        nationality
+        status
+        userType
+        userPermissions
+        description
+        createdAt
+        updatedAt
+        institutionUsersId
+        branchUsersId
+        __typename
+      }
+      recipientUserId
+      institutionMessagesId
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const listMessages = /* GraphQL */ `
+  query ListMessages(
+    $filter: ModelMessageFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listMessages(filter: $filter, limit: $limit, nextToken: $nextToken) {
+      items {
+        id
+        subject
+        body
+        messageType
+        systemMessageType
+        systemMessageData
+        status
+        createdAt
+        senderUserId
+        recipientUserId
+        institutionMessagesId
+        updatedAt
         __typename
       }
       nextToken
@@ -6669,6 +6777,111 @@ export const expensesByCreatedByEmployeeID = /* GraphQL */ `
         createdAt
         updatedAt
         accountExpensesId
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const messagesBySenderUserId = /* GraphQL */ `
+  query MessagesBySenderUserId(
+    $senderUserId: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelMessageFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    messagesBySenderUserId(
+      senderUserId: $senderUserId
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        subject
+        body
+        messageType
+        systemMessageType
+        systemMessageData
+        status
+        createdAt
+        senderUserId
+        recipientUserId
+        institutionMessagesId
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const messagesByRecipientUserId = /* GraphQL */ `
+  query MessagesByRecipientUserId(
+    $recipientUserId: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelMessageFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    messagesByRecipientUserId(
+      recipientUserId: $recipientUserId
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        subject
+        body
+        messageType
+        systemMessageType
+        systemMessageData
+        status
+        createdAt
+        senderUserId
+        recipientUserId
+        institutionMessagesId
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const messagesByInstitutionMessagesId = /* GraphQL */ `
+  query MessagesByInstitutionMessagesId(
+    $institutionMessagesId: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelMessageFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    messagesByInstitutionMessagesId(
+      institutionMessagesId: $institutionMessagesId
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        subject
+        body
+        messageType
+        systemMessageType
+        systemMessageData
+        status
+        createdAt
+        senderUserId
+        recipientUserId
+        institutionMessagesId
+        updatedAt
         __typename
       }
       nextToken

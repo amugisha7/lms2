@@ -31,7 +31,7 @@ export const LIST_MESSAGES_QUERY = `
     }
   }
 `;
-
+ 
 export const GET_MESSAGE_QUERY = `
   query GetMessage($id: ID!) {
     getMessage(id: $id) {
@@ -115,8 +115,8 @@ export const LIST_USERS_IN_INSTITUTION_QUERY = `
 `;
 
 export const SUBSCRIBE_TO_NEW_MESSAGES = `
-  subscription OnCreateMessage($recipientUserId: ID!) {
-    onCreateMessage(recipientUserId: $recipientUserId) {
+  subscription OnCreateMessage($filter: ModelSubscriptionMessageFilterInput) {
+    onCreateMessage(filter: $filter) {
       id
       subject
       body

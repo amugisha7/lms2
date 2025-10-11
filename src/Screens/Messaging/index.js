@@ -10,3 +10,4 @@ export * from "./messageUtils";
 export * from "./systemMessages";
 export * from "./messagingQueries";
 export * from "./messagingAPI";
+export { useUnreadMessageCount } from "./useUnreadMessageCount";

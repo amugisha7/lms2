@@ -58,18 +58,7 @@ export default function BorrowerUpdateForm(props) {
     creditScore: "",
     additionalNote1: "",
     additionalNote2: "",
-    borrowerDocument1: "",
-    borrowerDocument1URL: "",
-    borrowerDocument2: "",
-    borrowerDocument2URL: "",
-    borrowerDocument3: "",
-    borrowerDocument3URL: "",
-    borrowerDocument4: "",
-    borrowerDocument4URL: "",
-    borrowerStatus: "",
-    borrowertype: "",
-    borrowerAttribute1: "",
-    borrowerAttribute2: "",
+    borrowerDocuments: "",
     customFieldsData: "",
     status: "",
   };
@@ -134,41 +123,8 @@ export default function BorrowerUpdateForm(props) {
   const [additionalNote2, setAdditionalNote2] = React.useState(
     initialValues.additionalNote2
   );
-  const [borrowerDocument1, setBorrowerDocument1] = React.useState(
-    initialValues.borrowerDocument1
-  );
-  const [borrowerDocument1URL, setBorrowerDocument1URL] = React.useState(
-    initialValues.borrowerDocument1URL
-  );
-  const [borrowerDocument2, setBorrowerDocument2] = React.useState(
-    initialValues.borrowerDocument2
-  );
-  const [borrowerDocument2URL, setBorrowerDocument2URL] = React.useState(
-    initialValues.borrowerDocument2URL
-  );
-  const [borrowerDocument3, setBorrowerDocument3] = React.useState(
-    initialValues.borrowerDocument3
-  );
-  const [borrowerDocument3URL, setBorrowerDocument3URL] = React.useState(
-    initialValues.borrowerDocument3URL
-  );
-  const [borrowerDocument4, setBorrowerDocument4] = React.useState(
-    initialValues.borrowerDocument4
-  );
-  const [borrowerDocument4URL, setBorrowerDocument4URL] = React.useState(
-    initialValues.borrowerDocument4URL
-  );
-  const [borrowerStatus, setBorrowerStatus] = React.useState(
-    initialValues.borrowerStatus
-  );
-  const [borrowertype, setBorrowertype] = React.useState(
-    initialValues.borrowertype
-  );
-  const [borrowerAttribute1, setBorrowerAttribute1] = React.useState(
-    initialValues.borrowerAttribute1
-  );
-  const [borrowerAttribute2, setBorrowerAttribute2] = React.useState(
-    initialValues.borrowerAttribute2
+  const [borrowerDocuments, setBorrowerDocuments] = React.useState(
+    initialValues.borrowerDocuments
   );
   const [customFieldsData, setCustomFieldsData] = React.useState(
     initialValues.customFieldsData
@@ -206,18 +162,12 @@ export default function BorrowerUpdateForm(props) {
     setCreditScore(cleanValues.creditScore);
     setAdditionalNote1(cleanValues.additionalNote1);
     setAdditionalNote2(cleanValues.additionalNote2);
-    setBorrowerDocument1(cleanValues.borrowerDocument1);
-    setBorrowerDocument1URL(cleanValues.borrowerDocument1URL);
-    setBorrowerDocument2(cleanValues.borrowerDocument2);
-    setBorrowerDocument2URL(cleanValues.borrowerDocument2URL);
-    setBorrowerDocument3(cleanValues.borrowerDocument3);
-    setBorrowerDocument3URL(cleanValues.borrowerDocument3URL);
-    setBorrowerDocument4(cleanValues.borrowerDocument4);
-    setBorrowerDocument4URL(cleanValues.borrowerDocument4URL);
-    setBorrowerStatus(cleanValues.borrowerStatus);
-    setBorrowertype(cleanValues.borrowertype);
-    setBorrowerAttribute1(cleanValues.borrowerAttribute1);
-    setBorrowerAttribute2(cleanValues.borrowerAttribute2);
+    setBorrowerDocuments(
+      typeof cleanValues.borrowerDocuments === "string" ||
+        cleanValues.borrowerDocuments === null
+        ? cleanValues.borrowerDocuments
+        : JSON.stringify(cleanValues.borrowerDocuments)
+    );
     setCustomFieldsData(
       typeof cleanValues.customFieldsData === "string" ||
         cleanValues.customFieldsData === null
@@ -271,18 +221,7 @@ export default function BorrowerUpdateForm(props) {
     creditScore: [],
     additionalNote1: [],
     additionalNote2: [],
-    borrowerDocument1: [],
-    borrowerDocument1URL: [],
-    borrowerDocument2: [],
-    borrowerDocument2URL: [],
-    borrowerDocument3: [],
-    borrowerDocument3URL: [],
-    borrowerDocument4: [],
-    borrowerDocument4URL: [],
-    borrowerStatus: [],
-    borrowertype: [],
-    borrowerAttribute1: [],
-    borrowerAttribute2: [],
+    borrowerDocuments: [{ type: "JSON" }],
     customFieldsData: [{ type: "JSON" }],
     status: [],
   };
@@ -339,18 +278,7 @@ export default function BorrowerUpdateForm(props) {
           creditScore: creditScore ?? null,
           additionalNote1: additionalNote1 ?? null,
           additionalNote2: additionalNote2 ?? null,
-          borrowerDocument1: borrowerDocument1 ?? null,
-          borrowerDocument1URL: borrowerDocument1URL ?? null,
-          borrowerDocument2: borrowerDocument2 ?? null,
-          borrowerDocument2URL: borrowerDocument2URL ?? null,
-          borrowerDocument3: borrowerDocument3 ?? null,
-          borrowerDocument3URL: borrowerDocument3URL ?? null,
-          borrowerDocument4: borrowerDocument4 ?? null,
-          borrowerDocument4URL: borrowerDocument4URL ?? null,
-          borrowerStatus: borrowerStatus ?? null,
-          borrowertype: borrowertype ?? null,
-          borrowerAttribute1: borrowerAttribute1 ?? null,
-          borrowerAttribute2: borrowerAttribute2 ?? null,
+          borrowerDocuments: borrowerDocuments ?? null,
           customFieldsData: customFieldsData ?? null,
           status: status ?? null,
         };
@@ -440,18 +368,7 @@ export default function BorrowerUpdateForm(props) {
               creditScore,
               additionalNote1,
               additionalNote2,
-              borrowerDocument1,
-              borrowerDocument1URL,
-              borrowerDocument2,
-              borrowerDocument2URL,
-              borrowerDocument3,
-              borrowerDocument3URL,
-              borrowerDocument4,
-              borrowerDocument4URL,
-              borrowerStatus,
-              borrowertype,
-              borrowerAttribute1,
-              borrowerAttribute2,
+              borrowerDocuments,
               customFieldsData,
               status,
             };
@@ -504,18 +421,7 @@ export default function BorrowerUpdateForm(props) {
               creditScore,
               additionalNote1,
               additionalNote2,
-              borrowerDocument1,
-              borrowerDocument1URL,
-              borrowerDocument2,
-              borrowerDocument2URL,
-              borrowerDocument3,
-              borrowerDocument3URL,
-              borrowerDocument4,
-              borrowerDocument4URL,
-              borrowerStatus,
-              borrowertype,
-              borrowerAttribute1,
-              borrowerAttribute2,
+              borrowerDocuments,
               customFieldsData,
               status,
             };
@@ -568,18 +474,7 @@ export default function BorrowerUpdateForm(props) {
               creditScore,
               additionalNote1,
               additionalNote2,
-              borrowerDocument1,
-              borrowerDocument1URL,
-              borrowerDocument2,
-              borrowerDocument2URL,
-              borrowerDocument3,
-              borrowerDocument3URL,
-              borrowerDocument4,
-              borrowerDocument4URL,
-              borrowerStatus,
-              borrowertype,
-              borrowerAttribute1,
-              borrowerAttribute2,
+              borrowerDocuments,
               customFieldsData,
               status,
             };
@@ -632,18 +527,7 @@ export default function BorrowerUpdateForm(props) {
               creditScore,
               additionalNote1,
               additionalNote2,
-              borrowerDocument1,
-              borrowerDocument1URL,
-              borrowerDocument2,
-              borrowerDocument2URL,
-              borrowerDocument3,
-              borrowerDocument3URL,
-              borrowerDocument4,
-              borrowerDocument4URL,
-              borrowerStatus,
-              borrowertype,
-              borrowerAttribute1,
-              borrowerAttribute2,
+              borrowerDocuments,
               customFieldsData,
               status,
             };
@@ -696,18 +580,7 @@ export default function BorrowerUpdateForm(props) {
               creditScore,
               additionalNote1,
               additionalNote2,
-              borrowerDocument1,
-              borrowerDocument1URL,
-              borrowerDocument2,
-              borrowerDocument2URL,
-              borrowerDocument3,
-              borrowerDocument3URL,
-              borrowerDocument4,
-              borrowerDocument4URL,
-              borrowerStatus,
-              borrowertype,
-              borrowerAttribute1,
-              borrowerAttribute2,
+              borrowerDocuments,
               customFieldsData,
               status,
             };
@@ -760,18 +633,7 @@ export default function BorrowerUpdateForm(props) {
               creditScore,
               additionalNote1,
               additionalNote2,
-              borrowerDocument1,
-              borrowerDocument1URL,
-              borrowerDocument2,
-              borrowerDocument2URL,
-              borrowerDocument3,
-              borrowerDocument3URL,
-              borrowerDocument4,
-              borrowerDocument4URL,
-              borrowerStatus,
-              borrowertype,
-              borrowerAttribute1,
-              borrowerAttribute2,
+              borrowerDocuments,
               customFieldsData,
               status,
             };
@@ -824,18 +686,7 @@ export default function BorrowerUpdateForm(props) {
               creditScore,
               additionalNote1,
               additionalNote2,
-              borrowerDocument1,
-              borrowerDocument1URL,
-              borrowerDocument2,
-              borrowerDocument2URL,
-              borrowerDocument3,
-              borrowerDocument3URL,
-              borrowerDocument4,
-              borrowerDocument4URL,
-              borrowerStatus,
-              borrowertype,
-              borrowerAttribute1,
-              borrowerAttribute2,
+              borrowerDocuments,
               customFieldsData,
               status,
             };
@@ -888,18 +739,7 @@ export default function BorrowerUpdateForm(props) {
               creditScore,
               additionalNote1,
               additionalNote2,
-              borrowerDocument1,
-              borrowerDocument1URL,
-              borrowerDocument2,
-              borrowerDocument2URL,
-              borrowerDocument3,
-              borrowerDocument3URL,
-              borrowerDocument4,
-              borrowerDocument4URL,
-              borrowerStatus,
-              borrowertype,
-              borrowerAttribute1,
-              borrowerAttribute2,
+              borrowerDocuments,
               customFieldsData,
               status,
             };
@@ -952,18 +792,7 @@ export default function BorrowerUpdateForm(props) {
               creditScore,
               additionalNote1,
               additionalNote2,
-              borrowerDocument1,
-              borrowerDocument1URL,
-              borrowerDocument2,
-              borrowerDocument2URL,
-              borrowerDocument3,
-              borrowerDocument3URL,
-              borrowerDocument4,
-              borrowerDocument4URL,
-              borrowerStatus,
-              borrowertype,
-              borrowerAttribute1,
-              borrowerAttribute2,
+              borrowerDocuments,
               customFieldsData,
               status,
             };
@@ -1016,18 +845,7 @@ export default function BorrowerUpdateForm(props) {
               creditScore,
               additionalNote1,
               additionalNote2,
-              borrowerDocument1,
-              borrowerDocument1URL,
-              borrowerDocument2,
-              borrowerDocument2URL,
-              borrowerDocument3,
-              borrowerDocument3URL,
-              borrowerDocument4,
-              borrowerDocument4URL,
-              borrowerStatus,
-              borrowertype,
-              borrowerAttribute1,
-              borrowerAttribute2,
+              borrowerDocuments,
               customFieldsData,
               status,
             };
@@ -1080,18 +898,7 @@ export default function BorrowerUpdateForm(props) {
               creditScore,
               additionalNote1,
               additionalNote2,
-              borrowerDocument1,
-              borrowerDocument1URL,
-              borrowerDocument2,
-              borrowerDocument2URL,
-              borrowerDocument3,
-              borrowerDocument3URL,
-              borrowerDocument4,
-              borrowerDocument4URL,
-              borrowerStatus,
-              borrowertype,
-              borrowerAttribute1,
-              borrowerAttribute2,
+              borrowerDocuments,
               customFieldsData,
               status,
             };
@@ -1144,18 +951,7 @@ export default function BorrowerUpdateForm(props) {
               creditScore,
               additionalNote1,
               additionalNote2,
-              borrowerDocument1,
-              borrowerDocument1URL,
-              borrowerDocument2,
-              borrowerDocument2URL,
-              borrowerDocument3,
-              borrowerDocument3URL,
-              borrowerDocument4,
-              borrowerDocument4URL,
-              borrowerStatus,
-              borrowertype,
-              borrowerAttribute1,
-              borrowerAttribute2,
+              borrowerDocuments,
               customFieldsData,
               status,
             };
@@ -1210,18 +1006,7 @@ export default function BorrowerUpdateForm(props) {
               creditScore,
               additionalNote1,
               additionalNote2,
-              borrowerDocument1,
-              borrowerDocument1URL,
-              borrowerDocument2,
-              borrowerDocument2URL,
-              borrowerDocument3,
-              borrowerDocument3URL,
-              borrowerDocument4,
-              borrowerDocument4URL,
-              borrowerStatus,
-              borrowertype,
-              borrowerAttribute1,
-              borrowerAttribute2,
+              borrowerDocuments,
               customFieldsData,
               status,
             };
@@ -1274,18 +1059,7 @@ export default function BorrowerUpdateForm(props) {
               creditScore,
               additionalNote1,
               additionalNote2,
-              borrowerDocument1,
-              borrowerDocument1URL,
-              borrowerDocument2,
-              borrowerDocument2URL,
-              borrowerDocument3,
-              borrowerDocument3URL,
-              borrowerDocument4,
-              borrowerDocument4URL,
-              borrowerStatus,
-              borrowertype,
-              borrowerAttribute1,
-              borrowerAttribute2,
+              borrowerDocuments,
               customFieldsData,
               status,
             };
@@ -1342,18 +1116,7 @@ export default function BorrowerUpdateForm(props) {
               creditScore,
               additionalNote1,
               additionalNote2,
-              borrowerDocument1,
-              borrowerDocument1URL,
-              borrowerDocument2,
-              borrowerDocument2URL,
-              borrowerDocument3,
-              borrowerDocument3URL,
-              borrowerDocument4,
-              borrowerDocument4URL,
-              borrowerStatus,
-              borrowertype,
-              borrowerAttribute1,
-              borrowerAttribute2,
+              borrowerDocuments,
               customFieldsData,
               status,
             };
@@ -1410,18 +1173,7 @@ export default function BorrowerUpdateForm(props) {
               creditScore,
               additionalNote1,
               additionalNote2,
-              borrowerDocument1,
-              borrowerDocument1URL,
-              borrowerDocument2,
-              borrowerDocument2URL,
-              borrowerDocument3,
-              borrowerDocument3URL,
-              borrowerDocument4,
-              borrowerDocument4URL,
-              borrowerStatus,
-              borrowertype,
-              borrowerAttribute1,
-              borrowerAttribute2,
+              borrowerDocuments,
               customFieldsData,
               status,
             };
@@ -1480,18 +1232,7 @@ export default function BorrowerUpdateForm(props) {
               creditScore,
               additionalNote1,
               additionalNote2,
-              borrowerDocument1,
-              borrowerDocument1URL,
-              borrowerDocument2,
-              borrowerDocument2URL,
-              borrowerDocument3,
-              borrowerDocument3URL,
-              borrowerDocument4,
-              borrowerDocument4URL,
-              borrowerStatus,
-              borrowertype,
-              borrowerAttribute1,
-              borrowerAttribute2,
+              borrowerDocuments,
               customFieldsData,
               status,
             };
@@ -1550,18 +1291,7 @@ export default function BorrowerUpdateForm(props) {
               creditScore,
               additionalNote1,
               additionalNote2,
-              borrowerDocument1,
-              borrowerDocument1URL,
-              borrowerDocument2,
-              borrowerDocument2URL,
-              borrowerDocument3,
-              borrowerDocument3URL,
-              borrowerDocument4,
-              borrowerDocument4URL,
-              borrowerStatus,
-              borrowertype,
-              borrowerAttribute1,
-              borrowerAttribute2,
+              borrowerDocuments,
               customFieldsData,
               status,
             };
@@ -1616,18 +1346,7 @@ export default function BorrowerUpdateForm(props) {
               creditScore,
               additionalNote1,
               additionalNote2,
-              borrowerDocument1,
-              borrowerDocument1URL,
-              borrowerDocument2,
-              borrowerDocument2URL,
-              borrowerDocument3,
-              borrowerDocument3URL,
-              borrowerDocument4,
-              borrowerDocument4URL,
-              borrowerStatus,
-              borrowertype,
-              borrowerAttribute1,
-              borrowerAttribute2,
+              borrowerDocuments,
               customFieldsData,
               status,
             };
@@ -1680,18 +1399,7 @@ export default function BorrowerUpdateForm(props) {
               creditScore,
               additionalNote1,
               additionalNote2,
-              borrowerDocument1,
-              borrowerDocument1URL,
-              borrowerDocument2,
-              borrowerDocument2URL,
-              borrowerDocument3,
-              borrowerDocument3URL,
-              borrowerDocument4,
-              borrowerDocument4URL,
-              borrowerStatus,
-              borrowertype,
-              borrowerAttribute1,
-              borrowerAttribute2,
+              borrowerDocuments,
               customFieldsData,
               status,
             };
@@ -1744,18 +1452,7 @@ export default function BorrowerUpdateForm(props) {
               creditScore,
               additionalNote1,
               additionalNote2,
-              borrowerDocument1,
-              borrowerDocument1URL,
-              borrowerDocument2,
-              borrowerDocument2URL,
-              borrowerDocument3,
-              borrowerDocument3URL,
-              borrowerDocument4,
-              borrowerDocument4URL,
-              borrowerStatus,
-              borrowertype,
-              borrowerAttribute1,
-              borrowerAttribute2,
+              borrowerDocuments,
               customFieldsData,
               status,
             };
@@ -1808,18 +1505,7 @@ export default function BorrowerUpdateForm(props) {
               creditScore,
               additionalNote1,
               additionalNote2,
-              borrowerDocument1,
-              borrowerDocument1URL,
-              borrowerDocument2,
-              borrowerDocument2URL,
-              borrowerDocument3,
-              borrowerDocument3URL,
-              borrowerDocument4,
-              borrowerDocument4URL,
-              borrowerStatus,
-              borrowertype,
-              borrowerAttribute1,
-              borrowerAttribute2,
+              borrowerDocuments,
               customFieldsData,
               status,
             };
@@ -1872,18 +1558,7 @@ export default function BorrowerUpdateForm(props) {
               creditScore,
               additionalNote1,
               additionalNote2,
-              borrowerDocument1,
-              borrowerDocument1URL,
-              borrowerDocument2,
-              borrowerDocument2URL,
-              borrowerDocument3,
-              borrowerDocument3URL,
-              borrowerDocument4,
-              borrowerDocument4URL,
-              borrowerStatus,
-              borrowertype,
-              borrowerAttribute1,
-              borrowerAttribute2,
+              borrowerDocuments,
               customFieldsData,
               status,
             };
@@ -1936,18 +1611,7 @@ export default function BorrowerUpdateForm(props) {
               creditScore,
               additionalNote1,
               additionalNote2,
-              borrowerDocument1,
-              borrowerDocument1URL,
-              borrowerDocument2,
-              borrowerDocument2URL,
-              borrowerDocument3,
-              borrowerDocument3URL,
-              borrowerDocument4,
-              borrowerDocument4URL,
-              borrowerStatus,
-              borrowertype,
-              borrowerAttribute1,
-              borrowerAttribute2,
+              borrowerDocuments,
               customFieldsData,
               status,
             };
@@ -2000,18 +1664,7 @@ export default function BorrowerUpdateForm(props) {
               creditScore: value,
               additionalNote1,
               additionalNote2,
-              borrowerDocument1,
-              borrowerDocument1URL,
-              borrowerDocument2,
-              borrowerDocument2URL,
-              borrowerDocument3,
-              borrowerDocument3URL,
-              borrowerDocument4,
-              borrowerDocument4URL,
-              borrowerStatus,
-              borrowertype,
-              borrowerAttribute1,
-              borrowerAttribute2,
+              borrowerDocuments,
               customFieldsData,
               status,
             };
@@ -2064,18 +1717,7 @@ export default function BorrowerUpdateForm(props) {
               creditScore,
               additionalNote1: value,
               additionalNote2,
-              borrowerDocument1,
-              borrowerDocument1URL,
-              borrowerDocument2,
-              borrowerDocument2URL,
-              borrowerDocument3,
-              borrowerDocument3URL,
-              borrowerDocument4,
-              borrowerDocument4URL,
-              borrowerStatus,
-              borrowertype,
-              borrowerAttribute1,
-              borrowerAttribute2,
+              borrowerDocuments,
               customFieldsData,
               status,
             };
@@ -2128,18 +1770,7 @@ export default function BorrowerUpdateForm(props) {
               creditScore,
               additionalNote1,
               additionalNote2: value,
-              borrowerDocument1,
-              borrowerDocument1URL,
-              borrowerDocument2,
-              borrowerDocument2URL,
-              borrowerDocument3,
-              borrowerDocument3URL,
-              borrowerDocument4,
-              borrowerDocument4URL,
-              borrowerStatus,
-              borrowertype,
-              borrowerAttribute1,
-              borrowerAttribute2,
+              borrowerDocuments,
               customFieldsData,
               status,
             };
@@ -2156,11 +1787,11 @@ export default function BorrowerUpdateForm(props) {
         hasError={errors.additionalNote2?.hasError}
         {...getOverrideProps(overrides, "additionalNote2")}
       ></TextField>
-      <TextField
-        label="Borrower document1"
+      <TextAreaField
+        label="Borrower documents"
         isRequired={false}
         isReadOnly={false}
-        value={borrowerDocument1}
+        value={borrowerDocuments}
         onChange={(e) => {
           let { value } = e.target;
           if (onChange) {
@@ -2192,758 +1823,25 @@ export default function BorrowerUpdateForm(props) {
               creditScore,
               additionalNote1,
               additionalNote2,
-              borrowerDocument1: value,
-              borrowerDocument1URL,
-              borrowerDocument2,
-              borrowerDocument2URL,
-              borrowerDocument3,
-              borrowerDocument3URL,
-              borrowerDocument4,
-              borrowerDocument4URL,
-              borrowerStatus,
-              borrowertype,
-              borrowerAttribute1,
-              borrowerAttribute2,
+              borrowerDocuments: value,
               customFieldsData,
               status,
             };
             const result = onChange(modelFields);
-            value = result?.borrowerDocument1 ?? value;
+            value = result?.borrowerDocuments ?? value;
           }
-          if (errors.borrowerDocument1?.hasError) {
-            runValidationTasks("borrowerDocument1", value);
+          if (errors.borrowerDocuments?.hasError) {
+            runValidationTasks("borrowerDocuments", value);
           }
-          setBorrowerDocument1(value);
+          setBorrowerDocuments(value);
         }}
         onBlur={() =>
-          runValidationTasks("borrowerDocument1", borrowerDocument1)
+          runValidationTasks("borrowerDocuments", borrowerDocuments)
         }
-        errorMessage={errors.borrowerDocument1?.errorMessage}
-        hasError={errors.borrowerDocument1?.hasError}
-        {...getOverrideProps(overrides, "borrowerDocument1")}
-      ></TextField>
-      <TextField
-        label="Borrower document1 url"
-        isRequired={false}
-        isReadOnly={false}
-        value={borrowerDocument1URL}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              firstname,
-              othername,
-              businessName,
-              typeOfBusiness,
-              uniqueIdNumber,
-              phoneNumber,
-              otherPhoneNumber,
-              email,
-              gender,
-              dateOfBirth,
-              nationality,
-              nationalIdPicture,
-              passportPicture,
-              address,
-              points,
-              borrowerOpeningBalance,
-              borrowerClosingBalance,
-              borrowerInterestRate,
-              city,
-              state,
-              title,
-              zipcode,
-              employmentStatus,
-              employerName,
-              creditScore,
-              additionalNote1,
-              additionalNote2,
-              borrowerDocument1,
-              borrowerDocument1URL: value,
-              borrowerDocument2,
-              borrowerDocument2URL,
-              borrowerDocument3,
-              borrowerDocument3URL,
-              borrowerDocument4,
-              borrowerDocument4URL,
-              borrowerStatus,
-              borrowertype,
-              borrowerAttribute1,
-              borrowerAttribute2,
-              customFieldsData,
-              status,
-            };
-            const result = onChange(modelFields);
-            value = result?.borrowerDocument1URL ?? value;
-          }
-          if (errors.borrowerDocument1URL?.hasError) {
-            runValidationTasks("borrowerDocument1URL", value);
-          }
-          setBorrowerDocument1URL(value);
-        }}
-        onBlur={() =>
-          runValidationTasks("borrowerDocument1URL", borrowerDocument1URL)
-        }
-        errorMessage={errors.borrowerDocument1URL?.errorMessage}
-        hasError={errors.borrowerDocument1URL?.hasError}
-        {...getOverrideProps(overrides, "borrowerDocument1URL")}
-      ></TextField>
-      <TextField
-        label="Borrower document2"
-        isRequired={false}
-        isReadOnly={false}
-        value={borrowerDocument2}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              firstname,
-              othername,
-              businessName,
-              typeOfBusiness,
-              uniqueIdNumber,
-              phoneNumber,
-              otherPhoneNumber,
-              email,
-              gender,
-              dateOfBirth,
-              nationality,
-              nationalIdPicture,
-              passportPicture,
-              address,
-              points,
-              borrowerOpeningBalance,
-              borrowerClosingBalance,
-              borrowerInterestRate,
-              city,
-              state,
-              title,
-              zipcode,
-              employmentStatus,
-              employerName,
-              creditScore,
-              additionalNote1,
-              additionalNote2,
-              borrowerDocument1,
-              borrowerDocument1URL,
-              borrowerDocument2: value,
-              borrowerDocument2URL,
-              borrowerDocument3,
-              borrowerDocument3URL,
-              borrowerDocument4,
-              borrowerDocument4URL,
-              borrowerStatus,
-              borrowertype,
-              borrowerAttribute1,
-              borrowerAttribute2,
-              customFieldsData,
-              status,
-            };
-            const result = onChange(modelFields);
-            value = result?.borrowerDocument2 ?? value;
-          }
-          if (errors.borrowerDocument2?.hasError) {
-            runValidationTasks("borrowerDocument2", value);
-          }
-          setBorrowerDocument2(value);
-        }}
-        onBlur={() =>
-          runValidationTasks("borrowerDocument2", borrowerDocument2)
-        }
-        errorMessage={errors.borrowerDocument2?.errorMessage}
-        hasError={errors.borrowerDocument2?.hasError}
-        {...getOverrideProps(overrides, "borrowerDocument2")}
-      ></TextField>
-      <TextField
-        label="Borrower document2 url"
-        isRequired={false}
-        isReadOnly={false}
-        value={borrowerDocument2URL}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              firstname,
-              othername,
-              businessName,
-              typeOfBusiness,
-              uniqueIdNumber,
-              phoneNumber,
-              otherPhoneNumber,
-              email,
-              gender,
-              dateOfBirth,
-              nationality,
-              nationalIdPicture,
-              passportPicture,
-              address,
-              points,
-              borrowerOpeningBalance,
-              borrowerClosingBalance,
-              borrowerInterestRate,
-              city,
-              state,
-              title,
-              zipcode,
-              employmentStatus,
-              employerName,
-              creditScore,
-              additionalNote1,
-              additionalNote2,
-              borrowerDocument1,
-              borrowerDocument1URL,
-              borrowerDocument2,
-              borrowerDocument2URL: value,
-              borrowerDocument3,
-              borrowerDocument3URL,
-              borrowerDocument4,
-              borrowerDocument4URL,
-              borrowerStatus,
-              borrowertype,
-              borrowerAttribute1,
-              borrowerAttribute2,
-              customFieldsData,
-              status,
-            };
-            const result = onChange(modelFields);
-            value = result?.borrowerDocument2URL ?? value;
-          }
-          if (errors.borrowerDocument2URL?.hasError) {
-            runValidationTasks("borrowerDocument2URL", value);
-          }
-          setBorrowerDocument2URL(value);
-        }}
-        onBlur={() =>
-          runValidationTasks("borrowerDocument2URL", borrowerDocument2URL)
-        }
-        errorMessage={errors.borrowerDocument2URL?.errorMessage}
-        hasError={errors.borrowerDocument2URL?.hasError}
-        {...getOverrideProps(overrides, "borrowerDocument2URL")}
-      ></TextField>
-      <TextField
-        label="Borrower document3"
-        isRequired={false}
-        isReadOnly={false}
-        value={borrowerDocument3}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              firstname,
-              othername,
-              businessName,
-              typeOfBusiness,
-              uniqueIdNumber,
-              phoneNumber,
-              otherPhoneNumber,
-              email,
-              gender,
-              dateOfBirth,
-              nationality,
-              nationalIdPicture,
-              passportPicture,
-              address,
-              points,
-              borrowerOpeningBalance,
-              borrowerClosingBalance,
-              borrowerInterestRate,
-              city,
-              state,
-              title,
-              zipcode,
-              employmentStatus,
-              employerName,
-              creditScore,
-              additionalNote1,
-              additionalNote2,
-              borrowerDocument1,
-              borrowerDocument1URL,
-              borrowerDocument2,
-              borrowerDocument2URL,
-              borrowerDocument3: value,
-              borrowerDocument3URL,
-              borrowerDocument4,
-              borrowerDocument4URL,
-              borrowerStatus,
-              borrowertype,
-              borrowerAttribute1,
-              borrowerAttribute2,
-              customFieldsData,
-              status,
-            };
-            const result = onChange(modelFields);
-            value = result?.borrowerDocument3 ?? value;
-          }
-          if (errors.borrowerDocument3?.hasError) {
-            runValidationTasks("borrowerDocument3", value);
-          }
-          setBorrowerDocument3(value);
-        }}
-        onBlur={() =>
-          runValidationTasks("borrowerDocument3", borrowerDocument3)
-        }
-        errorMessage={errors.borrowerDocument3?.errorMessage}
-        hasError={errors.borrowerDocument3?.hasError}
-        {...getOverrideProps(overrides, "borrowerDocument3")}
-      ></TextField>
-      <TextField
-        label="Borrower document3 url"
-        isRequired={false}
-        isReadOnly={false}
-        value={borrowerDocument3URL}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              firstname,
-              othername,
-              businessName,
-              typeOfBusiness,
-              uniqueIdNumber,
-              phoneNumber,
-              otherPhoneNumber,
-              email,
-              gender,
-              dateOfBirth,
-              nationality,
-              nationalIdPicture,
-              passportPicture,
-              address,
-              points,
-              borrowerOpeningBalance,
-              borrowerClosingBalance,
-              borrowerInterestRate,
-              city,
-              state,
-              title,
-              zipcode,
-              employmentStatus,
-              employerName,
-              creditScore,
-              additionalNote1,
-              additionalNote2,
-              borrowerDocument1,
-              borrowerDocument1URL,
-              borrowerDocument2,
-              borrowerDocument2URL,
-              borrowerDocument3,
-              borrowerDocument3URL: value,
-              borrowerDocument4,
-              borrowerDocument4URL,
-              borrowerStatus,
-              borrowertype,
-              borrowerAttribute1,
-              borrowerAttribute2,
-              customFieldsData,
-              status,
-            };
-            const result = onChange(modelFields);
-            value = result?.borrowerDocument3URL ?? value;
-          }
-          if (errors.borrowerDocument3URL?.hasError) {
-            runValidationTasks("borrowerDocument3URL", value);
-          }
-          setBorrowerDocument3URL(value);
-        }}
-        onBlur={() =>
-          runValidationTasks("borrowerDocument3URL", borrowerDocument3URL)
-        }
-        errorMessage={errors.borrowerDocument3URL?.errorMessage}
-        hasError={errors.borrowerDocument3URL?.hasError}
-        {...getOverrideProps(overrides, "borrowerDocument3URL")}
-      ></TextField>
-      <TextField
-        label="Borrower document4"
-        isRequired={false}
-        isReadOnly={false}
-        value={borrowerDocument4}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              firstname,
-              othername,
-              businessName,
-              typeOfBusiness,
-              uniqueIdNumber,
-              phoneNumber,
-              otherPhoneNumber,
-              email,
-              gender,
-              dateOfBirth,
-              nationality,
-              nationalIdPicture,
-              passportPicture,
-              address,
-              points,
-              borrowerOpeningBalance,
-              borrowerClosingBalance,
-              borrowerInterestRate,
-              city,
-              state,
-              title,
-              zipcode,
-              employmentStatus,
-              employerName,
-              creditScore,
-              additionalNote1,
-              additionalNote2,
-              borrowerDocument1,
-              borrowerDocument1URL,
-              borrowerDocument2,
-              borrowerDocument2URL,
-              borrowerDocument3,
-              borrowerDocument3URL,
-              borrowerDocument4: value,
-              borrowerDocument4URL,
-              borrowerStatus,
-              borrowertype,
-              borrowerAttribute1,
-              borrowerAttribute2,
-              customFieldsData,
-              status,
-            };
-            const result = onChange(modelFields);
-            value = result?.borrowerDocument4 ?? value;
-          }
-          if (errors.borrowerDocument4?.hasError) {
-            runValidationTasks("borrowerDocument4", value);
-          }
-          setBorrowerDocument4(value);
-        }}
-        onBlur={() =>
-          runValidationTasks("borrowerDocument4", borrowerDocument4)
-        }
-        errorMessage={errors.borrowerDocument4?.errorMessage}
-        hasError={errors.borrowerDocument4?.hasError}
-        {...getOverrideProps(overrides, "borrowerDocument4")}
-      ></TextField>
-      <TextField
-        label="Borrower document4 url"
-        isRequired={false}
-        isReadOnly={false}
-        value={borrowerDocument4URL}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              firstname,
-              othername,
-              businessName,
-              typeOfBusiness,
-              uniqueIdNumber,
-              phoneNumber,
-              otherPhoneNumber,
-              email,
-              gender,
-              dateOfBirth,
-              nationality,
-              nationalIdPicture,
-              passportPicture,
-              address,
-              points,
-              borrowerOpeningBalance,
-              borrowerClosingBalance,
-              borrowerInterestRate,
-              city,
-              state,
-              title,
-              zipcode,
-              employmentStatus,
-              employerName,
-              creditScore,
-              additionalNote1,
-              additionalNote2,
-              borrowerDocument1,
-              borrowerDocument1URL,
-              borrowerDocument2,
-              borrowerDocument2URL,
-              borrowerDocument3,
-              borrowerDocument3URL,
-              borrowerDocument4,
-              borrowerDocument4URL: value,
-              borrowerStatus,
-              borrowertype,
-              borrowerAttribute1,
-              borrowerAttribute2,
-              customFieldsData,
-              status,
-            };
-            const result = onChange(modelFields);
-            value = result?.borrowerDocument4URL ?? value;
-          }
-          if (errors.borrowerDocument4URL?.hasError) {
-            runValidationTasks("borrowerDocument4URL", value);
-          }
-          setBorrowerDocument4URL(value);
-        }}
-        onBlur={() =>
-          runValidationTasks("borrowerDocument4URL", borrowerDocument4URL)
-        }
-        errorMessage={errors.borrowerDocument4URL?.errorMessage}
-        hasError={errors.borrowerDocument4URL?.hasError}
-        {...getOverrideProps(overrides, "borrowerDocument4URL")}
-      ></TextField>
-      <TextField
-        label="Borrower status"
-        isRequired={false}
-        isReadOnly={false}
-        value={borrowerStatus}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              firstname,
-              othername,
-              businessName,
-              typeOfBusiness,
-              uniqueIdNumber,
-              phoneNumber,
-              otherPhoneNumber,
-              email,
-              gender,
-              dateOfBirth,
-              nationality,
-              nationalIdPicture,
-              passportPicture,
-              address,
-              points,
-              borrowerOpeningBalance,
-              borrowerClosingBalance,
-              borrowerInterestRate,
-              city,
-              state,
-              title,
-              zipcode,
-              employmentStatus,
-              employerName,
-              creditScore,
-              additionalNote1,
-              additionalNote2,
-              borrowerDocument1,
-              borrowerDocument1URL,
-              borrowerDocument2,
-              borrowerDocument2URL,
-              borrowerDocument3,
-              borrowerDocument3URL,
-              borrowerDocument4,
-              borrowerDocument4URL,
-              borrowerStatus: value,
-              borrowertype,
-              borrowerAttribute1,
-              borrowerAttribute2,
-              customFieldsData,
-              status,
-            };
-            const result = onChange(modelFields);
-            value = result?.borrowerStatus ?? value;
-          }
-          if (errors.borrowerStatus?.hasError) {
-            runValidationTasks("borrowerStatus", value);
-          }
-          setBorrowerStatus(value);
-        }}
-        onBlur={() => runValidationTasks("borrowerStatus", borrowerStatus)}
-        errorMessage={errors.borrowerStatus?.errorMessage}
-        hasError={errors.borrowerStatus?.hasError}
-        {...getOverrideProps(overrides, "borrowerStatus")}
-      ></TextField>
-      <TextField
-        label="Borrowertype"
-        isRequired={false}
-        isReadOnly={false}
-        value={borrowertype}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              firstname,
-              othername,
-              businessName,
-              typeOfBusiness,
-              uniqueIdNumber,
-              phoneNumber,
-              otherPhoneNumber,
-              email,
-              gender,
-              dateOfBirth,
-              nationality,
-              nationalIdPicture,
-              passportPicture,
-              address,
-              points,
-              borrowerOpeningBalance,
-              borrowerClosingBalance,
-              borrowerInterestRate,
-              city,
-              state,
-              title,
-              zipcode,
-              employmentStatus,
-              employerName,
-              creditScore,
-              additionalNote1,
-              additionalNote2,
-              borrowerDocument1,
-              borrowerDocument1URL,
-              borrowerDocument2,
-              borrowerDocument2URL,
-              borrowerDocument3,
-              borrowerDocument3URL,
-              borrowerDocument4,
-              borrowerDocument4URL,
-              borrowerStatus,
-              borrowertype: value,
-              borrowerAttribute1,
-              borrowerAttribute2,
-              customFieldsData,
-              status,
-            };
-            const result = onChange(modelFields);
-            value = result?.borrowertype ?? value;
-          }
-          if (errors.borrowertype?.hasError) {
-            runValidationTasks("borrowertype", value);
-          }
-          setBorrowertype(value);
-        }}
-        onBlur={() => runValidationTasks("borrowertype", borrowertype)}
-        errorMessage={errors.borrowertype?.errorMessage}
-        hasError={errors.borrowertype?.hasError}
-        {...getOverrideProps(overrides, "borrowertype")}
-      ></TextField>
-      <TextField
-        label="Borrower attribute1"
-        isRequired={false}
-        isReadOnly={false}
-        value={borrowerAttribute1}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              firstname,
-              othername,
-              businessName,
-              typeOfBusiness,
-              uniqueIdNumber,
-              phoneNumber,
-              otherPhoneNumber,
-              email,
-              gender,
-              dateOfBirth,
-              nationality,
-              nationalIdPicture,
-              passportPicture,
-              address,
-              points,
-              borrowerOpeningBalance,
-              borrowerClosingBalance,
-              borrowerInterestRate,
-              city,
-              state,
-              title,
-              zipcode,
-              employmentStatus,
-              employerName,
-              creditScore,
-              additionalNote1,
-              additionalNote2,
-              borrowerDocument1,
-              borrowerDocument1URL,
-              borrowerDocument2,
-              borrowerDocument2URL,
-              borrowerDocument3,
-              borrowerDocument3URL,
-              borrowerDocument4,
-              borrowerDocument4URL,
-              borrowerStatus,
-              borrowertype,
-              borrowerAttribute1: value,
-              borrowerAttribute2,
-              customFieldsData,
-              status,
-            };
-            const result = onChange(modelFields);
-            value = result?.borrowerAttribute1 ?? value;
-          }
-          if (errors.borrowerAttribute1?.hasError) {
-            runValidationTasks("borrowerAttribute1", value);
-          }
-          setBorrowerAttribute1(value);
-        }}
-        onBlur={() =>
-          runValidationTasks("borrowerAttribute1", borrowerAttribute1)
-        }
-        errorMessage={errors.borrowerAttribute1?.errorMessage}
-        hasError={errors.borrowerAttribute1?.hasError}
-        {...getOverrideProps(overrides, "borrowerAttribute1")}
-      ></TextField>
-      <TextField
-        label="Borrower attribute2"
-        isRequired={false}
-        isReadOnly={false}
-        value={borrowerAttribute2}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              firstname,
-              othername,
-              businessName,
-              typeOfBusiness,
-              uniqueIdNumber,
-              phoneNumber,
-              otherPhoneNumber,
-              email,
-              gender,
-              dateOfBirth,
-              nationality,
-              nationalIdPicture,
-              passportPicture,
-              address,
-              points,
-              borrowerOpeningBalance,
-              borrowerClosingBalance,
-              borrowerInterestRate,
-              city,
-              state,
-              title,
-              zipcode,
-              employmentStatus,
-              employerName,
-              creditScore,
-              additionalNote1,
-              additionalNote2,
-              borrowerDocument1,
-              borrowerDocument1URL,
-              borrowerDocument2,
-              borrowerDocument2URL,
-              borrowerDocument3,
-              borrowerDocument3URL,
-              borrowerDocument4,
-              borrowerDocument4URL,
-              borrowerStatus,
-              borrowertype,
-              borrowerAttribute1,
-              borrowerAttribute2: value,
-              customFieldsData,
-              status,
-            };
-            const result = onChange(modelFields);
-            value = result?.borrowerAttribute2 ?? value;
-          }
-          if (errors.borrowerAttribute2?.hasError) {
-            runValidationTasks("borrowerAttribute2", value);
-          }
-          setBorrowerAttribute2(value);
-        }}
-        onBlur={() =>
-          runValidationTasks("borrowerAttribute2", borrowerAttribute2)
-        }
-        errorMessage={errors.borrowerAttribute2?.errorMessage}
-        hasError={errors.borrowerAttribute2?.hasError}
-        {...getOverrideProps(overrides, "borrowerAttribute2")}
-      ></TextField>
+        errorMessage={errors.borrowerDocuments?.errorMessage}
+        hasError={errors.borrowerDocuments?.hasError}
+        {...getOverrideProps(overrides, "borrowerDocuments")}
+      ></TextAreaField>
       <TextAreaField
         label="Custom fields data"
         isRequired={false}
@@ -2980,18 +1878,7 @@ export default function BorrowerUpdateForm(props) {
               creditScore,
               additionalNote1,
               additionalNote2,
-              borrowerDocument1,
-              borrowerDocument1URL,
-              borrowerDocument2,
-              borrowerDocument2URL,
-              borrowerDocument3,
-              borrowerDocument3URL,
-              borrowerDocument4,
-              borrowerDocument4URL,
-              borrowerStatus,
-              borrowertype,
-              borrowerAttribute1,
-              borrowerAttribute2,
+              borrowerDocuments,
               customFieldsData: value,
               status,
             };
@@ -3044,18 +1931,7 @@ export default function BorrowerUpdateForm(props) {
               creditScore,
               additionalNote1,
               additionalNote2,
-              borrowerDocument1,
-              borrowerDocument1URL,
-              borrowerDocument2,
-              borrowerDocument2URL,
-              borrowerDocument3,
-              borrowerDocument3URL,
-              borrowerDocument4,
-              borrowerDocument4URL,
-              borrowerStatus,
-              borrowertype,
-              borrowerAttribute1,
-              borrowerAttribute2,
+              borrowerDocuments,
               customFieldsData,
               status: value,
             };

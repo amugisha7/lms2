@@ -6,7 +6,13 @@
 
 /* eslint-disable */
 import * as React from "react";
-import { Button, Flex, Grid, TextField } from "@aws-amplify/ui-react";
+import {
+  Button,
+  Flex,
+  Grid,
+  TextAreaField,
+  TextField,
+} from "@aws-amplify/ui-react";
 import { fetchByPath, getOverrideProps, validateField } from "./utils";
 import { generateClient } from "aws-amplify/api";
 import { createUser } from "../graphql/mutations";
@@ -40,6 +46,7 @@ export default function UserCreateForm(props) {
     nationality: "",
     status: "",
     userType: "",
+    userPermissions: "",
     description: "",
   };
   const [firstName, setFirstName] = React.useState(initialValues.firstName);
@@ -75,6 +82,9 @@ export default function UserCreateForm(props) {
   );
   const [status, setStatus] = React.useState(initialValues.status);
   const [userType, setUserType] = React.useState(initialValues.userType);
+  const [userPermissions, setUserPermissions] = React.useState(
+    initialValues.userPermissions
+  );
   const [description, setDescription] = React.useState(
     initialValues.description
   );
@@ -97,6 +107,7 @@ export default function UserCreateForm(props) {
     setNationality(initialValues.nationality);
     setStatus(initialValues.status);
     setUserType(initialValues.userType);
+    setUserPermissions(initialValues.userPermissions);
     setDescription(initialValues.description);
     setErrors({});
   };
@@ -118,6 +129,7 @@ export default function UserCreateForm(props) {
     nationality: [],
     status: [],
     userType: [],
+    userPermissions: [{ type: "JSON" }],
     description: [],
   };
   const runValidationTasks = async (
@@ -163,6 +175,7 @@ export default function UserCreateForm(props) {
           nationality,
           status,
           userType,
+          userPermissions,
           description,
         };
         const validationResponses = await Promise.all(
@@ -243,6 +256,7 @@ export default function UserCreateForm(props) {
               nationality,
               status,
               userType,
+              userPermissions,
               description,
             };
             const result = onChange(modelFields);
@@ -284,6 +298,7 @@ export default function UserCreateForm(props) {
               nationality,
               status,
               userType,
+              userPermissions,
               description,
             };
             const result = onChange(modelFields);
@@ -325,6 +340,7 @@ export default function UserCreateForm(props) {
               nationality,
               status,
               userType,
+              userPermissions,
               description,
             };
             const result = onChange(modelFields);
@@ -367,6 +383,7 @@ export default function UserCreateForm(props) {
               nationality,
               status,
               userType,
+              userPermissions,
               description,
             };
             const result = onChange(modelFields);
@@ -408,6 +425,7 @@ export default function UserCreateForm(props) {
               nationality,
               status,
               userType,
+              userPermissions,
               description,
             };
             const result = onChange(modelFields);
@@ -449,6 +467,7 @@ export default function UserCreateForm(props) {
               nationality,
               status,
               userType,
+              userPermissions,
               description,
             };
             const result = onChange(modelFields);
@@ -490,6 +509,7 @@ export default function UserCreateForm(props) {
               nationality,
               status,
               userType,
+              userPermissions,
               description,
             };
             const result = onChange(modelFields);
@@ -531,6 +551,7 @@ export default function UserCreateForm(props) {
               nationality,
               status,
               userType,
+              userPermissions,
               description,
             };
             const result = onChange(modelFields);
@@ -572,6 +593,7 @@ export default function UserCreateForm(props) {
               nationality,
               status,
               userType,
+              userPermissions,
               description,
             };
             const result = onChange(modelFields);
@@ -613,6 +635,7 @@ export default function UserCreateForm(props) {
               nationality,
               status,
               userType,
+              userPermissions,
               description,
             };
             const result = onChange(modelFields);
@@ -654,6 +677,7 @@ export default function UserCreateForm(props) {
               nationality,
               status,
               userType,
+              userPermissions,
               description,
             };
             const result = onChange(modelFields);
@@ -695,6 +719,7 @@ export default function UserCreateForm(props) {
               nationality,
               status,
               userType,
+              userPermissions,
               description,
             };
             const result = onChange(modelFields);
@@ -736,6 +761,7 @@ export default function UserCreateForm(props) {
               nationality,
               status,
               userType,
+              userPermissions,
               description,
             };
             const result = onChange(modelFields);
@@ -777,6 +803,7 @@ export default function UserCreateForm(props) {
               nationality,
               status,
               userType,
+              userPermissions,
               description,
             };
             const result = onChange(modelFields);
@@ -818,6 +845,7 @@ export default function UserCreateForm(props) {
               nationality: value,
               status,
               userType,
+              userPermissions,
               description,
             };
             const result = onChange(modelFields);
@@ -859,6 +887,7 @@ export default function UserCreateForm(props) {
               nationality,
               status: value,
               userType,
+              userPermissions,
               description,
             };
             const result = onChange(modelFields);
@@ -900,6 +929,7 @@ export default function UserCreateForm(props) {
               nationality,
               status,
               userType: value,
+              userPermissions,
               description,
             };
             const result = onChange(modelFields);
@@ -915,6 +945,47 @@ export default function UserCreateForm(props) {
         hasError={errors.userType?.hasError}
         {...getOverrideProps(overrides, "userType")}
       ></TextField>
+      <TextAreaField
+        label="User permissions"
+        isRequired={false}
+        isReadOnly={false}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              firstName,
+              lastName,
+              middleName,
+              dateOfBirth,
+              phoneNumber1,
+              phoneNumber2,
+              email,
+              addressLine1,
+              addressLine2,
+              city,
+              stateProvince,
+              postalCode,
+              nationalID,
+              passportNumber,
+              nationality,
+              status,
+              userType,
+              userPermissions: value,
+              description,
+            };
+            const result = onChange(modelFields);
+            value = result?.userPermissions ?? value;
+          }
+          if (errors.userPermissions?.hasError) {
+            runValidationTasks("userPermissions", value);
+          }
+          setUserPermissions(value);
+        }}
+        onBlur={() => runValidationTasks("userPermissions", userPermissions)}
+        errorMessage={errors.userPermissions?.errorMessage}
+        hasError={errors.userPermissions?.hasError}
+        {...getOverrideProps(overrides, "userPermissions")}
+      ></TextAreaField>
       <TextField
         label="Description"
         isRequired={false}
@@ -941,6 +1012,7 @@ export default function UserCreateForm(props) {
               nationality,
               status,
               userType,
+              userPermissions,
               description: value,
             };
             const result = onChange(modelFields);

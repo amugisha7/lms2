@@ -9,3 +9,4 @@ export { default as UserDirectory } from "./UserDirectory";
 export * from "./messageUtils";
 export * from "./systemMessages";
 export * from "./messagingQueries";
+export * from "./messagingAPI";

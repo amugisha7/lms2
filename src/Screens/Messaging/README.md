@@ -76,6 +76,17 @@ GraphQL queries and mutations for:
 - Listing users
 - Real-time subscriptions
 
+### messagingAPI.js
+Helper functions for programmatic message sending:
+- `sendUserMessage` - Send a user-to-user message
+- `sendSystemMessage` - Send a system message
+- `sendLoanApprovalRequest` - Send loan approval request to admin
+- `sendPaymentReceivedNotification` - Notify about payment receipt
+- `sendPaymentDueReminder` - Send payment due reminder
+- `sendLoanDisbursedNotification` - Notify about loan disbursement
+- `sendUserJoinRequest` - Send user join request to admin
+- `broadcastMessage` - Send a message to multiple recipients
+
 ## Usage
 
 ### Basic Messaging
@@ -88,37 +99,50 @@ import { Messaging } from "./Screens/Messaging";
 
 ### Sending System Messages
 ```javascript
-import { generateSystemMessage } from "./Screens/Messaging/systemMessages";
-import { CREATE_MESSAGE_MUTATION } from "./Screens/Messaging/messagingQueries";
+import { sendLoanApprovalRequest } from "./Screens/Messaging/messagingAPI";
 
-// Generate a loan approval request message
-const messageData = generateSystemMessage("LOAN_APPROVAL_REQUEST", {
-  borrowerName: "John Doe",
-  loanAmount: "$10,000",
-  loanProduct: "Personal Loan",
-  applicationDate: "2025-01-15",
-  loanOfficer: "Jane Smith",
-  loanId: "loan123",
-  borrowerId: "borrower456",
-});
-
-// Send the message to admins
-await client.graphql({
-  query: CREATE_MESSAGE_MUTATION,
-  variables: {
-    input: {
-      subject: messageData.subject,
-      body: messageData.body,
-      messageType: messageData.messageType,
-      systemMessageType: messageData.systemMessageType,
-      systemMessageData: JSON.stringify(messageData.systemMessageData),
-      status: "unread",
-      senderUserId: "system",
-      recipientUserId: adminUserId,
-      institutionMessagesId: institutionId,
-    },
+// Send a loan approval request to admin
+await sendLoanApprovalRequest(
+  {
+    borrowerName: "John Doe",
+    loanAmount: "$10,000",
+    loanProduct: "Personal Loan",
+    applicationDate: "2025-01-15",
+    loanOfficer: "Jane Smith",
+    loanId: "loan123",
+    borrowerId: "borrower456",
   },
-});
+  adminUserId,
+  institutionId
+);
+```
+
+### Sending User Messages
+```javascript
+import { sendUserMessage } from "./Screens/Messaging/messagingAPI";
+
+// Send a simple user message
+await sendUserMessage(
+  currentUserId,
+  recipientUserId,
+  "Hello, this is a test message",
+  "Test Subject",
+  institutionId
+);
+```
+
+### Broadcasting Messages
+```javascript
+import { broadcastMessage } from "./Screens/Messaging/messagingAPI";
+
+// Send a message to multiple users
+await broadcastMessage(
+  currentUserId,
+  [userId1, userId2, userId3],
+  "Important announcement for all staff",
+  "Staff Meeting",
+  institutionId
+);
 ```
 
 ### Using Message Utilities

@@ -11,6 +11,10 @@ import ErrorLoadingWorkspace from "./Resources/ErrorLoadingWorkspace";
 import NoInternet from "./Resources/NoInternet";
 import { ColorModeContext, useMode } from "./theme";
 import { ThemeProvider } from "@mui/material";
+import {
+  LIST_MESSAGES_QUERY,
+  SUBSCRIBE_TO_NEW_MESSAGES,
+} from "./Screens/Messaging/messagingQueries";
 
 // Create UserContext once at the top level
 export const UserContext = createContext();
@@ -21,8 +25,46 @@ function App({ signOut, user }) {
   const [userDetails, setUserDetails] = useState(null);
   const [error, setError] = useState(false);
   const [online, setOnline] = useState(window.navigator.onLine);
+  const [allMessages, setAllMessages] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const [theme, colorMode] = useMode();
+
+  const fetchMessages = async (userId) => {
+    try {
+      const client = generateClient();
+      // Fetch messages where user is sender
+      const sentResponse = await client.graphql({
+        query: LIST_MESSAGES_QUERY,
+        variables: {
+          filter: { senderUserId: { eq: userId } },
+          limit: 100,
+        },
+      });
+
+      // Fetch messages where user is recipient
+      const receivedResponse = await client.graphql({
+        query: LIST_MESSAGES_QUERY,
+        variables: {
+          filter: { recipientUserId: { eq: userId } },
+          limit: 100,
+        },
+      });
+
+      const sent = sentResponse.data.listMessages.items || [];
+      const received = receivedResponse.data.listMessages.items || [];
+
+      // Combine and deduplicate
+      const allMsgs = [...sent, ...received];
+      const uniqueMessages = Array.from(
+        new Map(allMsgs.map((msg) => [msg.id, msg])).values()
+      );
+
+      setAllMessages(uniqueMessages);
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+    }
+  };
 
   useEffect(() => {
     const handleOnline = () => setOnline(true);
@@ -34,6 +76,13 @@ function App({ signOut, user }) {
       window.removeEventListener("offline", handleOffline);
     };
   }, []);
+
+  useEffect(() => {
+    const count = allMessages.filter(
+      (m) => m.recipientUserId === userDetails?.id && m.status === "unread"
+    ).length;
+    setUnreadCount(count);
+  }, [allMessages, userDetails?.id]);
 
   useEffect(() => {
     const checkUser = async () => {
@@ -78,11 +127,42 @@ function App({ signOut, user }) {
     checkUser();
   }, [user?.userId]);
 
+  useEffect(() => {
+    if (!userDetails?.id) return;
+
+    fetchMessages(userDetails.id);
+
+    const client = generateClient();
+    const subscription = client
+      .graphql({
+        query: SUBSCRIBE_TO_NEW_MESSAGES,
+        variables: { filter: { recipientUserId: { eq: userDetails.id } } },
+      })
+      .subscribe({
+        next: ({ data }) => {
+          const newMessage = data.onCreateMessage;
+          setAllMessages((prev) => [newMessage, ...prev]);
+        },
+        error: (error) => {
+          console.error("Subscription error:", error);
+        },
+      });
+
+    return () => subscription.unsubscribe();
+  }, [userDetails?.id]);
+
   return (
     <ColorModeContext.Provider value={colorMode}>
       <ThemeProvider theme={theme}>
         <UserContext.Provider
-          value={{ signOut, user, userDetails, setUserDetails }}
+          value={{
+            signOut,
+            user,
+            userDetails,
+            setUserDetails,
+            allMessages,
+            unreadCount,
+          }}
         >
           {checking && <LoadingScreen onSignOut={signOut} />}
           {!checking && (

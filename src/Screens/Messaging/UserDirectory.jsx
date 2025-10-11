@@ -39,6 +39,9 @@ const UserDirectory = ({ onSelectUser, selectedUserId }) => {
 
     try {
       setLoading(true);
+      console.log("API Call: LIST_USERS_IN_INSTITUTION_QUERY", {
+        institutionUsersId: userDetails.institutionUsersId,
+      });
       const response = await client.graphql({
         query: LIST_USERS_IN_INSTITUTION_QUERY,
         variables: {

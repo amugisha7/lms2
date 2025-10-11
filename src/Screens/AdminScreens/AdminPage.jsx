@@ -2,7 +2,7 @@ import React from "react";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
-import Link from "@mui/material/Link";
+import { Link } from "react-router-dom";
 
 export default function AdminPage() {
   const [search, setSearch] = React.useState("");
@@ -94,8 +94,14 @@ export default function AdminPage() {
           {cat.links.map((link) => (
             <Link
               key={link.label}
-              href={link.href}
-              sx={{ display: "block", mb: 1, fontSize: 16 }}
+              to={link.href}
+              style={{
+                display: "block",
+                marginBottom: 8,
+                fontSize: 16,
+                textDecoration: "none",
+                // color: "inherit",
+              }}
             >
               {link.label}
             </Link>

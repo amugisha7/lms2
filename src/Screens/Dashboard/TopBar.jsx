@@ -152,7 +152,7 @@ const TopBar = ({ onMenuClick }) => {
                     <NotificationsIcon />
                   </Badge>
                 </IconButton>
-                <IconButton>
+                <IconButton onClick={() => navigate("/settings")}>
                   <SettingsIcon />
                 </IconButton>
                 <ColorModeToggle />

@@ -28,6 +28,10 @@ const MessageComposer = ({ recipient, onClose, onMessageSent }) => {
     try {
       setSending(true);
 
+      console.log("API Call: CREATE_MESSAGE_MUTATION send message", {
+        senderUserId: userDetails.id,
+        recipientUserId: recipient.id,
+      });
       await client.graphql({
         query: CREATE_MESSAGE_MUTATION,
         variables: {
@@ -89,7 +93,9 @@ const MessageComposer = ({ recipient, onClose, onMessageSent }) => {
             To:
           </Typography>
           <Typography variant="body1">
-            {recipient ? getUserDisplayName(recipient) : "No recipient selected"}
+            {recipient
+              ? getUserDisplayName(recipient)
+              : "No recipient selected"}
           </Typography>
         </Box>
 

@@ -16,7 +16,6 @@ import {
   Chip,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
-import { generateClient } from "aws-amplify/api";
 import { UserContext } from "../../App";
 import {
   LIST_MESSAGES_QUERY,
@@ -30,36 +29,11 @@ import {
   searchMessages,
 } from "./messageUtils";
 
-const client = generateClient();
-
 const MessageList = ({ onSelectConversation, selectedUserId }) => {
-  const { userDetails } = useContext(UserContext);
+  const { userDetails, allMessages } = useContext(UserContext);
   const [conversations, setConversations] = useState([]);
-  const [allMessages, setAllMessages] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchMessages();
-
-    // Subscribe to new messages
-    const subscription = client
-      .graphql({
-        query: SUBSCRIBE_TO_NEW_MESSAGES,
-        variables: { filter: { recipientUserId: { eq: userDetails.id } } },
-      })
-      .subscribe({
-        next: ({ data }) => {
-          const newMessage = data.onCreateMessage;
-          setAllMessages((prev) => [newMessage, ...prev]);
-        },
-        error: (error) => {
-          console.error("Subscription error:", error);
-        },
-      });
-
-    return () => subscription.unsubscribe();
-  }, [userDetails?.id]);
 
   useEffect(() => {
     // Group messages into conversations whenever messages change
@@ -75,48 +49,8 @@ const MessageList = ({ onSelectConversation, selectedUserId }) => {
     } else {
       setConversations([]);
     }
+    setLoading(false); // Set loading to false once messages are processed
   }, [allMessages, searchTerm, userDetails?.id]);
-
-  const fetchMessages = async () => {
-    if (!userDetails?.id) return;
-
-    try {
-      setLoading(true);
-
-      // Fetch messages where user is sender
-      const sentResponse = await client.graphql({
-        query: LIST_MESSAGES_QUERY,
-        variables: {
-          filter: { senderUserId: { eq: userDetails.id } },
-          limit: 100,
-        },
-      });
-
-      // Fetch messages where user is recipient
-      const receivedResponse = await client.graphql({
-        query: LIST_MESSAGES_QUERY,
-        variables: {
-          filter: { recipientUserId: { eq: userDetails.id } },
-          limit: 100,
-        },
-      });
-
-      const sent = sentResponse.data.listMessages.items || [];
-      const received = receivedResponse.data.listMessages.items || [];
-
-      // Combine and deduplicate
-      const allMsgs = [...sent, ...received];
-      const uniqueMessages = Array.from(
-        new Map(allMsgs.map((msg) => [msg.id, msg])).values()
-      );
-
-      setAllMessages(uniqueMessages);
-    } catch (error) {
-      console.error("Error fetching messages:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const getUserInitials = (user) => {
     if (!user) return "?";

@@ -54,12 +54,14 @@ const MessageThread = ({ conversation, onBack, onMessageSent }) => {
     if (!conversation?.messages) return;
 
     const unreadMessages = conversation.messages.filter(
-      (msg) =>
-        msg.recipientUserId === userDetails.id && msg.status === "unread"
+      (msg) => msg.recipientUserId === userDetails.id && msg.status === "unread"
     );
 
     for (const message of unreadMessages) {
       try {
+        console.log("API Call: UPDATE_MESSAGE_MUTATION mark as read", {
+          id: message.id,
+        });
         await client.graphql({
           query: UPDATE_MESSAGE_MUTATION,
           variables: {
@@ -81,6 +83,10 @@ const MessageThread = ({ conversation, onBack, onMessageSent }) => {
     try {
       setSending(true);
 
+      console.log("API Call: CREATE_MESSAGE_MUTATION send reply", {
+        senderUserId: userDetails.id,
+        recipientUserId: conversation.userId,
+      });
       await client.graphql({
         query: CREATE_MESSAGE_MUTATION,
         variables: {
@@ -110,12 +116,16 @@ const MessageThread = ({ conversation, onBack, onMessageSent }) => {
   const handleApproval = async (message, action) => {
     // Handle approval/rejection actions
     console.log(`Action ${action} on message:`, message);
-    
+
     // Here you would implement the actual approval logic
     // For example, updating a loan status, user status, etc.
-    
+
     // After processing, mark the message as read
     try {
+      console.log(
+        "API Call: UPDATE_MESSAGE_MUTATION mark as read after approval",
+        { id: message.id }
+      );
       await client.graphql({
         query: UPDATE_MESSAGE_MUTATION,
         variables: {
@@ -125,7 +135,7 @@ const MessageThread = ({ conversation, onBack, onMessageSent }) => {
           },
         },
       });
-      
+
       if (onMessageSent) {
         onMessageSent();
       }
@@ -217,11 +227,16 @@ const MessageThread = ({ conversation, onBack, onMessageSent }) => {
                       : isSystemMessage
                       ? "info.light"
                       : "background.paper",
-                    color: isOwnMessage ? "primary.contrastText" : "text.primary",
+                    color: isOwnMessage
+                      ? "primary.contrastText"
+                      : "text.primary",
                   }}
                 >
                   {message.subject && (
-                    <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
+                    <Typography
+                      variant="subtitle2"
+                      sx={{ fontWeight: 600, mb: 1 }}
+                    >
                       {message.subject}
                     </Typography>
                   )}

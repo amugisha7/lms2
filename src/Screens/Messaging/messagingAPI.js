@@ -23,6 +23,7 @@ export const sendUserMessage = async (
   institutionId
 ) => {
   try {
+    console.log('API Call: sendUserMessage', { senderUserId, recipientUserId, body, subject, institutionId });
     const response = await client.graphql({
       query: CREATE_MESSAGE_MUTATION,
       variables: {
@@ -68,6 +69,7 @@ export const sendSystemMessage = async (
       throw new Error(`Invalid message type: ${messageType}`);
     }
 
+    console.log('API Call: sendSystemMessage', { messageType, recipientUserId, institutionId, senderUserId });
     const response = await client.graphql({
       query: CREATE_MESSAGE_MUTATION,
       variables: {

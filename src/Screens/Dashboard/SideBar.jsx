@@ -192,6 +192,12 @@ const SideBar = ({ open = true, onClose }) => {
           <Typography variant="body2" sx={{ color: "white" }}>
             User Type: {userDetails?.userType || "N/A"}
           </Typography>
+          <Typography variant="body2" sx={{ color: "white" }}>
+            Institution ID: {userDetails?.institutionUsersId || "N/A"}
+          </Typography>
+          <Typography variant="body2" sx={{ color: "white" }}>
+            Branch ID: {userDetails?.branchUsersId || "N/A"}
+          </Typography>
         </Box>
       </Box>
     </Box>

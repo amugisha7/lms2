@@ -67,9 +67,24 @@ const Messaging = () => {
               key={refreshTrigger}
             />
             <Fab
-              color="primary"
               aria-label="new message"
-              sx={{ position: "absolute", bottom: 16, right: 16 }}
+              sx={{
+                position: "absolute",
+                bottom: 16,
+                right: 16,
+                backgroundColor:
+                  theme.palette.mode === "dark" ? "#f08735" : "#dd621a",
+                color: "white",
+                "&:hover": {
+                  backgroundColor: "#bc3401",
+                  transform: "scale(1.05)",
+                },
+                transition: "all 0.2s ease-in-out",
+                boxShadow:
+                  theme.palette.mode === "dark"
+                    ? "0px 4px 12px rgba(0, 0, 0, 0.4)"
+                    : "0px 4px 12px rgba(0, 0, 0, 0.1)",
+              }}
               onClick={handleNewMessage}
             >
               <AddIcon />
@@ -123,10 +138,25 @@ const Messaging = () => {
               key={refreshTrigger}
             />
             <Fab
-              color="primary"
               aria-label="new message"
               size="medium"
-              sx={{ position: "absolute", bottom: 16, right: 16 }}
+              sx={{
+                position: "absolute",
+                bottom: 16,
+                right: 16,
+                backgroundColor:
+                  theme.palette.mode === "dark" ? "#f08735" : "#dd621a",
+                color: "white",
+                "&:hover": {
+                  backgroundColor: "#bc3401",
+                  transform: "scale(1.05)",
+                },
+                transition: "all 0.2s ease-in-out",
+                boxShadow:
+                  theme.palette.mode === "dark"
+                    ? "0px 4px 12px rgba(0, 0, 0, 0.4)"
+                    : "0px 4px 12px rgba(0, 0, 0, 0.1)",
+              }}
               onClick={handleNewMessage}
             >
               <AddIcon />

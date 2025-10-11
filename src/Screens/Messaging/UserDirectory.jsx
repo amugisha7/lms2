@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useRef } from "react";
 import {
   Box,
   List,
@@ -13,6 +13,7 @@ import {
   Divider,
   InputAdornment,
   Chip,
+  useTheme,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import PersonIcon from "@mui/icons-material/Person";
@@ -25,18 +26,21 @@ const client = generateClient();
 
 const UserDirectory = ({ onSelectUser, selectedUserId }) => {
   const { userDetails } = useContext(UserContext);
+  const theme = useTheme();
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
+  const hasFetchedRef = useRef(false);
 
   useEffect(() => {
-    fetchUsers();
+    if (!hasFetchedRef.current && userDetails?.institutionUsersId) {
+      fetchUsers();
+      hasFetchedRef.current = true;
+    }
   }, [userDetails?.institutionUsersId]);
 
   const fetchUsers = async () => {
-    if (!userDetails?.institutionUsersId) return;
-
     try {
       setLoading(true);
       console.log("API Call: LIST_USERS_IN_INSTITUTION_QUERY", {
@@ -146,6 +150,46 @@ const UserDirectory = ({ onSelectUser, selectedUserId }) => {
                   <ListItemButton
                     selected={selectedUserId === user.id}
                     onClick={() => onSelectUser(user)}
+                    sx={{
+                      "&:hover": {
+                        backgroundColor:
+                          theme.palette.mode === "dark"
+                            ? "rgba(240, 135, 53, 0.08)"
+                            : "rgba(221, 98, 26, 0.06)",
+                        "& .MuiListItemText-primary": {
+                          color:
+                            theme.palette.mode === "dark"
+                              ? "#fff"
+                              : theme.palette.text.primary,
+                        },
+                        "& .MuiListItemText-secondary": {
+                          color:
+                            theme.palette.mode === "dark"
+                              ? theme.palette.grey[300]
+                              : theme.palette.text.secondary,
+                        },
+                      },
+                      "&.Mui-selected": {
+                        backgroundColor:
+                          theme.palette.mode === "dark"
+                            ? "rgba(240, 135, 53, 0.4)"
+                            : "rgba(221, 98, 26, 0.4)",
+                        "&:hover": {
+                          backgroundColor:
+                            theme.palette.mode === "dark"
+                              ? "rgba(240, 135, 53, 0.4)"
+                              : "rgba(221, 98, 26, 0.4)",
+                        },
+                        "& .MuiListItemText-primary": {
+                          color:
+                            theme.palette.mode === "dark"
+                              ? "#f08735"
+                              : "#dd621a",
+                          fontWeight: 600,
+                        },
+                      },
+                      transition: "all 0.2s ease-in-out",
+                    }}
                   >
                     <ListItemAvatar>
                       <Avatar sx={{ bgcolor: "primary.main" }}>
@@ -154,6 +198,7 @@ const UserDirectory = ({ onSelectUser, selectedUserId }) => {
                     </ListItemAvatar>
                     <ListItemText
                       primary={getUserDisplayName(user)}
+                      slotProps={{ secondary: { component: "div" } }}
                       secondary={
                         <Box
                           sx={{
@@ -163,13 +208,6 @@ const UserDirectory = ({ onSelectUser, selectedUserId }) => {
                             mt: 0.5,
                           }}
                         >
-                          <Typography
-                            variant="body2"
-                            color="text.secondary"
-                            sx={{ flexGrow: 1 }}
-                          >
-                            {user.email}
-                          </Typography>
                           {user.userType && (
                             <Chip
                               label={user.userType}

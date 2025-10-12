@@ -12,9 +12,9 @@ import NoInternet from "./Resources/NoInternet";
 import { ColorModeContext, useMode } from "./theme";
 import { ThemeProvider } from "@mui/material";
 import {
-  LIST_MESSAGES_QUERY,
-  SUBSCRIBE_TO_NEW_MESSAGES,
-} from "./Screens/Messaging/messagingQueries";
+  LIST_NOTIFICATIONS_QUERY,
+  SUBSCRIBE_TO_NEW_NOTIFICATIONS,
+} from "./Screens/Notifications/notificationQueries";
 
 // Create UserContext once at the top level
 export const UserContext = createContext();
@@ -37,11 +37,11 @@ function App({ signOut, user }) {
     try {
       const client = generateClient();
       // Fetch messages where user is sender
-      console.log("API Call: LIST_MESSAGES_QUERY sent messages", {
+      console.log("API Call: LIST_NOTIFICATIONS_QUERY sent messages", {
         senderUserId: userId,
       });
       const sentResponse = await client.graphql({
-        query: LIST_MESSAGES_QUERY,
+        query: LIST_NOTIFICATIONS_QUERY,
         variables: {
           filter: { senderUserId: { eq: userId } },
           limit: 100,
@@ -49,19 +49,19 @@ function App({ signOut, user }) {
       });
 
       // Fetch messages where user is recipient
-      console.log("API Call: LIST_MESSAGES_QUERY received messages", {
+      console.log("API Call: LIST_NOTIFICATIONS_QUERY received messages", {
         recipientUserId: userId,
       });
       const receivedResponse = await client.graphql({
-        query: LIST_MESSAGES_QUERY,
+        query: LIST_NOTIFICATIONS_QUERY,
         variables: {
           filter: { recipientUserId: { eq: userId } },
           limit: 100,
         },
       });
 
-      const sent = sentResponse.data.listMessages.items || [];
-      const received = receivedResponse.data.listMessages.items || [];
+      const sent = sentResponse.data.listNotifications.items || [];
+      const received = receivedResponse.data.listNotifications.items || [];
 
       // Combine and deduplicate
       const allMsgs = [...sent, ...received];
@@ -147,21 +147,21 @@ function App({ signOut, user }) {
     fetchMessages(userDetails.id);
 
     const client = generateClient();
-    console.log("API Call: SUBSCRIBE_TO_NEW_MESSAGES", {
+    console.log("API Call: SUBSCRIBE_TO_NEW_NOTIFICATIONS", {
       recipientUserId: userDetails.id,
     });
     const subscription = client
       .graphql({
-        query: SUBSCRIBE_TO_NEW_MESSAGES,
+        query: SUBSCRIBE_TO_NEW_NOTIFICATIONS,
         variables: { filter: { recipientUserId: { eq: userDetails.id } } },
       })
       .subscribe({
         next: ({ data }) => {
           console.log(
             "Subscription received new message:",
-            data.onCreateMessage
+            data.onCreateNotification
           );
-          const newMessage = data.onCreateMessage;
+          const newMessage = data.onCreateNotification;
           setAllMessages((prev) => [newMessage, ...prev]);
         },
         error: (error) => {

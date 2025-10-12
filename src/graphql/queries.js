@@ -277,6 +277,14 @@ export const getUser = /* GraphQL */ `
         nextToken
         __typename
       }
+      sentNotifications {
+        nextToken
+        __typename
+      }
+      receivedNotifications {
+        nextToken
+        __typename
+      }
       createdAt
       updatedAt
       institutionUsersId
@@ -3219,9 +3227,101 @@ export const getMessage = /* GraphQL */ `
       id
       subject
       body
-      messageType
-      systemMessageType
-      systemMessageData
+      status
+      createdAt
+      sender {
+        id
+        firstName
+        lastName
+        middleName
+        dateOfBirth
+        phoneNumber1
+        phoneNumber2
+        email
+        addressLine1
+        addressLine2
+        city
+        stateProvince
+        postalCode
+        nationalID
+        passportNumber
+        nationality
+        status
+        userType
+        userPermissions
+        description
+        createdAt
+        updatedAt
+        institutionUsersId
+        branchUsersId
+        __typename
+      }
+      senderUserId
+      recipient {
+        id
+        firstName
+        lastName
+        middleName
+        dateOfBirth
+        phoneNumber1
+        phoneNumber2
+        email
+        addressLine1
+        addressLine2
+        city
+        stateProvince
+        postalCode
+        nationalID
+        passportNumber
+        nationality
+        status
+        userType
+        userPermissions
+        description
+        createdAt
+        updatedAt
+        institutionUsersId
+        branchUsersId
+        __typename
+      }
+      recipientUserId
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const listMessages = /* GraphQL */ `
+  query ListMessages(
+    $filter: ModelMessageFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listMessages(filter: $filter, limit: $limit, nextToken: $nextToken) {
+      items {
+        id
+        subject
+        body
+        status
+        createdAt
+        senderUserId
+        recipientUserId
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const getNotification = /* GraphQL */ `
+  query GetNotification($id: ID!) {
+    getNotification(id: $id) {
+      id
+      subject
+      body
+      notificationType
+      approvalStatus
+      referenceId
       status
       createdAt
       sender {
@@ -3286,20 +3386,20 @@ export const getMessage = /* GraphQL */ `
     }
   }
 `;
-export const listMessages = /* GraphQL */ `
-  query ListMessages(
-    $filter: ModelMessageFilterInput
+export const listNotifications = /* GraphQL */ `
+  query ListNotifications(
+    $filter: ModelNotificationFilterInput
     $limit: Int
     $nextToken: String
   ) {
-    listMessages(filter: $filter, limit: $limit, nextToken: $nextToken) {
+    listNotifications(filter: $filter, limit: $limit, nextToken: $nextToken) {
       items {
         id
         subject
         body
-        messageType
-        systemMessageType
-        systemMessageData
+        notificationType
+        approvalStatus
+        referenceId
         status
         createdAt
         senderUserId
@@ -6803,14 +6903,10 @@ export const messagesBySenderUserId = /* GraphQL */ `
         id
         subject
         body
-        messageType
-        systemMessageType
-        systemMessageData
         status
         createdAt
         senderUserId
         recipientUserId
-        institutionMessagesId
         updatedAt
         __typename
       }
@@ -6838,9 +6934,40 @@ export const messagesByRecipientUserId = /* GraphQL */ `
         id
         subject
         body
-        messageType
-        systemMessageType
-        systemMessageData
+        status
+        createdAt
+        senderUserId
+        recipientUserId
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const notificationsBySenderUserId = /* GraphQL */ `
+  query NotificationsBySenderUserId(
+    $senderUserId: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelNotificationFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    notificationsBySenderUserId(
+      senderUserId: $senderUserId
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        subject
+        body
+        notificationType
+        approvalStatus
+        referenceId
         status
         createdAt
         senderUserId
@@ -6854,15 +6981,50 @@ export const messagesByRecipientUserId = /* GraphQL */ `
     }
   }
 `;
-export const messagesByInstitutionMessagesId = /* GraphQL */ `
-  query MessagesByInstitutionMessagesId(
-    $institutionMessagesId: ID!
+export const notificationsByRecipientUserId = /* GraphQL */ `
+  query NotificationsByRecipientUserId(
+    $recipientUserId: ID!
     $sortDirection: ModelSortDirection
-    $filter: ModelMessageFilterInput
+    $filter: ModelNotificationFilterInput
     $limit: Int
     $nextToken: String
   ) {
-    messagesByInstitutionMessagesId(
+    notificationsByRecipientUserId(
+      recipientUserId: $recipientUserId
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        subject
+        body
+        notificationType
+        approvalStatus
+        referenceId
+        status
+        createdAt
+        senderUserId
+        recipientUserId
+        institutionMessagesId
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const notificationsByInstitutionMessagesId = /* GraphQL */ `
+  query NotificationsByInstitutionMessagesId(
+    $institutionMessagesId: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelNotificationFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    notificationsByInstitutionMessagesId(
       institutionMessagesId: $institutionMessagesId
       sortDirection: $sortDirection
       filter: $filter
@@ -6873,9 +7035,9 @@ export const messagesByInstitutionMessagesId = /* GraphQL */ `
         id
         subject
         body
-        messageType
-        systemMessageType
-        systemMessageData
+        notificationType
+        approvalStatus
+        referenceId
         status
         createdAt
         senderUserId

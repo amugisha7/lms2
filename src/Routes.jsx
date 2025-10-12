@@ -28,7 +28,7 @@ import EmployeeManagement from "./Screens/Employees/EmployeeManagement";
 import BorrowerManagement from "./Models/Borrowers/BorrowerManagement";
 import UserSettings from "./Screens/AdminScreens/Settings/UserSettings";
 import NotificationsDashboard from "./Screens/Notifications/NotificationsDashboard";
-import Messaging from "./Screens/Messaging/Messaging";
+import Notifications from "./Screens/Notifications/Notifications";
 
 export default function AppRoutes({ userExists }) {
   return (
@@ -44,7 +44,7 @@ export default function AppRoutes({ userExists }) {
                 path="notifications"
                 element={<NotificationsDashboard />}
               />
-              <Route path="messages" element={<Messaging />} />
+              <Route path="messages" element={<Notifications />} />
 
               {/* Borrowers routes */}
               <Route path="borrowers" element={<Borrowers />} />

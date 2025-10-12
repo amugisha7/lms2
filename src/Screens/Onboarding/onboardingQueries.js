@@ -28,7 +28,3 @@ export const LIST_USERS_QUERY = `query ListUsers($filter: ModelUserFilterInput) 
     }
   }
 }`;
-
-export const CREATE_USER_NOTIFICATION_MUTATION = `mutation CreateUserNotification($input: CreateUserNotificationInput!) {
-  createUserNotification(input: $input) { id }
-}`;

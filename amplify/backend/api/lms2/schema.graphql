@@ -113,6 +113,10 @@ type User @model {
   userNotifications: [UserNotification] @hasMany
   sentMessages: [Message] @hasMany(indexName: "bySender", fields: ["id"])
   receivedMessages: [Message] @hasMany(indexName: "byRecipient", fields: ["id"])
+  sentNotifications: [Notification]
+    @hasMany(indexName: "bySender", fields: ["id"])
+  receivedNotifications: [Notification]
+    @hasMany(indexName: "byRecipient", fields: ["id"])
 }
 
 type Employee @model {
@@ -704,9 +708,21 @@ type Message @model {
   id: ID!
   subject: String
   body: String
-  messageType: String # "user_message" or "system_message"
-  systemMessageType: String # e.g., "approval_request", "notification"
-  systemMessageData: AWSJSON # Contains approval details, buttons, etc.
+  status: String
+  createdAt: AWSDateTime
+  sender: User @belongsTo(fields: ["senderUserId"])
+  senderUserId: ID! @index(name: "bySender")
+  recipient: User @belongsTo(fields: ["recipientUserId"])
+  recipientUserId: ID! @index(name: "byRecipient")
+}
+
+type Notification @model {
+  id: ID!
+  subject: String
+  body: String
+  notificationType: String # e.g., "USER_JOIN_REQUEST", "BORROWER_EDIT_APPROVAL"
+  approvalStatus: String # e.g., "PENDING", "APPROVED", "REJECTED"
+  referenceId: String # ID of the entity being approved/notified about (e.g., userID, borrowerID)
   status: String # "unread", "read"
   createdAt: AWSDateTime
   sender: User @belongsTo(fields: ["senderUserId"])

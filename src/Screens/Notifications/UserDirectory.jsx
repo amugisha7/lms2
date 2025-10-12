@@ -19,8 +19,8 @@ import SearchIcon from "@mui/icons-material/Search";
 import PersonIcon from "@mui/icons-material/Person";
 import { generateClient } from "aws-amplify/api";
 import { UserContext } from "../../App";
-import { LIST_USERS_IN_INSTITUTION_QUERY } from "./messagingQueries";
-import { getUserDisplayName } from "./messageUtils";
+import { LIST_USERS_IN_INSTITUTION_QUERY } from "./notificationQueries";
+import { getUserDisplayName } from "./notificationUtils";
 
 const client = generateClient();
 

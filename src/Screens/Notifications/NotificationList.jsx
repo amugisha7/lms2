@@ -7,7 +7,6 @@ import {
   ListItemText,
   ListItemAvatar,
   Avatar,
-  Badge,
   Typography,
   CircularProgress,
   TextField,
@@ -18,49 +17,81 @@ import {
 import SearchIcon from "@mui/icons-material/Search";
 import { UserContext } from "../../App";
 import {
-  LIST_MESSAGES_QUERY,
-  SUBSCRIBE_TO_NEW_MESSAGES,
-} from "./messagingQueries";
+  LIST_NOTIFICATIONS_QUERY,
+  SUBSCRIBE_TO_NEW_NOTIFICATIONS,
+} from "./notificationQueries";
 import {
   getUserDisplayName,
-  formatMessageDate,
-  getMessagePreview,
-  groupMessagesByConversation,
-  searchMessages,
-} from "./messageUtils";
+  formatNotificationDate,
+  getNotificationPreview,
+  searchNotifications,
+} from "./notificationUtils";
+import { generateClient } from "aws-amplify/api";
 
-const MessageList = ({ onSelectConversation, selectedUserId }) => {
-  const { userDetails, allMessages } = useContext(UserContext);
-  const [conversations, setConversations] = useState([]);
+const client = generateClient();
+
+const NotificationList = ({ onSelectNotification, selectedNotificationId }) => {
+  const { user } = useContext(UserContext);
+  const [notifications, setNotifications] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Group messages into conversations whenever messages change
-    if (allMessages.length > 0) {
-      const filteredMessages = searchTerm
-        ? searchMessages(allMessages, searchTerm)
-        : allMessages;
-      const grouped = groupMessagesByConversation(
-        filteredMessages,
-        userDetails.id
-      );
-      setConversations(grouped);
-    } else {
-      setConversations([]);
-    }
-    setLoading(false); // Set loading to false once messages are processed
-  }, [allMessages, searchTerm, userDetails?.id]);
+    const fetchNotifications = async () => {
+      if (!user?.userId) return;
+      setLoading(true);
+      try {
+        const response = await client.graphql({
+          query: LIST_NOTIFICATIONS_QUERY,
+          variables: {
+            filter: { recipientUserId: { eq: user.userId } },
+            limit: 100, // Adjust limit as needed
+          },
+        });
+        const fetchedNotifications = response.data.listNotifications.items.sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        );
+        setNotifications(fetchedNotifications);
+      } catch (error) {
+        console.error("Error fetching notifications:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const getUserInitials = (user) => {
-    if (!user) return "?";
-    if (user.firstName && user.lastName) {
-      return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
+    fetchNotifications();
+
+    const subscription = client
+      .graphql({
+        query: SUBSCRIBE_TO_NEW_NOTIFICATIONS,
+        variables: {
+          filter: { recipientUserId: { eq: user.userId } },
+        },
+      })
+      .subscribe({
+        next: ({ data }) => {
+          const newNotification = data.onCreateNotification;
+          setNotifications((prev) => [newNotification, ...prev]);
+        },
+        error: (error) => console.warn("Subscription error:", error),
+      });
+
+    return () => subscription.unsubscribe();
+  }, [user?.userId]);
+
+  const filteredNotifications = searchTerm
+    ? searchNotifications(notifications, searchTerm)
+    : notifications;
+
+  const getUserInitials = (sender) => {
+    if (!sender) return "S"; // System
+    if (sender.firstName && sender.lastName) {
+      return `${sender.firstName[0]}${sender.lastName[0]}`.toUpperCase();
     }
-    if (user.email) {
-      return user.email[0].toUpperCase();
+    if (sender.email) {
+      return sender.email[0].toUpperCase();
     }
-    return "?";
+    return "U"; // User
   };
 
   if (loading) {
@@ -82,11 +113,11 @@ const MessageList = ({ onSelectConversation, selectedUserId }) => {
     <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
       <Box sx={{ p: 2 }}>
         <Typography variant="h6" gutterBottom>
-          Messages
+          Notifications
         </Typography>
         <TextField
           fullWidth
-          placeholder="Search conversations..."
+          placeholder="Search notifications..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           size="small"
@@ -101,35 +132,36 @@ const MessageList = ({ onSelectConversation, selectedUserId }) => {
       </Box>
       <Divider />
       <Box sx={{ flexGrow: 1, overflow: "auto" }}>
-        {conversations.length === 0 ? (
+        {filteredNotifications.length === 0 ? (
           <Box sx={{ p: 3, textAlign: "center" }}>
             <Typography color="text.secondary">
-              {searchTerm ? "No conversations found" : "No messages yet"}
+              {searchTerm ? "No notifications found" : "No notifications yet"}
             </Typography>
           </Box>
         ) : (
           <List sx={{ p: 0 }}>
-            {conversations.map((conversation) => {
-              const lastMessage = conversation.lastMessage;
-              const isUnread = conversation.unreadCount > 0;
-              const isSent = lastMessage.senderUserId === userDetails.id;
+            {filteredNotifications.map((notification) => {
+              const isUnread = notification.status === "unread";
 
               return (
-                <React.Fragment key={conversation.userId}>
+                <React.Fragment key={notification.id}>
                   <ListItem disablePadding>
                     <ListItemButton
-                      selected={selectedUserId === conversation.userId}
-                      onClick={() => onSelectConversation(conversation)}
+                      selected={selectedNotificationId === notification.id}
+                      onClick={() => onSelectNotification(notification)}
                     >
                       <ListItemAvatar>
-                        <Badge
-                          badgeContent={conversation.unreadCount}
-                          color="error"
+                        <Avatar
+                          sx={{
+                            bgcolor:
+                              notification.notificationType ===
+                              "USER_JOIN_REQUEST"
+                                ? "secondary.main"
+                                : "primary.main",
+                          }}
                         >
-                          <Avatar sx={{ bgcolor: "primary.main" }}>
-                            {getUserInitials(conversation.user)}
-                          </Avatar>
-                        </Badge>
+                          {getUserInitials(notification.sender)}
+                        </Avatar>
                       </ListItemAvatar>
                       <ListItemText
                         primary={
@@ -144,13 +176,13 @@ const MessageList = ({ onSelectConversation, selectedUserId }) => {
                               variant="body1"
                               sx={{ fontWeight: isUnread ? 600 : 400 }}
                             >
-                              {getUserDisplayName(conversation.user)}
+                              {notification.subject}
                             </Typography>
                             <Typography
                               variant="caption"
                               color="text.secondary"
                             >
-                              {formatMessageDate(lastMessage.createdAt)}
+                              {formatNotificationDate(notification.createdAt)}
                             </Typography>
                           </Box>
                         }
@@ -167,17 +199,13 @@ const MessageList = ({ onSelectConversation, selectedUserId }) => {
                                 whiteSpace: "nowrap",
                               }}
                             >
-                              {isSent && "You: "}
-                              {lastMessage.subject
-                                ? `${lastMessage.subject} - `
-                                : ""}
-                              {getMessagePreview(lastMessage.body, 40)}
+                              {getNotificationPreview(notification.body, 50)}
                             </Typography>
-                            {lastMessage.messageType === "system_message" && (
+                            {notification.approvalStatus === "PENDING" && (
                               <Chip
-                                label="System"
+                                label="Action Required"
                                 size="small"
-                                color="info"
+                                color="warning"
                                 sx={{ ml: 1 }}
                               />
                             )}
@@ -197,4 +225,4 @@ const MessageList = ({ onSelectConversation, selectedUserId }) => {
   );
 };
 
-export default MessageList;
+export default NotificationList;

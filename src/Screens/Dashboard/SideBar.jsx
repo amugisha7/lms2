@@ -15,7 +15,7 @@ import { useNavigate } from "react-router-dom";
 import myLogo from "../../Resources/loantabs_logo.png";
 import { menuItems } from "./Menu";
 import { UserContext } from "../../App";
-import { useUnreadMessageCount } from "../Messaging";
+import { useUnreadMessageCount } from "../Notifications";
 
 const SideBar = ({ open = true, onClose }) => {
   const [expandedItems, setExpandedItems] = useState({});

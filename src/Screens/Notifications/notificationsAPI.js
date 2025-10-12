@@ -1,7 +1,7 @@
 // Messaging API helper functions for sending messages programmatically
 
 import { generateClient } from "aws-amplify/api";
-import { CREATE_MESSAGE_MUTATION } from "./messagingQueries";
+import { CREATE_NOTIFICATION_MUTATION } from "./notificationQueries";
 import { generateSystemMessage } from "./systemMessages";
 
 const client = generateClient();
@@ -25,12 +25,12 @@ export const sendUserMessage = async (
   try {
     console.log('API Call: sendUserMessage', { senderUserId, recipientUserId, body, subject, institutionId });
     const response = await client.graphql({
-      query: CREATE_MESSAGE_MUTATION,
+      query: CREATE_NOTIFICATION_MUTATION,
       variables: {
         input: {
           subject: subject,
           body: body,
-          messageType: "user_message",
+          notificationType: "user_message",
           status: "unread",
           senderUserId: senderUserId,
           recipientUserId: recipientUserId,
@@ -71,14 +71,12 @@ export const sendSystemMessage = async (
 
     console.log('API Call: sendSystemMessage', { messageType, recipientUserId, institutionId, senderUserId });
     const response = await client.graphql({
-      query: CREATE_MESSAGE_MUTATION,
+      query: CREATE_NOTIFICATION_MUTATION,
       variables: {
         input: {
           subject: messageData.subject,
           body: messageData.body,
-          messageType: messageData.messageType,
-          systemMessageType: messageData.systemMessageType,
-          systemMessageData: JSON.stringify(messageData.systemMessageData),
+          notificationType: messageData.messageType,
           status: "unread",
           senderUserId: senderUserId,
           recipientUserId: recipientUserId,

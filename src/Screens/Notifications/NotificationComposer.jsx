@@ -11,8 +11,8 @@ import CloseIcon from "@mui/icons-material/Close";
 import SendIcon from "@mui/icons-material/Send";
 import { generateClient } from "aws-amplify/api";
 import { UserContext } from "../../App";
-import { CREATE_MESSAGE_MUTATION } from "./messagingQueries";
-import { getUserDisplayName } from "./messageUtils";
+import { CREATE_NOTIFICATION_MUTATION } from "./notificationQueries";
+import { getUserDisplayName } from "./notificationUtils";
 
 const client = generateClient();
 
@@ -28,12 +28,12 @@ const MessageComposer = ({ recipient, onClose, onMessageSent }) => {
     try {
       setSending(true);
 
-      console.log("API Call: CREATE_MESSAGE_MUTATION send message", {
+      console.log("API Call: CREATE_NOTIFICATION_MUTATION send message", {
         senderUserId: userDetails.id,
         recipientUserId: recipient.id,
       });
       await client.graphql({
-        query: CREATE_MESSAGE_MUTATION,
+        query: CREATE_NOTIFICATION_MUTATION,
         variables: {
           input: {
             subject: subject.trim() || null,

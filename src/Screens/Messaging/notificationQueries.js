@@ -1,15 +1,15 @@
-// GraphQL queries and mutations for messaging
+// GraphQL queries and mutations for notifications
 
-export const LIST_MESSAGES_QUERY = `
-  query ListMessages($filter: ModelMessageFilterInput, $limit: Int, $nextToken: String) {
-    listMessages(filter: $filter, limit: $limit, nextToken: $nextToken) {
+export const LIST_NOTIFICATIONS_QUERY = `
+  query ListNotifications($filter: ModelNotificationFilterInput, $limit: Int, $nextToken: String) {
+    listNotifications(filter: $filter, limit: $limit, nextToken: $nextToken) {
       items {
         id
         subject
         body
-        messageType
-        systemMessageType
-        systemMessageData
+        notificationType
+        approvalStatus
+        referenceId
         status
         createdAt
         senderUserId
@@ -32,15 +32,15 @@ export const LIST_MESSAGES_QUERY = `
   }
 `;
  
-export const GET_MESSAGE_QUERY = `
-  query GetMessage($id: ID!) {
-    getMessage(id: $id) {
+export const GET_NOTIFICATION_QUERY = `
+  query GetNotification($id: ID!) {
+    getNotification(id: $id) {
       id
       subject
       body
-      messageType
-      systemMessageType
-      systemMessageData
+      notificationType
+      approvalStatus
+      referenceId
       status
       createdAt
       senderUserId
@@ -63,15 +63,15 @@ export const GET_MESSAGE_QUERY = `
   }
 `;
 
-export const CREATE_MESSAGE_MUTATION = `
-  mutation CreateMessage($input: CreateMessageInput!) {
-    createMessage(input: $input) {
+export const CREATE_NOTIFICATION_MUTATION = `
+  mutation CreateNotification($input: CreateNotificationInput!) {
+    createNotification(input: $input) {
       id
       subject
       body
-      messageType
-      systemMessageType
-      systemMessageData
+      notificationType
+      approvalStatus
+      referenceId
       status
       createdAt
       senderUserId
@@ -80,18 +80,19 @@ export const CREATE_MESSAGE_MUTATION = `
   }
 `;
 
-export const UPDATE_MESSAGE_MUTATION = `
-  mutation UpdateMessage($input: UpdateMessageInput!) {
-    updateMessage(input: $input) {
+export const UPDATE_NOTIFICATION_MUTATION = `
+  mutation UpdateNotification($input: UpdateNotificationInput!) {
+    updateNotification(input: $input) {
       id
       status
+      approvalStatus
     }
   }
 `;
 
-export const DELETE_MESSAGE_MUTATION = `
-  mutation DeleteMessage($input: DeleteMessageInput!) {
-    deleteMessage(input: $input) {
+export const DELETE_NOTIFICATION_MUTATION = `
+  mutation DeleteNotification($input: DeleteNotificationInput!) {
+    deleteNotification(input: $input) {
       id
     }
   }
@@ -114,15 +115,15 @@ export const LIST_USERS_IN_INSTITUTION_QUERY = `
   }
 `;
 
-export const SUBSCRIBE_TO_NEW_MESSAGES = `
-  subscription OnCreateMessage($filter: ModelSubscriptionMessageFilterInput) {
-    onCreateMessage(filter: $filter) {
+export const SUBSCRIBE_TO_NEW_NOTIFICATIONS = `
+  subscription OnCreateNotification($filter: ModelSubscriptionNotificationFilterInput) {
+    onCreateNotification(filter: $filter) {
       id
       subject
       body
-      messageType
-      systemMessageType
-      systemMessageData
+      notificationType
+      approvalStatus
+      referenceId
       status
       createdAt
       senderUserId

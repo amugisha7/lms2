@@ -41,8 +41,8 @@ import {
   CREATE_USER_MUTATION,
   GET_INSTITUTION_QUERY,
   LIST_USERS_QUERY,
-  CREATE_USER_NOTIFICATION_MUTATION,
 } from "./onboardingQueries";
+import { CREATE_NOTIFICATION_MUTATION } from "../Notifications/notificationQueries";
 
 const client = generateClient();
 
@@ -270,21 +270,21 @@ const AccountSettingsForm = () => {
       }
 
       // Create notifications for each admin
-      const currentDate = new Date().toISOString().split("T")[0];
       for (const admin of admins) {
         try {
           await client.graphql({
-            query: CREATE_USER_NOTIFICATION_MUTATION,
+            query: CREATE_NOTIFICATION_MUTATION,
             variables: {
               input: {
-                eventType: "user_join_request",
-                name: "New User Join Request",
-                description:
-                  "A new user has requested to join your institution.",
-                reference: userRes.data.createUser.id,
-                message: `Please review and approve the join request for ${user.signInDetails.loginId}. Joined on ${currentDate}.`,
+                subject: "New User Join Request",
+                body: `A new user, ${user.signInDetails.loginId}, has requested to join your institution. Please review and approve or reject the request.`,
+                notificationType: "USER_JOIN_REQUEST",
+                approvalStatus: "PENDING",
+                referenceId: userRes.data.createUser.id,
                 status: "unread",
-                userUserNotificationsId: admin.id,
+                senderUserId: user.userId,
+                recipientUserId: admin.id,
+                institutionMessagesId: businessID,
               },
             },
           });

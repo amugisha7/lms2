@@ -508,6 +508,14 @@ export const createUser = /* GraphQL */ `
         nextToken
         __typename
       }
+      sentNotifications {
+        nextToken
+        __typename
+      }
+      receivedNotifications {
+        nextToken
+        __typename
+      }
       createdAt
       updatedAt
       institutionUsersId
@@ -594,6 +602,14 @@ export const updateUser = /* GraphQL */ `
         nextToken
         __typename
       }
+      sentNotifications {
+        nextToken
+        __typename
+      }
+      receivedNotifications {
+        nextToken
+        __typename
+      }
       createdAt
       updatedAt
       institutionUsersId
@@ -677,6 +693,14 @@ export const deleteUser = /* GraphQL */ `
         __typename
       }
       receivedMessages {
+        nextToken
+        __typename
+      }
+      sentNotifications {
+        nextToken
+        __typename
+      }
+      receivedNotifications {
         nextToken
         __typename
       }
@@ -7192,9 +7216,6 @@ export const createMessage = /* GraphQL */ `
       id
       subject
       body
-      messageType
-      systemMessageType
-      systemMessageData
       status
       createdAt
       sender {
@@ -7253,7 +7274,6 @@ export const createMessage = /* GraphQL */ `
         __typename
       }
       recipientUserId
-      institutionMessagesId
       updatedAt
       __typename
     }
@@ -7268,9 +7288,153 @@ export const updateMessage = /* GraphQL */ `
       id
       subject
       body
-      messageType
-      systemMessageType
-      systemMessageData
+      status
+      createdAt
+      sender {
+        id
+        firstName
+        lastName
+        middleName
+        dateOfBirth
+        phoneNumber1
+        phoneNumber2
+        email
+        addressLine1
+        addressLine2
+        city
+        stateProvince
+        postalCode
+        nationalID
+        passportNumber
+        nationality
+        status
+        userType
+        userPermissions
+        description
+        createdAt
+        updatedAt
+        institutionUsersId
+        branchUsersId
+        __typename
+      }
+      senderUserId
+      recipient {
+        id
+        firstName
+        lastName
+        middleName
+        dateOfBirth
+        phoneNumber1
+        phoneNumber2
+        email
+        addressLine1
+        addressLine2
+        city
+        stateProvince
+        postalCode
+        nationalID
+        passportNumber
+        nationality
+        status
+        userType
+        userPermissions
+        description
+        createdAt
+        updatedAt
+        institutionUsersId
+        branchUsersId
+        __typename
+      }
+      recipientUserId
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const deleteMessage = /* GraphQL */ `
+  mutation DeleteMessage(
+    $input: DeleteMessageInput!
+    $condition: ModelMessageConditionInput
+  ) {
+    deleteMessage(input: $input, condition: $condition) {
+      id
+      subject
+      body
+      status
+      createdAt
+      sender {
+        id
+        firstName
+        lastName
+        middleName
+        dateOfBirth
+        phoneNumber1
+        phoneNumber2
+        email
+        addressLine1
+        addressLine2
+        city
+        stateProvince
+        postalCode
+        nationalID
+        passportNumber
+        nationality
+        status
+        userType
+        userPermissions
+        description
+        createdAt
+        updatedAt
+        institutionUsersId
+        branchUsersId
+        __typename
+      }
+      senderUserId
+      recipient {
+        id
+        firstName
+        lastName
+        middleName
+        dateOfBirth
+        phoneNumber1
+        phoneNumber2
+        email
+        addressLine1
+        addressLine2
+        city
+        stateProvince
+        postalCode
+        nationalID
+        passportNumber
+        nationality
+        status
+        userType
+        userPermissions
+        description
+        createdAt
+        updatedAt
+        institutionUsersId
+        branchUsersId
+        __typename
+      }
+      recipientUserId
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const createNotification = /* GraphQL */ `
+  mutation CreateNotification(
+    $input: CreateNotificationInput!
+    $condition: ModelNotificationConditionInput
+  ) {
+    createNotification(input: $input, condition: $condition) {
+      id
+      subject
+      body
+      notificationType
+      approvalStatus
+      referenceId
       status
       createdAt
       sender {
@@ -7335,18 +7499,94 @@ export const updateMessage = /* GraphQL */ `
     }
   }
 `;
-export const deleteMessage = /* GraphQL */ `
-  mutation DeleteMessage(
-    $input: DeleteMessageInput!
-    $condition: ModelMessageConditionInput
+export const updateNotification = /* GraphQL */ `
+  mutation UpdateNotification(
+    $input: UpdateNotificationInput!
+    $condition: ModelNotificationConditionInput
   ) {
-    deleteMessage(input: $input, condition: $condition) {
+    updateNotification(input: $input, condition: $condition) {
       id
       subject
       body
-      messageType
-      systemMessageType
-      systemMessageData
+      notificationType
+      approvalStatus
+      referenceId
+      status
+      createdAt
+      sender {
+        id
+        firstName
+        lastName
+        middleName
+        dateOfBirth
+        phoneNumber1
+        phoneNumber2
+        email
+        addressLine1
+        addressLine2
+        city
+        stateProvince
+        postalCode
+        nationalID
+        passportNumber
+        nationality
+        status
+        userType
+        userPermissions
+        description
+        createdAt
+        updatedAt
+        institutionUsersId
+        branchUsersId
+        __typename
+      }
+      senderUserId
+      recipient {
+        id
+        firstName
+        lastName
+        middleName
+        dateOfBirth
+        phoneNumber1
+        phoneNumber2
+        email
+        addressLine1
+        addressLine2
+        city
+        stateProvince
+        postalCode
+        nationalID
+        passportNumber
+        nationality
+        status
+        userType
+        userPermissions
+        description
+        createdAt
+        updatedAt
+        institutionUsersId
+        branchUsersId
+        __typename
+      }
+      recipientUserId
+      institutionMessagesId
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const deleteNotification = /* GraphQL */ `
+  mutation DeleteNotification(
+    $input: DeleteNotificationInput!
+    $condition: ModelNotificationConditionInput
+  ) {
+    deleteNotification(input: $input, condition: $condition) {
+      id
+      subject
+      body
+      notificationType
+      approvalStatus
+      referenceId
       status
       createdAt
       sender {

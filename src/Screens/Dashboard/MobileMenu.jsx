@@ -20,7 +20,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import myLogo from "../../Resources/loantabs_logo.png";
 import { menuItems } from "./Menu";
-import { useUnreadMessageCount } from "../Messaging";
+import { useUnreadMessageCount } from "../Notifications";
 
 const MobileMenu = ({ open, onClose }) => {
   const [expandedItems, setExpandedItems] = useState({});

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useCallback } from "react";
 import {
   Box,
   Typography,
@@ -12,29 +12,24 @@ import {
   CircularProgress,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import { generateClient } from "aws-amplify/api";
+import loggedClient from "../../loggedClient";
 import { UserContext } from "../../App";
 import {
   UPDATE_NOTIFICATION_MUTATION,
   CREATE_NOTIFICATION_MUTATION,
+  UPDATE_USER_MUTATION,
 } from "./notificationQueries";
 import { getUserDisplayName, formatFullDate } from "./notificationUtils";
 import { useSnackbar } from "../../ComponentAssets/SnackbarContext";
 
-const client = generateClient();
+const client = loggedClient;
 
 const NotificationThread = ({ notification, onBack, onNotificationAction }) => {
   const { user } = useContext(UserContext);
   const { showSnackbar } = useSnackbar();
   const [isProcessing, setIsProcessing] = useState(false);
 
-  useEffect(() => {
-    if (notification && notification.status === "unread") {
-      markNotificationAsRead();
-    }
-  }, [notification]);
-
-  const markNotificationAsRead = async () => {
+  const markNotificationAsRead = useCallback(async () => {
     try {
       await client.graphql({
         query: UPDATE_NOTIFICATION_MUTATION,
@@ -52,7 +47,13 @@ const NotificationThread = ({ notification, onBack, onNotificationAction }) => {
     } catch (error) {
       console.error("Error marking notification as read:", error);
     }
-  };
+  }, [notification, onNotificationAction]);
+
+  useEffect(() => {
+    if (notification && notification.status === "unread") {
+      markNotificationAsRead();
+    }
+  }, [notification, markNotificationAsRead]);
 
   const handleApproval = async (action) => {
     if (!notification || !user) return;
@@ -77,14 +78,7 @@ const NotificationThread = ({ notification, onBack, onNotificationAction }) => {
       // This assumes `referenceId` is the user ID to be updated
       if (notification.notificationType === "USER_JOIN_REQUEST") {
         await client.graphql({
-          query: /* GraphQL */ `
-            mutation UpdateUser($input: UpdateUserInput!) {
-              updateUser(input: $input) {
-                id
-                status
-              }
-            }
-          `,
+          query: UPDATE_USER_MUTATION,
           variables: {
             input: {
               id: referenceId,
@@ -142,18 +136,20 @@ const NotificationThread = ({ notification, onBack, onNotificationAction }) => {
 
   if (!notification) {
     return (
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "100%",
-        }}
-      >
-        <Typography color="text.secondary">
-          Select a notification to view details
-        </Typography>
-      </Box>
+      <></>
+      // <Box
+      //   sx={{
+      //     display: "flex",
+      //     justifyContent: "center",
+      //     alignItems: "center",
+      //     height: "100%",
+      //     p: 2,
+      //   }}
+      // >
+      //   <Typography color="text.secondary">
+      //     Select a notification to view details
+      //   </Typography>
+      // </Box>
     );
   }
 
@@ -164,44 +160,27 @@ const NotificationThread = ({ notification, onBack, onNotificationAction }) => {
     notificationType === "USER_JOIN_REQUEST" && approvalStatus === "PENDING";
 
   return (
-    <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
       {/* Header */}
-      <Paper
-        elevation={1}
-        sx={{ p: 2, display: "flex", alignItems: "center", gap: 2 }}
-      >
+      <Box sx={{ p: 2, display: "flex", alignItems: "center", gap: 2 }}>
         <IconButton onClick={onBack} sx={{ display: { md: "none" } }}>
           <ArrowBackIcon />
         </IconButton>
-        <Avatar
-          sx={{
-            bgcolor:
-              notificationType === "USER_JOIN_REQUEST"
-                ? "secondary.main"
-                : "primary.main",
-          }}
-        >
-          {getUserInitials(sender)}
-        </Avatar>
-        <Box sx={{ flexGrow: 1 }}>
-          <Typography variant="h6">{getUserDisplayName(sender)}</Typography>
-          <Typography variant="body2" color="text.secondary">
-            {sender?.email || "System Notification"}
-          </Typography>
-        </Box>
+
         <Chip label={notificationType.replace(/_/g, " ")} variant="outlined" />
-      </Paper>
+        <Typography variant="caption" color="text.secondary">
+          {formatFullDate(createdAt)}
+        </Typography>
+      </Box>
 
       {/* Notification Body */}
-      <Box sx={{ flexGrow: 1, overflow: "auto", p: 3 }}>
+      <Box sx={{ flexGrow: 1, overflow: "auto", p: 2 }}>
         <Stack spacing={2}>
-          <Typography variant="h5" gutterBottom>
-            {subject}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            {formatFullDate(createdAt)}
-          </Typography>
-          <Divider sx={{ my: 2 }} />
           <Typography variant="body1" sx={{ whiteSpace: "pre-wrap" }}>
             {body}
           </Typography>

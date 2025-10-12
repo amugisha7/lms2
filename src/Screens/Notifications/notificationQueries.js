@@ -98,6 +98,15 @@ export const DELETE_NOTIFICATION_MUTATION = `
   }
 `;
 
+export const UPDATE_USER_MUTATION = `
+  mutation UpdateUser($input: UpdateUserInput!) {
+    updateUser(input: $input) {
+      id
+      status
+    }
+  }
+`;
+
 export const LIST_USERS_IN_INSTITUTION_QUERY = `
   query ListUsersInInstitution($filter: ModelUserFilterInput, $limit: Int, $nextToken: String) {
     listUsers(filter: $filter, limit: $limit, nextToken: $nextToken) {

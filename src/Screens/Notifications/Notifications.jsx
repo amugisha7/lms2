@@ -48,29 +48,51 @@ const Notifications = () => {
   // Desktop view - multi-panel layout
   return (
     <Box sx={{ height: "calc(100vh - 64px)", p: 2 }}>
-      <Grid container spacing={2} sx={{ height: "100%" }}>
-        {/* Notification List */}
-        <Grid item xs={12} md={4}>
-          <Paper sx={{ height: "100%", position: "relative" }}>
+      <Box
+        sx={{
+          display: { xs: "block", md: "flex" },
+          height: "100%",
+          width: "100%",
+        }}
+      >
+        {/* Notification List - 30% width */}
+        <Box
+          sx={{
+            width: { xs: "100%", md: "30%" },
+            height: "100%",
+            minWidth: 0,
+            pr: { md: 2 },
+          }}
+        >
+          <Box sx={{ height: "100%", position: "relative" }}>
             <NotificationList
               onSelectNotification={handleSelectNotification}
               selectedNotificationId={selectedNotification?.id}
               key={refreshTrigger}
             />
-          </Paper>
-        </Grid>
+          </Box>
+        </Box>
 
-        {/* Notification Thread */}
-        <Grid item xs={12} md={8}>
-          <Paper sx={{ height: "100%" }}>
+        {/* Notification Thread - 70% width */}
+        <Box
+          sx={{
+            width: { xs: "100%", md: "70%" },
+            height: "100%",
+            minWidth: 0,
+            pl: { md: 2 },
+            display: { xs: "none", md: "block" },
+            borderLeft: { md: "1px solid #e0e0e0" },
+          }}
+        >
+          <Paper>
             <NotificationThread
               notification={selectedNotification}
               onBack={handleBackToList}
               onNotificationAction={handleNotificationAction}
             />
           </Paper>
-        </Grid>
-      </Grid>
+        </Box>
+      </Box>
     </Box>
   );
 };

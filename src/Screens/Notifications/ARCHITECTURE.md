@@ -1,36 +1,27 @@
-# Messaging Platform Architecture
+# Notifications System Architecture
 
 ## Component Hierarchy
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                      Messaging.jsx                          │
+│                     Notifications.jsx                       │
 │                   (Main Container)                          │
-│  - Manages view state (list/thread/compose)                 │
+│  - Manages view state (list/thread)                         │
 │  - Responsive layout switching                              │
-│  - User directory drawer                                    │
+│  - Handles notification actions                             │
 └─────────────────────────────────────────────────────────────┘
                             │
-        ┌───────────────────┼───────────────────┐
-        │                   │                   │
-        ▼                   ▼                   ▼
-┌───────────────┐  ┌────────────────┐  ┌──────────────────┐
-│ MessageList   │  │ MessageThread  │  │ MessageComposer  │
-│               │  │                │  │                  │
-│ - Conversations│  │ - Thread view  │  │ - New message   │
-│ - Search      │  │ - Reply input  │  │ - Subject/body   │
-│ - Unread count│  │ - Mark as read │  │ - Send action    │
-└───────────────┘  └────────────────┘  └──────────────────┘
-                            │
-                            └────────────────┐
-                                            ▼
-                                    ┌───────────────┐
-                                    │ UserDirectory │
-                                    │               │
-                                    │ - User list   │
-                                    │ - Search      │
-                                    │ - Selection   │
-                                    └───────────────┘
+                ┌───────────┼───────────┐
+                │                       │
+                ▼                       ▼
+┌──────────────────────┐  ┌──────────────────────┐
+│   NotificationList    │  │  NotificationThread  │
+│                      │  │                      │
+│ - Notification list  │  │ - Notification detail│
+│ - Search             │  │ - Approval actions    │
+│ - Unread indicators  │  │ - Mark as read       │
+│ - Real-time updates  │  │ - Back navigation    │
+└──────────────────────┘  └──────────────────────┘
 ```
 
 ## Data Flow
@@ -41,20 +32,19 @@
 │                   (AWS AppSync)                             │
 │                                                             │
 │  Queries:                    Mutations:                     │
-│  - listMessages              - createMessage                │
-│  - getMessage                - updateMessage                │
-│  - listUsers                 - deleteMessage                │
+│  - listNotifications         - createNotification          │
+│  - getNotification           - updateNotification          │
 │                                                             │
 │  Subscriptions:                                             │
-│  - onCreateMessage (real-time)                              │
+│  - onCreateNotification (real-time)                         │
 └─────────────────────────────────────────────────────────────┘
                             ▲
                             │
                             │ GraphQL Operations
                             │
 ┌─────────────────────────────────────────────────────────────┐
-│                   Messaging Queries                         │
-│               (messagingQueries.js)                         │
+│                  Notification Queries                       │
+│               (notificationQueries.js)                      │
 │  - Defines all GraphQL query/mutation strings               │
 └─────────────────────────────────────────────────────────────┘
                             ▲
@@ -62,12 +52,12 @@
                             │ Uses
                             │
 ┌─────────────────────────────────────────────────────────────┐
-│                    Messaging API                            │
-│                 (messagingAPI.js)                           │
-│  - sendUserMessage()                                        │
-│  - sendSystemMessage()                                      │
+│                   Notification API                          │
+│                 (notificationsAPI.js)                       │
+│  - sendNotification()                                       │
+│  - sendApprovalRequest()                                    │
 │  - sendLoanApprovalRequest()                                │
-│  - broadcastMessage()                                       │
+│  - sendPaymentReceivedNotification()                        │
 │  - ... more helper functions                                │
 └─────────────────────────────────────────────────────────────┘
                             ▲
@@ -76,10 +66,8 @@
                             │
 ┌─────────────────────────────────────────────────────────────┐
 │                   Components Layer                          │
-│  - MessageList.jsx                                          │
-│  - MessageThread.jsx                                        │
-│  - MessageComposer.jsx                                      │
-│  - UserDirectory.jsx                                        │
+│  - NotificationList.jsx                                     │
+│  - NotificationThread.jsx                                   │
 └─────────────────────────────────────────────────────────────┘
                             │
                             │ Uses
@@ -87,10 +75,10 @@
                             ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                 Utility Functions                           │
-│                (messageUtils.js)                            │
-│  - formatMessageDate()                                      │
-│  - groupMessagesByConversation()                            │
-│  - searchMessages()                                         │
+│                (notificationUtils.js)                       │
+│  - formatNotificationDate()                                 │
+│  - getNotificationPreview()                                 │
+│  - searchNotifications()                                    │
 │  - ... more utilities                                       │
 └─────────────────────────────────────────────────────────────┘
 
@@ -108,28 +96,28 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                     Message Table                           │
+│                   Notification Table                        │
 ├─────────────────────────────────────────────────────────────┤
 │ PK: id (ID!)                                                │
 │                                                             │
 │ Fields:                                                     │
 │ - subject: String (optional)                                │
 │ - body: String! (required)                                  │
-│ - messageType: String (user_message / system_message)       │
-│ - systemMessageType: String (approval_request, etc.)        │
-│ - systemMessageData: AWSJSON (for approval buttons/data)    │
+│ - notificationType: String (approval_request, etc.)         │
+│ - approvalStatus: String (pending/approved/rejected)        │
+│ - referenceId: String (loan/payment ID)                     │
 │ - status: String (unread / read)                            │
 │ - createdAt: AWSDateTime                                    │
 │                                                             │
 │ Foreign Keys:                                               │
 │ - senderUserId: ID! → User.id                               │
 │ - recipientUserId: ID! → User.id                            │
-│ - institutionMessagesId: ID                                 │
+│ - institutionNotificationsId: ID                           │
 │                                                             │
 │ GSI Indexes:                                                │
 │ - bySender: senderUserId                                    │
 │ - byRecipient: recipientUserId                              │
-│ - byInstitution: institutionMessagesId                      │
+│ - byInstitution: institutionNotificationsId                 │
 └─────────────────────────────────────────────────────────────┘
            │                    │
            │                    │
@@ -147,78 +135,64 @@
 └──────────────────┘   └──────────────────┘
 ```
 
-## Message Flow - User Message
+## Notification Flow - General Notification
 
 ```
-1. User opens Messaging
+1. User opens Notifications
    │
-   ├─→ MessageList fetches conversations
-   │   (queries sent + received messages)
+   ├─→ NotificationList fetches notifications
+   │   (queries notifications for current user)
    │
-   ├─→ Groups messages by conversation partner
+   ├─→ Displays notifications sorted by date
    │
-   ├─→ Subscribes to new messages (real-time)
+   ├─→ Subscribes to new notifications (real-time)
    │
-2. User clicks "New Message"
+2. User clicks a notification
    │
-   ├─→ Opens UserDirectory drawer
+   ├─→ Opens NotificationThread
    │
-   ├─→ Fetches institution users
+   ├─→ Displays full notification content
    │
-   ├─→ User selects recipient
+   ├─→ Automatically marks as read
    │
-3. MessageComposer opens
-   │
-   ├─→ User types subject (optional) and body
-   │
-   ├─→ User clicks Send
-   │
-   ├─→ Calls CREATE_MESSAGE_MUTATION
-   │
-   ├─→ Message saved to DynamoDB
-   │
-   ├─→ Subscription triggers update in recipient's MessageList
-   │
-   └─→ Returns to MessageList with confirmation
+   └─→ Shows approval buttons if applicable
 ```
 
-## Message Flow - System Message
+## Notification Flow - Approval Notification
 
 ```
 1. System event occurs (e.g., loan submitted)
    │
    ├─→ Application calls sendLoanApprovalRequest()
-   │   from messagingAPI.js
+   │   from notificationsAPI.js
    │
-   ├─→ Function calls generateSystemMessage()
-   │   with LOAN_APPROVAL_REQUEST template
-   │
-   ├─→ Template generates message with:
+   ├─→ Function generates notification with:
    │   - Subject: "Loan Approval Required - [Borrower]"
    │   - Body: Formatted details
-   │   - systemMessageData: { actions: ["approve", "reject"] }
+   │   - notificationType: "approval_request"
+   │   - referenceId: loan.id
    │
-   ├─→ Calls CREATE_MESSAGE_MUTATION
+   ├─→ Calls CREATE_NOTIFICATION_MUTATION
    │
-   ├─→ Message saved to DynamoDB
+   ├─→ Notification saved to DynamoDB
    │
-2. Admin opens Messaging
+2. Admin opens Notifications
    │
-   ├─→ Sees message in MessageList with "System" chip
+   ├─→ Sees notification in NotificationList
    │
-   ├─→ Opens MessageThread
+   ├─→ Opens NotificationThread
    │
-   ├─→ Sees message with Approve/Reject buttons
+   ├─→ Sees notification with Approve/Reject buttons
    │
    ├─→ Clicks Approve
    │
    ├─→ handleApproval() processes the action
    │
-   ├─→ Updates loan status in database
+   ├─→ Updates related entity (loan status)
    │
-   ├─→ Marks message as read
+   ├─→ Updates notification approvalStatus
    │
-   └─→ Optionally sends confirmation message
+   └─→ Refreshes notification list
 ```
 
 ## Integration Points
@@ -239,33 +213,32 @@
           │                 │                 │
           └─────────────────┼─────────────────┘
                             │
-                            │ Uses messaging API
+                            │ Uses notification API
                             │
                             ▼
     ┌─────────────────────────────────────────────┐
-    │         Messaging Platform                  │
-    │         (messagingAPI.js)                   │
+    │         Notification System                 │
+    │         (notificationsAPI.js)               │
     ├─────────────────────────────────────────────┤
     │ - sendLoanApprovalRequest()                 │
     │ - sendPaymentReceivedNotification()         │
     │ - sendUserJoinRequest()                     │
     │ - sendPaymentDueReminder()                  │
-    │ - broadcastMessage()                        │
     └─────────────────────────────────────────────┘
                             │
-                            │ Creates messages
+                            │ Creates notifications
                             │
                             ▼
     ┌─────────────────────────────────────────────┐
-    │         DynamoDB Message Table              │
+    │         DynamoDB Notification Table         │
     └─────────────────────────────────────────────┘
                             │
                             │ Real-time updates
                             │
                             ▼
     ┌─────────────────────────────────────────────┐
-    │         User's Message Interface            │
-    │         (MessageList + MessageThread)       │
+    │         User's Notification Interface       │
+    │         (NotificationList + NotificationThread) │
     └─────────────────────────────────────────────┘
 ```
 
@@ -280,19 +253,11 @@
 │                                                         │
 │  ┌──────────────────┐  ┌─────────────────────────────┐ │
 │  │                  │  │                             │ │
-│  │  MessageList     │  │     MessageThread          │ │
+│  │ NotificationList │  │    NotificationThread       │ │
 │  │                  │  │                             │ │
-│  │  - Conversations │  │  - Messages                 │ │
-│  │  - Search        │  │  - Reply box                │ │
-│  │  - Unread counts │  │                             │ │
-│  │                  │  │  OR                         │ │
-│  │  [New Msg FAB]   │  │                             │ │
-│  │                  │  │     MessageComposer         │ │
-│  │                  │  │                             │ │
-│  │                  │  │  - Select recipient         │ │
-│  │                  │  │  - Subject                  │ │
-│  │                  │  │  - Body                     │ │
-│  │                  │  │  - Send                     │ │
+│  │ - Notifications  │  │ - Notification details      │ │
+│  │ - Search         │  │ - Approval actions          │ │
+│  │ - Unread badges  │  │ - Mark as read              │ │
 │  │                  │  │                             │ │
 │  └──────────────────┘  └─────────────────────────────┘ │
 │       33% width              67% width                  │
@@ -306,52 +271,25 @@
 │      Navigation Bar         │
 ├─────────────────────────────┤
 │                             │
-│      MessageList            │
+│    NotificationList         │
 │                             │
-│  - Conversations            │
-│  - Search                   │
-│  - Unread counts            │
-│                             │
-│         [FAB]               │
+│ - Notifications             │
+│ - Search                    │
+│ - Unread indicators         │
 │                             │
 └─────────────────────────────┘
 
-        ↓ User taps conversation
+        ↓ User taps notification
 
 ┌─────────────────────────────┐
-│    [←] Conversation         │
+│   [←] Notification          │
 ├─────────────────────────────┤
 │                             │
-│      MessageThread          │
+│   NotificationThread        │
 │                             │
-│  - Messages                 │
-│  - Reply box                │
-│                             │
-└─────────────────────────────┘
-
-        ↓ User taps New Message
-
-┌─────────────────────────────┐
-│ UserDirectory (Drawer)      │
-│ 80% height                  │
-│                             │
-│  - Search users             │
-│  - Select recipient         │
-│                             │
-└─────────────────────────────┘
-
-        ↓ User selects recipient
-
-┌─────────────────────────────┐
-│    [X] New Message          │
-├─────────────────────────────┤
-│                             │
-│    MessageComposer          │
-│                             │
-│  - To: [Selected User]      │
-│  - Subject                  │
-│  - Body                     │
-│  - [Cancel] [Send]          │
+│ - Full content              │
+│ - Approval buttons          │
+│ - Back to list              │
 │                             │
 └─────────────────────────────┘
 ```
@@ -363,19 +301,18 @@
 │                   Institution Boundary                  │
 │                                                         │
 │  ┌─────────┐    ┌─────────┐    ┌─────────┐           │
-│  │ User A  │───>│ Message │───>│ User B  │           │
-│  │         │    │         │    │         │           │
+│  │ User A  │───>│Notification│───>│ User B  │           │
+│  │         │    │          │    │         │           │
 │  └─────────┘    └─────────┘    └─────────┘           │
 │                      ▲                                 │
 │                      │                                 │
-│                      │ institutionMessagesId           │
+│                      │ institutionNotificationsId      │
 │                      │ filter                          │
 │                      │                                 │
 │  ┌──────────────────────────────────────────┐         │
-│  │  All messages scoped to institution      │         │
+│  │  All notifications scoped to institution │         │
 │  │  Users can only see:                     │         │
-│  │  - Messages they sent                    │         │
-│  │  - Messages they received                │         │
+│  │  - Notifications they received           │         │
 │  │  Users in same institution only          │         │
 │  └──────────────────────────────────────────┘         │
 │                                                         │
@@ -383,6 +320,37 @@
 ```
 
 ## Performance Optimizations
+
+1. **Pagination**: Limit 100 notifications per query
+2. **Subscription filtering**: Only new notifications for current user
+3. **Debounced search**: Reduces unnecessary re-renders
+4. **Lazy loading**: Components loaded on-demand
+5. **Efficient queries**: Only fetch required fields
+
+## Extension Points
+
+The architecture supports future enhancements:
+
+```
+Current:                     Future Enhancements:
+┌───────────────┐           ┌───────────────┐
+│ Text Notifs   │ ──add──> │ + Categories  │
+└───────────────┘           └───────────────┘
+                            ┌───────────────┐
+                            │ + Preferences │
+                            └───────────────┘
+                            ┌───────────────┐
+                            │ + Templates   │
+                            └───────────────┘
+                            ┌───────────────┐
+                            │ + Push Notifs │
+                            └───────────────┘
+                            ┌───────────────┐
+                            │ + Snooze      │
+                            └───────────────┘
+```
+
+All components are designed with extensibility in mind.
 
 1. **Pagination**: Limit 100 messages per query
 2. **Client-side grouping**: No extra queries for conversations

@@ -1,10 +1,10 @@
 // Messaging API helper functions for sending messages programmatically
 
-import { generateClient } from "aws-amplify/api";
+import loggedClient from "../../loggedClient";
 import { CREATE_NOTIFICATION_MUTATION } from "./notificationQueries";
 import { generateSystemMessage } from "./systemMessages";
 
-const client = generateClient();
+const client = loggedClient;
 
 /**
  * Send a user message

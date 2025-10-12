@@ -1,12 +1,12 @@
 import React, { useRef } from "react";
 import { UserContext } from "../../App";
-import ClickableText from "../../ComponentAssets/ClickableText";
+import ClickableText from "../../ModelAssets/ClickableText";
 import CreateBranches from "./CreateBranches/CreateBranch";
 import { useTheme } from "@mui/material/styles";
-import CollectionsTemplate from "../../ComponentAssets/CollectionsTemplate";
+import CollectionsTemplate from "../../ModelAssets/CollectionsTemplate";
 import { useCrudOperations } from "../../hooks/useCrudOperations";
 import { generateClient } from "aws-amplify/api";
-import NotificationBar from "../../ComponentAssets/NotificationBar";
+import NotificationBar from "../../ModelAssets/NotificationBar";
 
 // Guard to ensure we only fetch branches once per page load (even under React StrictMode)
 let __branchesFetchedOnce = false;

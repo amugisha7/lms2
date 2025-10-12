@@ -15,10 +15,10 @@ import createBranchForm from "./createBranchForm";
 import TextInput from "../../../Resources/FormComponents/TextInput";
 import TextArea from "../../../Resources/FormComponents/TextArea";
 import RadioGroup from "../../../Resources/FormComponents/RadioGroup";
-import CreateFormButtons from "../../../ComponentAssets/CreateFormButtons";
-import CustomEditFormButtons from "../../../ComponentAssets/CustomEditFormButtons";
+import CreateFormButtons from "../../../ModelAssets/CreateFormButtons";
+import CustomEditFormButtons from "../../../ModelAssets/CustomEditFormButtons";
 import { UserContext } from "../../../App";
-import { EditClickedContext } from "../../../ComponentAssets/CollectionsTemplate";
+import { EditClickedContext } from "../../../ModelAssets/CollectionsTemplate";
 
 const FormGrid = styled(Grid)(({ theme }) => ({
   display: "flex",

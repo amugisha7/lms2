@@ -6,7 +6,6 @@ import {
 } from "react-router-dom";
 import Onboarding from "./Screens/Onboarding/Onboarding";
 import MainGrid from "./muiTemplates/dashboard/components/MainGrid";
-import CreateBorrower from "./Screens/Borrowers/CreateBorrower/CreateBorrower";
 import CustomFieldsManager from "./Screens/AdminScreens/CustomFields/CustomFieldsManager";
 import Dashboard from "./Screens/Dashboard/Dashboard";
 import CreateLoanFeesForm from "./Screens/LoanFees/CreateLoanFeesForm"; // Add this import

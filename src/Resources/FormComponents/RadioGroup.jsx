@@ -17,7 +17,8 @@ const RadioGroup = ({
   required,
   editing = true,
   readOnly = false,
-  ...props
+  showOnlyInEditMode,
+  ...otherProps
 }) => {
   const [field, meta] = useField(name);
   const isReadOnly = readOnly || !editing;
@@ -54,7 +55,7 @@ const RadioGroup = ({
           minWidth: 0,
         }}
       >
-        <MuiRadioGroup {...field} {...props} row>
+        <MuiRadioGroup {...field} {...otherProps} row>
           {options?.map((option) => (
             <FormControlLabel
               key={option.value}

@@ -11,7 +11,10 @@ const TextArea = ({
   readOnly = false,
   editing = true,
   slotProps: incomingSlotProps,
-  ...props
+  validationType,
+  validationMessage,
+  validationPattern,
+  ...otherProps
 }) => {
   const [field, meta] = useField(name);
   const isReadOnly = readOnly || editing === false;
@@ -57,7 +60,7 @@ const TextArea = ({
       </Typography>
       <TextField
         {...field}
-        {...props}
+        {...otherProps}
         fullWidth
         multiline
         rows={rows}

@@ -15,6 +15,7 @@ import {
   LIST_NOTIFICATIONS_QUERY,
   SUBSCRIBE_TO_NEW_NOTIFICATIONS,
 } from "./Screens/Notifications/notificationQueries";
+import { onUpdateUser } from "./graphql/subscriptions";
 
 // Create UserContext once at the top level
 export const UserContext = createContext();
@@ -150,7 +151,7 @@ function App({ signOut, user }) {
     console.log("API Call: SUBSCRIBE_TO_NEW_NOTIFICATIONS", {
       recipientUserId: userDetails.id,
     });
-    const subscription = client
+    const notificationSubscription = client
       .graphql({
         query: SUBSCRIBE_TO_NEW_NOTIFICATIONS,
         variables: { filter: { recipientUserId: { eq: userDetails.id } } },
@@ -165,13 +166,35 @@ function App({ signOut, user }) {
           setAllMessages((prev) => [newMessage, ...prev]);
         },
         error: (error) => {
-          console.error("Subscription error:", error);
+          console.error("Notification subscription error:", error);
+        },
+      });
+
+    console.log("API Call: SUBSCRIBE_TO_USER_UPDATES", {
+      id: userDetails.id,
+    });
+    const userUpdateSubscription = client
+      .graphql({
+        query: onUpdateUser,
+        variables: { filter: { id: { eq: userDetails.id } } },
+      })
+      .subscribe({
+        next: ({ data }) => {
+          console.log("Subscription received user update:", data.onUpdateUser);
+          const updatedUser = data.onUpdateUser;
+          setUserDetails(updatedUser);
+        },
+        error: (error) => {
+          console.error("User update subscription error:", error);
         },
       });
 
     processedUserIds.current.add(userDetails.id);
 
-    return () => subscription.unsubscribe();
+    return () => {
+      notificationSubscription.unsubscribe();
+      userUpdateSubscription.unsubscribe();
+    };
   }, [userDetails?.id]);
 
   return (

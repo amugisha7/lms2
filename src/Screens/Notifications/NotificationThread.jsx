@@ -60,7 +60,7 @@ const NotificationThread = ({ notification, onBack, onNotificationAction }) => {
 
     setIsProcessing(true);
     const { id, referenceId, senderUserId } = notification;
-    const newStatus = action === "approve" ? "APPROVED" : "REJECTED";
+    const newStatus = action === "approve" ? "approved" : "rejected";
 
     try {
       // 1. Update the current notification's approval status
@@ -90,7 +90,7 @@ const NotificationThread = ({ notification, onBack, onNotificationAction }) => {
 
       // 3. Send a feedback notification to the original sender
       const feedbackSubject = `Request ${newStatus}`;
-      const feedbackBody = `Your request to join the institution has been ${newStatus.toLowerCase()}.`;
+      const feedbackBody = `Your request to join the institution has been ${newStatus}.`;
 
       await client.graphql({
         query: CREATE_NOTIFICATION_MUTATION,
@@ -99,7 +99,7 @@ const NotificationThread = ({ notification, onBack, onNotificationAction }) => {
             subject: feedbackSubject,
             body: feedbackBody,
             notificationType: "USER_JOIN_FEEDBACK",
-            approvalStatus: "NONE",
+            approvalStatus: newStatus,
             status: "unread",
             senderUserId: user.userId, // The admin is the sender
             recipientUserId: senderUserId, // The original user is the recipient
@@ -108,10 +108,7 @@ const NotificationThread = ({ notification, onBack, onNotificationAction }) => {
         },
       });
 
-      showSnackbar(
-        `User request has been ${newStatus.toLowerCase()}.`,
-        "success"
-      );
+      showSnackbar(`User request has been ${newStatus}.`, "success");
       if (onNotificationAction) {
         onNotificationAction();
       }
@@ -217,14 +214,14 @@ const NotificationThread = ({ notification, onBack, onNotificationAction }) => {
         </Box>
       )}
 
-      {approvalStatus !== "PENDING" && (
+      {approvalStatus !== "PENDING" && approvalStatus !== "NONE" && (
         <Box sx={{ p: 2, bgcolor: "background.paper", textAlign: "center" }}>
           <Chip
-            label={`Status: ${approvalStatus}`}
+            label={`Status: ${approvalStatus.toUpperCase()}`}
             color={
-              approvalStatus === "APPROVED"
+              approvalStatus === "approved"
                 ? "success"
-                : approvalStatus === "REJECTED"
+                : approvalStatus === "rejected"
                 ? "error"
                 : "default"
             }

@@ -76,6 +76,23 @@ export const menuItems = [
     ],
   },
   {
+    name: "Users",
+    icon: <GroupIcon sx={{ color: "white" }} />,
+    expandable: true,
+    children: [
+      {
+        name: "View Users",
+        icon: <ListAltIcon sx={{ color: "white" }} />,
+        route: "/users",
+      },
+      {
+        name: "Create User",
+        icon: <PersonAddIcon sx={{ color: "white" }} />,
+        route: "/users", // Since Users component has inline create
+      },
+    ],
+  },
+  {
     name: "Accounts",
     icon: <WalletIcon sx={{ color: "white" }} />,
     expandable: true,

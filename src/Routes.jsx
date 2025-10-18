@@ -25,6 +25,8 @@ import EmployeeDataGrid from "./Screens/Employees/EmployeeDataGrid";
 import CreateEmployeePage from "./Screens/Employees/CreateEmployeePage";
 import EmployeeManagement from "./Screens/Employees/EmployeeManagement";
 import BorrowerManagement from "./Models/Borrowers/BorrowerManagement";
+import UserManagement from "./Models/Users/UserManagement";
+import Users from "./Models/Users/Users";
 import UserSettings from "./Screens/AdminScreens/Settings/UserSettings";
 import NotificationsDashboard from "./Screens/Notifications/NotificationsDashboard";
 import Notifications from "./Screens/Notifications/Notifications";
@@ -56,6 +58,10 @@ export default function AppRoutes({ userExists }) {
               <Route path="employees" element={<EmployeeDataGrid />} />
               <Route path="employees/create" element={<CreateEmployeePage />} />
               <Route path="employees/manage" element={<EmployeeManagement />} />
+
+              {/* Users routes */}
+              <Route path="users" element={<Users />} />
+              <Route path="users/id/:id/view" element={<UserManagement />} />
 
               <Route path="customFields" element={<CustomFieldsManager />} />
               {/* Add more routes as needed */}

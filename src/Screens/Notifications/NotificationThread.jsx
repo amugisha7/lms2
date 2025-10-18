@@ -218,13 +218,14 @@ const NotificationThread = ({ notification, onBack, onNotificationAction }) => {
         <Box sx={{ p: 2, bgcolor: "background.paper", textAlign: "center" }}>
           <Chip
             label={`Status: ${approvalStatus.toUpperCase()}`}
-            color={
-              approvalStatus === "approved"
-                ? "success"
-                : approvalStatus === "rejected"
-                ? "error"
-                : "default"
-            }
+            // color={
+            //   approvalStatus === "approved"
+            //     ? "success"
+            //     : approvalStatus === "rejected"
+            //     ? "red"
+            //     : "default"
+            // }
+            variant="outlined"
           />
         </Box>
       )}

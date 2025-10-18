@@ -27,6 +27,7 @@ export const LIST_USERS_QUERY = `
         userType
         userPermissions
         description
+        customFieldsData
         createdAt
         updatedAt
       }
@@ -58,6 +59,7 @@ export const CREATE_USER_MUTATION = `
       userType
       userPermissions
       description
+      customFieldsData
       createdAt
       updatedAt
     }
@@ -87,6 +89,7 @@ export const UPDATE_USER_MUTATION = `
       userType
       userPermissions
       description
+      customFieldsData
       createdAt
       updatedAt
     }

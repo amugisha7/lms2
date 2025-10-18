@@ -120,6 +120,7 @@ const CreateUser = forwardRef(
       hideCancel,
       onCancel, // Add onCancel prop
       forceEditMode = false, // Add prop to force edit mode
+      canEdit = true, // Add canEdit prop
     },
     ref
   ) => {
@@ -189,6 +190,16 @@ const CreateUser = forwardRef(
           ...mapDbFieldsToFormFields(propInitialValues),
         }
       : initialValues;
+
+    useEffect(() => {
+      if (propInitialValues) {
+        const newInitialValues = {
+          ...baseInitialValues,
+          ...mapDbFieldsToFormFields(propInitialValues),
+        };
+        setInitialValues(newInitialValues);
+      }
+    }, [propInitialValues]);
 
     useImperativeHandle(ref, () => ({
       toggleEdit: () => {

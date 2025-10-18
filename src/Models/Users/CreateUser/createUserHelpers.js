@@ -29,6 +29,7 @@ export const fetchUserById = async (userId) => {
         userType
         userPermissions
         description
+        customFieldsData
         createdAt
         updatedAt
       }
@@ -76,6 +77,7 @@ export const updateUserById = async (userId, updateData) => {
         userType
         userPermissions
         description
+        customFieldsData
         createdAt
         updatedAt
       }

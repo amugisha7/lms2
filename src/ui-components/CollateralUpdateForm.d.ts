@@ -1,0 +1,82 @@
+/***************************************************************************
+ * The contents of this file were generated with Amplify Studio.           *
+ * Please refrain from making any modifications to this file.              *
+ * Any changes to this file will be overwritten when running amplify pull. *
+ **************************************************************************/
+
+import * as React from "react";
+import { GridProps, TextAreaFieldProps, TextFieldProps } from "@aws-amplify/ui-react";
+export declare type EscapeHatchProps = {
+    [elementHierarchy: string]: Record<string, unknown>;
+} | null;
+export declare type VariantValues = {
+    [key: string]: string;
+};
+export declare type Variant = {
+    variantValues: VariantValues;
+    overrides: EscapeHatchProps;
+};
+export declare type ValidationResponse = {
+    hasError: boolean;
+    errorMessage?: string;
+};
+export declare type ValidationFunction<T> = (value: T, validationResponse: ValidationResponse) => ValidationResponse | Promise<ValidationResponse>;
+export declare type CollateralUpdateFormInputValues = {
+    name?: string;
+    type?: string;
+    description?: string;
+    location?: string;
+    value?: number;
+    serialNumber?: string;
+    registrationNumber?: string;
+    insuranceDetails?: string;
+    insuranceExpiryDate?: string;
+    insuranceCompany?: string;
+    storedAt?: string;
+    customFieldsData?: string;
+    status?: string;
+};
+export declare type CollateralUpdateFormValidationValues = {
+    name?: ValidationFunction<string>;
+    type?: ValidationFunction<string>;
+    description?: ValidationFunction<string>;
+    location?: ValidationFunction<string>;
+    value?: ValidationFunction<number>;
+    serialNumber?: ValidationFunction<string>;
+    registrationNumber?: ValidationFunction<string>;
+    insuranceDetails?: ValidationFunction<string>;
+    insuranceExpiryDate?: ValidationFunction<string>;
+    insuranceCompany?: ValidationFunction<string>;
+    storedAt?: ValidationFunction<string>;
+    customFieldsData?: ValidationFunction<string>;
+    status?: ValidationFunction<string>;
+};
+export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
+export declare type CollateralUpdateFormOverridesProps = {
+    CollateralUpdateFormGrid?: PrimitiveOverrideProps<GridProps>;
+    name?: PrimitiveOverrideProps<TextFieldProps>;
+    type?: PrimitiveOverrideProps<TextFieldProps>;
+    description?: PrimitiveOverrideProps<TextFieldProps>;
+    location?: PrimitiveOverrideProps<TextFieldProps>;
+    value?: PrimitiveOverrideProps<TextFieldProps>;
+    serialNumber?: PrimitiveOverrideProps<TextFieldProps>;
+    registrationNumber?: PrimitiveOverrideProps<TextFieldProps>;
+    insuranceDetails?: PrimitiveOverrideProps<TextFieldProps>;
+    insuranceExpiryDate?: PrimitiveOverrideProps<TextFieldProps>;
+    insuranceCompany?: PrimitiveOverrideProps<TextFieldProps>;
+    storedAt?: PrimitiveOverrideProps<TextFieldProps>;
+    customFieldsData?: PrimitiveOverrideProps<TextAreaFieldProps>;
+    status?: PrimitiveOverrideProps<TextFieldProps>;
+} & EscapeHatchProps;
+export declare type CollateralUpdateFormProps = React.PropsWithChildren<{
+    overrides?: CollateralUpdateFormOverridesProps | undefined | null;
+} & {
+    id?: string;
+    collateral?: any;
+    onSubmit?: (fields: CollateralUpdateFormInputValues) => CollateralUpdateFormInputValues;
+    onSuccess?: (fields: CollateralUpdateFormInputValues) => void;
+    onError?: (fields: CollateralUpdateFormInputValues, errorMessage: string) => void;
+    onChange?: (fields: CollateralUpdateFormInputValues) => CollateralUpdateFormInputValues;
+    onValidate?: CollateralUpdateFormValidationValues;
+} & React.CSSProperties>;
+export default function CollateralUpdateForm(props: CollateralUpdateFormProps): React.ReactElement;

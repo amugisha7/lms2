@@ -513,6 +513,7 @@ export default function UserManagement() {
           onUpdateUserAPI={handleUpdateUserAPI}
           setNotification={setNotification}
           onCancel={handleEditPopupClose}
+          canEdit={canEditUser}
         />
       </EditContentPopup>
 
@@ -694,6 +695,7 @@ export default function UserManagement() {
                 onEditSuccess={handleEditSuccess}
                 onUpdateUserAPI={handleUpdateUserAPI}
                 setNotification={setNotification}
+                canEdit={canEditUser}
               />
             </div>
           </TabPanel>

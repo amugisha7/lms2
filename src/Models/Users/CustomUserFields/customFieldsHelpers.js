@@ -128,6 +128,17 @@ export const updateUserCustomFields = async (userId, customFields, formValues) =
         id
         customFieldsData
         updatedAt
+        institutionUsersId
+        branchUsersId
+        institution {
+          id
+          name
+          currencyCode
+        }
+        branch {
+          id
+          name
+        }
       }
     }
   `;

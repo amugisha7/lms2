@@ -22,6 +22,13 @@ import {
   updateUserById,
   deleteUserById,
 } from "./CreateUser/createUserHelpers";
+import {
+  fetchCustomFieldsForUser,
+  mapCustomFieldsToFormValues,
+  updateUserCustomFields,
+} from "./CustomUserFields/customFieldsHelpers";
+import EditableCustomUserFields from "./CustomUserFields/EditableCustomUserFields";
+import CustomUserFields from "./CustomUserFields/CustomUserFields";
 
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
@@ -251,6 +258,11 @@ export default function UserManagement() {
   const colorMode = useContext(ColorModeContext);
   const printableRef = useRef();
   const customFieldsPrintableRef = useRef();
+  const fetchedUserIdRef = React.useRef();
+  const fetchedCustomFieldsRef = React.useRef({
+    institutionUsersId: null,
+    branchUsersId: null,
+  }); // <-- Add ref
 
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -263,6 +275,10 @@ export default function UserManagement() {
   const [editPopupOpen, setEditPopupOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [customFields, setCustomFields] = useState([]);
+  const [customFieldsLoading, setCustomFieldsLoading] = useState(true);
+  const [editCustomFieldsPopupOpen, setEditCustomFieldsPopupOpen] =
+    useState(false);
 
   // Permissions
   const canEditUser = useHasPermission("update", "user");
@@ -287,6 +303,50 @@ export default function UserManagement() {
       fetchUser();
     }
   }, [id]);
+
+  // Fetch custom fields
+  useEffect(() => {
+    const fetchCustomFields = async () => {
+      if (!userDetails?.institutionUsersId || !userDetails?.branchUsersId) {
+        setCustomFieldsLoading(false);
+        return;
+      }
+
+      try {
+        setCustomFieldsLoading(true);
+        console.log("API Call: Fetching custom fields for user", {
+          institutionUsersId: userDetails.institutionUsersId,
+          branchUsersId: userDetails.branchUsersId,
+        });
+        const fields = await fetchCustomFieldsForUser(
+          userDetails.institutionUsersId,
+          userDetails.branchUsersId
+        );
+        console.log("API Call: Custom fields fetched successfully", fields);
+        setCustomFields(fields);
+      } catch (error) {
+        console.error("Error fetching custom fields:", error);
+      } finally {
+        setCustomFieldsLoading(false);
+      }
+    };
+
+    // Only fetch if institutionUsersId or branchUsersId changed
+    if (
+      userDetails?.institutionUsersId &&
+      userDetails?.branchUsersId &&
+      (fetchedCustomFieldsRef.current.institutionUsersId !==
+        userDetails.institutionUsersId ||
+        fetchedCustomFieldsRef.current.branchUsersId !==
+          userDetails.branchUsersId)
+    ) {
+      fetchCustomFields();
+      fetchedCustomFieldsRef.current = {
+        institutionUsersId: userDetails.institutionUsersId,
+        branchUsersId: userDetails.branchUsersId,
+      };
+    }
+  }, [userDetails?.institutionUsersId, userDetails?.branchUsersId]);
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
@@ -336,6 +396,48 @@ export default function UserManagement() {
       setDeleteLoading(false);
       setDeleteDialogOpen(false);
     }
+  };
+
+  // Custom fields handlers
+  const handleEditCustomFields = () => {
+    setEditCustomFieldsPopupOpen(true);
+  };
+
+  const handleCustomFieldsPrint = () => {
+    const heading = `User Details (custom fields) - ${getUserName()}`;
+    const filename = heading.replace(/ /g, "_") + ".pdf";
+    downloadPdf(
+      customFieldsPrintableRef,
+      colorMode,
+      theme.palette.mode,
+      filename,
+      heading
+    );
+  };
+
+  const handleEditCustomFieldsPopupClose = () => {
+    setEditCustomFieldsPopupOpen(false);
+  };
+
+  const handleUpdateCustomFieldsAPI = async (values) => {
+    console.log("API Call: Updating user custom fields", {
+      userId: id,
+      customFields,
+      values,
+    });
+    const result = await updateUserCustomFields(id, customFields, values);
+    console.log("API Call: Custom fields updated successfully", result);
+    return result;
+  };
+
+  const handleCustomFieldsUpdateSuccess = (updatedData) => {
+    // Update the user state with new custom fields data
+    setUser((prevUser) => ({
+      ...prevUser,
+      customFieldsData: updatedData.customFieldsData,
+      updatedAt: updatedData.updatedAt,
+    }));
+    setEditCustomFieldsPopupOpen(false);
   };
 
   const handlePrint = () => {
@@ -422,6 +524,23 @@ export default function UserManagement() {
         loading={deleteLoading}
         name={getUserName()}
       />
+
+      {/* Edit Custom Fields Popup */}
+      <EditContentPopup
+        open={editCustomFieldsPopupOpen}
+        onClose={handleEditCustomFieldsPopupClose}
+        title={`Edit Custom Fields - ${getUserName()}`}
+        maxWidth="lg"
+      >
+        <EditableCustomUserFields
+          customFields={customFields}
+          initialValues={mapCustomFieldsToFormValues(user, customFields)}
+          onUpdateSuccess={handleCustomFieldsUpdateSuccess}
+          onUpdateCustomFieldsAPI={handleUpdateCustomFieldsAPI}
+          onCancel={handleEditCustomFieldsPopupClose}
+          setNotification={setNotification}
+        />
+      </EditContentPopup>
 
       <Box sx={{ width: "100%" }}>
         {/* Header */}
@@ -586,9 +705,34 @@ export default function UserManagement() {
           </TabPanel>
 
           <TabPanel value={tabValue} index={2}>
-            <Typography variant="body1">
-              Custom fields functionality not implemented yet.
-            </Typography>
+            <div ref={customFieldsPrintableRef}>
+              {customFieldsLoading ? (
+                <Box sx={{ textAlign: "center", py: 4 }}>
+                  <CircularProgress size={24} />
+                  <Typography variant="body2" sx={{ mt: 1 }}>
+                    Loading custom fields...
+                  </Typography>
+                </Box>
+              ) : (
+                <Formik
+                  initialValues={mapCustomFieldsToFormValues(
+                    user,
+                    customFields
+                  )}
+                  enableReinitialize
+                >
+                  {(formik) => (
+                    <CustomUserFields
+                      customFields={customFields}
+                      formik={formik}
+                      editing={false}
+                      onEdit={handleEditCustomFields}
+                      onPrint={handleCustomFieldsPrint}
+                    />
+                  )}
+                </Formik>
+              )}
+            </div>
           </TabPanel>
         </Box>
       </Box>

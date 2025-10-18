@@ -8,7 +8,6 @@ import {
   remove,
 } from "aws-amplify/storage";
 import { generateClient } from "aws-amplify/api";
-import { updateBorrower } from "../../../graphql/mutations";
 import CustomDataGrid from "../../../ModelAssets/CustomDataGrid";
 import DeleteDialog from "../../../ModelAssets/DeleteDialog";
 import { UserContext } from "../../../App";
@@ -16,6 +15,16 @@ import BorrowerUploadDialog from "../../../ModelAssets/UploadDialogBox";
 import { formatFileSize, formatDate } from "./fileUtils";
 import { getBorrowerFilesColumns } from "./borrowerFilesColumns";
 import { useHasPermission } from "../../../ModelAssets/Permissions/permissions";
+
+const UPDATE_BORROWER_MUTATION = `
+  mutation UpdateBorrower($input: UpdateBorrowerInput!) {
+    updateBorrower(input: $input) {
+      id
+      borrowerDocuments
+      updatedAt
+    }
+  }
+`;
 
 const BorrowerFiles = ({ borrower, setBorrower, setNotification }) => {
   const theme = useTheme();
@@ -152,8 +161,8 @@ const BorrowerFiles = ({ borrower, setBorrower, setNotification }) => {
           borrowerDocuments: JSON.stringify(updatedFiles),
         };
 
-        const updateResult = await client.graphql({
-          query: updateBorrower,
+        await client.graphql({
+          query: UPDATE_BORROWER_MUTATION,
           variables: { input: borrowerInput },
         });
 
@@ -211,7 +220,7 @@ const BorrowerFiles = ({ borrower, setBorrower, setNotification }) => {
         };
 
         await client.graphql({
-          query: updateBorrower,
+          query: UPDATE_BORROWER_MUTATION,
           variables: { input: borrowerInput },
         });
 
@@ -282,8 +291,8 @@ const BorrowerFiles = ({ borrower, setBorrower, setNotification }) => {
         borrowerDocuments: JSON.stringify(updatedFiles),
       };
 
-      const updateResult = await client.graphql({
-        query: updateBorrower,
+      await client.graphql({
+        query: UPDATE_BORROWER_MUTATION,
         variables: { input: borrowerInput },
       });
 

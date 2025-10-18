@@ -196,6 +196,7 @@ export default function CreateCustomFieldsForm(props) {
               label="Form"
               options={[
                 { value: "CreateBorrowerForm", label: "Borrower Form" },
+                { value: "CreateUserForm", label: "User Form" },
                 { value: "CreateLoanForm", label: "Loan Form" },
                 { value: "CreateCollateralForm", label: "Collateral Form" },
               ]}

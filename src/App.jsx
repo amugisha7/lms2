@@ -15,7 +15,6 @@ import {
   LIST_NOTIFICATIONS_QUERY,
   SUBSCRIBE_TO_NEW_NOTIFICATIONS,
 } from "./Screens/Notifications/notificationQueries";
-import { onUpdateUser } from "./graphql/subscriptions";
 
 // Create UserContext once at the top level
 export const UserContext = createContext();
@@ -175,7 +174,97 @@ function App({ signOut, user }) {
     });
     const userUpdateSubscription = client
       .graphql({
-        query: onUpdateUser,
+        query: `
+  subscription OnUpdateUser($filter: ModelSubscriptionUserFilterInput) {
+    onUpdateUser(filter: $filter) {
+      id
+      firstName
+      lastName
+      middleName
+      dateOfBirth
+      phoneNumber1
+      phoneNumber2
+      email
+      addressLine1
+      addressLine2
+      city
+      stateProvince
+      postalCode
+      nationalID
+      passportNumber
+      nationality
+      status
+      userType
+      userPermissions
+      description
+      institution {
+        id
+        name
+        currencyCode
+        subscriptionTier
+        subscriptionStatus
+        trialEndDate
+        nextBillingDate
+        stripeCustomerID
+        stripeSubscriptionID
+        defaultDateFormat
+        defaultCurrencyFormat
+        defaultLanguage
+        regulatoryRegion
+        maxUsers
+        maxBranches
+        maxStaffPerBranch
+        saccoFeaturesEnabled
+        staffManagementEnabled
+        payrollEnabled
+        collectionsModuleEnabled
+        customWorkflowsEnabled
+        advancedReportingEnabled
+        apiIntegrationSettings
+        status
+        createdAt
+        updatedAt
+        __typename
+      }
+      branch {
+        id
+        name
+        branchCode
+        address
+        status
+        createdAt
+        updatedAt
+        institutionBranchesId
+        __typename
+      }
+      userNotifications {
+        nextToken
+        __typename
+      }
+      sentMessages {
+        nextToken
+        __typename
+      }
+      receivedMessages {
+        nextToken
+        __typename
+      }
+      sentNotifications {
+        nextToken
+        __typename
+      }
+      receivedNotifications {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      institutionUsersId
+      branchUsersId
+      __typename
+    }
+  }
+`,
         variables: { filter: { id: { eq: userDetails.id } } },
       })
       .subscribe({

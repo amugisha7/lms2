@@ -21,9 +21,6 @@ import CreateSecurities from "./Screens/Securities/CreateSecurities/CreateSecuri
 // import Borrowers from "./Screens/Borrowers/Borrowers";
 import Borrowers from "./Models/Borrowers/Borrowers";
 import Temp from "./temp/Temp";
-import EmployeeDataGrid from "./Screens/Employees/EmployeeDataGrid";
-import CreateEmployeePage from "./Screens/Employees/CreateEmployeePage";
-import EmployeeManagement from "./Screens/Employees/EmployeeManagement";
 import BorrowerManagement from "./Models/Borrowers/BorrowerManagement";
 import UserManagement from "./Models/Users/UserManagement";
 import Users from "./Models/Users/Users";
@@ -53,11 +50,6 @@ export default function AppRoutes({ userExists }) {
                 path="borrowers/id/:borrowerId/view"
                 element={<BorrowerManagement />}
               />
-
-              {/* Employee routes */}
-              <Route path="employees" element={<EmployeeDataGrid />} />
-              <Route path="employees/create" element={<CreateEmployeePage />} />
-              <Route path="employees/manage" element={<EmployeeManagement />} />
 
               {/* Users routes */}
               <Route path="users" element={<Users />} />

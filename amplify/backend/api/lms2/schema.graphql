@@ -108,6 +108,7 @@ type User @model {
   userType: String
   userPermissions: AWSJSON
   description: String
+  customFieldsData: AWSJSON
   institution: Institution @belongsTo
   branch: Branch @belongsTo
   userNotifications: [UserNotification] @hasMany

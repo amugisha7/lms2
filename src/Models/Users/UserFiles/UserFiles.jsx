@@ -8,7 +8,6 @@ import {
   remove,
 } from "aws-amplify/storage";
 import { generateClient } from "aws-amplify/api";
-import { updateUser } from "../../../graphql/mutations";
 import CustomDataGrid from "../../../ModelAssets/CustomDataGrid";
 import DeleteDialog from "../../../ModelAssets/DeleteDialog";
 import { UserContext } from "../../../App";

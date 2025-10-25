@@ -27,6 +27,7 @@ import {
   mapCustomFieldsToFormValues,
   updateUserCustomFields,
 } from "./CustomUserFields/customFieldsHelpers";
+import UserFiles from "./UserFiles/UserFiles";
 import EditableCustomUserFields from "./CustomUserFields/EditableCustomUserFields";
 import CustomUserFields from "./CustomUserFields/CustomUserFields";
 
@@ -366,6 +367,7 @@ export default function UserManagement() {
       message: "User updated successfully!",
       color: "green",
     });
+    setEditPopupOpen(false); // Close the popup on success
   };
 
   const handleUpdateUserAPI = async (values, initialValues) => {
@@ -425,7 +427,13 @@ export default function UserManagement() {
       customFields,
       values,
     });
-    const result = await updateUserCustomFields(id, customFields, values);
+    const result = await updateUserCustomFields(
+      id,
+      customFields,
+      values,
+      userDetails.institutionUsersId,
+      userDetails.branchUsersId
+    );
     console.log("API Call: Custom fields updated successfully", result);
     return result;
   };
@@ -434,8 +442,7 @@ export default function UserManagement() {
     // Update the user state with new custom fields data
     setUser((prevUser) => ({
       ...prevUser,
-      customFieldsData: updatedData.customFieldsData,
-      updatedAt: updatedData.updatedAt,
+      ...updatedData,
     }));
     setEditCustomFieldsPopupOpen(false);
   };
@@ -701,9 +708,11 @@ export default function UserManagement() {
           </TabPanel>
 
           <TabPanel value={tabValue} index={1}>
-            <Typography variant="body1">
-              User files functionality not implemented yet.
-            </Typography>
+            <UserFiles
+              user={user}
+              setUser={setUser}
+              setNotification={setNotification}
+            />
           </TabPanel>
 
           <TabPanel value={tabValue} index={2}>

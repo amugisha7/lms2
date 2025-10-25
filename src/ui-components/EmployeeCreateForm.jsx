@@ -568,7 +568,6 @@ export default function EmployeeCreateForm(props) {
         label="Date of birth"
         isRequired={false}
         isReadOnly={false}
-        type="date"
         value={dateOfBirth}
         onChange={(e) => {
           let { value } = e.target;

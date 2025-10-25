@@ -442,6 +442,7 @@ export const onCreateUser = /* GraphQL */ `
       userPermissions
       description
       customFieldsData
+      userDocuments
       institution {
         id
         name
@@ -534,6 +535,7 @@ export const onUpdateUser = /* GraphQL */ `
       userPermissions
       description
       customFieldsData
+      userDocuments
       institution {
         id
         name
@@ -626,6 +628,7 @@ export const onDeleteUser = /* GraphQL */ `
       userPermissions
       description
       customFieldsData
+      userDocuments
       institution {
         id
         name
@@ -1883,6 +1886,7 @@ export const onCreateUserNotification = /* GraphQL */ `
         userPermissions
         description
         customFieldsData
+        userDocuments
         createdAt
         updatedAt
         institutionUsersId
@@ -1930,6 +1934,7 @@ export const onUpdateUserNotification = /* GraphQL */ `
         userPermissions
         description
         customFieldsData
+        userDocuments
         createdAt
         updatedAt
         institutionUsersId
@@ -1977,6 +1982,7 @@ export const onDeleteUserNotification = /* GraphQL */ `
         userPermissions
         description
         customFieldsData
+        userDocuments
         createdAt
         updatedAt
         institutionUsersId
@@ -7078,6 +7084,7 @@ export const onCreateMessage = /* GraphQL */ `
         userPermissions
         description
         customFieldsData
+        userDocuments
         createdAt
         updatedAt
         institutionUsersId
@@ -7107,6 +7114,7 @@ export const onCreateMessage = /* GraphQL */ `
         userPermissions
         description
         customFieldsData
+        userDocuments
         createdAt
         updatedAt
         institutionUsersId
@@ -7149,6 +7157,7 @@ export const onUpdateMessage = /* GraphQL */ `
         userPermissions
         description
         customFieldsData
+        userDocuments
         createdAt
         updatedAt
         institutionUsersId
@@ -7178,6 +7187,7 @@ export const onUpdateMessage = /* GraphQL */ `
         userPermissions
         description
         customFieldsData
+        userDocuments
         createdAt
         updatedAt
         institutionUsersId
@@ -7220,6 +7230,7 @@ export const onDeleteMessage = /* GraphQL */ `
         userPermissions
         description
         customFieldsData
+        userDocuments
         createdAt
         updatedAt
         institutionUsersId
@@ -7249,6 +7260,7 @@ export const onDeleteMessage = /* GraphQL */ `
         userPermissions
         description
         customFieldsData
+        userDocuments
         createdAt
         updatedAt
         institutionUsersId
@@ -7296,6 +7308,7 @@ export const onCreateNotification = /* GraphQL */ `
         userPermissions
         description
         customFieldsData
+        userDocuments
         createdAt
         updatedAt
         institutionUsersId
@@ -7325,6 +7338,7 @@ export const onCreateNotification = /* GraphQL */ `
         userPermissions
         description
         customFieldsData
+        userDocuments
         createdAt
         updatedAt
         institutionUsersId
@@ -7373,6 +7387,7 @@ export const onUpdateNotification = /* GraphQL */ `
         userPermissions
         description
         customFieldsData
+        userDocuments
         createdAt
         updatedAt
         institutionUsersId
@@ -7402,6 +7417,7 @@ export const onUpdateNotification = /* GraphQL */ `
         userPermissions
         description
         customFieldsData
+        userDocuments
         createdAt
         updatedAt
         institutionUsersId
@@ -7450,6 +7466,7 @@ export const onDeleteNotification = /* GraphQL */ `
         userPermissions
         description
         customFieldsData
+        userDocuments
         createdAt
         updatedAt
         institutionUsersId
@@ -7479,6 +7496,7 @@ export const onDeleteNotification = /* GraphQL */ `
         userPermissions
         description
         customFieldsData
+        userDocuments
         createdAt
         updatedAt
         institutionUsersId

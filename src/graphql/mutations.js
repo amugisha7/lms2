@@ -457,6 +457,7 @@ export const createUser = /* GraphQL */ `
       userPermissions
       description
       customFieldsData
+      userDocuments
       institution {
         id
         name
@@ -552,6 +553,7 @@ export const updateUser = /* GraphQL */ `
       userPermissions
       description
       customFieldsData
+      userDocuments
       institution {
         id
         name
@@ -647,6 +649,7 @@ export const deleteUser = /* GraphQL */ `
       userPermissions
       description
       customFieldsData
+      userDocuments
       institution {
         id
         name
@@ -1935,6 +1938,7 @@ export const createUserNotification = /* GraphQL */ `
         userPermissions
         description
         customFieldsData
+        userDocuments
         createdAt
         updatedAt
         institutionUsersId
@@ -1983,6 +1987,7 @@ export const updateUserNotification = /* GraphQL */ `
         userPermissions
         description
         customFieldsData
+        userDocuments
         createdAt
         updatedAt
         institutionUsersId
@@ -2031,6 +2036,7 @@ export const deleteUserNotification = /* GraphQL */ `
         userPermissions
         description
         customFieldsData
+        userDocuments
         createdAt
         updatedAt
         institutionUsersId
@@ -7246,6 +7252,7 @@ export const createMessage = /* GraphQL */ `
         userPermissions
         description
         customFieldsData
+        userDocuments
         createdAt
         updatedAt
         institutionUsersId
@@ -7275,6 +7282,7 @@ export const createMessage = /* GraphQL */ `
         userPermissions
         description
         customFieldsData
+        userDocuments
         createdAt
         updatedAt
         institutionUsersId
@@ -7320,6 +7328,7 @@ export const updateMessage = /* GraphQL */ `
         userPermissions
         description
         customFieldsData
+        userDocuments
         createdAt
         updatedAt
         institutionUsersId
@@ -7349,6 +7358,7 @@ export const updateMessage = /* GraphQL */ `
         userPermissions
         description
         customFieldsData
+        userDocuments
         createdAt
         updatedAt
         institutionUsersId
@@ -7394,6 +7404,7 @@ export const deleteMessage = /* GraphQL */ `
         userPermissions
         description
         customFieldsData
+        userDocuments
         createdAt
         updatedAt
         institutionUsersId
@@ -7423,6 +7434,7 @@ export const deleteMessage = /* GraphQL */ `
         userPermissions
         description
         customFieldsData
+        userDocuments
         createdAt
         updatedAt
         institutionUsersId
@@ -7471,6 +7483,7 @@ export const createNotification = /* GraphQL */ `
         userPermissions
         description
         customFieldsData
+        userDocuments
         createdAt
         updatedAt
         institutionUsersId
@@ -7500,6 +7513,7 @@ export const createNotification = /* GraphQL */ `
         userPermissions
         description
         customFieldsData
+        userDocuments
         createdAt
         updatedAt
         institutionUsersId
@@ -7549,6 +7563,7 @@ export const updateNotification = /* GraphQL */ `
         userPermissions
         description
         customFieldsData
+        userDocuments
         createdAt
         updatedAt
         institutionUsersId
@@ -7578,6 +7593,7 @@ export const updateNotification = /* GraphQL */ `
         userPermissions
         description
         customFieldsData
+        userDocuments
         createdAt
         updatedAt
         institutionUsersId
@@ -7627,6 +7643,7 @@ export const deleteNotification = /* GraphQL */ `
         userPermissions
         description
         customFieldsData
+        userDocuments
         createdAt
         updatedAt
         institutionUsersId
@@ -7656,6 +7673,7 @@ export const deleteNotification = /* GraphQL */ `
         userPermissions
         description
         customFieldsData
+        userDocuments
         createdAt
         updatedAt
         institutionUsersId

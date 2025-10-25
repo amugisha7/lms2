@@ -92,7 +92,7 @@ type User @model {
   firstName: String
   lastName: String
   middleName: String
-  dateOfBirth: AWSDate
+  dateOfBirth: String
   phoneNumber1: String
   phoneNumber2: String
   email: String
@@ -109,6 +109,7 @@ type User @model {
   userPermissions: AWSJSON
   description: String
   customFieldsData: AWSJSON
+  userDocuments: AWSJSON
   institution: Institution @belongsTo
   branch: Branch @belongsTo
   userNotifications: [UserNotification] @hasMany
@@ -125,7 +126,7 @@ type Employee @model {
   firstName: String
   lastName: String
   middleName: String
-  dateOfBirth: AWSDate
+  dateOfBirth: String
   phoneNumber1: String
   phoneNumber2: String
   email: String

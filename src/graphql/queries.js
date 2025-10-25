@@ -226,6 +226,7 @@ export const getUser = /* GraphQL */ `
       userPermissions
       description
       customFieldsData
+      userDocuments
       institution {
         id
         name
@@ -323,6 +324,7 @@ export const listUsers = /* GraphQL */ `
         userPermissions
         description
         customFieldsData
+        userDocuments
         createdAt
         updatedAt
         institutionUsersId
@@ -908,6 +910,7 @@ export const getUserNotification = /* GraphQL */ `
         userPermissions
         description
         customFieldsData
+        userDocuments
         createdAt
         updatedAt
         institutionUsersId
@@ -3254,6 +3257,7 @@ export const getMessage = /* GraphQL */ `
         userPermissions
         description
         customFieldsData
+        userDocuments
         createdAt
         updatedAt
         institutionUsersId
@@ -3283,6 +3287,7 @@ export const getMessage = /* GraphQL */ `
         userPermissions
         description
         customFieldsData
+        userDocuments
         createdAt
         updatedAt
         institutionUsersId
@@ -3351,6 +3356,7 @@ export const getNotification = /* GraphQL */ `
         userPermissions
         description
         customFieldsData
+        userDocuments
         createdAt
         updatedAt
         institutionUsersId
@@ -3380,6 +3386,7 @@ export const getNotification = /* GraphQL */ `
         userPermissions
         description
         customFieldsData
+        userDocuments
         createdAt
         updatedAt
         institutionUsersId

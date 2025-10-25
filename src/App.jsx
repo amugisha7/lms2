@@ -271,7 +271,10 @@ function App({ signOut, user }) {
         next: ({ data }) => {
           console.log("Subscription received user update:", data.onUpdateUser);
           const updatedUser = data.onUpdateUser;
-          setUserDetails(updatedUser);
+          setUserDetails((prevDetails) => ({
+            ...prevDetails,
+            ...updatedUser,
+          }));
         },
         error: (error) => {
           console.error("User update subscription error:", error);

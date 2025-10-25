@@ -151,7 +151,7 @@ const CreateUser = forwardRef(
         email: dbData.email || "",
         phoneNumber1: dbData.phoneNumber1 || "",
         phoneNumber2: dbData.phoneNumber2 || "",
-        dateOfBirth: dbData.dateOfBirth || "",
+        dateOfBirth: dbData.dateOfBirth || null,
         nationality: dbData.nationality || "",
         nationalID: dbData.nationalID || "",
         passportNumber: dbData.passportNumber || "",
@@ -223,10 +223,39 @@ const CreateUser = forwardRef(
 
       console.log("CreateUser Form Values:", values); // <-- Add this log
 
+      // Preprocess values to reconstruct customFieldsData
+      const processedValues = { ...values };
+      const customFieldsData = {};
+
+      // Extract custom fields and remove them from processedValues
+      Object.keys(processedValues).forEach((key) => {
+        if (key.startsWith("custom_")) {
+          const fieldId = key.replace("custom_", "");
+          customFieldsData[fieldId] = { value: processedValues[key] };
+          delete processedValues[key];
+        }
+      });
+
+      // Add customFieldsData to processedValues if any custom fields exist
+      if (Object.keys(customFieldsData).length > 0) {
+        processedValues.customFieldsData = JSON.stringify(customFieldsData);
+      }
+
+      // Preserve institution and branch IDs for updates
+      if (isEditMode && propInitialValues) {
+        processedValues.institutionUsersId =
+          propInitialValues.institutionUsersId;
+        processedValues.branchUsersId = propInitialValues.branchUsersId;
+      }
+
       try {
         if (isEditMode && propInitialValues && onUpdateUserAPI) {
           // Update existing user using parent-provided API function
-          const result = await onUpdateUserAPI(values, propInitialValues);
+          console.log("Updating user with values:", processedValues);
+          const result = await onUpdateUserAPI(
+            processedValues,
+            propInitialValues
+          );
           setSubmitSuccess("User updated!");
           setEditMode(false);
           setTimeout(() => setSubmitSuccess(""), 2000);
@@ -235,7 +264,7 @@ const CreateUser = forwardRef(
           }
         } else if (!isEditMode && onCreateUserAPI) {
           // Create new user using parent-provided API function
-          const result = await onCreateUserAPI(values);
+          const result = await onCreateUserAPI(processedValues);
           setSubmitSuccess("User created!");
           resetForm();
           if (onCreateSuccess) {

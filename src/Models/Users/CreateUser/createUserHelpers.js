@@ -30,6 +30,9 @@ export const fetchUserById = async (userId) => {
         userPermissions
         description
         customFieldsData
+        userDocuments
+        institutionUsersId
+        branchUsersId
         createdAt
         updatedAt
       }
@@ -43,7 +46,17 @@ export const fetchUserById = async (userId) => {
   });
 
   if (result.data.getUser) {
-    return result.data.getUser;
+    const user = result.data.getUser;
+    if (user.userDocuments) {
+      try {
+        user.userDocuments = JSON.parse(user.userDocuments);
+      } catch (e) {
+        user.userDocuments = [];
+      }
+    } else {
+      user.userDocuments = [];
+    }
+    return user;
   } else {
     throw new Error("User not found");
   }
@@ -78,6 +91,8 @@ export const updateUserById = async (userId, updateData) => {
         userPermissions
         description
         customFieldsData
+        institutionUsersId
+        branchUsersId
         createdAt
         updatedAt
       }

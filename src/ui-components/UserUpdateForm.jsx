@@ -51,6 +51,7 @@ export default function UserUpdateForm(props) {
     userPermissions: "",
     description: "",
     customFieldsData: "",
+    userDocuments: "",
   };
   const [firstName, setFirstName] = React.useState(initialValues.firstName);
   const [lastName, setLastName] = React.useState(initialValues.lastName);
@@ -94,6 +95,9 @@ export default function UserUpdateForm(props) {
   const [customFieldsData, setCustomFieldsData] = React.useState(
     initialValues.customFieldsData
   );
+  const [userDocuments, setUserDocuments] = React.useState(
+    initialValues.userDocuments
+  );
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     const cleanValues = userRecord
@@ -128,6 +132,12 @@ export default function UserUpdateForm(props) {
         cleanValues.customFieldsData === null
         ? cleanValues.customFieldsData
         : JSON.stringify(cleanValues.customFieldsData)
+    );
+    setUserDocuments(
+      typeof cleanValues.userDocuments === "string" ||
+        cleanValues.userDocuments === null
+        ? cleanValues.userDocuments
+        : JSON.stringify(cleanValues.userDocuments)
     );
     setErrors({});
   };
@@ -168,6 +178,7 @@ export default function UserUpdateForm(props) {
     userPermissions: [{ type: "JSON" }],
     description: [],
     customFieldsData: [{ type: "JSON" }],
+    userDocuments: [{ type: "JSON" }],
   };
   const runValidationTasks = async (
     fieldName,
@@ -215,6 +226,7 @@ export default function UserUpdateForm(props) {
           userPermissions: userPermissions ?? null,
           description: description ?? null,
           customFieldsData: customFieldsData ?? null,
+          userDocuments: userDocuments ?? null,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -295,6 +307,7 @@ export default function UserUpdateForm(props) {
               userPermissions,
               description,
               customFieldsData,
+              userDocuments,
             };
             const result = onChange(modelFields);
             value = result?.firstName ?? value;
@@ -338,6 +351,7 @@ export default function UserUpdateForm(props) {
               userPermissions,
               description,
               customFieldsData,
+              userDocuments,
             };
             const result = onChange(modelFields);
             value = result?.lastName ?? value;
@@ -381,6 +395,7 @@ export default function UserUpdateForm(props) {
               userPermissions,
               description,
               customFieldsData,
+              userDocuments,
             };
             const result = onChange(modelFields);
             value = result?.middleName ?? value;
@@ -399,7 +414,6 @@ export default function UserUpdateForm(props) {
         label="Date of birth"
         isRequired={false}
         isReadOnly={false}
-        type="date"
         value={dateOfBirth}
         onChange={(e) => {
           let { value } = e.target;
@@ -425,6 +439,7 @@ export default function UserUpdateForm(props) {
               userPermissions,
               description,
               customFieldsData,
+              userDocuments,
             };
             const result = onChange(modelFields);
             value = result?.dateOfBirth ?? value;
@@ -468,6 +483,7 @@ export default function UserUpdateForm(props) {
               userPermissions,
               description,
               customFieldsData,
+              userDocuments,
             };
             const result = onChange(modelFields);
             value = result?.phoneNumber1 ?? value;
@@ -511,6 +527,7 @@ export default function UserUpdateForm(props) {
               userPermissions,
               description,
               customFieldsData,
+              userDocuments,
             };
             const result = onChange(modelFields);
             value = result?.phoneNumber2 ?? value;
@@ -554,6 +571,7 @@ export default function UserUpdateForm(props) {
               userPermissions,
               description,
               customFieldsData,
+              userDocuments,
             };
             const result = onChange(modelFields);
             value = result?.email ?? value;
@@ -597,6 +615,7 @@ export default function UserUpdateForm(props) {
               userPermissions,
               description,
               customFieldsData,
+              userDocuments,
             };
             const result = onChange(modelFields);
             value = result?.addressLine1 ?? value;
@@ -640,6 +659,7 @@ export default function UserUpdateForm(props) {
               userPermissions,
               description,
               customFieldsData,
+              userDocuments,
             };
             const result = onChange(modelFields);
             value = result?.addressLine2 ?? value;
@@ -683,6 +703,7 @@ export default function UserUpdateForm(props) {
               userPermissions,
               description,
               customFieldsData,
+              userDocuments,
             };
             const result = onChange(modelFields);
             value = result?.city ?? value;
@@ -726,6 +747,7 @@ export default function UserUpdateForm(props) {
               userPermissions,
               description,
               customFieldsData,
+              userDocuments,
             };
             const result = onChange(modelFields);
             value = result?.stateProvince ?? value;
@@ -769,6 +791,7 @@ export default function UserUpdateForm(props) {
               userPermissions,
               description,
               customFieldsData,
+              userDocuments,
             };
             const result = onChange(modelFields);
             value = result?.postalCode ?? value;
@@ -812,6 +835,7 @@ export default function UserUpdateForm(props) {
               userPermissions,
               description,
               customFieldsData,
+              userDocuments,
             };
             const result = onChange(modelFields);
             value = result?.nationalID ?? value;
@@ -855,6 +879,7 @@ export default function UserUpdateForm(props) {
               userPermissions,
               description,
               customFieldsData,
+              userDocuments,
             };
             const result = onChange(modelFields);
             value = result?.passportNumber ?? value;
@@ -898,6 +923,7 @@ export default function UserUpdateForm(props) {
               userPermissions,
               description,
               customFieldsData,
+              userDocuments,
             };
             const result = onChange(modelFields);
             value = result?.nationality ?? value;
@@ -941,6 +967,7 @@ export default function UserUpdateForm(props) {
               userPermissions,
               description,
               customFieldsData,
+              userDocuments,
             };
             const result = onChange(modelFields);
             value = result?.status ?? value;
@@ -984,6 +1011,7 @@ export default function UserUpdateForm(props) {
               userPermissions,
               description,
               customFieldsData,
+              userDocuments,
             };
             const result = onChange(modelFields);
             value = result?.userType ?? value;
@@ -1027,6 +1055,7 @@ export default function UserUpdateForm(props) {
               userPermissions: value,
               description,
               customFieldsData,
+              userDocuments,
             };
             const result = onChange(modelFields);
             value = result?.userPermissions ?? value;
@@ -1070,6 +1099,7 @@ export default function UserUpdateForm(props) {
               userPermissions,
               description: value,
               customFieldsData,
+              userDocuments,
             };
             const result = onChange(modelFields);
             value = result?.description ?? value;
@@ -1113,6 +1143,7 @@ export default function UserUpdateForm(props) {
               userPermissions,
               description,
               customFieldsData: value,
+              userDocuments,
             };
             const result = onChange(modelFields);
             value = result?.customFieldsData ?? value;
@@ -1126,6 +1157,50 @@ export default function UserUpdateForm(props) {
         errorMessage={errors.customFieldsData?.errorMessage}
         hasError={errors.customFieldsData?.hasError}
         {...getOverrideProps(overrides, "customFieldsData")}
+      ></TextAreaField>
+      <TextAreaField
+        label="User documents"
+        isRequired={false}
+        isReadOnly={false}
+        value={userDocuments}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              firstName,
+              lastName,
+              middleName,
+              dateOfBirth,
+              phoneNumber1,
+              phoneNumber2,
+              email,
+              addressLine1,
+              addressLine2,
+              city,
+              stateProvince,
+              postalCode,
+              nationalID,
+              passportNumber,
+              nationality,
+              status,
+              userType,
+              userPermissions,
+              description,
+              customFieldsData,
+              userDocuments: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.userDocuments ?? value;
+          }
+          if (errors.userDocuments?.hasError) {
+            runValidationTasks("userDocuments", value);
+          }
+          setUserDocuments(value);
+        }}
+        onBlur={() => runValidationTasks("userDocuments", userDocuments)}
+        errorMessage={errors.userDocuments?.errorMessage}
+        hasError={errors.userDocuments?.hasError}
+        {...getOverrideProps(overrides, "userDocuments")}
       ></TextAreaField>
       <Flex
         justifyContent="space-between"

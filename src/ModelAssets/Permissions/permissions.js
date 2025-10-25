@@ -3,7 +3,7 @@ import { UserContext } from '../../App';
 
 export const useHasPermission = (action, resource) => {
   const { userDetails } = useContext(UserContext);
-  if (!userDetails || userDetails.status !== 'active') return false;
+  if (!userDetails || userDetails.status.toLowerCase() !== 'active') return false;
   
   const { userType } = userDetails;
   const permissions = {

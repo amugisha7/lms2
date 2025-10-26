@@ -54,7 +54,6 @@ const createUserForm = [
       { value: "Inactive", label: "Inactive" },
       { value: "Suspended", label: "Suspended" },
     ],
-    hiddenInReview: true,
   },
   {
     label: "First Name:",

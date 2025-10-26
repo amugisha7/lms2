@@ -210,8 +210,34 @@ export default function Users() {
       field: "userType",
       headerName: "User Type",
       width: 140,
-      valueGetter: (value, row) => {
-        return USER_TYPE_LABELS[row.userType] || row.userType;
+      renderCell: (params) => {
+        const userType = params.row.userType;
+        if (!userType) {
+          return (
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={() => navigate(`/users/id/${params.row.id}/view`)}
+              sx={{
+                borderColor: theme.palette.blueText.main,
+                color: theme.palette.blueText.main,
+                backgroundColor: "transparent",
+                "&:hover": {
+                  backgroundColor: "transparent",
+                  borderColor: theme.palette.blueText.main,
+                  borderWidth: "2px",
+                },
+                textTransform: "none",
+                fontSize: "0.7rem",
+                py: 0.5,
+                px: 1.5,
+              }}
+            >
+              Review
+            </Button>
+          );
+        }
+        return USER_TYPE_LABELS[userType] || userType;
       },
     },
     {

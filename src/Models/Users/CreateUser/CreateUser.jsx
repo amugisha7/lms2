@@ -318,6 +318,19 @@ const CreateUser = forwardRef(
             }
           }
 
+          if (field.name === "status") {
+            // If admin, replace dropdown with readonly text field
+            if (isAdmin) {
+              return {
+                label: "Status:",
+                name: "status",
+                type: "text",
+                span: 6,
+                readOnly: true,
+              };
+            }
+          }
+
           return field;
         })
         .filter(Boolean); // Remove null entries (hidden branch field)
@@ -332,9 +345,6 @@ const CreateUser = forwardRef(
 
       // Preprocess values to reconstruct customFieldsData
       const processedValues = { ...values };
-      if (isEditMode && forceEditMode) {
-        processedValues.status = "Active";
-      }
       const customFieldsData = {};
 
       // Extract custom fields and remove them from processedValues
@@ -501,21 +511,14 @@ const CreateUser = forwardRef(
                   />
                 ) : null}
                 <Grid container spacing={1}>
-                  {updatedCreateUserForm
-                    .filter((field) => {
-                      if (isEditMode && forceEditMode && field.hiddenInReview) {
-                        return false;
-                      }
-                      return true;
-                    })
-                    .map((field) => (
-                      <FormGrid
-                        size={{ xs: 12, md: field.span }}
-                        key={field.name}
-                      >
-                        {renderFormField({ ...field, editing: editMode })}
-                      </FormGrid>
-                    ))}
+                  {updatedCreateUserForm.map((field) => (
+                    <FormGrid
+                      size={{ xs: 12, md: field.span }}
+                      key={field.name}
+                    >
+                      {renderFormField({ ...field, editing: editMode })}
+                    </FormGrid>
+                  ))}
 
                   {/* Custom Fields Component */}
                   <Box sx={{ display: "flex" }}>

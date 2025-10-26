@@ -21,6 +21,8 @@ import {
 } from "./notificationQueries";
 import { getUserDisplayName, formatFullDate } from "./notificationUtils";
 import { useSnackbar } from "../../ComponentAssets/SnackbarContext";
+import CustomPopUp from "../../ModelAssets/CustomPopUp";
+import CreateUser from "../../Models/Users/CreateUser/CreateUser";
 
 const client = loggedClient;
 
@@ -28,6 +30,8 @@ const NotificationThread = ({ notification, onBack, onNotificationAction }) => {
   const { user } = useContext(UserContext);
   const { showSnackbar } = useSnackbar();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [reviewPopupOpen, setReviewPopupOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
 
   const markNotificationAsRead = useCallback(async () => {
     try {
@@ -54,6 +58,55 @@ const NotificationThread = ({ notification, onBack, onNotificationAction }) => {
       markNotificationAsRead();
     }
   }, [notification, markNotificationAsRead]);
+
+  const handleReview = async () => {
+    // Fetch the actual user data using the referenceId
+    try {
+      const GET_USER_QUERY = `
+        query GetUser($id: ID!) {
+          getUser(id: $id) {
+            id
+            firstName
+            lastName
+            middleName
+            email
+            phoneNumber1
+            phoneNumber2
+            dateOfBirth
+            nationality
+            nationalID
+            passportNumber
+            addressLine1
+            addressLine2
+            city
+            stateProvince
+            postalCode
+            userType
+            status
+            description
+            institutionUsersId
+            branchUsersId
+            customFieldsData
+          }
+        }
+      `;
+
+      const result = await client.graphql({
+        query: GET_USER_QUERY,
+        variables: { id: notification.referenceId },
+      });
+
+      if (result.data.getUser) {
+        setSelectedUser(result.data.getUser);
+        setReviewPopupOpen(true);
+      } else {
+        showSnackbar("Unable to load user data", "error");
+      }
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+      showSnackbar("Error loading user data", "error");
+    }
+  };
 
   const handleApproval = async (action) => {
     if (!notification || !user) return;
@@ -196,11 +249,11 @@ const NotificationThread = ({ notification, onBack, onNotificationAction }) => {
             <Button
               variant="contained"
               color="success"
-              onClick={() => handleApproval("approve")}
+              onClick={handleReview}
               disabled={isProcessing}
               startIcon={isProcessing && <CircularProgress size={20} />}
             >
-              Approve
+              Review
             </Button>
             <Button
               variant="outlined"
@@ -228,6 +281,53 @@ const NotificationThread = ({ notification, onBack, onNotificationAction }) => {
             variant="outlined"
           />
         </Box>
+      )}
+      {reviewPopupOpen && (
+        <CustomPopUp
+          open={reviewPopupOpen}
+          onClose={() => setReviewPopupOpen(false)}
+          title="Review User Join Request"
+          showEdit={false}
+          showDelete={false}
+          maxWidth="lg"
+        >
+          <CreateUser
+            initialValues={selectedUser}
+            isEditMode={true}
+            forceEditMode={true}
+            onUpdateUserAPI={async (values) => {
+              try {
+                // First, update the user record with any changes from the form
+                // The values already contain the id from CreateUser's handleSubmit
+                const updateInput = {
+                  id: notification.referenceId,
+                  ...values,
+                };
+
+                // Remove the id from values if it's there (will be in input root)
+                delete updateInput.values;
+
+                await client.graphql({
+                  query: UPDATE_USER_MUTATION,
+                  variables: {
+                    input: updateInput,
+                  },
+                });
+
+                // After successful update, trigger the approval process
+                await handleApproval("approve");
+
+                // Close the popup
+                setReviewPopupOpen(false);
+              } catch (error) {
+                console.error("Error updating user:", error);
+                showSnackbar("Failed to update user", "error");
+                throw error; // Re-throw to let CreateUser handle the error display
+              }
+            }}
+            onCancel={() => setReviewPopupOpen(false)}
+          />
+        </CustomPopUp>
       )}
     </Box>
   );

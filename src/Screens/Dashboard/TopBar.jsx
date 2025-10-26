@@ -31,7 +31,7 @@ const TopBar = ({ onMenuClick }) => {
   const [unreadCount, setUnreadCount] = useState(0);
 
   const { userDetails } = React.useContext(require("../../App").UserContext);
-  const institutionName = userDetails?.institution?.name || "Institution";
+  const institutionName = userDetails?.institution?.name || "";
 
   const handleMobileMenuToggle = () => {
     setMobileMenuOpen(!mobileMenuOpen);

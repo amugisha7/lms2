@@ -21,6 +21,7 @@ import CreateFormButtons from "../../../ComponentAssets/CreateFormButtons";
 import CustomEditFormButtons from "../../../ComponentAssets/CustomEditFormButtons";
 // import CustomFields from "../../AdminScreens/CustomFields/CustomFields";
 import { UserContext } from "../../../App";
+import { generateClient } from "aws-amplify/api";
 import { EditClickedContext } from "../../../ComponentAssets/CollectionsTemplate"; // <-- import context
 
 // Styled FormGrid component for consistent layout
@@ -34,76 +35,103 @@ const FormGrid = styled(Grid)(({ theme }) => ({
 
 // Build initialValues dynamically from createUserForm
 const baseInitialValues = createUserForm.reduce((acc, field) => {
-  acc[field.name] = "";
+  acc[field.name] = field.defaultValue || "";
   return acc;
 }, {});
 
+const LIST_BRANCHES_QUERY = `
+  query ListBranches($institutionId: ID!, $nextToken: String) {
+    listBranches(
+      filter: { institutionBranchesId: { eq: $institutionId } }
+      limit: 100
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        name
+      }
+      nextToken
+    }
+  }
+`;
+
 // Build validation schema dynamically using field validation properties
-const validationShape = {};
-createUserForm.forEach((field) => {
-  let validator = Yup.string().nullable();
+const buildValidationSchema = (isReviewMode = false) => {
+  const validationShape = {};
 
-  // Apply validation based on validationType
-  if (field.validationType === "email") {
-    validator = Yup.string()
-      .nullable()
-      .email(field.validationMessage || "Invalid email");
-  } else if (field.validationType === "date") {
-    validator = Yup.date().nullable();
-  } else if (field.validationType === "string") {
-    validator = Yup.string().nullable();
+  createUserForm.forEach((field) => {
+    // Skip validation for fields that are hidden in review mode
+    if (isReviewMode && field.hiddenInReview) {
+      return;
+    }
 
-    // Apply pattern validation if specified
-    if (field.validationPattern) {
-      validator = validator.test(
-        "pattern-validation",
-        field.validationMessage,
-        function (value) {
+    let validator = Yup.string().nullable();
+
+    // Apply validation based on validationType
+    if (field.validationType === "email") {
+      validator = Yup.string()
+        .nullable()
+        .email(field.validationMessage || "Invalid email");
+    } else if (field.validationType === "date") {
+      validator = Yup.date().nullable();
+    } else if (field.validationType === "string") {
+      validator = Yup.string().nullable();
+
+      // Apply pattern validation if specified
+      if (field.validationPattern) {
+        validator = validator.test(
+          "pattern-validation",
+          field.validationMessage,
+          function (value) {
+            if (!value || value.trim() === "") return true; // Allow empty values
+            return field.validationPattern.test(value);
+          }
+        );
+      }
+
+      // Apply min/max length if specified
+      if (field.minLength) {
+        validator = validator.test("min-length", "Too short", function (value) {
           if (!value || value.trim() === "") return true; // Allow empty values
-          return field.validationPattern.test(value);
-        }
-      );
+          return value.length >= field.minLength;
+        });
+      }
+      if (field.maxLength) {
+        validator = validator.test("max-length", "Too long", function (value) {
+          if (!value || value.trim() === "") return true; // Allow empty values
+          return value.length <= field.maxLength;
+        });
+      }
     }
 
-    // Apply min/max length if specified
-    if (field.minLength) {
-      validator = validator.test("min-length", "Too short", function (value) {
-        if (!value || value.trim() === "") return true; // Allow empty values
-        return value.length >= field.minLength;
-      });
+    // Apply required validation
+    if (field.required) {
+      validator = validator.required(`${field.label} is required`);
     }
-    if (field.maxLength) {
-      validator = validator.test("max-length", "Too long", function (value) {
-        if (!value || value.trim() === "") return true; // Allow empty values
-        return value.length <= field.maxLength;
-      });
-    }
-  }
 
-  // Apply required validation
-  if (field.required) {
-    validator = validator.required(`${field.label} is required`);
-  }
+    validationShape[field.name] = validator;
+  });
 
-  validationShape[field.name] = validator;
-});
+  return Yup.object().shape(validationShape);
+};
 
-const baseValidationSchema = Yup.object().shape(validationShape);
+const baseValidationSchema = buildValidationSchema(false);
 
 const renderFormField = (field) => {
+  const { hiddenInReview, ...rest } = field;
   switch (field.type) {
     case "text":
     case "email":
     case "tel":
-      return <TextInput {...field} />;
+      return <TextInput {...rest} />;
     case "select":
-      return <Dropdown {...field} />;
+      return <Dropdown {...rest} />;
     case "date":
-      return <DateInput {...field} />;
+      return <DateInput {...rest} />;
     case "textarea":
-      return <TextArea {...field} />;
+      return <TextArea {...rest} />;
     default:
-      return <TextInput {...field} />;
+      return <TextInput {...rest} />;
   }
 };
 
@@ -125,12 +153,16 @@ const CreateUser = forwardRef(
     ref
   ) => {
     const [initialValues, setInitialValues] = useState(baseInitialValues);
-    const [dynamicValidationSchema, setDynamicValidationSchema] =
-      useState(baseValidationSchema);
+    // Use review mode validation schema if in forceEditMode (review popup)
+    const [dynamicValidationSchema, setDynamicValidationSchema] = useState(
+      forceEditMode ? buildValidationSchema(true) : baseValidationSchema
+    );
     const navigate = useNavigate();
     const { userDetails } = React.useContext(UserContext);
     const [submitError, setSubmitError] = useState("");
     const [submitSuccess, setSubmitSuccess] = useState("");
+    const [branches, setBranches] = useState([]);
+    const client = React.useMemo(() => generateClient(), []);
     // Only enable edit mode if explicitly forced (popup) or not in edit mode (create)
     const [editMode, setEditMode] = useState(forceEditMode || !isEditMode);
     const editClickedContext = useContext(EditClickedContext); // <-- get context
@@ -139,6 +171,43 @@ const CreateUser = forwardRef(
     useEffect(() => {
       window.scrollTo({ top: 0, behavior: "smooth" });
     }, []);
+
+    useEffect(() => {
+      const fetchBranches = async () => {
+        if (!userDetails?.institutionUsersId) return;
+
+        try {
+          let allBranchesList = [];
+          let nextToken = null;
+          while (true) {
+            const result = await client.graphql({
+              query: LIST_BRANCHES_QUERY,
+              variables: {
+                institutionId: userDetails.institutionUsersId,
+                nextToken,
+              },
+            });
+
+            const listResult = result?.data?.listBranches || {};
+            const batchItems = Array.isArray(listResult.items)
+              ? listResult.items
+              : [];
+            allBranchesList.push(...batchItems);
+
+            const newNextToken = listResult.nextToken || null;
+            if (!newNextToken) {
+              break;
+            }
+            nextToken = newNextToken;
+          }
+          setBranches(allBranchesList);
+        } catch (err) {
+          console.error("Error fetching branches:", err);
+        }
+      };
+
+      fetchBranches();
+    }, [userDetails?.institutionUsersId, client]);
 
     // Map database field names to form field names
     const mapDbFieldsToFormFields = (dbData) => {
@@ -163,6 +232,7 @@ const CreateUser = forwardRef(
         userType: dbData.userType || "",
         status: dbData.status || "",
         description: dbData.description || "",
+        branch: dbData.branchUsersId || "",
         // Handle custom fields if they exist
         ...(dbData.customFieldsData
           ? (() => {
@@ -216,6 +286,43 @@ const CreateUser = forwardRef(
       }
     }, [editClickedContext?.editClicked, forceEditMode, editMode]);
 
+    const updatedCreateUserForm = React.useMemo(() => {
+      const isAdmin = formInitialValues.userType === "Admin";
+
+      return createUserForm
+        .map((field) => {
+          if (field.name === "branch") {
+            // If admin, hide the branch dropdown
+            if (isAdmin) {
+              return null;
+            }
+            return {
+              ...field,
+              options: branches.map((branch) => ({
+                value: branch.id,
+                label: branch.name,
+              })),
+            };
+          }
+
+          if (field.name === "userType") {
+            // If admin, replace dropdown with readonly text field
+            if (isAdmin) {
+              return {
+                label: "User Type:",
+                name: "userType",
+                type: "text",
+                span: 6,
+                readOnly: true,
+              };
+            }
+          }
+
+          return field;
+        })
+        .filter(Boolean); // Remove null entries (hidden branch field)
+    }, [branches, formInitialValues.userType]);
+
     const handleSubmit = async (values, { setSubmitting, resetForm }) => {
       setSubmitError("");
       setSubmitSuccess("");
@@ -225,6 +332,9 @@ const CreateUser = forwardRef(
 
       // Preprocess values to reconstruct customFieldsData
       const processedValues = { ...values };
+      if (isEditMode && forceEditMode) {
+        processedValues.status = "Active";
+      }
       const customFieldsData = {};
 
       // Extract custom fields and remove them from processedValues
@@ -245,35 +355,92 @@ const CreateUser = forwardRef(
       if (isEditMode && propInitialValues) {
         processedValues.institutionUsersId =
           propInitialValues.institutionUsersId;
-        processedValues.branchUsersId = propInitialValues.branchUsersId;
+        // Map 'branch' field to 'branchUsersId' for database
+        if (processedValues.branch) {
+          processedValues.branchUsersId = processedValues.branch;
+          delete processedValues.branch;
+        } else {
+          processedValues.branchUsersId = propInitialValues.branchUsersId;
+        }
+      } else {
+        // For create mode, also map branch to branchUsersId
+        if (processedValues.branch) {
+          processedValues.branchUsersId = processedValues.branch;
+          delete processedValues.branch;
+        }
       }
 
       try {
-        if (isEditMode && propInitialValues && onUpdateUserAPI) {
-          // Update existing user using parent-provided API function
-          console.log("Updating user with values:", processedValues);
-          const result = await onUpdateUserAPI(
-            processedValues,
-            propInitialValues
-          );
-          setSubmitSuccess("User updated!");
-          setEditMode(false);
-          setTimeout(() => setSubmitSuccess(""), 2000);
-          if (onEditSuccess) {
-            onEditSuccess(result);
+        if (isEditMode) {
+          // Update logic
+          processedValues.id = propInitialValues.id; // Ensure ID is included for update
+
+          // Clean up undefined, null, or empty string values
+          Object.keys(processedValues).forEach((key) => {
+            if (
+              processedValues[key] === undefined ||
+              processedValues[key] === null ||
+              processedValues[key] === ""
+            ) {
+              delete processedValues[key];
+            }
+          });
+
+          if (onUpdateUserAPI) {
+            // Call the custom update handler - it will handle approval flow
+            const result = await onUpdateUserAPI(processedValues);
+            setSubmitSuccess("User updated successfully!");
+            setEditMode(false);
+            setTimeout(() => setSubmitSuccess(""), 2000);
+            if (onEditSuccess) onEditSuccess(result); // Ensure onEditSuccess is called with result
+            // Note: Don't call onClose here - let onUpdateUserAPI handle it after approval
+          } else {
+            const { data } = await client.graphql({
+              query: `
+                mutation UpdateUser($input: UpdateUserInput!) {
+                  updateUser(input: $input) {
+                    id
+                    firstName
+                    lastName
+                    email
+                    phoneNumber1
+                    phoneNumber2
+                    dateOfBirth
+                    nationality
+                    nationalID
+                    passportNumber
+                    addressLine1
+                    addressLine2
+                    city
+                    stateProvince
+                    postalCode
+                    userType
+                    status
+                    description
+                    branchUsersId
+                    institutionUsersId
+                    customFieldsData
+                  }
+                }
+              `,
+              variables: {
+                input: processedValues,
+              },
+            });
+
+            setSubmitSuccess("User updated successfully!");
+            if (onEditSuccess) onEditSuccess(data.updateUser);
+            setEditMode(false);
+            if (onClose) onClose();
           }
-        } else if (!isEditMode && onCreateUserAPI) {
-          // Create new user using parent-provided API function
+        } else {
+          // Create logic
           const result = await onCreateUserAPI(processedValues);
           setSubmitSuccess("User created!");
           resetForm();
           if (onCreateSuccess) {
             onCreateSuccess(result);
           }
-        } else {
-          setSubmitError(
-            "API handler function not available. Please try again."
-          );
         }
       } catch (err) {
         console.error("Error creating/updating user:", err);
@@ -299,9 +466,10 @@ const CreateUser = forwardRef(
 
     // Handle validation schema changes from custom fields
     const handleValidationSchemaChange = (customFieldsValidation) => {
-      const newValidationSchema = baseValidationSchema.shape(
-        customFieldsValidation
-      );
+      const baseSchema = forceEditMode
+        ? buildValidationSchema(true)
+        : baseValidationSchema;
+      const newValidationSchema = baseSchema.shape(customFieldsValidation);
       setDynamicValidationSchema(newValidationSchema);
     };
 
@@ -333,14 +501,21 @@ const CreateUser = forwardRef(
                   />
                 ) : null}
                 <Grid container spacing={1}>
-                  {createUserForm.map((field) => (
-                    <FormGrid
-                      size={{ xs: 12, md: field.span }}
-                      key={field.name}
-                    >
-                      {renderFormField({ ...field, editing: editMode })}
-                    </FormGrid>
-                  ))}
+                  {updatedCreateUserForm
+                    .filter((field) => {
+                      if (isEditMode && forceEditMode && field.hiddenInReview) {
+                        return false;
+                      }
+                      return true;
+                    })
+                    .map((field) => (
+                      <FormGrid
+                        size={{ xs: 12, md: field.span }}
+                        key={field.name}
+                      >
+                        {renderFormField({ ...field, editing: editMode })}
+                      </FormGrid>
+                    ))}
 
                   {/* Custom Fields Component */}
                   <Box sx={{ display: "flex" }}>

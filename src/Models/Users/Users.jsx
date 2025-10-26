@@ -14,16 +14,32 @@ import ClickableText from "../../ModelAssets/ClickableText";
 
 // Model-specific components
 import CreateUser from "./CreateUser/CreateUser";
+import AddUserInstructions from "./AddUserInstructions";
 
 // GraphQL queries
 import {
   LIST_USERS_QUERY,
-  CREATE_USER_MUTATION,
   UPDATE_USER_MUTATION,
   DELETE_USER_MUTATION,
 } from "./userQueries";
 
 import { useHasPermission } from "../../ModelAssets/Permissions/permissions";
+
+// User type mapping from values to labels
+const USER_TYPE_LABELS = {
+  Admin: "Admin",
+  loanOfficer: "Loan Officer",
+  creditCommittee: "Credit Committee",
+  accountant: "Accountant",
+  cashier: "Cashier",
+  client: "Client",
+  branchManager: "Branch Manager",
+  auditor: "Auditor",
+  collectionsOfficer: "Collections Officer",
+  riskAnalyst: "Risk Analyst",
+  itSupport: "IT Support",
+  Viewer: "Viewer",
+};
 
 export default function Users() {
   const theme = useTheme();
@@ -40,7 +56,7 @@ export default function Users() {
   });
 
   // Dialog states
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [instructionsDialogOpen, setInstructionsDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
@@ -49,12 +65,12 @@ export default function Users() {
   const [userToDelete, setUserToDelete] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  // Ref to track fetched branch ID
+  // Ref to track fetched institution ID
   const hasFetchedRef = React.useRef();
 
   // Fetch users
   const fetchUsers = async () => {
-    if (!userDetails?.branchUsersId) return;
+    if (!userDetails?.institutionUsersId) return;
 
     setLoading(true);
     try {
@@ -62,11 +78,10 @@ export default function Users() {
       let nextToken = null;
 
       do {
-        console.log("API Call: Fetching users"); // <-- Added
         const result = await client.graphql({
           query: LIST_USERS_QUERY,
           variables: {
-            branchId: userDetails.branchUsersId,
+            institutionId: userDetails.institutionUsersId,
             ...(nextToken && { nextToken }),
           },
         });
@@ -75,6 +90,8 @@ export default function Users() {
         allUsers.push(...batch);
         nextToken = result?.data?.listUsers?.nextToken;
       } while (nextToken);
+
+      console.log("API Call: Fetched users", allUsers); // <-- Added
 
       // Process users
       const processed = allUsers.map((user) => ({
@@ -97,38 +114,6 @@ export default function Users() {
       .filter(Boolean)
       .join(" ");
     return fullName || user.email || "Unnamed User";
-  };
-
-  // CRUD operations
-  const handleCreate = async (formData) => {
-    try {
-      const input = {
-        ...formData,
-        branchUsersId: userDetails.branchUsersId,
-      };
-
-      console.log("API Call: Creating user"); // <-- Added
-
-      const result = await client.graphql({
-        query: CREATE_USER_MUTATION,
-        variables: { input },
-      });
-
-      const newUser = {
-        ...result.data.createUser,
-        displayName: getUserDisplayName(result.data.createUser),
-      };
-
-      setUsers((prev) => [...prev, newUser]);
-      setNotification({
-        message: `${newUser.displayName} created successfully!`,
-        color: "green",
-      });
-      setCreateDialogOpen(false);
-    } catch (error) {
-      console.error("Error creating user:", error);
-      setNotification({ message: "Error creating user", color: "red" });
-    }
   };
 
   const handleUpdate = async (formData) => {
@@ -225,6 +210,9 @@ export default function Users() {
       field: "userType",
       headerName: "User Type",
       width: 140,
+      valueGetter: (value, row) => {
+        return USER_TYPE_LABELS[row.userType] || row.userType;
+      },
     },
     {
       field: "status",
@@ -236,13 +224,13 @@ export default function Users() {
   // Effects
   useEffect(() => {
     if (
-      userDetails?.branchUsersId &&
-      userDetails.branchUsersId !== hasFetchedRef.current
+      userDetails?.institutionUsersId &&
+      userDetails.institutionUsersId !== hasFetchedRef.current
     ) {
       fetchUsers();
-      hasFetchedRef.current = userDetails.branchUsersId;
+      hasFetchedRef.current = userDetails.institutionUsersId;
     }
-  }, [userDetails?.branchUsersId]);
+  }, [userDetails?.institutionUsersId]);
 
   const canCreateUser = useHasPermission("create", "user");
 
@@ -272,7 +260,7 @@ export default function Users() {
           {canCreateUser && (
             <Button
               variant="outlined"
-              onClick={() => setCreateDialogOpen(true)}
+              onClick={() => setInstructionsDialogOpen(true)}
               sx={{
                 borderColor: theme.palette.blueText.main,
                 color: theme.palette.blueText.main,
@@ -284,7 +272,7 @@ export default function Users() {
                 },
               }}
             >
-              Create User
+              Add User
             </Button>
           )}
         </Box>
@@ -299,20 +287,12 @@ export default function Users() {
           pageSizeOptions={[25, 50, 100]}
         />
 
-        {/* Create Dialog */}
-        <CustomSlider
-          open={createDialogOpen}
-          onClose={() => setCreateDialogOpen(false)}
-          title="Create User"
-          showEdit={false}
-          showDelete={false}
-        >
-          <CreateUser
-            onCreateUserAPI={handleCreate}
-            onClose={() => setCreateDialogOpen(false)}
-            isEditMode={false}
-          />
-        </CustomSlider>
+        {/* Instructions Dialog */}
+        <AddUserInstructions
+          open={instructionsDialogOpen}
+          onClose={() => setInstructionsDialogOpen(false)}
+          institutionId={userDetails?.institutionUsersId}
+        />
 
         {/* Edit Dialog */}
         <CustomSlider

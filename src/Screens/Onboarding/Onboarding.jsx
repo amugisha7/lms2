@@ -243,7 +243,7 @@ const AccountSettingsForm = () => {
       const userInput = {
         id: user.userId,
         institutionUsersId: businessID,
-        userType: "User",
+        // userType intentionally left blank - admin must select during review
         email: user.signInDetails.loginId,
         status: "pending",
       };

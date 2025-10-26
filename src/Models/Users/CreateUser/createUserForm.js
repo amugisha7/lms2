@@ -5,28 +5,21 @@ const createUserForm = [
     label: "Email:",
     name: "email",
     type: "email",
-    required: true,
-    span: 6,
+    // required: true,
+    span: 9,
     autoComplete: "email",
     validationType: "email",
     validationMessage: "Invalid email address",
+    readOnly: true, // Email cannot be edited after creation
   },
   {
-    label: "Branch:",
-    name: "branch",
-    type: "select",
-    required: false,
-    span: 6,
-    options: [], // Add branch options here, e.g., similar to countries.map(c => ({ value: c, label: c }))
-  },
-    {
     label: "User Type:",
     name: "userType",
     type: "select",
     required: true,
     span: 6,
+    defaultValue: "Viewer",
     options: [
-      { value: "Admin", label: "Admin" },
       { value: "loanOfficer", label: "Loan Officer" },
       { value: "creditCommittee", label: "Credit Committee" },
       { value: "accountant", label: "Accountant" },
@@ -37,7 +30,17 @@ const createUserForm = [
       { value: "collectionsOfficer", label: "Collections Officer" },
       { value: "riskAnalyst", label: "Risk Analyst" },
       { value: "itSupport", label: "IT Support" },
+      { value: "Viewer", label: "Viewer" },
     ],
+  },
+  {
+    label: "Branch:",
+    name: "branch",
+    type: "select",
+    required: true,
+    span: 6,
+    options: [], // Will be populated dynamically
+    dynamicoptions: "true", // Indicates that options are loaded at runtime
   },
 
   {
@@ -51,6 +54,7 @@ const createUserForm = [
       { value: "Inactive", label: "Inactive" },
       { value: "Suspended", label: "Suspended" },
     ],
+    hiddenInReview: true,
   },
   {
     label: "First Name:",

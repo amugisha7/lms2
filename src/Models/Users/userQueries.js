@@ -1,8 +1,8 @@
 // GraphQL queries for Users
 export const LIST_USERS_QUERY = `
-  query ListUsers($branchId: ID!, $nextToken: String) {
+  query ListUsers($institutionId: ID!, $nextToken: String) {
     listUsers(
-      filter: { branchUsersId: { eq: $branchId } }
+      filter: { institutionUsersId: { eq: $institutionId } }
       limit: 100
       nextToken: $nextToken
     ) {

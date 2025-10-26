@@ -102,7 +102,27 @@ export const UPDATE_USER_MUTATION = `
   mutation UpdateUser($input: UpdateUserInput!) {
     updateUser(input: $input) {
       id
+      firstName
+      lastName
+      middleName
+      email
+      phoneNumber1
+      phoneNumber2
+      dateOfBirth
+      nationality
+      nationalID
+      passportNumber
+      addressLine1
+      addressLine2
+      city
+      stateProvince
+      postalCode
+      userType
       status
+      description
+      institutionUsersId
+      branchUsersId
+      customFieldsData
     }
   }
 `;

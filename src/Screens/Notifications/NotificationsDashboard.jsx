@@ -205,7 +205,7 @@ const NotificationsDashboard = () => {
   };
 
   return (
-    <Box sx={{ p: 2 }}>
+    <Box>
       <Typography variant="h4" gutterBottom>
         Notifications
       </Typography>

@@ -594,7 +594,7 @@ export default function UserManagement() {
               flexShrink: 0,
             }}
           >
-            {canDeleteUser && (
+            {canDeleteUser && userDetails?.id !== id && (
               <ClickableText
                 onClick={handleDelete}
                 sx={{

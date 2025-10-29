@@ -4,11 +4,11 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import { UserContext } from "../../App";
-import CustomDataGrid from "../../ModelAssets/CustomDataGrid";
-import CustomPopUp from "../../ModelAssets/CustomPopUp";
-import DeleteDialog from "../../ModelAssets/DeleteDialog";
+import CustomDataGrid from "../../ComponentAssets/CustomDataGrid";
+import CustomPopUp from "../../ComponentAssets/CustomPopUp";
+import DeleteDialog from "../../ComponentAssets/DeleteDialog";
 import { useTheme } from "@mui/material/styles";
-import ClickableText from "../../ModelAssets/ClickableText";
+import ClickableText from "../../ComponentAssets/ClickableText";
 import EditLoanProductForm from "./EditLoanProductForm";
 import CreateLoanProductFormOptimized from "./CreateLoanProductFormOptimized";
 

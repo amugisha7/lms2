@@ -1,2 +1,2 @@
-- apply tabs to users page
-- manage user deleting. Do you want it? 
+- Review loan products
+- Create loans

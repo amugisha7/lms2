@@ -9,12 +9,12 @@ import MainGrid from "./muiTemplates/dashboard/components/MainGrid";
 import CustomFieldsManager from "./Screens/AdminScreens/CustomFields/CustomFieldsManager";
 import Dashboard from "./Screens/Dashboard/Dashboard";
 import CreateLoanFeesForm from "./Screens/LoanFees/CreateLoanFeesForm"; // Add this import
-import CreateLoanProductFormOptimized from "./Screens/LoanProducts/CreateLoanProductFormOptimized"; // Add this import
+import CreateLoanProductFormOptimized from "./Models/LoanProducts/CreateLoanProductFormOptimized"; // Add this import
 import AdminPage from "./Screens/AdminScreens/AdminPage";
 import LoanFees from "./Screens/LoanFees/LoanFees"; // Add this import
 import CreateBranches from "./Screens/Branches/CreateBranches/CreateBranch";
 import Branches from "./Screens/Branches/Branches";
-import LoanProducts from "./Screens/LoanProducts/LoanProducts";
+import LoanProducts from "./Models/LoanProducts/LoanProducts";
 import FormTemplate from "./temp/FormTemplate";
 import Securities from "./Screens/Securities/Securities";
 import CreateSecurities from "./Screens/Securities/CreateSecurities/CreateSecurities";

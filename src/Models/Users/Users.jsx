@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
-import { Box, Typography, Button } from "@mui/material";
+import { Box, Typography, Button, Tabs, Tab } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { useNavigate } from "react-router-dom";
 import { generateClient } from "aws-amplify/api";
@@ -54,6 +54,7 @@ export default function Users() {
     message: "",
     color: "green",
   });
+  const [selectedBranchId, setSelectedBranchId] = useState("all");
 
   // Dialog states
   const [instructionsDialogOpen, setInstructionsDialogOpen] = useState(false);
@@ -260,6 +261,32 @@ export default function Users() {
 
   const canCreateUser = useHasPermission("create", "user");
 
+  // Extract unique branches from users
+  const branches = React.useMemo(() => {
+    const branchMap = new Map();
+    users.forEach((user) => {
+      if (user.branch?.id && user.branch?.name) {
+        branchMap.set(user.branch.id, {
+          id: user.branch.id,
+          name: user.branch.name,
+        });
+      }
+    });
+    return Array.from(branchMap.values()).sort((a, b) =>
+      a.name.localeCompare(b.name)
+    );
+  }, [users]);
+
+  // Filter users by selected branch
+  const filteredUsers =
+    selectedBranchId === "all"
+      ? users
+      : users.filter((user) => user.branch?.id === selectedBranchId);
+
+  const handleTabChange = (event, newValue) => {
+    setSelectedBranchId(newValue);
+  };
+
   return (
     <>
       <NotificationBar
@@ -303,9 +330,66 @@ export default function Users() {
           )}
         </Box>
 
+        {/* Tabs */}
+        <Box sx={{ width: "100%", mb: 2 }}>
+          <Box
+            sx={{
+              borderBottom: 1,
+              borderColor: theme.palette.divider,
+              backgroundColor: theme.palette.background.paper,
+              borderRadius: "8px 8px 0 0",
+            }}
+          >
+            <Tabs
+              value={selectedBranchId}
+              onChange={handleTabChange}
+              aria-label="branch filter tabs"
+              variant="scrollable"
+              scrollButtons
+              allowScrollButtonsMobile
+              sx={{
+                "& .MuiTabs-indicator": {
+                  backgroundColor: theme.palette.blueText.main,
+                  height: 3,
+                  borderRadius: "1.5px",
+                },
+                "& .MuiTab-root": {
+                  fontFamily: theme.typography.fontFamily,
+                  fontSize: "0.875rem",
+                  fontWeight: 500,
+                  textTransform: "none",
+                  letterSpacing: "0.02em",
+                  color: theme.palette.text.secondary,
+                  minHeight: 48,
+                  padding: "12px 24px",
+                  transition: "all 0.2s ease-in-out",
+                  "&:hover": {
+                    color: theme.palette.blueText.main,
+                  },
+                  "&.Mui-selected": {
+                    color: theme.palette.blueText.main,
+                    fontWeight: 600,
+                  },
+                  "&.Mui-focusVisible": {
+                    backgroundColor: theme.palette.action.focus,
+                  },
+                },
+                "& .MuiTabs-flexContainer": {
+                  gap: 1,
+                },
+              }}
+            >
+              <Tab label="All Branches" value="all" />
+              {branches.map((branch) => (
+                <Tab key={branch.id} label={branch.name} value={branch.id} />
+              ))}
+            </Tabs>
+          </Box>
+        </Box>
+
         {/* Data Grid */}
         <CustomDataGrid
-          rows={users}
+          rows={filteredUsers}
           columns={columns}
           loading={loading}
           getRowId={(row) => row.id}

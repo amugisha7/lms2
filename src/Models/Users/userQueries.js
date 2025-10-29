@@ -28,6 +28,10 @@ export const LIST_USERS_QUERY = `
         userPermissions
         description
         customFieldsData
+        branch {
+          id
+          name
+        }
         createdAt
         updatedAt
       }
@@ -60,6 +64,10 @@ export const CREATE_USER_MUTATION = `
       userPermissions
       description
       customFieldsData
+      branch {
+        id
+        name
+      }
       createdAt
       updatedAt
     }
@@ -90,6 +98,10 @@ export const UPDATE_USER_MUTATION = `
       userPermissions
       description
       customFieldsData
+      branch {
+        id
+        name
+      }
       createdAt
       updatedAt
     }

@@ -1,1 +1,2 @@
-fix the save button for the popup on review of the user join request.
+- apply tabs to users page
+- manage user deleting. Do you want it? 

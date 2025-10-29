@@ -1,2 +1,3 @@
-- Review loan products
-- Create loans
+- Add repayment order to the create loan products.
+- Test that creation and editing of loan products is working.
+- Work on loan fees.

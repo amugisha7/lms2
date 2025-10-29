@@ -14,8 +14,9 @@ import { generateClient } from "aws-amplify/api";
 import createLoanProductForm from "./createLoanProductForm";
 import TextInput from "../../../Resources/FormComponents/TextInput";
 import Dropdown from "../../../Resources/FormComponents/Dropdown";
-import CreateFormButtons from "../../../ComponentAssets/CreateFormButtons";
-import CustomEditFormButtons from "../../../ComponentAssets/CustomEditFormButtons";
+import MultipleDropDown from "../../../Resources/FormComponents/MultipleDropDown";
+import CreateFormButtons from "../../../ModelAssets/CreateFormButtons";
+import CustomEditFormButtons from "../../../ModelAssets/CustomEditFormButtons";
 import { UserContext } from "../../../App";
 import {
   createLoanProduct,
@@ -23,6 +24,7 @@ import {
   associateFeeWithLoanProduct,
   buildLoanProductInput,
 } from "./createLoanProductHelpers";
+import FormLabel from "../../../Resources/FormComponents/FormLabel";
 
 const FormGrid = styled(Grid)(({ theme }) => ({
   display: "flex",
@@ -33,6 +35,8 @@ const FormGrid = styled(Grid)(({ theme }) => ({
 }));
 
 const baseInitialValues = createLoanProductForm.reduce((acc, field) => {
+  // Skip label fields as they don't need values
+  if (field.type === "label") return acc;
   // For multi-select fields, use an empty array instead of empty string
   acc[field.name] = field.multiple ? [] : field.defaultValue || "";
   return acc;
@@ -251,6 +255,10 @@ const renderFormField = (field) => {
       return <TextInput {...field} />;
     case "select":
       return <Dropdown {...field} />;
+    case "selectMultiple":
+      return <MultipleDropDown {...field} />;
+    case "label":
+      return <FormLabel label={field.label} />;
     default:
       return <TextInput {...field} />;
   }

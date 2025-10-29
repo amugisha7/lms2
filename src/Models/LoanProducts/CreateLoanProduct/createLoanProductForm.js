@@ -1,6 +1,6 @@
 const createLoanProductForm = [
   {
-    label: "Loan Product Name*",
+    label: "Loan Product Name",
     name: "name",
     type: "text",
     required: true,
@@ -12,18 +12,24 @@ const createLoanProductForm = [
   {
     label: "Branches",
     name: "branch",
-    type: "select",
+    type: "selectMultiple",
     span: 12,
     multiple: true,
     options: [], // Will be populated dynamically
     dynamicoptions: "true",
+    helperText: "If you do not select any branch, then this loan product will not be available to any branch."
   },
   // Principal Settings
+  {
+    label: "Principal Settings",
+    type: "label",
+    span: 12,
+  },
   {
     label: "Minimum Principal",
     name: "minPrincipal",
     type: "number",
-    span: 4,
+    span: 6,
     validationType: "number",
     min: 0,
   },
@@ -31,7 +37,7 @@ const createLoanProductForm = [
     label: "Default Principal",
     name: "defaultPrincipal",
     type: "number",
-    span: 4,
+    span: 6,
     validationType: "number",
     min: 0,
   },
@@ -39,16 +45,21 @@ const createLoanProductForm = [
     label: "Maximum Principal",
     name: "maxPrincipal",
     type: "number",
-    span: 4,
+    span: 6,
     validationType: "number",
     min: 0,
   },
   // Interest Settings
   {
+    label: "Interest Settings",
+    type: "label",
+    span: 12,
+  },
+  {
     label: "Interest Method",
     name: "interestMethod",
     type: "select",
-    span: 4,
+    span: 6,
     options: [
       { value: "flat", label: "Flat" },
       { value: "declining_balance", label: "Declining Balance" },
@@ -58,7 +69,7 @@ const createLoanProductForm = [
     label: "Interest Type",
     name: "interestType",
     type: "select",
-    span: 4,
+    span: 6,
     options: [
       { value: "percentage", label: "Percentage" },
       { value: "fixed", label: "Fixed Amount" },
@@ -68,7 +79,7 @@ const createLoanProductForm = [
     label: "Interest Period",
     name: "interestPeriod",
     type: "select",
-    span: 4,
+    span: 6,
     options: [
         { value: "per_day", label: "Per Day" },
         { value: "per_week", label: "Per Week" },
@@ -81,7 +92,7 @@ const createLoanProductForm = [
     label: "Minimum Interest",
     name: "minInterest",
     type: "number",
-    span: 4,
+    span: 6,
     validationType: "number",
     min: 0,
   },
@@ -89,7 +100,7 @@ const createLoanProductForm = [
     label: "Default Interest",
     name: "defaultInterest",
     type: "number",
-    span: 4,
+    span: 6,
     validationType: "number",
     min: 0,
   },
@@ -97,11 +108,16 @@ const createLoanProductForm = [
     label: "Maximum Interest",
     name: "maxInterest",
     type: "number",
-    span: 4,
+    span: 6,
     validationType: "number",
     min: 0,
   },
   // Duration Settings
+  {
+    label: "Duration Settings",
+    type: "label",
+    span: 12,
+  },
   {
     label: "Duration Period",
     name: "durationPeriod",
@@ -118,7 +134,7 @@ const createLoanProductForm = [
     label: "Minimum Duration",
     name: "minDuration",
     type: "number",
-    span: 4,
+    span: 6,
     validationType: "number",
     min: 0,
   },
@@ -126,7 +142,7 @@ const createLoanProductForm = [
     label: "Default Duration",
     name: "defaultDuration",
     type: "number",
-    span: 4,
+    span: 6,
     validationType: "number",
     min: 0,
   },
@@ -134,11 +150,16 @@ const createLoanProductForm = [
     label: "Maximum Duration",
     name: "maxDuration",
     type: "number",
-    span: 4,
+    span: 6,
     validationType: "number",
     min: 0,
   },
   // Repayment Settings
+  {
+    label: "Repayment Settings",
+    type: "label",
+    span: 12,
+  },
   {
     label: "Repayment Frequency",
     name: "repaymentFrequency",
@@ -159,6 +180,11 @@ const createLoanProductForm = [
     ],
   },
   // Loan Maturity Settings
+  {
+    label: "Loan Maturity Settings",
+    type: "label",
+    span: 12,
+  },
   {
     label: "Extend Loan After Maturity",
     name: "extendLoanAfterMaturity",
@@ -210,9 +236,14 @@ const createLoanProductForm = [
     ],
   },
   {
+    label: "Fees & Charges",
+    type: "label",
+    span: 12,
+  },
+  {
     label: "Loan Fees",
     name: "loanFees",
-    type: "select",
+    type: "selectMultiple",
     span: 12,
     multiple: true,
     options: [], // Will be populated dynamically

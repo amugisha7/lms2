@@ -9,8 +9,8 @@ import CustomPopUp from "../../ComponentAssets/CustomPopUp";
 import DeleteDialog from "../../ComponentAssets/DeleteDialog";
 import { useTheme } from "@mui/material/styles";
 import ClickableText from "../../ComponentAssets/ClickableText";
-import EditLoanProductForm from "./EditLoanProductForm";
-import CreateLoanProductFormOptimized from "./CreateLoanProductFormOptimized";
+import EditLoanProduct from "./EditLoanProduct/EditLoanProduct";
+import CreateLoanProduct from "./CreateLoanProduct/CreateLoanProduct";
 
 export default function LoanProducts() {
   const [loanProducts, setLoanProducts] = React.useState([]);
@@ -334,10 +334,9 @@ export default function LoanProducts() {
         maxWidth="md"
         fullWidth
       >
-        <CreateLoanProductFormOptimized
+        <CreateLoanProduct
           onClose={handleCreateDialogClose}
           onCreateSuccess={handleCreateSuccess}
-          isViewMode={false}
         />
       </CustomPopUp>
 
@@ -356,10 +355,10 @@ export default function LoanProducts() {
         fullWidth
       >
         {viewDialogRow && (
-          <EditLoanProductForm
+          <EditLoanProduct
             initialValues={viewDialogRow}
             onClose={handleViewDialogClose}
-            isViewMode={true}
+            isEditMode={false}
           />
         )}
       </CustomPopUp>
@@ -375,12 +374,12 @@ export default function LoanProducts() {
         editMode={editMode}
       >
         {editDialogRow && (
-          <EditLoanProductForm
+          <EditLoanProduct
             ref={formRef}
             initialValues={editDialogRow}
             onClose={handleEditDialogClose}
             onEditSuccess={handleEditSuccess}
-            isViewMode={false}
+            isEditMode={true}
           />
         )}
       </CustomPopUp>

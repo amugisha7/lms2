@@ -9,7 +9,7 @@ import MainGrid from "./muiTemplates/dashboard/components/MainGrid";
 import CustomFieldsManager from "./Screens/AdminScreens/CustomFields/CustomFieldsManager";
 import Dashboard from "./Screens/Dashboard/Dashboard";
 import CreateLoanFeesForm from "./Screens/LoanFees/CreateLoanFeesForm"; // Add this import
-import CreateLoanProductFormOptimized from "./Models/LoanProducts/CreateLoanProductFormOptimized"; // Add this import
+import CreateLoanProduct from "./Models/LoanProducts/CreateLoanProduct/CreateLoanProduct"; // Add this import
 import AdminPage from "./Screens/AdminScreens/AdminPage";
 import LoanFees from "./Screens/LoanFees/LoanFees"; // Add this import
 import CreateBranches from "./Screens/Branches/CreateBranches/CreateBranch";
@@ -61,7 +61,7 @@ export default function AppRoutes({ userExists }) {
               {/* Loan Products route */}
               <Route
                 path="admin/add-loan-product"
-                element={<CreateLoanProductFormOptimized />}
+                element={<CreateLoanProduct />}
               />
               {/* Loan Products list route */}
               <Route path="admin/loan-products" element={<LoanProducts />} />

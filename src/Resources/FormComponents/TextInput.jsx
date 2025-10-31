@@ -10,6 +10,7 @@ const TextInput = ({
   required,
   readOnly = false,
   editing = true,
+  disabled = false,
   inputProps, // explicitly accept inputProps
   minLength, // <-- accept minLength
   maxLength, // <-- accept maxLength
@@ -20,7 +21,7 @@ const TextInput = ({
   ...props
 }) => {
   const [field, meta] = useField(name);
-  const isReadOnly = readOnly || editing === false;
+  const isReadOnly = readOnly || editing === false || disabled;
 
   // Merge consumer-provided slotProps with our readOnly and inputProps, plus min/max length
   const mergedSlotProps = {

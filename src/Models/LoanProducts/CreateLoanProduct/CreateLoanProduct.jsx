@@ -15,6 +15,8 @@ import createLoanProductForm from "./createLoanProductForm";
 import TextInput from "../../../Resources/FormComponents/TextInput";
 import Dropdown from "../../../Resources/FormComponents/Dropdown";
 import MultipleDropDown from "../../../Resources/FormComponents/MultipleDropDown";
+import OrderedList from "../../../Resources/FormComponents/OrderedList";
+import RadioGroup from "../../../Resources/FormComponents/RadioGroup";
 import CreateFormButtons from "../../../ModelAssets/CreateFormButtons";
 import CustomEditFormButtons from "../../../ModelAssets/CustomEditFormButtons";
 import { UserContext } from "../../../App";
@@ -248,15 +250,53 @@ const buildValidationSchema = () => {
 
 const baseValidationSchema = buildValidationSchema();
 
-const renderFormField = (field) => {
+const renderFormField = (field, formikValues) => {
+  // Check if field should be disabled based on dependencies
+  const isDisabled =
+    field.dependsOn && formikValues[field.dependsOn] !== field.dependsOnValue;
+
+  // Handle dynamic labels
+  let displayLabel = field.label;
+  if (field.dynamicLabel && field.name === "calculateInterestOn") {
+    displayLabel =
+      formikValues.interestTypeMaturity === "fixed"
+        ? "Calculate Interest if there is"
+        : "Calculate Interest on";
+  } else if (
+    field.dynamicLabel &&
+    field.name === "loanInterestRateAfterMaturity"
+  ) {
+    displayLabel =
+      formikValues.interestTypeMaturity === "fixed"
+        ? "Interest Amount After Maturity"
+        : "Interest Rate After Maturity";
+  }
+
   switch (field.type) {
     case "text":
     case "number":
-      return <TextInput {...field} />;
+      return (
+        <TextInput {...field} label={displayLabel} disabled={isDisabled} />
+      );
     case "select":
-      return <Dropdown {...field} />;
+      return <Dropdown {...field} label={displayLabel} disabled={isDisabled} />;
     case "selectMultiple":
-      return <MultipleDropDown {...field} />;
+      return <MultipleDropDown {...field} disabled={isDisabled} />;
+    case "radio":
+      return <RadioGroup {...field} disabled={isDisabled} />;
+    case "orderedList":
+      return (
+        <OrderedList
+          label={field.label}
+          items={field.formik.values[field.name] || field.defaultValue || []}
+          onChange={(newOrder) =>
+            field.formik.setFieldValue(field.name, newOrder)
+          }
+          helperText={field.helperText}
+          required={field.required}
+          editing={field.editing}
+        />
+      );
     case "label":
       return <FormLabel label={field.label} />;
     default:
@@ -406,8 +446,21 @@ const CreateLoanProduct = forwardRef(
         maxDuration: dbData.maxDuration || "",
         defaultDuration: dbData.defaultDuration || "",
         repaymentFrequency: dbData.repaymentFrequency || "",
+        repaymentOrder: dbData.repaymentOrder || [
+          "Penalty",
+          "Fees",
+          "Interest",
+          "Principal",
+        ],
         branch: dbData.branch || [],
         loanFees: dbData.loanFees || [],
+        extendLoanAfterMaturity: dbData.extendLoanAfterMaturity || "no",
+        interestTypeMaturity: dbData.interestTypeMaturity || "percentage",
+        calculateInterestOn: dbData.calculateInterestOn || "",
+        loanInterestRateAfterMaturity:
+          dbData.loanInterestRateAfterMaturity || "",
+        recurringPeriodAfterMaturityUnit:
+          dbData.recurringPeriodAfterMaturityUnit || "",
       };
     };
 
@@ -552,7 +605,10 @@ const CreateLoanProduct = forwardRef(
                       size={{ xs: 12, md: field.span }}
                       key={field.name}
                     >
-                      {renderFormField({ ...field, formik, editing: editMode })}
+                      {renderFormField(
+                        { ...field, formik, editing: editMode },
+                        formik.values
+                      )}
                     </FormGrid>
                   ))}
                   <Box

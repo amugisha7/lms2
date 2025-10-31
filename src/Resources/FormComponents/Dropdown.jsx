@@ -20,10 +20,11 @@ const Dropdown = ({
   required,
   readOnly = false,
   editing = true,
+  disabled = false,
   ...props
 }) => {
   const [field, meta] = useField(name);
-  const isReadOnly = readOnly || editing === false;
+  const isReadOnly = readOnly || editing === false || disabled;
 
   const StyledOutlinedInput = styled(OutlinedInput)(({ theme }) => {
     const colors = tokens(theme.palette.mode);

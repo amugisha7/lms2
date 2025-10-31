@@ -1,3 +1,3 @@
-- Add repayment order to the create loan products.
 - Test that creation and editing of loan products is working.
+- check validation at extend loan after maturity
 - Work on loan fees.

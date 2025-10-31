@@ -7,8 +7,6 @@ const FormLabel = ({
   sx = {},
   variant = "body2",
   fontWeight = 600,
-  minWidth = { xs: "100%", sm: "120px" },
-  maxWidth = { xs: "100%", sm: "120px" },
   ...props
 }) => {
   const theme = useTheme();
@@ -31,8 +29,6 @@ const FormLabel = ({
         sx={{
           fontSize: 12,
           fontWeight: fontWeight,
-          minWidth: minWidth,
-          maxWidth: maxWidth,
           color: "#ff9800;",
         }}
         {...props}

@@ -17,11 +17,12 @@ const RadioGroup = ({
   required,
   editing = true,
   readOnly = false,
+  disabled = false,
   showOnlyInEditMode,
   ...otherProps
 }) => {
   const [field, meta] = useField(name);
-  const isReadOnly = readOnly || !editing;
+  const isReadOnly = readOnly || !editing || disabled;
 
   return (
     <Box

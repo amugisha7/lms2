@@ -6,13 +6,9 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
-import List from "@mui/material/List";
-import ListItem from "@mui/material/ListItem";
-import IconButton from "@mui/material/IconButton";
-import ArrowUpward from "@mui/icons-material/ArrowUpward";
-import ArrowDownward from "@mui/icons-material/ArrowDownward";
 import { useTheme } from "@mui/material/styles";
 import { tokens } from "../../../theme";
+import OrderedList from "../../../Resources/FormComponents/OrderedList";
 
 const REPAYMENT_FREQUENCY_OPTIONS = [
   { value: "daily", label: "Daily" },
@@ -44,26 +40,8 @@ const RepaymentSettings = forwardRef(function RepaymentSettings(
     getRepaymentOrder: () => [...repaymentOrder],
   }));
 
-  const moveOrderUp = (index) => {
-    if (index > 0) {
-      const newOrder = [...repaymentOrder];
-      [newOrder[index - 1], newOrder[index]] = [
-        newOrder[index],
-        newOrder[index - 1],
-      ];
-      setRepaymentOrder(newOrder);
-    }
-  };
-
-  const moveOrderDown = (index) => {
-    if (index < repaymentOrder.length - 1) {
-      const newOrder = [...repaymentOrder];
-      [newOrder[index + 1], newOrder[index]] = [
-        newOrder[index],
-        newOrder[index + 1],
-      ];
-      setRepaymentOrder(newOrder);
-    }
+  const handleRepaymentOrderChange = (newOrder) => {
+    setRepaymentOrder(newOrder);
   };
 
   return (
@@ -112,80 +90,12 @@ const RepaymentSettings = forwardRef(function RepaymentSettings(
         </Select>
       </Grid>
       <Grid size={{ xs: 12, md: 12 }}>
-        <FormLabel sx={{ mb: 1 }}>Repayment Order</FormLabel>
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "flex-start",
-          }}
-        >
-          <Typography variant="caption" sx={{ mb: 1 }}>
-            This is the order in which received payments are allocated. For
-            example, if the order is Fees → Principal → Interest → Penalty and a
-            $100 payment is received, the system first covers any Fees, then
-            applies the remainder to Principal, then Interest, and finally
-            Penalty.
-          </Typography>
-          <Box
-            sx={{
-              width: 200,
-              border: `1px solid ${colors.grey[200]}`,
-              borderRadius: "4px",
-            }}
-          >
-            <List
-              dense
-              sx={{
-                // maxHeight: 160,
-                height: 105,
-                // overflow: "auto",
-                padding: 0,
-                "& .MuiListItem-root": {
-                  paddingTop: "0px",
-                  paddingBottom: "0px",
-                },
-              }}
-            >
-              {repaymentOrder.map((item, idx) => (
-                <ListItem
-                  key={`${item}-${idx}`}
-                  secondaryAction={
-                    <>
-                      <IconButton
-                        edge="end"
-                        aria-label="up"
-                        onClick={() => moveOrderUp(idx)}
-                        disabled={idx === 0}
-                        size="small"
-                      >
-                        <ArrowUpward
-                          sx={{ color: colors.blueAccent[400] }}
-                          fontSize="inherit"
-                        />
-                      </IconButton>
-                      <IconButton
-                        edge="end"
-                        aria-label="down"
-                        onClick={() => moveOrderDown(idx)}
-                        disabled={idx === repaymentOrder.length - 1}
-                        size="small"
-                      >
-                        <ArrowDownward
-                          sx={{ color: colors.blueAccent[400] }}
-                          fontSize="inherit"
-                        />
-                      </IconButton>
-                    </>
-                  }
-                  sx={{ color: colors.grey[200] }}
-                >
-                  {idx + 1}. {item}
-                </ListItem>
-              ))}
-            </List>
-          </Box>
-        </Box>
+        <OrderedList
+          label="Repayment Order"
+          items={repaymentOrder}
+          onChange={handleRepaymentOrderChange}
+          helperText="This is the order in which received payments are allocated. For example, if the order is Fees → Principal → Interest → Penalty and a $100 payment is received, the system first covers any Fees, then applies the remainder to Principal, then Interest, and finally Penalty."
+        />
       </Grid>
     </>
   );

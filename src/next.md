@@ -1,3 +1,5 @@
+- Ensure the branch is always available for creating loan products.
 - Test that creation and editing of loan products is working.
 - check validation at extend loan after maturity
 - Work on loan fees.
+- Disable deleting or revise it so that it doesn't affect other models.

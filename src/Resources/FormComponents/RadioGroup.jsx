@@ -19,6 +19,8 @@ const RadioGroup = ({
   readOnly = false,
   disabled = false,
   showOnlyInEditMode,
+  dependsOn,
+  dependsOnValue,
   ...otherProps
 }) => {
   const [field, meta] = useField(name);

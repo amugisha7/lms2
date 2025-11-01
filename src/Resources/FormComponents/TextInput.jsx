@@ -18,6 +18,9 @@ const TextInput = ({
   validationMessage, // <-- extract validationMessage to prevent it from reaching DOM
   validationType, // <-- extract validationType to prevent it from reaching DOM
   validationPattern, // <-- extract validationPattern to prevent it from reaching DOM
+  dynamicLabel,
+  dependsOn,
+  dependsOnValue,
   ...props
 }) => {
   const [field, meta] = useField(name);

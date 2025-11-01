@@ -17,6 +17,7 @@ const createLoanProductForm = [
     multiple: true,
     options: [], // Will be populated dynamically
     dynamicoptions: "true",
+    required: true,
     helperText: "If you do not select any branch, then this loan product will not be available to any branch."
   },
   // Principal Settings

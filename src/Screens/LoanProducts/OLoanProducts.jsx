@@ -79,7 +79,7 @@ export default function LoanProducts() {
                     termDurationMin
                     branches {
                       items {
-                        branchId
+                        id
                         branch {
                           name
                         }

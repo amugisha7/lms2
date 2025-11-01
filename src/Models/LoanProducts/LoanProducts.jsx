@@ -5,7 +5,7 @@ import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import { UserContext } from "../../App";
 import CustomDataGrid from "../../ComponentAssets/CustomDataGrid";
-import CustomPopUp from "../../ComponentAssets/CustomPopUp";
+import CustomSlider from "../../ComponentAssets/CustomSlider";
 import DeleteDialog from "../../ComponentAssets/DeleteDialog";
 import { useTheme } from "@mui/material/styles";
 import ClickableText from "../../ComponentAssets/ClickableText";
@@ -79,9 +79,9 @@ export default function LoanProducts() {
                     termDurationMin
                     branches {
                       items {
-                        branchId
                         branch {
                           name
+                          id
                         }
                       }
                     }
@@ -325,7 +325,7 @@ export default function LoanProducts() {
         )}
       </Box>
 
-      <CustomPopUp
+      <CustomSlider
         open={createDialogOpen}
         onClose={handleCreateDialogClose}
         title="Create Loan Product"
@@ -338,9 +338,9 @@ export default function LoanProducts() {
           onClose={handleCreateDialogClose}
           onCreateSuccess={handleCreateSuccess}
         />
-      </CustomPopUp>
+      </CustomSlider>
 
-      <CustomPopUp
+      <CustomSlider
         open={viewDialogOpen}
         onClose={handleViewDialogClose}
         title={viewDialogRow ? `${viewDialogRow.name}` : "Loan Product Details"}
@@ -361,9 +361,9 @@ export default function LoanProducts() {
             isEditMode={false}
           />
         )}
-      </CustomPopUp>
+      </CustomSlider>
 
-      <CustomPopUp
+      <CustomSlider
         open={editDialogOpen}
         onClose={handleEditDialogClose}
         title={editDialogRow ? `${editDialogRow.name}` : "Loan Product Details"}
@@ -382,7 +382,7 @@ export default function LoanProducts() {
             isEditMode={true}
           />
         )}
-      </CustomPopUp>
+      </CustomSlider>
 
       <DeleteDialog
         open={deleteDialogOpen}

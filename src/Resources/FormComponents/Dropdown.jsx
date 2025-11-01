@@ -21,6 +21,9 @@ const Dropdown = ({
   readOnly = false,
   editing = true,
   disabled = false,
+  dynamicLabel,
+  dependsOn,
+  dependsOnValue,
   ...props
 }) => {
   const [field, meta] = useField(name);

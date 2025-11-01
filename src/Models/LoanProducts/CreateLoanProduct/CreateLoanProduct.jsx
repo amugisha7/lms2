@@ -49,6 +49,10 @@ const buildValidationSchema = () => {
     name: Yup.string()
       .required("Loan Product Name is required")
       .max(100, "Name too long"),
+    branch: Yup.array()
+      .of(Yup.string())
+      .min(1, "At least one branch must be selected")
+      .required("Branch is required"),
     minPrincipal: Yup.number()
       .min(0, "Minimum Principal must be at least 0")
       .nullable()
@@ -600,10 +604,10 @@ const CreateLoanProduct = forwardRef(
                   />
                 ) : null}
                 <Grid container spacing={1}>
-                  {updatedCreateLoanProductForm.map((field) => (
+                  {updatedCreateLoanProductForm.map((field, index) => (
                     <FormGrid
                       size={{ xs: 12, md: field.span }}
-                      key={field.name}
+                      key={`${field.name}-${index}`}
                     >
                       {renderFormField(
                         { ...field, formik, editing: editMode },

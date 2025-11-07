@@ -543,24 +543,57 @@ const CreateLoanProduct = forwardRef(
 
           if (loanProductId) {
             // Associate branches
+            const branchAssociations = [];
             if (values.branch && Array.isArray(values.branch)) {
               for (const branchId of values.branch) {
                 await associateBranchWithLoanProduct(loanProductId, branchId);
+                // Find the branch details from the branches state
+                const branchDetails = branches.find((b) => b.id === branchId);
+                if (branchDetails) {
+                  branchAssociations.push({
+                    id: `${loanProductId}-${branchId}`,
+                    branch: {
+                      id: branchDetails.id,
+                      name: branchDetails.name,
+                    },
+                  });
+                }
               }
             }
 
             // Associate loan fees
+            const feeAssociations = [];
             if (values.loanFees && Array.isArray(values.loanFees)) {
               for (const feeId of values.loanFees) {
                 await associateFeeWithLoanProduct(loanProductId, feeId);
+                feeAssociations.push({
+                  id: `${loanProductId}-${feeId}`,
+                });
               }
             }
-          }
 
-          setSubmitSuccess("Loan product created successfully!");
-          resetForm();
-          if (onCreateSuccess) {
-            onCreateSuccess(result);
+            // Construct the complete loan product object with associations
+            const completeLoanProduct = {
+              ...result,
+              branches: {
+                items: branchAssociations,
+              },
+              loanFees: {
+                items: feeAssociations,
+              },
+            };
+
+            setSubmitSuccess("Loan product created successfully!");
+            resetForm();
+            if (onCreateSuccess) {
+              onCreateSuccess(completeLoanProduct);
+            }
+          } else {
+            setSubmitSuccess("Loan product created successfully!");
+            resetForm();
+            if (onCreateSuccess) {
+              onCreateSuccess(result);
+            }
           }
         }
       } catch (err) {

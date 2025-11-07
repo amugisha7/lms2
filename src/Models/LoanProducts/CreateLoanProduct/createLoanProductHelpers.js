@@ -8,6 +8,40 @@ export const createLoanProduct = async (input) => {
         createLoanProduct(input: $input) {
           id
           name
+          calculateInterestOn
+          durationPeriod
+          extendLoanAfterMaturity
+          interestCalculationMethod
+          interestPeriod
+          interestRateDefault
+          interestRateMax
+          interestRateMin
+          interestType
+          interestTypeMaturity
+          loanInterestRateAfterMaturity
+          principalAmountDefault
+          principalAmountMax
+          principalAmountMin
+          recurringPeriodAfterMaturityUnit
+          repaymentFrequency
+          repaymentOrder
+          termDurationDefault
+          termDurationMax
+          termDurationMin
+          branches {
+            items {
+              id
+              branch {
+                id
+                name
+              }
+            }
+          }
+          loanFees {
+            items {
+              id
+            }
+          }
         }
       }
     `,

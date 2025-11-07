@@ -12,6 +12,9 @@ import ClickableText from "../../ComponentAssets/ClickableText";
 import EditLoanProduct from "./EditLoanProduct/EditLoanProduct";
 import CreateLoanProduct from "./CreateLoanProduct/CreateLoanProduct";
 
+// Guard to ensure we only fetch loan products once per page load (even under React StrictMode)
+let __loanProductsFetchedOnce = false;
+
 export default function LoanProducts() {
   const [loanProducts, setLoanProducts] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
@@ -106,6 +109,7 @@ export default function LoanProducts() {
         } while (nextToken);
 
         setLoanProducts(allLoanProducts);
+        console.log("allLoanProducts::: ", allLoanProducts);
       } catch (err) {
         console.log("err::: ", err);
         setLoanProducts([]);
@@ -113,7 +117,8 @@ export default function LoanProducts() {
         setLoading(false);
       }
     };
-    if (userDetails?.institutionUsersId) {
+    if (userDetails?.institutionUsersId && !__loanProductsFetchedOnce) {
+      __loanProductsFetchedOnce = true;
       fetchLoanProducts();
     }
   }, [userDetails?.institutionUsersId]);

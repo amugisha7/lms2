@@ -11,9 +11,12 @@ import { Box, Grid, Typography } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { generateClient } from "aws-amplify/api";
 
-import editLoanProductForm from "./editLoanProductForm";
+import createLoanProductForm from "../CreateLoanProduct/createLoanProductForm";
 import TextInput from "../../../Resources/FormComponents/TextInput";
 import Dropdown from "../../../Resources/FormComponents/Dropdown";
+import Radio from "../../../Resources/FormComponents/RadioGroup";
+import OrderedList from "../../../Resources/FormComponents/OrderedList";
+import Label from "../../../Resources/FormComponents/FormLabel";
 import CustomEditFormButtons from "../../../ComponentAssets/CustomEditFormButtons";
 import { UserContext } from "../../../App";
 import {
@@ -34,8 +37,11 @@ const FormGrid = styled(Grid)(({ theme }) => ({
   },
 }));
 
-const baseInitialValues = editLoanProductForm.reduce((acc, field) => {
-  acc[field.name] = field.defaultValue || "";
+const baseInitialValues = createLoanProductForm.reduce((acc, field) => {
+  // Skip label fields as they don't need values
+  if (field.type === "label") return acc;
+  // For multi-select fields, use an empty array instead of empty string
+  acc[field.name] = field.multiple ? [] : field.defaultValue || "";
   return acc;
 }, {});
 
@@ -245,15 +251,51 @@ const buildValidationSchema = () => {
 
 const baseValidationSchema = buildValidationSchema();
 
-const renderFormField = (field) => {
+const renderFormField = (field, formikValues) => {
+  // Check if field should be disabled based on dependencies
+  const isDisabled =
+    field.dependsOn && formikValues[field.dependsOn] !== field.dependsOnValue;
+
+  // Handle dynamic labels
+  let displayLabel = field.label;
+  if (field.dynamicLabel && field.name === "calculateInterestOn") {
+    displayLabel =
+      formikValues.interestTypeMaturity === "fixed"
+        ? "Calculate Interest if there is"
+        : "Calculate Interest on";
+  } else if (
+    field.dynamicLabel &&
+    field.name === "loanInterestRateAfterMaturity"
+  ) {
+    displayLabel =
+      formikValues.interestTypeMaturity === "fixed"
+        ? "Fixed Amount"
+        : "Interest Rate After Maturity";
+  }
+
   switch (field.type) {
     case "text":
     case "number":
-      return <TextInput {...field} />;
+      return <TextInput {...field} disabled={isDisabled} />;
     case "select":
-      return <Dropdown {...field} />;
+      return <Dropdown {...field} disabled={isDisabled} />;
+    case "selectMultiple":
+      return <Dropdown {...field} disabled={isDisabled} />;
+    case "radio":
+      return <Radio {...field} disabled={isDisabled} />;
+    case "orderedList":
+      return (
+        <OrderedList
+          {...field}
+          items={formikValues[field.name]}
+          onChange={(value) => field.formik.setFieldValue(field.name, value)}
+          editing={field.editing && !isDisabled}
+        />
+      );
+    case "label":
+      return <Label {...field} />;
     default:
-      return <TextInput {...field} />;
+      return <TextInput {...field} disabled={isDisabled} />;
   }
 };
 
@@ -274,9 +316,9 @@ const LIST_BRANCHES_QUERY = `
 `;
 
 const LIST_LOAN_FEES_QUERY = `
-  query ListLoanFees($institutionId: ID!, $nextToken: String) {
-    listLoanFees(
-      filter: { institutionLoanFeesId: { eq: $institutionId } }
+  query ListLoanFeesConfigs($institutionId: ID!, $nextToken: String) {
+    listLoanFeesConfigs(
+      filter: { institutionLoanFeesConfigsId: { eq: $institutionId } }
       limit: 100
       nextToken: $nextToken
     ) {
@@ -383,24 +425,29 @@ const EditLoanProduct = forwardRef(
         minInterest: dbData.interestRateMin || "",
         maxInterest: dbData.interestRateMax || "",
         defaultInterest: dbData.interestRateDefault || "",
+        interestMethod: dbData.interestMethod || "",
         interestType: dbData.interestType || "",
         interestPeriod: dbData.interestPeriod || "",
+        durationPeriod: dbData.durationPeriod || "",
         minDuration: dbData.termDurationMin || "",
         maxDuration: dbData.termDurationMax || "",
         defaultDuration: dbData.termDurationDefault || "",
-        durationPeriod: dbData.durationPeriod || "",
         repaymentFrequency: dbData.repaymentFrequency || "",
-        extendLoanAfterMaturity: dbData.extendLoanAfterMaturity
-          ? "true"
-          : "false",
-        interestTypeMaturity: dbData.interestTypeMaturity || "",
+        repaymentOrder: dbData.repaymentOrder || [
+          "Penalty",
+          "Fees",
+          "Interest",
+          "Principal",
+        ],
+        branch: dbData.Branches?.items.map((b) => b.branchId) || [],
+        loanFees: dbData.LoanFees?.items.map((f) => f.loanFeesId) || [],
+        extendLoanAfterMaturity: dbData.extendLoanAfterMaturity ? "yes" : "no",
+        interestTypeMaturity: dbData.interestTypeMaturity || "percentage",
         calculateInterestOn: dbData.calculateInterestOn || "",
         loanInterestRateAfterMaturity:
           dbData.loanInterestRateAfterMaturity || "",
         recurringPeriodAfterMaturityUnit:
           dbData.recurringPeriodAfterMaturityUnit || "",
-        branch: dbData.Branches?.items.map((b) => b.branchId) || [],
-        loanFees: dbData.LoanFees?.items.map((f) => f.loanFeesId) || [],
       };
     };
 
@@ -429,7 +476,7 @@ const EditLoanProduct = forwardRef(
     }));
 
     const updatedEditLoanProductForm = React.useMemo(() => {
-      return editLoanProductForm.map((field) => {
+      return createLoanProductForm.map((field) => {
         if (field.name === "branch") {
           return {
             ...field,
@@ -556,9 +603,15 @@ const EditLoanProduct = forwardRef(
                   />
                 ) : null}
                 <Grid container spacing={1}>
-                  {updatedEditLoanProductForm.map((field) => (
-                    <FormGrid item xs={12} md={field.span} key={field.name}>
-                      {renderFormField({ ...field, formik, editing: editMode })}
+                  {updatedEditLoanProductForm.map((field, index) => (
+                    <FormGrid
+                      size={{ xs: 12, md: field.span }}
+                      key={`${field.name}-${index}`}
+                    >
+                      {renderFormField(
+                        { ...field, formik, editing: editMode },
+                        formik.values
+                      )}
                     </FormGrid>
                   ))}
                   {submitError && (

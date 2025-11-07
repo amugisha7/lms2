@@ -130,6 +130,9 @@ export default function Branches() {
               nextToken || "null"
             }`
           );
+          console.log("API Query: LIST_BRANCHES_QUERY", {
+            variables: queryVariables,
+          });
           const result = await client.graphql({
             query: LIST_BRANCHES_QUERY,
             variables: queryVariables,
@@ -193,6 +196,9 @@ export default function Branches() {
       institutionBranchesId: userDetails.institutionUsersId,
     };
 
+    console.log("API Mutation: CREATE_BRANCH_MUTATION", {
+      variables: { input },
+    });
     const result = await client.graphql({
       query: CREATE_BRANCH_MUTATION,
       variables: { input },
@@ -211,6 +217,9 @@ export default function Branches() {
       status: values.status || "active",
     };
 
+    console.log("API Mutation: UPDATE_BRANCH_MUTATION", {
+      variables: { input },
+    });
     const result = await client.graphql({
       query: UPDATE_BRANCH_MUTATION,
       variables: { input },
@@ -232,6 +241,9 @@ export default function Branches() {
   // Custom handleDeleteConfirm to update allBranches state and show notification
   const handleDeleteConfirm = async () => {
     try {
+      console.log("API Mutation: DELETE_BRANCH_MUTATION", {
+        variables: { input: { id: deleteDialogRow.id } },
+      });
       await originalHandleDeleteConfirm();
       if (deleteDialogRow) {
         setAllBranches((prev) =>

@@ -359,6 +359,12 @@ const EditLoanProduct = forwardRef(
           let allBranchesList = [];
           let nextToken = null;
           while (true) {
+            console.log("API Query: LIST_BRANCHES_QUERY", {
+              variables: {
+                institutionId: userDetails.institutionUsersId,
+                nextToken,
+              },
+            });
             const result = await client.graphql({
               query: LIST_BRANCHES_QUERY,
               variables: {
@@ -385,6 +391,12 @@ const EditLoanProduct = forwardRef(
           let allLoanFeesList = [];
           nextToken = null;
           while (true) {
+            console.log("API Query: LIST_LOAN_FEES_QUERY", {
+              variables: {
+                institutionId: userDetails.institutionUsersId,
+                nextToken,
+              },
+            });
             const result = await client.graphql({
               query: LIST_LOAN_FEES_QUERY,
               variables: {
@@ -510,11 +522,15 @@ const EditLoanProduct = forwardRef(
           userDetails,
           propInitialValues.id
         );
+        console.log("API Mutation: updateLoanProduct", { input });
         const result = await updateLoanProduct(input);
 
         // This is a simplified version. In a real app, you'd want to diff the arrays and only add/remove what's necessary.
         // For now, we remove all and re-add.
         const client = generateClient();
+        console.log("API Query: ListBranchLoanProducts", {
+          variables: { loanProductId: propInitialValues.id },
+        });
         const existingBranches = await client.graphql({
           query: `query ListBranchLoanProducts($loanProductId: ID!) {
             listBranchLoanProducts(filter: {loanProductId: {eq: $loanProductId}}) {
@@ -524,6 +540,9 @@ const EditLoanProduct = forwardRef(
           variables: { loanProductId: propInitialValues.id },
         });
         for (const item of existingBranches.data.listBranchLoanProducts.items) {
+          console.log("API Mutation: DeleteBranchLoanProduct", {
+            variables: { input: { id: item.id } },
+          });
           await client.graphql({
             query: `mutation DeleteBranchLoanProduct($input: DeleteBranchLoanProductInput!) {
                 deleteBranchLoanProduct(input: $input) { id }
@@ -541,6 +560,9 @@ const EditLoanProduct = forwardRef(
           }
         }
 
+        console.log("API Query: ListLoanProductLoanFees", {
+          variables: { loanProductId: propInitialValues.id },
+        });
         const existingFees = await client.graphql({
           query: `query ListLoanProductLoanFees($loanProductId: ID!) {
             listLoanProductLoanFees(filter: {loanProductId: {eq: $loanProductId}}) {
@@ -550,6 +572,9 @@ const EditLoanProduct = forwardRef(
           variables: { loanProductId: propInitialValues.id },
         });
         for (const item of existingFees.data.listLoanProductLoanFees.items) {
+          console.log("API Mutation: DeleteLoanProductLoanFees", {
+            variables: { input: { id: item.id } },
+          });
           await client.graphql({
             query: `mutation DeleteLoanProductLoanFees($input: DeleteLoanProductLoanFeesInput!) {
                 deleteLoanProductLoanFees(input: $input) { id }

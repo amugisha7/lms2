@@ -28,20 +28,7 @@ export const createLoanProduct = async (input) => {
           termDurationDefault
           termDurationMax
           termDurationMin
-          branches {
-            items {
-              id
-              branch {
-                id
-                name
-              }
-            }
-          }
-          loanFees {
-            items {
-              id
-            }
-          }
+          
         }
       }
     `,

@@ -14,6 +14,8 @@ import { generateClient } from "aws-amplify/api";
 import createLoanProductForm from "../CreateLoanProduct/createLoanProductForm";
 import TextInput from "../../../Resources/FormComponents/TextInput";
 import Dropdown from "../../../Resources/FormComponents/Dropdown";
+import MultipleDropDown from "../../../Resources/FormComponents/MultipleDropDown";
+
 import Radio from "../../../Resources/FormComponents/RadioGroup";
 import OrderedList from "../../../Resources/FormComponents/OrderedList";
 import Label from "../../../Resources/FormComponents/FormLabel";
@@ -23,6 +25,7 @@ import {
   updateLoanProduct,
   getLoanProductById,
   buildLoanProductUpdateInput,
+  fetchBranchesAndFees,
 } from "./editLoanProductHelpers";
 import {
   associateBranchWithLoanProduct,
@@ -280,7 +283,7 @@ const renderFormField = (field, formikValues) => {
     case "select":
       return <Dropdown {...field} disabled={isDisabled} />;
     case "selectMultiple":
-      return <Dropdown {...field} disabled={isDisabled} />;
+      return <MultipleDropDown {...field} disabled={isDisabled} />;
     case "radio":
       return <Radio {...field} disabled={isDisabled} />;
     case "orderedList":
@@ -299,38 +302,6 @@ const renderFormField = (field, formikValues) => {
   }
 };
 
-const LIST_BRANCHES_QUERY = `
-  query ListBranches($institutionId: ID!, $nextToken: String) {
-    listBranches(
-      filter: { institutionBranchesId: { eq: $institutionId } }
-      limit: 100
-      nextToken: $nextToken
-    ) {
-      items {
-        id
-        name
-      }
-      nextToken
-    }
-  }
-`;
-
-const LIST_LOAN_FEES_QUERY = `
-  query ListLoanFeesConfigs($institutionId: ID!, $nextToken: String) {
-    listLoanFeesConfigs(
-      filter: { institutionLoanFeesConfigsId: { eq: $institutionId } }
-      limit: 100
-      nextToken: $nextToken
-    ) {
-      items {
-        id
-        name
-      }
-      nextToken
-    }
-  }
-`;
-
 const EditLoanProduct = forwardRef(
   (
     {
@@ -347,84 +318,26 @@ const EditLoanProduct = forwardRef(
     const [submitSuccess, setSubmitSuccess] = useState("");
     const [branches, setBranches] = useState([]);
     const [loanFees, setLoanFees] = useState([]);
-    const client = React.useMemo(() => generateClient(), []);
+    const [viewBranches, setViewBranches] = useState([]);
+    const [viewLoanFees, setViewLoanFees] = useState([]);
     const [editMode, setEditMode] = useState(isEditMode);
 
     useEffect(() => {
-      const fetchBranchesAndFees = async () => {
-        if (!userDetails?.institutionUsersId) return;
+      const fetchData = async () => {
+        if (!editMode || !userDetails?.institutionUsersId) return;
 
         try {
-          // Fetch Branches
-          let allBranchesList = [];
-          let nextToken = null;
-          while (true) {
-            console.log("API Query: LIST_BRANCHES_QUERY", {
-              variables: {
-                institutionId: userDetails.institutionUsersId,
-                nextToken,
-              },
-            });
-            const result = await client.graphql({
-              query: LIST_BRANCHES_QUERY,
-              variables: {
-                institutionId: userDetails.institutionUsersId,
-                nextToken,
-              },
-            });
-
-            const listResult = result?.data?.listBranches || {};
-            const batchItems = Array.isArray(listResult.items)
-              ? listResult.items
-              : [];
-            allBranchesList.push(...batchItems);
-
-            const newNextToken = listResult.nextToken || null;
-            if (!newNextToken) {
-              break;
-            }
-            nextToken = newNextToken;
-          }
-          setBranches(allBranchesList);
-
-          // Fetch Loan Fees
-          let allLoanFeesList = [];
-          nextToken = null;
-          while (true) {
-            console.log("API Query: LIST_LOAN_FEES_QUERY", {
-              variables: {
-                institutionId: userDetails.institutionUsersId,
-                nextToken,
-              },
-            });
-            const result = await client.graphql({
-              query: LIST_LOAN_FEES_QUERY,
-              variables: {
-                institutionId: userDetails.institutionUsersId,
-                nextToken,
-              },
-            });
-
-            const listResult = result?.data?.listLoanFees || {};
-            const batchItems = Array.isArray(listResult.items)
-              ? listResult.items
-              : [];
-            allLoanFeesList.push(...batchItems);
-
-            const newNextToken = listResult.nextToken || null;
-            if (!newNextToken) {
-              break;
-            }
-            nextToken = newNextToken;
-          }
-          setLoanFees(allLoanFeesList);
+          const { branches: fetchedBranches, loanFees: fetchedFees } =
+            await fetchBranchesAndFees(userDetails.institutionUsersId);
+          setBranches(fetchedBranches);
+          setLoanFees(fetchedFees);
         } catch (err) {
           console.error("Error fetching branches or fees:", err);
         }
       };
 
-      fetchBranchesAndFees();
-    }, [userDetails?.institutionUsersId, client]);
+      fetchData();
+    }, [editMode, userDetails?.institutionUsersId]);
 
     const mapDbFieldsToFormFields = (dbData) => {
       if (!dbData) return {};
@@ -451,8 +364,8 @@ const EditLoanProduct = forwardRef(
           "Interest",
           "Principal",
         ],
-        branch: dbData.Branches?.items.map((b) => b.branchId) || [],
-        loanFees: dbData.LoanFees?.items.map((f) => f.loanFeesId) || [],
+        branch: dbData.branches?.items.map((b) => b.branch.id) || [],
+        loanFees: dbData.loanFees?.items.map((f) => f.loanFees?.id) || [],
         extendLoanAfterMaturity: dbData.extendLoanAfterMaturity ? "yes" : "no",
         interestTypeMaturity: dbData.interestTypeMaturity || "percentage",
         calculateInterestOn: dbData.calculateInterestOn || "",
@@ -472,11 +385,19 @@ const EditLoanProduct = forwardRef(
 
     useEffect(() => {
       if (propInitialValues) {
-        const newInitialValues = {
-          ...baseInitialValues,
-          ...mapDbFieldsToFormFields(propInitialValues),
-        };
-        setInitialValues(newInitialValues);
+        const branchOptions =
+          propInitialValues.branches?.items?.map((item) => ({
+            value: item.branch.id,
+            label: item.branch.name,
+          })) || [];
+        setViewBranches(branchOptions);
+
+        const feeOptions =
+          propInitialValues.loanFees?.items?.map((item) => ({
+            value: item.loanFees.id,
+            label: item.loanFees.loanFeesName || "Unknown Fee",
+          })) || [];
+        setViewLoanFees(feeOptions);
       }
     }, [propInitialValues]);
 
@@ -492,24 +413,28 @@ const EditLoanProduct = forwardRef(
         if (field.name === "branch") {
           return {
             ...field,
-            options: branches.map((branch) => ({
-              value: branch.id,
-              label: branch.name,
-            })),
+            options: editMode
+              ? branches.map((branch) => ({
+                  value: branch.id,
+                  label: branch.name,
+                }))
+              : viewBranches,
           };
         }
         if (field.name === "loanFees") {
           return {
             ...field,
-            options: loanFees.map((fee) => ({
-              value: fee.id,
-              label: fee.name,
-            })),
+            options: editMode
+              ? loanFees.map((fee) => ({
+                  value: fee.id,
+                  label: fee.name,
+                }))
+              : viewLoanFees,
           };
         }
         return field;
       });
-    }, [branches, loanFees]);
+    }, [branches, loanFees, viewBranches, viewLoanFees, editMode]);
 
     const handleSubmit = async (values, { setSubmitting }) => {
       setSubmitError("");

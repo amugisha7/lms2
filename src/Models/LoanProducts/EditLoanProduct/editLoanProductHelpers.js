@@ -96,3 +96,96 @@ export const buildLoanProductUpdateInput = (values, userDetails, id) => ({
     values.recurringPeriodAfterMaturityUnit || null,
   institutionLoanProductsId: userDetails?.institutionUsersId || null,
 });
+
+export const LIST_BRANCHES_QUERY = `
+  query ListBranches($institutionId: ID!, $nextToken: String) {
+    listBranches(
+      filter: { institutionBranchesId: { eq: $institutionId } }
+      limit: 100
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        name
+      }
+      nextToken
+    }
+  }
+`;
+
+export const LIST_LOAN_FEES_QUERY = `
+  query ListLoanFeesConfigs($institutionId: ID!, $nextToken: String) {
+    listLoanFeesConfigs(
+      filter: { institutionLoanFeesConfigsId: { eq: $institutionId } }
+      limit: 100
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        name
+      }
+      nextToken
+    }
+  }
+`;
+
+export const fetchBranchesAndFees = async (institutionId) => {
+  const client = generateClient();
+  const branches = [];
+  const loanFees = [];
+
+  try {
+    // Fetch Branches
+    let nextToken = null;
+    while (true) {
+      const result = await client.graphql({
+        query: LIST_BRANCHES_QUERY,
+        variables: {
+          institutionId,
+          nextToken,
+        },
+      });
+
+      const listResult = result?.data?.listBranches || {};
+      const batchItems = Array.isArray(listResult.items)
+        ? listResult.items
+        : [];
+      branches.push(...batchItems);
+
+      const newNextToken = listResult.nextToken || null;
+      if (!newNextToken) {
+        break;
+      }
+      nextToken = newNextToken;
+    }
+
+    // Fetch Loan Fees
+    nextToken = null;
+    while (true) {
+      const result = await client.graphql({
+        query: LIST_LOAN_FEES_QUERY,
+        variables: {
+          institutionId,
+          nextToken,
+        },
+      });
+
+      const listResult = result?.data?.listLoanFeesConfigs || {};
+      const batchItems = Array.isArray(listResult.items)
+        ? listResult.items
+        : [];
+      loanFees.push(...batchItems);
+
+      const newNextToken = listResult.nextToken || null;
+      if (!newNextToken) {
+        break;
+      }
+      nextToken = newNextToken;
+    }
+  } catch (err) {
+    console.error("Error fetching branches or fees:", err);
+    throw err;
+  }
+
+  return { branches, loanFees };
+};

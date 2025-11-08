@@ -7,6 +7,7 @@ const FormLabel = ({
   sx = {},
   variant = "body2",
   fontWeight = 600,
+  editing,
   ...props
 }) => {
   const theme = useTheme();

@@ -378,6 +378,10 @@ const CreateLoanProduct = forwardRef(
           let allBranchesList = [];
           let nextToken = null;
           while (true) {
+            console.log("API Call: LIST_BRANCHES_QUERY", {
+              institutionId: userDetails.institutionUsersId,
+              nextToken,
+            });
             const result = await client.graphql({
               query: LIST_BRANCHES_QUERY,
               variables: {
@@ -404,6 +408,10 @@ const CreateLoanProduct = forwardRef(
           let allLoanFeesList = [];
           nextToken = null;
           while (true) {
+            console.log("API Call: LIST_LOAN_FEES_QUERY", {
+              institutionId: userDetails.institutionUsersId,
+              nextToken,
+            });
             const result = await client.graphql({
               query: LIST_LOAN_FEES_QUERY,
               variables: {
@@ -517,6 +525,10 @@ const CreateLoanProduct = forwardRef(
       try {
         if (isEditMode && propInitialValues && onUpdateLoanProductAPI) {
           // Update existing loan product using parent-provided API function
+          console.log("API Call: onUpdateLoanProductAPI", {
+            values,
+            propInitialValues,
+          });
           const result = await onUpdateLoanProductAPI(
             values,
             propInitialValues
@@ -529,6 +541,7 @@ const CreateLoanProduct = forwardRef(
           }
         } else if (!isEditMode && onCreateLoanProductAPI) {
           // Create new loan product using parent-provided API function
+          console.log("API Call: onCreateLoanProductAPI", { values });
           const result = await onCreateLoanProductAPI(values);
           setSubmitSuccess("Loan product created!");
           resetForm();
@@ -538,6 +551,7 @@ const CreateLoanProduct = forwardRef(
         } else {
           // Fallback to direct creation if no API function provided
           const input = buildLoanProductInput(values, userDetails);
+          console.log("API Call: createLoanProduct", { input });
           const result = await createLoanProduct(input);
           const loanProductId = result?.id;
 
@@ -546,6 +560,10 @@ const CreateLoanProduct = forwardRef(
             const branchAssociations = [];
             if (values.branch && Array.isArray(values.branch)) {
               for (const branchId of values.branch) {
+                console.log("API Call: associateBranchWithLoanProduct", {
+                  loanProductId,
+                  branchId,
+                });
                 await associateBranchWithLoanProduct(loanProductId, branchId);
                 // Find the branch details from the branches state
                 const branchDetails = branches.find((b) => b.id === branchId);
@@ -565,6 +583,10 @@ const CreateLoanProduct = forwardRef(
             const feeAssociations = [];
             if (values.loanFees && Array.isArray(values.loanFees)) {
               for (const feeId of values.loanFees) {
+                console.log("API Call: associateFeeWithLoanProduct", {
+                  loanProductId,
+                  feeId,
+                });
                 await associateFeeWithLoanProduct(loanProductId, feeId);
                 feeAssociations.push({
                   id: `${loanProductId}-${feeId}`,

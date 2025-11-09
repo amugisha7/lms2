@@ -23,7 +23,6 @@ import CustomEditFormButtons from "../../../ComponentAssets/CustomEditFormButton
 import { UserContext } from "../../../App";
 import {
   updateLoanProduct,
-  getLoanProductById,
   buildLoanProductUpdateInput,
   fetchBranchesAndFees,
 } from "./editLoanProductHelpers";
@@ -350,7 +349,7 @@ const EditLoanProduct = forwardRef(
         minInterest: dbData.interestRateMin || "",
         maxInterest: dbData.interestRateMax || "",
         defaultInterest: dbData.interestRateDefault || "",
-        interestMethod: dbData.interestMethod || "",
+        interestMethod: dbData.interestCalculationMethod || "",
         interestType: dbData.interestType || "",
         interestPeriod: dbData.interestPeriod || "",
         durationPeriod: dbData.durationPeriod || "",
@@ -358,14 +357,14 @@ const EditLoanProduct = forwardRef(
         maxDuration: dbData.termDurationMax || "",
         defaultDuration: dbData.termDurationDefault || "",
         repaymentFrequency: dbData.repaymentFrequency || "",
-        repaymentOrder: dbData.repaymentOrder || [
-          "Penalty",
-          "Fees",
-          "Interest",
-          "Principal",
-        ],
+        repaymentOrder: dbData.repaymentOrder
+          ? typeof dbData.repaymentOrder === "string"
+            ? JSON.parse(dbData.repaymentOrder)
+            : dbData.repaymentOrder
+          : ["Penalty", "Fees", "Interest", "Principal"],
         branch: dbData.branches?.items.map((b) => b.branch.id) || [],
-        loanFees: dbData.loanFees?.items.map((f) => f.loanFees?.id) || [],
+        loanFees:
+          dbData.loanFeesConfigs?.items.map((f) => f.loanFeesConfig?.id) || [],
         extendLoanAfterMaturity: dbData.extendLoanAfterMaturity ? "yes" : "no",
         interestTypeMaturity: dbData.interestTypeMaturity || "percentage",
         calculateInterestOn: dbData.calculateInterestOn || "",
@@ -393,9 +392,9 @@ const EditLoanProduct = forwardRef(
         setViewBranches(branchOptions);
 
         const feeOptions =
-          propInitialValues.loanFees?.items?.map((item) => ({
-            value: item.loanFees.id,
-            label: item.loanFees.loanFeesName || "Unknown Fee",
+          propInitialValues.loanFeesConfigs?.items?.map((item) => ({
+            value: item.loanFeesConfig.id,
+            label: item.loanFeesConfig.name || "Unknown Fee",
           })) || [];
         setViewLoanFees(feeOptions);
       }
@@ -485,24 +484,25 @@ const EditLoanProduct = forwardRef(
           }
         }
 
-        console.log("API Query: ListLoanProductLoanFees", {
+        console.log("API Query: ListLoanProductLoanFeesConfigs", {
           variables: { loanProductId: propInitialValues.id },
         });
         const existingFees = await client.graphql({
-          query: `query ListLoanProductLoanFees($loanProductId: ID!) {
-            listLoanProductLoanFees(filter: {loanProductId: {eq: $loanProductId}}) {
+          query: `query ListLoanProductLoanFeesConfigs($loanProductId: ID!) {
+            listLoanProductLoanFeesConfigs(filter: {loanProductId: {eq: $loanProductId}}) {
                 items { id }
             }
         }`,
           variables: { loanProductId: propInitialValues.id },
         });
-        for (const item of existingFees.data.listLoanProductLoanFees.items) {
-          console.log("API Mutation: DeleteLoanProductLoanFees", {
+        for (const item of existingFees.data.listLoanProductLoanFeesConfigs
+          .items) {
+          console.log("API Mutation: DeleteLoanProductLoanFeesConfig", {
             variables: { input: { id: item.id } },
           });
           await client.graphql({
-            query: `mutation DeleteLoanProductLoanFees($input: DeleteLoanProductLoanFeesInput!) {
-                deleteLoanProductLoanFees(input: $input) { id }
+            query: `mutation DeleteLoanProductLoanFeesConfig($input: DeleteLoanProductLoanFeesConfigInput!) {
+                deleteLoanProductLoanFeesConfig(input: $input) { id }
             }`,
             variables: { input: { id: item.id } },
           });

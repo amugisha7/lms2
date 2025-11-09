@@ -88,6 +88,14 @@ export default function LoanProducts() {
                         }
                       }
                     }
+                    loanFeesConfigs {
+                      items {
+                        loanFeesConfig {
+                          id
+                          name
+                        }
+                      }
+                    }
                     
                   }
                 }

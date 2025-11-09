@@ -2117,6 +2117,10 @@ export const createLoanProduct = /* GraphQL */ `
         nextToken
         __typename
       }
+      loanFeesConfigs {
+        nextToken
+        __typename
+      }
       loanPenalties {
         nextToken
         __typename
@@ -2203,6 +2207,10 @@ export const updateLoanProduct = /* GraphQL */ `
         nextToken
         __typename
       }
+      loanFeesConfigs {
+        nextToken
+        __typename
+      }
       loanPenalties {
         nextToken
         __typename
@@ -2286,6 +2294,10 @@ export const deleteLoanProduct = /* GraphQL */ `
         __typename
       }
       loanFees {
+        nextToken
+        __typename
+      }
+      loanFeesConfigs {
         nextToken
         __typename
       }
@@ -7096,6 +7108,10 @@ export const createLoanFeesConfig = /* GraphQL */ `
         nextToken
         __typename
       }
+      loanProducts {
+        nextToken
+        __typename
+      }
       createdAt
       updatedAt
       institutionLoanFeesConfigsId
@@ -7154,6 +7170,10 @@ export const updateLoanFeesConfig = /* GraphQL */ `
         nextToken
         __typename
       }
+      loanProducts {
+        nextToken
+        __typename
+      }
       createdAt
       updatedAt
       institutionLoanFeesConfigsId
@@ -7209,6 +7229,10 @@ export const deleteLoanFeesConfig = /* GraphQL */ `
         __typename
       }
       loanFees {
+        nextToken
+        __typename
+      }
+      loanProducts {
         nextToken
         __typename
       }
@@ -10760,6 +10784,183 @@ export const deleteLoanProductLoanFees = /* GraphQL */ `
         createdAt
         updatedAt
         loanLoanFeesId
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const createLoanProductLoanFeesConfig = /* GraphQL */ `
+  mutation CreateLoanProductLoanFeesConfig(
+    $input: CreateLoanProductLoanFeesConfigInput!
+    $condition: ModelLoanProductLoanFeesConfigConditionInput
+  ) {
+    createLoanProductLoanFeesConfig(input: $input, condition: $condition) {
+      id
+      loanProductId
+      loanFeesConfigId
+      loanProduct {
+        id
+        name
+        description
+        principalAmountMin
+        principalAmountMax
+        principalAmountDefault
+        interestRateMin
+        interestRateMax
+        interestRateDefault
+        interestCalculationMethod
+        interestType
+        interestPeriod
+        termDurationMin
+        termDurationMax
+        termDurationDefault
+        durationPeriod
+        repaymentFrequency
+        repaymentOrder
+        extendLoanAfterMaturity
+        interestTypeMaturity
+        calculateInterestOn
+        loanInterestRateAfterMaturity
+        recurringPeriodAfterMaturityUnit
+        status
+        createdAt
+        updatedAt
+        institutionLoanProductsId
+        __typename
+      }
+      loanFeesConfig {
+        id
+        name
+        category
+        calculationMethod
+        description
+        percentageBase
+        rate
+        status
+        createdAt
+        updatedAt
+        institutionLoanFeesConfigsId
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const updateLoanProductLoanFeesConfig = /* GraphQL */ `
+  mutation UpdateLoanProductLoanFeesConfig(
+    $input: UpdateLoanProductLoanFeesConfigInput!
+    $condition: ModelLoanProductLoanFeesConfigConditionInput
+  ) {
+    updateLoanProductLoanFeesConfig(input: $input, condition: $condition) {
+      id
+      loanProductId
+      loanFeesConfigId
+      loanProduct {
+        id
+        name
+        description
+        principalAmountMin
+        principalAmountMax
+        principalAmountDefault
+        interestRateMin
+        interestRateMax
+        interestRateDefault
+        interestCalculationMethod
+        interestType
+        interestPeriod
+        termDurationMin
+        termDurationMax
+        termDurationDefault
+        durationPeriod
+        repaymentFrequency
+        repaymentOrder
+        extendLoanAfterMaturity
+        interestTypeMaturity
+        calculateInterestOn
+        loanInterestRateAfterMaturity
+        recurringPeriodAfterMaturityUnit
+        status
+        createdAt
+        updatedAt
+        institutionLoanProductsId
+        __typename
+      }
+      loanFeesConfig {
+        id
+        name
+        category
+        calculationMethod
+        description
+        percentageBase
+        rate
+        status
+        createdAt
+        updatedAt
+        institutionLoanFeesConfigsId
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const deleteLoanProductLoanFeesConfig = /* GraphQL */ `
+  mutation DeleteLoanProductLoanFeesConfig(
+    $input: DeleteLoanProductLoanFeesConfigInput!
+    $condition: ModelLoanProductLoanFeesConfigConditionInput
+  ) {
+    deleteLoanProductLoanFeesConfig(input: $input, condition: $condition) {
+      id
+      loanProductId
+      loanFeesConfigId
+      loanProduct {
+        id
+        name
+        description
+        principalAmountMin
+        principalAmountMax
+        principalAmountDefault
+        interestRateMin
+        interestRateMax
+        interestRateDefault
+        interestCalculationMethod
+        interestType
+        interestPeriod
+        termDurationMin
+        termDurationMax
+        termDurationDefault
+        durationPeriod
+        repaymentFrequency
+        repaymentOrder
+        extendLoanAfterMaturity
+        interestTypeMaturity
+        calculateInterestOn
+        loanInterestRateAfterMaturity
+        recurringPeriodAfterMaturityUnit
+        status
+        createdAt
+        updatedAt
+        institutionLoanProductsId
+        __typename
+      }
+      loanFeesConfig {
+        id
+        name
+        category
+        calculationMethod
+        description
+        percentageBase
+        rate
+        status
+        createdAt
+        updatedAt
+        institutionLoanFeesConfigsId
         __typename
       }
       createdAt

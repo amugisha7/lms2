@@ -59,19 +59,19 @@ export const associateBranchWithLoanProduct = async (
   });
 };
 
-export const associateFeeWithLoanProduct = async (loanProductId, loanFeesId) => {
+export const associateFeeWithLoanProduct = async (loanProductId, loanFeesConfigId) => {
   const client = generateClient();
   await client.graphql({
     query: `
-      mutation CreateLoanProductLoanFees($input: CreateLoanProductLoanFeesInput!) {
-        createLoanProductLoanFees(input: $input) {
+      mutation CreateLoanProductLoanFeesConfig($input: CreateLoanProductLoanFeesConfigInput!) {
+        createLoanProductLoanFeesConfig(input: $input) {
           id
         }
       }
     `,
     variables: {
       input: {
-        loanFeesId,
+        loanFeesConfigId,
         loanProductId,
       },
     },
@@ -91,6 +91,7 @@ export const buildLoanProductInput = (values, userDetails) => ({
   interestRateDefault: values.defaultInterest
     ? Number(values.defaultInterest)
     : null,
+  interestCalculationMethod: values.interestMethod || null,
   interestType: values.interestType || null,
   interestPeriod: values.interestPeriod || null,
   termDurationMin: values.minDuration ? Number(values.minDuration) : null,
@@ -100,11 +101,11 @@ export const buildLoanProductInput = (values, userDetails) => ({
     : null,
   durationPeriod: values.durationPeriod || null,
   repaymentFrequency: values.repaymentFrequency || null,
+  repaymentOrder: values.repaymentOrder ? JSON.stringify(values.repaymentOrder) : null,
   extendLoanAfterMaturity:
     values.extendLoanAfterMaturity === ""
       ? null
-      : values.extendLoanAfterMaturity === "true" ||
-        values.extendLoanAfterMaturity === true,
+      : values.extendLoanAfterMaturity === "yes",
   interestTypeMaturity: values.interestTypeMaturity || null,
   calculateInterestOn: values.calculateInterestOn || null,
   loanInterestRateAfterMaturity: values.loanInterestRateAfterMaturity

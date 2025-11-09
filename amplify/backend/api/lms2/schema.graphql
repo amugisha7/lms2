@@ -322,6 +322,8 @@ type LoanProduct @model {
   institution: Institution @belongsTo
   branches: [Branch] @manyToMany(relationName: "BranchLoanProduct")
   loanFees: [LoanFees] @manyToMany(relationName: "LoanProductLoanFees")
+  loanFeesConfigs: [LoanFeesConfig]
+    @manyToMany(relationName: "LoanProductLoanFeesConfig")
   loanPenalties: [Penalty] @manyToMany(relationName: "LoanProductPenalty")
   applications: [Application]
     @hasMany(indexName: "byLoanProductID", fields: ["id"])
@@ -704,6 +706,8 @@ type LoanFeesConfig @model {
   institution: Institution @belongsTo
   branches: [Branch] @manyToMany(relationName: "BranchLoanFeesConfig")
   loanFees: [LoanFees] @manyToMany(relationName: "LoanFeesLoanFeesConfig")
+  loanProducts: [LoanProduct]
+    @manyToMany(relationName: "LoanProductLoanFeesConfig")
 }
 
 type Message @model {

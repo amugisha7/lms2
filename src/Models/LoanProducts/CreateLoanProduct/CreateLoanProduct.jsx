@@ -453,20 +453,22 @@ const CreateLoanProduct = forwardRef(
         minInterest: dbData.minInterest || "",
         maxInterest: dbData.maxInterest || "",
         defaultInterest: dbData.defaultInterest || "",
+        interestMethod: dbData.interestCalculationMethod || "",
+        interestType: dbData.interestType || "",
+        interestPeriod: dbData.interestPeriod || "",
         durationPeriod: dbData.durationPeriod || "",
         minDuration: dbData.minDuration || "",
         maxDuration: dbData.maxDuration || "",
         defaultDuration: dbData.defaultDuration || "",
         repaymentFrequency: dbData.repaymentFrequency || "",
-        repaymentOrder: dbData.repaymentOrder || [
-          "Penalty",
-          "Fees",
-          "Interest",
-          "Principal",
-        ],
+        repaymentOrder: dbData.repaymentOrder
+          ? typeof dbData.repaymentOrder === "string"
+            ? JSON.parse(dbData.repaymentOrder)
+            : dbData.repaymentOrder
+          : ["Penalty", "Fees", "Interest", "Principal"],
         branch: dbData.branch || [],
         loanFees: dbData.loanFees || [],
-        extendLoanAfterMaturity: dbData.extendLoanAfterMaturity || "no",
+        extendLoanAfterMaturity: dbData.extendLoanAfterMaturity ? "yes" : "no",
         interestTypeMaturity: dbData.interestTypeMaturity || "percentage",
         calculateInterestOn: dbData.calculateInterestOn || "",
         loanInterestRateAfterMaturity:
@@ -588,9 +590,16 @@ const CreateLoanProduct = forwardRef(
                   feeId,
                 });
                 await associateFeeWithLoanProduct(loanProductId, feeId);
-                feeAssociations.push({
-                  id: `${loanProductId}-${feeId}`,
-                });
+                // Find the fee details from the loanFees state
+                const feeDetails = loanFees.find((f) => f.id === feeId);
+                if (feeDetails) {
+                  feeAssociations.push({
+                    loanFeesConfig: {
+                      id: feeDetails.id,
+                      name: feeDetails.name,
+                    },
+                  });
+                }
               }
             }
 
@@ -600,7 +609,7 @@ const CreateLoanProduct = forwardRef(
               branches: {
                 items: branchAssociations,
               },
-              loanFees: {
+              loanFeesConfigs: {
                 items: feeAssociations,
               },
             };

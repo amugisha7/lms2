@@ -2062,6 +2062,10 @@ export const onCreateLoanProduct = /* GraphQL */ `
         nextToken
         __typename
       }
+      loanFeesConfigs {
+        nextToken
+        __typename
+      }
       loanPenalties {
         nextToken
         __typename
@@ -2147,6 +2151,10 @@ export const onUpdateLoanProduct = /* GraphQL */ `
         nextToken
         __typename
       }
+      loanFeesConfigs {
+        nextToken
+        __typename
+      }
       loanPenalties {
         nextToken
         __typename
@@ -2229,6 +2237,10 @@ export const onDeleteLoanProduct = /* GraphQL */ `
         __typename
       }
       loanFees {
+        nextToken
+        __typename
+      }
+      loanFeesConfigs {
         nextToken
         __typename
       }
@@ -6933,6 +6945,10 @@ export const onCreateLoanFeesConfig = /* GraphQL */ `
         nextToken
         __typename
       }
+      loanProducts {
+        nextToken
+        __typename
+      }
       createdAt
       updatedAt
       institutionLoanFeesConfigsId
@@ -6990,6 +7006,10 @@ export const onUpdateLoanFeesConfig = /* GraphQL */ `
         nextToken
         __typename
       }
+      loanProducts {
+        nextToken
+        __typename
+      }
       createdAt
       updatedAt
       institutionLoanFeesConfigsId
@@ -7044,6 +7064,10 @@ export const onDeleteLoanFeesConfig = /* GraphQL */ `
         __typename
       }
       loanFees {
+        nextToken
+        __typename
+      }
+      loanProducts {
         nextToken
         __typename
       }
@@ -10532,6 +10556,180 @@ export const onDeleteLoanProductLoanFees = /* GraphQL */ `
         createdAt
         updatedAt
         loanLoanFeesId
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onCreateLoanProductLoanFeesConfig = /* GraphQL */ `
+  subscription OnCreateLoanProductLoanFeesConfig(
+    $filter: ModelSubscriptionLoanProductLoanFeesConfigFilterInput
+  ) {
+    onCreateLoanProductLoanFeesConfig(filter: $filter) {
+      id
+      loanProductId
+      loanFeesConfigId
+      loanProduct {
+        id
+        name
+        description
+        principalAmountMin
+        principalAmountMax
+        principalAmountDefault
+        interestRateMin
+        interestRateMax
+        interestRateDefault
+        interestCalculationMethod
+        interestType
+        interestPeriod
+        termDurationMin
+        termDurationMax
+        termDurationDefault
+        durationPeriod
+        repaymentFrequency
+        repaymentOrder
+        extendLoanAfterMaturity
+        interestTypeMaturity
+        calculateInterestOn
+        loanInterestRateAfterMaturity
+        recurringPeriodAfterMaturityUnit
+        status
+        createdAt
+        updatedAt
+        institutionLoanProductsId
+        __typename
+      }
+      loanFeesConfig {
+        id
+        name
+        category
+        calculationMethod
+        description
+        percentageBase
+        rate
+        status
+        createdAt
+        updatedAt
+        institutionLoanFeesConfigsId
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onUpdateLoanProductLoanFeesConfig = /* GraphQL */ `
+  subscription OnUpdateLoanProductLoanFeesConfig(
+    $filter: ModelSubscriptionLoanProductLoanFeesConfigFilterInput
+  ) {
+    onUpdateLoanProductLoanFeesConfig(filter: $filter) {
+      id
+      loanProductId
+      loanFeesConfigId
+      loanProduct {
+        id
+        name
+        description
+        principalAmountMin
+        principalAmountMax
+        principalAmountDefault
+        interestRateMin
+        interestRateMax
+        interestRateDefault
+        interestCalculationMethod
+        interestType
+        interestPeriod
+        termDurationMin
+        termDurationMax
+        termDurationDefault
+        durationPeriod
+        repaymentFrequency
+        repaymentOrder
+        extendLoanAfterMaturity
+        interestTypeMaturity
+        calculateInterestOn
+        loanInterestRateAfterMaturity
+        recurringPeriodAfterMaturityUnit
+        status
+        createdAt
+        updatedAt
+        institutionLoanProductsId
+        __typename
+      }
+      loanFeesConfig {
+        id
+        name
+        category
+        calculationMethod
+        description
+        percentageBase
+        rate
+        status
+        createdAt
+        updatedAt
+        institutionLoanFeesConfigsId
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onDeleteLoanProductLoanFeesConfig = /* GraphQL */ `
+  subscription OnDeleteLoanProductLoanFeesConfig(
+    $filter: ModelSubscriptionLoanProductLoanFeesConfigFilterInput
+  ) {
+    onDeleteLoanProductLoanFeesConfig(filter: $filter) {
+      id
+      loanProductId
+      loanFeesConfigId
+      loanProduct {
+        id
+        name
+        description
+        principalAmountMin
+        principalAmountMax
+        principalAmountDefault
+        interestRateMin
+        interestRateMax
+        interestRateDefault
+        interestCalculationMethod
+        interestType
+        interestPeriod
+        termDurationMin
+        termDurationMax
+        termDurationDefault
+        durationPeriod
+        repaymentFrequency
+        repaymentOrder
+        extendLoanAfterMaturity
+        interestTypeMaturity
+        calculateInterestOn
+        loanInterestRateAfterMaturity
+        recurringPeriodAfterMaturityUnit
+        status
+        createdAt
+        updatedAt
+        institutionLoanProductsId
+        __typename
+      }
+      loanFeesConfig {
+        id
+        name
+        category
+        calculationMethod
+        description
+        percentageBase
+        rate
+        status
+        createdAt
+        updatedAt
+        institutionLoanFeesConfigsId
         __typename
       }
       createdAt

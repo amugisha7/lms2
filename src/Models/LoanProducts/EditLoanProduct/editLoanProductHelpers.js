@@ -7,6 +7,43 @@ export const updateLoanProduct = async (input) => {
       mutation UpdateLoanProduct($input: UpdateLoanProductInput!) {
         updateLoanProduct(input: $input) {
           id
+          name
+          principalAmountMin
+          principalAmountMax
+          principalAmountDefault
+          interestRateMin
+          interestRateMax
+          interestRateDefault
+          interestCalculationMethod
+          interestType
+          interestPeriod
+          termDurationMin
+          termDurationMax
+          termDurationDefault
+          durationPeriod
+          repaymentFrequency
+          repaymentOrder
+          extendLoanAfterMaturity
+          interestTypeMaturity
+          calculateInterestOn
+          loanInterestRateAfterMaturity
+          recurringPeriodAfterMaturityUnit
+          branches {
+            items {
+              branch {
+                id
+                name
+              }
+            }
+          }
+          loanFeesConfigs {
+            items {
+              loanFeesConfig {
+                id
+                name
+              }
+            }
+          }
         }
       }
     `,
@@ -29,6 +66,7 @@ export const getLoanProductById = async (id) => {
                     interestRateMin
                     interestRateMax
                     interestRateDefault
+                    interestCalculationMethod
                     interestType
                     interestPeriod
                     termDurationMin
@@ -36,20 +74,27 @@ export const getLoanProductById = async (id) => {
                     termDurationDefault
                     durationPeriod
                     repaymentFrequency
+                    repaymentOrder
                     extendLoanAfterMaturity
                     interestTypeMaturity
                     calculateInterestOn
                     loanInterestRateAfterMaturity
                     recurringPeriodAfterMaturityUnit
                     institutionLoanProductsId
-                    Branches {
+                    branches {
                         items {
-                            branchId
+                            branch {
+                                id
+                                name
+                            }
                         }
                     }
-                    LoanFees {
+                    loanFeesConfigs {
                         items {
-                            loanFeesId
+                            loanFeesConfig {
+                                id
+                                name
+                            }
                         }
                     }
                 }
@@ -73,6 +118,7 @@ export const buildLoanProductUpdateInput = (values, userDetails, id) => ({
   interestRateDefault: values.defaultInterest
     ? Number(values.defaultInterest)
     : null,
+  interestCalculationMethod: values.interestMethod || null,
   interestType: values.interestType || null,
   interestPeriod: values.interestPeriod || null,
   termDurationMin: values.minDuration ? Number(values.minDuration) : null,
@@ -82,11 +128,11 @@ export const buildLoanProductUpdateInput = (values, userDetails, id) => ({
     : null,
   durationPeriod: values.durationPeriod || null,
   repaymentFrequency: values.repaymentFrequency || null,
+  repaymentOrder: values.repaymentOrder ? JSON.stringify(values.repaymentOrder) : null,
   extendLoanAfterMaturity:
     values.extendLoanAfterMaturity === ""
       ? null
-      : values.extendLoanAfterMaturity === "true" ||
-        values.extendLoanAfterMaturity === true,
+      : values.extendLoanAfterMaturity === "yes",
   interestTypeMaturity: values.interestTypeMaturity || null,
   calculateInterestOn: values.calculateInterestOn || null,
   loanInterestRateAfterMaturity: values.loanInterestRateAfterMaturity

@@ -1017,6 +1017,10 @@ export const getLoanProduct = /* GraphQL */ `
         nextToken
         __typename
       }
+      loanFeesConfigs {
+        nextToken
+        __typename
+      }
       loanPenalties {
         nextToken
         __typename
@@ -3194,6 +3198,10 @@ export const getLoanFeesConfig = /* GraphQL */ `
         nextToken
         __typename
       }
+      loanProducts {
+        nextToken
+        __typename
+      }
       createdAt
       updatedAt
       institutionLoanFeesConfigsId
@@ -4732,6 +4740,86 @@ export const listLoanProductLoanFees = /* GraphQL */ `
         id
         loanProductId
         loanFeesId
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const getLoanProductLoanFeesConfig = /* GraphQL */ `
+  query GetLoanProductLoanFeesConfig($id: ID!) {
+    getLoanProductLoanFeesConfig(id: $id) {
+      id
+      loanProductId
+      loanFeesConfigId
+      loanProduct {
+        id
+        name
+        description
+        principalAmountMin
+        principalAmountMax
+        principalAmountDefault
+        interestRateMin
+        interestRateMax
+        interestRateDefault
+        interestCalculationMethod
+        interestType
+        interestPeriod
+        termDurationMin
+        termDurationMax
+        termDurationDefault
+        durationPeriod
+        repaymentFrequency
+        repaymentOrder
+        extendLoanAfterMaturity
+        interestTypeMaturity
+        calculateInterestOn
+        loanInterestRateAfterMaturity
+        recurringPeriodAfterMaturityUnit
+        status
+        createdAt
+        updatedAt
+        institutionLoanProductsId
+        __typename
+      }
+      loanFeesConfig {
+        id
+        name
+        category
+        calculationMethod
+        description
+        percentageBase
+        rate
+        status
+        createdAt
+        updatedAt
+        institutionLoanFeesConfigsId
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const listLoanProductLoanFeesConfigs = /* GraphQL */ `
+  query ListLoanProductLoanFeesConfigs(
+    $filter: ModelLoanProductLoanFeesConfigFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listLoanProductLoanFeesConfigs(
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        loanProductId
+        loanFeesConfigId
         createdAt
         updatedAt
         __typename
@@ -7840,6 +7928,62 @@ export const loanProductLoanFeesByLoanFeesId = /* GraphQL */ `
         id
         loanProductId
         loanFeesId
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const loanProductLoanFeesConfigsByLoanProductId = /* GraphQL */ `
+  query LoanProductLoanFeesConfigsByLoanProductId(
+    $loanProductId: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelLoanProductLoanFeesConfigFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    loanProductLoanFeesConfigsByLoanProductId(
+      loanProductId: $loanProductId
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        loanProductId
+        loanFeesConfigId
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const loanProductLoanFeesConfigsByLoanFeesConfigId = /* GraphQL */ `
+  query LoanProductLoanFeesConfigsByLoanFeesConfigId(
+    $loanFeesConfigId: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelLoanProductLoanFeesConfigFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    loanProductLoanFeesConfigsByLoanFeesConfigId(
+      loanFeesConfigId: $loanFeesConfigId
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        loanProductId
+        loanFeesConfigId
         createdAt
         updatedAt
         __typename

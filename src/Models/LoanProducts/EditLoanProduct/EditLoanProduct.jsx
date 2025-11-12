@@ -514,9 +514,40 @@ const EditLoanProduct = forwardRef(
           }
         }
 
+        // Construct the updated loan product with the complete data structure
+        const updatedLoanProduct = {
+          ...result, // Contains all the updated field values from the mutation
+          branches: {
+            items: values.branch
+              ? values.branch.map((branchId) => {
+                  const branchDetails = branches.find((b) => b.id === branchId);
+                  return {
+                    branch: {
+                      id: branchId,
+                      name: branchDetails?.name || "",
+                    },
+                  };
+                })
+              : [],
+          },
+          loanFeesConfigs: {
+            items: values.loanFees
+              ? values.loanFees.map((feeId) => {
+                  const feeDetails = loanFees.find((f) => f.id === feeId);
+                  return {
+                    loanFeesConfig: {
+                      id: feeId,
+                      name: feeDetails?.name || "",
+                    },
+                  };
+                })
+              : [],
+          },
+        };
+
         setSubmitSuccess("Loan product updated successfully!");
         setEditMode(false);
-        if (onEditSuccess) onEditSuccess(result);
+        if (onEditSuccess) onEditSuccess(updatedLoanProduct);
       } catch (err) {
         console.error("Error updating loan product:", err);
         setSubmitError("Failed to update loan product. Please try again.");

@@ -138,11 +138,16 @@ export default function LoanProducts() {
   };
 
   const handleEditSuccess = (updatedRow) => {
+    // Update the loan product in the local state with the complete updated data
     setLoanProducts((prev) =>
-      prev.map((row) =>
-        row.id === updatedRow.id ? { ...row, ...updatedRow } : row
-      )
+      prev.map((row) => (row.id === updatedRow.id ? updatedRow : row))
     );
+
+    // Also update the view dialog if it's showing the same product
+    if (viewDialogRow && viewDialogRow.id === updatedRow.id) {
+      setViewDialogRow(updatedRow);
+    }
+
     handleEditDialogClose();
   };
 

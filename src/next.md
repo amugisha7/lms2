@@ -1,5 +1,2 @@
 - Test that creation and editing of loan products is working.
-  - there is no relationship between loan products and loanfeesconfig. Fix this.
-- check validation at extend loan after maturity
-- Work on loan fees.
 - Disable deleting or revise it so that it doesn't affect other models.

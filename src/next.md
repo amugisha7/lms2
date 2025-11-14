@@ -1,2 +1,3 @@
 - Test that creation and editing of loan products is working.
 - Disable deleting or revise it so that it doesn't affect other models.
+- Ensure deleting delets the relationships

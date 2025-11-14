@@ -68,6 +68,24 @@ const UPDATE_BRANCH_MUTATION = `
   }
 `;
 
+const LIST_BRANCH_LOAN_PRODUCTS_QUERY = `
+  query ListBranchLoanProducts($filter: ModelBranchLoanProductFilterInput) {
+    listBranchLoanProducts(filter: $filter) {
+      items {
+        id
+      }
+    }
+  }
+`;
+
+const DELETE_BRANCH_LOAN_PRODUCT_MUTATION = `
+  mutation DeleteBranchLoanProduct($input: DeleteBranchLoanProductInput!) {
+    deleteBranchLoanProduct(input: $input) {
+      branchId
+    }
+  }
+`;
+
 export default function Branches() {
   const [editMode, setEditMode] = React.useState(false);
   const formRef = useRef();
@@ -241,6 +259,26 @@ export default function Branches() {
   // Custom handleDeleteConfirm to update allBranches state and show notification
   const handleDeleteConfirm = async () => {
     try {
+      // First, clear relationships with loan products
+      console.log(
+        "Clearing BranchLoanProducts for branch:",
+        deleteDialogRow.id
+      );
+      const branchLoanProductsResult = await client.graphql({
+        query: LIST_BRANCH_LOAN_PRODUCTS_QUERY,
+        variables: { filter: { branchId: { eq: deleteDialogRow.id } } },
+      });
+      const items = branchLoanProductsResult.data.listBranchLoanProducts.items;
+      console.log(`Found ${items.length} BranchLoanProducts to delete`);
+      for (const item of items) {
+        console.log("Deleting BranchLoanProduct:", item.id);
+        await client.graphql({
+          query: DELETE_BRANCH_LOAN_PRODUCT_MUTATION,
+          variables: { input: { id: item.id } },
+        });
+      }
+      console.log("Finished clearing BranchLoanProducts");
+
       console.log("API Mutation: DELETE_BRANCH_MUTATION", {
         variables: { input: { id: deleteDialogRow.id } },
       });
@@ -256,6 +294,12 @@ export default function Branches() {
       }
     } catch (error) {
       console.error("Error deleting branch:", error);
+      setNotification({
+        message: `Error deleting ${deleteDialogRow?.name || "branch"}: ${
+          error.message
+        }`,
+        color: "red",
+      });
     }
   };
 

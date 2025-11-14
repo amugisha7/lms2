@@ -426,7 +426,8 @@ export default function Branches() {
           setNotification, // pass down if needed
         }}
         onEditClick={handleEditClick}
-        onPopupDeleteClick={handlePopupDeleteClick}
+        // reactivate to enable deleting of branches
+        // onPopupDeleteClick={handlePopupDeleteClick}
         editMode={editMode}
         // Delete dialog props
         deleteDialogOpen={deleteDialogOpen}

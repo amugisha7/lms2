@@ -15,6 +15,40 @@ import CreateLoanProduct from "./CreateLoanProduct/CreateLoanProduct";
 // Guard to ensure we only fetch loan products once per page load (even under React StrictMode)
 let __loanProductsFetchedOnce = false;
 
+const LIST_LOAN_PRODUCT_LOAN_FEES_CONFIGS_QUERY = `
+  query ListLoanProductLoanFeesConfigs($filter: ModelLoanProductLoanFeesConfigFilterInput) {
+    listLoanProductLoanFeesConfigs(filter: $filter) {
+      items {
+        id
+      }
+    }
+  }
+`;
+
+const DELETE_LOAN_PRODUCT_LOAN_FEES_CONFIG_MUTATION = `
+  mutation DeleteLoanProductLoanFeesConfig($input: DeleteLoanProductLoanFeesConfigInput!) {
+    deleteLoanProductLoanFeesConfig(input: $input)
+  }
+`;
+
+const LIST_BRANCH_LOAN_PRODUCTS_QUERY = `
+  query ListBranchLoanProducts($filter: ModelBranchLoanProductFilterInput) {
+    listBranchLoanProducts(filter: $filter) {
+      items {
+        id
+      }
+    }
+  }
+`;
+
+const DELETE_BRANCH_LOAN_PRODUCT_MUTATION = `
+  mutation DeleteBranchLoanProduct($input: DeleteBranchLoanProductInput!) {
+    deleteBranchLoanProduct(input: $input) {
+      branchId
+    }
+  }
+`;
+
 export default function LoanProducts() {
   const [loanProducts, setLoanProducts] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
@@ -168,6 +202,51 @@ export default function LoanProducts() {
     setDeleteError("");
     try {
       const client = generateClient();
+
+      // First, clear relationships with branches
+      console.log(
+        "Clearing BranchLoanProducts for loan product:",
+        deleteDialogRow.id
+      );
+      const branchLoanProductsResult = await client.graphql({
+        query: LIST_BRANCH_LOAN_PRODUCTS_QUERY,
+        variables: { filter: { loanProductId: { eq: deleteDialogRow.id } } },
+      });
+      const branchItems =
+        branchLoanProductsResult.data.listBranchLoanProducts.items;
+      console.log(`Found ${branchItems.length} BranchLoanProducts to delete`);
+      for (const item of branchItems) {
+        console.log("Deleting BranchLoanProduct:", item.id);
+        await client.graphql({
+          query: DELETE_BRANCH_LOAN_PRODUCT_MUTATION,
+          variables: { input: { id: item.id } },
+        });
+      }
+      console.log("Finished clearing BranchLoanProducts");
+
+      // Then, clear relationships with loan fees configs
+      console.log(
+        "Clearing LoanProductLoanFeesConfigs for loan product:",
+        deleteDialogRow.id
+      );
+      const loanFeesConfigsResult = await client.graphql({
+        query: LIST_LOAN_PRODUCT_LOAN_FEES_CONFIGS_QUERY,
+        variables: { filter: { loanProductId: { eq: deleteDialogRow.id } } },
+      });
+      const feeItems =
+        loanFeesConfigsResult.data.listLoanProductLoanFeesConfigs.items;
+      console.log(
+        `Found ${feeItems.length} LoanProductLoanFeesConfigs to delete`
+      );
+      for (const item of feeItems) {
+        console.log("Deleting LoanProductLoanFeesConfig:", item.id);
+        await client.graphql({
+          query: DELETE_LOAN_PRODUCT_LOAN_FEES_CONFIG_MUTATION,
+          variables: { input: { id: item.id } },
+        });
+      }
+      console.log("Finished clearing LoanProductLoanFeesConfigs");
+
       // Placeholder mutation for deleting a loan product
       await client.graphql({
         query: `
@@ -186,6 +265,7 @@ export default function LoanProducts() {
       );
       handleDeleteDialogClose();
     } catch (err) {
+      console.error("Error deleting loan product:", err);
       setDeleteError("Failed to delete. Please try again.");
     } finally {
       setDeleteLoading(false);

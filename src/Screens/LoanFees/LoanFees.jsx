@@ -38,6 +38,22 @@ const PERCENTAGE_BASE_LABELS = {
   principal_interest: "(Principal + Interest)",
 };
 
+const LIST_LOAN_PRODUCT_LOAN_FEES_CONFIGS_QUERY = `
+  query ListLoanProductLoanFeesConfigs($filter: ModelLoanProductLoanFeesConfigFilterInput) {
+    listLoanProductLoanFeesConfigs(filter: $filter) {
+      items {
+        id
+      }
+    }
+  }
+`;
+
+const DELETE_LOAN_PRODUCT_LOAN_FEES_CONFIG_MUTATION = `
+  mutation DeleteLoanProductLoanFeesConfig($input: DeleteLoanProductLoanFeesConfigInput!) {
+    deleteLoanProductLoanFeesConfig(input: $input)
+  }
+`;
+
 export default function LoanFees() {
   const [loanFees, setLoanFees] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
@@ -147,6 +163,28 @@ export default function LoanFees() {
     setDeleteError("");
     try {
       const client = generateClient();
+
+      // First, clear relationships with loan products
+      console.log(
+        "Clearing LoanProductLoanFeesConfigs for loan fee:",
+        deleteDialogRow.id
+      );
+      const loanProductFeesResult = await client.graphql({
+        query: LIST_LOAN_PRODUCT_LOAN_FEES_CONFIGS_QUERY,
+        variables: { filter: { loanFeesConfigId: { eq: deleteDialogRow.id } } },
+      });
+      const items =
+        loanProductFeesResult.data.listLoanProductLoanFeesConfigs.items;
+      console.log(`Found ${items.length} LoanProductLoanFeesConfigs to delete`);
+      for (const item of items) {
+        console.log("Deleting LoanProductLoanFeesConfig:", item.id);
+        await client.graphql({
+          query: DELETE_LOAN_PRODUCT_LOAN_FEES_CONFIG_MUTATION,
+          variables: { input: { id: item.id } },
+        });
+      }
+      console.log("Finished clearing LoanProductLoanFeesConfigs");
+
       await client.graphql({
         query: `
           mutation DeleteLoanFeesConfig($input: DeleteLoanFeesConfigInput!) {
@@ -164,6 +202,7 @@ export default function LoanFees() {
       );
       handleDeleteDialogClose();
     } catch (err) {
+      console.error("Error deleting loan fee:", err);
       setDeleteError("Failed to delete. Please try again.");
     } finally {
       setDeleteLoading(false);

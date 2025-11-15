@@ -30,6 +30,8 @@ import Notifications from "./Screens/Notifications/Notifications";
 
 //old loan products
 import OLoanProducts from "./Screens/LoanProducts/OLoanProducts";
+import Accounts from "./Models/Accounts/Accounts";
+import CreateAccounts from "./Models/Accounts/CreateAccounts/CreateAccount";
 
 export default function AppRoutes({ userExists }) {
   return (
@@ -85,6 +87,13 @@ export default function AppRoutes({ userExists }) {
               <Route
                 path="admin/add-branch"
                 element={<CreateBranches hideCancel />}
+              />
+
+              {/* Accounts routes */}
+              <Route path="admin/accounts" element={<Accounts />} />
+              <Route
+                path="admin/add-account"
+                element={<CreateAccounts hideCancel />}
               />
 
               {/* Securities routes */}

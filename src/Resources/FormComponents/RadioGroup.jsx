@@ -21,6 +21,10 @@ const RadioGroup = ({
   showOnlyInEditMode,
   dependsOn,
   dependsOnValue,
+  validationType,
+  validationPattern,
+  validationMessage,
+  maxLength,
   ...otherProps
 }) => {
   const [field, meta] = useField(name);

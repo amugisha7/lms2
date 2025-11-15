@@ -24,6 +24,10 @@ const Dropdown = ({
   dynamicLabel,
   dependsOn,
   dependsOnValue,
+  validationType,
+  validationPattern,
+  validationMessage,
+  maxLength,
   ...props
 }) => {
   const [field, meta] = useField(name);

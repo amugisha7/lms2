@@ -200,7 +200,6 @@ const AccountSettingsForm = () => {
         openingBalance: 0,
         status: "active",
         currency: formData.currency,
-        currentBalance: 0,
         accountType: "system",
         description: "Default system account",
       };

@@ -39,6 +39,7 @@ import {
   CREATE_INSTITUTION_MUTATION,
   CREATE_BRANCH_MUTATION,
   CREATE_USER_MUTATION,
+  CREATE_ACCOUNT_MUTATION,
   GET_INSTITUTION_QUERY,
   LIST_USERS_QUERY,
 } from "./onboardingQueries";
@@ -192,7 +193,24 @@ const AccountSettingsForm = () => {
 
       const branchId = branchRes.data.createBranch.id;
 
-      // 3. Create User with more details
+      // 4. Create default Account for the Branch
+      const accountInput = {
+        institutionAccountsId: institutionId,
+        name: "Cash_System_Default",
+        openingBalance: 0,
+        status: "active",
+        currency: formData.currency,
+        currentBalance: 0,
+        accountType: "system",
+        description: "Default system account",
+      };
+
+      await client.graphql({
+        query: CREATE_ACCOUNT_MUTATION,
+        variables: { input: accountInput },
+      });
+
+      // 5. Create User with more details
       const userInput = {
         id: user.userId,
         branchUsersId: branchId,

@@ -60,6 +60,8 @@ type Institution @model {
   # --- LoanFeesConfig relationship ---
   loanFeesConfigs: [LoanFeesConfig] @hasMany
 
+  accounts: [Account] @hasMany
+
   status: String
 }
 
@@ -75,7 +77,7 @@ type Branch @model {
   users: [User] @hasMany
   borrowers: [Borrower] @hasMany
   employees: [Employee] @hasMany
-  accounts: [Account] @hasMany
+  accounts: [Account] @manyToMany(relationName: "AccountBranch")
   documents: [Document] @hasMany
   loanProducts: [LoanProduct] @manyToMany(relationName: "BranchLoanProduct")
   payrolls: [Payroll] @hasMany
@@ -577,7 +579,8 @@ type Account @model {
   interestAccruedDate: AWSDate
   accountStatus: String
   status: String
-  branch: Branch @belongsTo
+  institution: Institution @belongsTo
+  branches: [Branch] @manyToMany(relationName: "AccountBranch")
   moneyTransactions: [MoneyTransaction] @hasMany
   expenses: [Expense] @hasMany
   loans: [Loan] @manyToMany(relationName: "LoanAccount")

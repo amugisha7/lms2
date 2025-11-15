@@ -16,6 +16,10 @@ export const CREATE_USER_MUTATION = `mutation CreateUser($input: CreateUserInput
   }
 }`;
 
+export const CREATE_ACCOUNT_MUTATION = `mutation CreateAccount($input: CreateAccountInput!) {
+  createAccount(input: $input) { id }
+}`;
+
 export const GET_INSTITUTION_QUERY = `query GetInstitution($id: ID!) {
   getInstitution(id: $id) { id }
 }`;

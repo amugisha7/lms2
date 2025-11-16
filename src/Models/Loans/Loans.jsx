@@ -100,6 +100,7 @@ export default function Loans() {
                     firstname
                     othername
                     businessName
+                    phoneNumber
                     loans {
                       items {
                         id
@@ -448,7 +449,7 @@ export default function Loans() {
       <CustomSlider
         open={listBorrowersOpen}
         onClose={handleListBorrowersClose}
-        title="Select Borrower"
+        title="Select Borrower to receive the Loan"
         showEdit={false}
         showDelete={false}
         maxWidth="md"

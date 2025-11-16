@@ -17,8 +17,8 @@ export const tokens = (mode) => ({
           500: "#666666",
           600: "#525252",
           700: "#3d3d3d",
-          800: "#292929",
-          900: "#141414",
+          800: "#080b12",
+          900: "#040509",
         },
         primary: {
           100: "#d0d1d5",
@@ -548,6 +548,17 @@ export const themeSettings = (mode) => {
       },
       MuiOutlinedInput: {
           styleOverrides: {
+            root: {
+              '& .MuiOutlinedInput-notchedOutline': {
+                borderColor: isDark ? colors.grey[600] : colors.grey[400],
+              },
+              '&:hover .MuiOutlinedInput-notchedOutline': {
+                borderColor: isDark ? colors.grey[500] : colors.grey[500],
+              },
+              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                borderColor: isDark ? colors.blueAccent[500] : colors.blueAccent[500],
+              },
+            },
             input: {
               color: isDark ? "#e8e6e3" : "#393a3d", // Input text color
               '&.Mui-disabled': {
@@ -556,6 +567,16 @@ export const themeSettings = (mode) => {
               }
             }
           }
+        },
+        MuiInputLabel: {
+          styleOverrides: {
+            root: {
+              color: isDark ? colors.grey[300] : colors.grey[700],
+              '&.Mui-focused': {
+                color: isDark ? colors.blueAccent[500] : colors.blueAccent[500],
+              },
+            },
+          },
         },
         MuiTextField: {
           styleOverrides: {

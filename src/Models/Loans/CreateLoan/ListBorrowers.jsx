@@ -5,90 +5,99 @@ import Typography from "@mui/material/Typography";
 import { useTheme, useMediaQuery } from "@mui/material";
 import CustomDataGrid from "../../../ModelAssets/CustomDataGrid";
 import ClickableText from "../../../ModelAssets/ClickableText";
+import Button from "@mui/material/Button";
+import { useNavigate } from "react-router-dom";
+import Add from "@mui/icons-material/Add";
 
 export default function ListBorrowers({ borrowers, onSelect, onClose }) {
   const [search, setSearch] = React.useState("");
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const navigate = useNavigate();
 
-  const filteredBorrowers = borrowers.filter((borrower) =>
-    `${borrower.firstname || ""} ${borrower.othername || ""} ${
-      borrower.businessName || ""
-    }`
-      .toLowerCase()
-      .includes(search.toLowerCase())
+  const getBorrowerDisplayName = (borrower) => {
+    const fullName = [borrower.firstname, borrower.othername]
+      .filter(Boolean)
+      .join(" ");
+    return fullName
+      ? `${fullName}${
+          borrower.businessName ? ` (${borrower.businessName})` : ""
+        }`
+      : borrower.businessName || "Unnamed Borrower";
+  };
+
+  const borrowersWithDisplayName = borrowers.map((borrower) => ({
+    ...borrower,
+    displayName: getBorrowerDisplayName(borrower),
+    totalDebt:
+      borrower.loans?.items?.reduce(
+        (sum, loan) => sum + (loan.principal || 0),
+        0
+      ) || 0,
+  }));
+
+  const filteredBorrowers = borrowersWithDisplayName.filter((borrower) =>
+    borrower.displayName.toLowerCase().includes(search.toLowerCase())
   );
 
-  const columns = isMobile
-    ? [
-        {
-          field: "name",
-          headerName: "Borrower",
-          width: 300,
-          renderCell: (params) => {
-            const name = `${params.row.firstname || ""} ${
-              params.row.othername || ""
-            } ${params.row.businessName || ""}`.trim();
-            return (
-              <ClickableText onClick={() => onSelect(params.row)}>
-                {name || "Unknown"}
-              </ClickableText>
-            );
-          },
-        },
-      ]
-    : [
-        {
-          field: "firstname",
-          headerName: "First Name",
-          width: 150,
-          renderCell: (params) => (
-            <ClickableText onClick={() => onSelect(params.row)}>
-              {params.value || "N/A"}
-            </ClickableText>
-          ),
-        },
-        {
-          field: "othername",
-          headerName: "Other Name",
-          width: 150,
-          renderCell: (params) => (
-            <ClickableText onClick={() => onSelect(params.row)}>
-              {params.value || "N/A"}
-            </ClickableText>
-          ),
-        },
-        {
-          field: "businessName",
-          headerName: "Business Name",
-          width: 200,
-          renderCell: (params) => (
-            <ClickableText onClick={() => onSelect(params.row)}>
-              {params.value || "N/A"}
-            </ClickableText>
-          ),
-        },
-        {
-          field: "phoneNumber",
-          headerName: "Phone Number",
-          width: 150,
-          renderCell: (params) => (
-            <ClickableText onClick={() => onSelect(params.row)}>
-              {params.value || "N/A"}
-            </ClickableText>
-          ),
-        },
-        {
-          field: "email",
-          headerName: "Email",
-          width: 200,
-          renderCell: (params) => (
-            <ClickableText onClick={() => onSelect(params.row)}>
-              {params.value || "N/A"}
-            </ClickableText>
-          ),
-        },
-      ];
+  const columns = [
+    {
+      field: "addLoan",
+      headerName: "",
+      width: 120,
+      renderCell: (params) => (
+        <Box sx={{ display: "flex", alignItems: "center", height: "100%" }}>
+          <Button
+            variant="outlined"
+            onClick={() => onSelect(params.row)}
+            startIcon={
+              <Add
+                sx={{ color: theme.palette.blueText.main, fontSize: "0.5rem" }}
+              />
+            }
+            sx={{
+              padding: "2px 5px",
+              fontSize: "0.7rem",
+              borderColor: theme.palette.blueText.main,
+              color: theme.palette.blueText.main,
+              backgroundColor: "transparent",
+              "&:hover": {
+                backgroundColor: "transparent",
+                borderColor: theme.palette.blueText.main,
+                borderWidth: "2px",
+              },
+            }}
+          >
+            ADD LOAN
+          </Button>
+        </Box>
+      ),
+    },
+    {
+      field: "displayName",
+      headerName: "Full Name / Business Name",
+      width: 300,
+      renderCell: (params) => (
+        <ClickableText
+          onClick={() => navigate(`/borrowers/id/${params.row.id}/view`)}
+        >
+          {params.value}
+        </ClickableText>
+      ),
+    },
+    {
+      field: "phoneNumber",
+      headerName: "Phone No.",
+      width: 140,
+      renderCell: (params) => params.value || "",
+    },
+    {
+      field: "totalDebt",
+      headerName: "Total Debt",
+      width: 120,
+      renderCell: (params) => `$${params.value?.toLocaleString() || "0"}`,
+    },
+  ];
 
   return (
     <Box sx={{ width: "100%" }}>
@@ -112,6 +121,11 @@ export default function ListBorrowers({ borrowers, onSelect, onClose }) {
           pageSizeOptions={[25, 50, 100]}
           onRowClick={(params) => onSelect(params.row)}
           showToolbar={false}
+          initialState={{
+            sorting: {
+              sortModel: [{ field: "displayName", sort: "asc" }],
+            },
+          }}
         />
       )}
     </Box>

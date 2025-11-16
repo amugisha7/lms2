@@ -47,6 +47,18 @@ export const menuItems = [
     name: "Loans",
     icon: <AccountBalanceIcon sx={{ color: "white" }} />,
     expandable: true,
+    children: [
+      {
+        name: "Create Loan",
+        icon: <PersonAddIcon sx={{ color: "white" }} />,
+        route: "/admin/add-loan",
+      },
+      {
+        name: "View Loans",
+        icon: <ListAltIcon sx={{ color: "white" }} />,
+        route: "/admin/loans",
+      },
+    ],
   },
   {
     name: "Team",

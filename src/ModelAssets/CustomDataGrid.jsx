@@ -124,6 +124,7 @@ const CustomDataGrid = ({
   pageSizeOptions = [50, 100],
   allowSorting = true,
   onRowClick,
+  showToolbar = true,
   ...otherProps
 }) => {
   const theme = useTheme();
@@ -284,7 +285,7 @@ const CustomDataGrid = ({
           },
         }}
         slots={{ toolbar: CustomToolbar }}
-        showToolbar
+        showToolbar={showToolbar}
       />
     </Box>
   );

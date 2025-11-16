@@ -29,9 +29,12 @@ import NotificationsDashboard from "./Screens/Notifications/NotificationsDashboa
 import Notifications from "./Screens/Notifications/Notifications";
 
 //old loan products
-import OLoanProducts from "./Screens/LoanProducts/OLoanProducts";
 import Accounts from "./Models/Accounts/Accounts";
 import CreateAccounts from "./Models/Accounts/CreateAccounts/CreateAccount";
+
+// Loans imports
+import Loans from "./Models/Loans/Loans";
+import CreateLoan from "./Models/Loans/CreateLoan/CreateLoan";
 
 export default function AppRoutes({ userExists }) {
   return (
@@ -70,10 +73,10 @@ export default function AppRoutes({ userExists }) {
               />
               {/* Loan Products list route */}
               <Route path="admin/loan-products" element={<LoanProducts />} />
-              <Route
-                path="admin/old-loan-products"
-                element={<OLoanProducts />}
-              />
+
+              {/* Loans routes */}
+              <Route path="admin/add-loan" element={<CreateLoan />} />
+              <Route path="admin/loans" element={<Loans />} />
 
               {/* Loan Fees route */}
               <Route

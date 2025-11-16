@@ -21,6 +21,7 @@ const TextInput = ({
   dynamicLabel,
   dependsOn,
   dependsOnValue,
+  defaultValue, // extract to prevent passing to TextField
   ...props
 }) => {
   const [field, meta] = useField(name);

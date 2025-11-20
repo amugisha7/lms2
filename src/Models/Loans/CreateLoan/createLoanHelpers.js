@@ -1,5 +1,117 @@
 import { generateClient } from "aws-amplify/api";
 
+const LIST_BORROWERS_QUERY = `
+  query ListBorrowers($branchId: ID!, $nextToken: String) {
+    listBorrowers(
+      filter: { branchBorrowersId: { eq: $branchId } }
+      limit: 100
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        firstname
+        othername
+        businessName
+        uniqueIdNumber
+      }
+      nextToken
+    }
+  }
+`;
+
+const LIST_LOAN_PRODUCTS_QUERY = `
+  query ListLoanProducts($institutionId: ID!, $nextToken: String) {
+    listLoanProducts(
+      filter: { institutionLoanProductsId: { eq: $institutionId } }
+      limit: 100
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        name
+      }
+      nextToken
+    }
+  }
+`;
+
+export const fetchBorrowers = async (branchId) => {
+  const client = generateClient();
+  let allBorrowersList = [];
+  let nextToken = null;
+
+  try {
+    while (true) {
+      console.log("API Call: LIST_BORROWERS_QUERY", {
+        branchId,
+        nextToken,
+      });
+      const result = await client.graphql({
+        query: LIST_BORROWERS_QUERY,
+        variables: {
+          branchId,
+          nextToken,
+        },
+      });
+
+      const listResult = result?.data?.listBorrowers || {};
+      const batchItems = Array.isArray(listResult.items)
+        ? listResult.items
+        : [];
+      allBorrowersList.push(...batchItems);
+
+      const newNextToken = listResult.nextToken || null;
+      if (!newNextToken) {
+        break;
+      }
+      nextToken = newNextToken;
+    }
+    return allBorrowersList;
+  } catch (err) {
+    console.error("Error fetching borrowers:", err);
+    throw err;
+  }
+};
+
+export const fetchLoanProducts = async (institutionId) => {
+  const client = generateClient();
+  let allLoanProductsList = [];
+  let nextToken = null;
+
+  try {
+    console.log("Fetching loan products...");
+    while (true) {
+      console.log("API Call: LIST_LOAN_PRODUCTS_QUERY", {
+        institutionId,
+        nextToken,
+      });
+      const result = await client.graphql({
+        query: LIST_LOAN_PRODUCTS_QUERY,
+        variables: {
+          institutionId,
+          nextToken,
+        },
+      });
+
+      const listResult = result?.data?.listLoanProducts || {};
+      const batchItems = Array.isArray(listResult.items)
+        ? listResult.items
+        : [];
+      allLoanProductsList.push(...batchItems);
+
+      const newNextToken = listResult.nextToken || null;
+      if (!newNextToken) {
+        break;
+      }
+      nextToken = newNextToken;
+    }
+    return allLoanProductsList;
+  } catch (err) {
+    console.error("Error fetching loan products:", err);
+    throw err;
+  }
+};
+
 export const createLoan = async (input) => {
   const client = generateClient();
   const result = await client.graphql({

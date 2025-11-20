@@ -25,10 +25,18 @@ const RadioGroup = ({
   validationPattern,
   validationMessage,
   maxLength,
+  onChange,
   ...otherProps
 }) => {
-  const [field, meta] = useField(name);
+  const [field, meta, helpers] = useField(name);
   const isReadOnly = readOnly || !editing || disabled;
+
+  const handleChange = (event) => {
+    helpers.setValue(event.target.value);
+    if (onChange) {
+      onChange(event);
+    }
+  };
 
   return (
     <Box
@@ -49,11 +57,16 @@ const RadioGroup = ({
       <Typography
         sx={{
           fontSize: 12,
-          width: { xs: "100%", sm: "100px" },
+          minWidth: { xs: "100%", sm: "120px" },
+          maxWidth: { xs: "100%", sm: "120px" },
         }}
       >
         {label}
-        {required && <span style={{ color: "#d32f2f" }}> *</span>}
+        {required && (
+          <Box component="span" sx={{ color: "error.main", ml: 0.5 }}>
+            *
+          </Box>
+        )}
       </Typography>
       <Box
         sx={{
@@ -62,7 +75,7 @@ const RadioGroup = ({
           minWidth: 0,
         }}
       >
-        <MuiRadioGroup {...field} {...otherProps} row>
+        <MuiRadioGroup {...field} {...otherProps} onChange={handleChange} row>
           {options?.map((option) => (
             <FormControlLabel
               key={option.value}

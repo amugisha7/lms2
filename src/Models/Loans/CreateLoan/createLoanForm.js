@@ -1,5 +1,15 @@
 const createLoanForm = [
   {
+    label: "Loan Product",
+    name: "loanProduct",
+    type: "select",
+    
+    span: 12,
+    options: [], // Will be populated dynamically
+    dynamicoptions: "true",
+    helperText: "Use a pre-set Loan Product."
+  },
+  {
     label: "Borrower",
     name: "borrower",
     type: "select",
@@ -7,17 +17,6 @@ const createLoanForm = [
     span: 12,
     options: [], // Will be populated dynamically
     dynamicoptions: "true",
-    helperText: "Select the borrower for this loan."
-  },
-  {
-    label: "Loan Product",
-    name: "loanProduct",
-    type: "select",
-    required: true,
-    span: 12,
-    options: [], // Will be populated dynamically
-    dynamicoptions: "true",
-    helperText: "Select the loan product for this loan."
   },
   {
     label: "Principal Amount",

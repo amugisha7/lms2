@@ -13,9 +13,6 @@ import EditLoan from "./EditLoan/EditLoan";
 import ListBorrowers from "./CreateLoan/ListBorrowers";
 import CreateLoan from "./CreateLoan/CreateLoan";
 
-// Guard to ensure we only fetch loans once per page load (even under React StrictMode)
-let __loansFetchedOnce = false;
-
 const LIST_LOAN_LOAN_FEES_QUERY = `
   query ListLoanLoanFees($filter: ModelLoanLoanFeesFilterInput) {
     listLoanLoanFees(filter: $filter) {
@@ -68,24 +65,23 @@ export default function Loans() {
   const [viewDialogOpen, setViewDialogOpen] = React.useState(false);
   const [viewDialogRow, setViewDialogRow] = React.useState(null);
   const formRef = React.useRef();
+  const hasFetchedRef = React.useRef();
   const { userDetails } = React.useContext(UserContext);
   const theme = useTheme();
 
   React.useEffect(() => {
     const fetchLoans = async () => {
+      if (!userDetails?.branchUsersId) return;
+
       setLoading(true);
       try {
         const client = generateClient();
-        if (!userDetails?.institutionUsersId) {
-          setLoans([]);
-          setLoading(false);
-          return;
-        }
 
         let allLoans = [];
         let nextToken = null;
 
         do {
+          console.log("API Call: Fetching loans");
           const result = await client.graphql({
             query: `
               query ListBorrowers($branchId: ID!, $nextToken: String) {
@@ -156,11 +152,15 @@ export default function Loans() {
         setLoading(false);
       }
     };
-    if (userDetails?.institutionUsersId && !__loansFetchedOnce) {
-      __loansFetchedOnce = true;
+
+    if (
+      userDetails?.branchUsersId &&
+      userDetails.branchUsersId !== hasFetchedRef.current
+    ) {
       fetchLoans();
+      hasFetchedRef.current = userDetails.branchUsersId;
     }
-  }, [userDetails?.institutionUsersId]);
+  }, [userDetails?.branchUsersId]);
 
   const handleEditDialogOpen = (row) => {
     setEditDialogRow(row);

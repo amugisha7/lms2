@@ -7,13 +7,16 @@ import React, {
 } from "react";
 import { Formik, Form } from "formik";
 import * as Yup from "yup";
-import { Box, Grid, Typography } from "@mui/material";
+import { Box, Grid, Typography, CircularProgress } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { generateClient } from "aws-amplify/api";
+import { Link as RouterLink } from "react-router-dom";
+import Link from "@mui/material/Link";
 
 import createLoanForm from "./createLoanForm";
 import TextInput from "../../../Resources/FormComponents/TextInput";
 import Dropdown from "../../../Resources/FormComponents/Dropdown";
+import DropDownSearchable from "../../../Resources/FormComponents/DropDownSearchable";
 import OrderedList from "../../../Resources/FormComponents/OrderedList";
 import CreateFormButtons from "../../../ModelAssets/CreateFormButtons";
 import { UserContext } from "../../../App";
@@ -91,6 +94,10 @@ const renderFormField = (field, formikValues) => {
     case "number":
       return <TextInput {...field} />;
     case "select":
+      // Use DropDownSearchable for borrower field, regular Dropdown for others
+      if (field.name === "borrower") {
+        return <DropDownSearchable {...field} />;
+      }
       return <Dropdown {...field} />;
     case "orderedList":
       return (
@@ -113,9 +120,9 @@ const renderFormField = (field, formikValues) => {
 };
 
 const LIST_BORROWERS_QUERY = `
-  query ListBorrowers($institutionId: ID!, $nextToken: String) {
+  query ListBorrowers($branchId: ID!, $nextToken: String) {
     listBorrowers(
-      filter: { institutionBorrowersId: { eq: $institutionId } }
+      filter: { branchBorrowersId: { eq: $branchId } }
       limit: 100
       nextToken: $nextToken
     ) {
@@ -166,6 +173,7 @@ const CreateLoan = forwardRef(
     const [submitSuccess, setSubmitSuccess] = useState("");
     const [borrowers, setBorrowers] = useState([]);
     const [loanProducts, setLoanProducts] = useState([]);
+    const [borrowersLoaded, setBorrowersLoaded] = useState(false);
     const client = React.useMemo(() => generateClient(), []);
 
     // Scroll to top on component mount
@@ -178,39 +186,9 @@ const CreateLoan = forwardRef(
         if (!userDetails?.institutionUsersId) return;
 
         try {
-          // Fetch Borrowers
-          let allBorrowersList = [];
-          let nextToken = null;
-          while (true) {
-            console.log("API Call: LIST_BORROWERS_QUERY", {
-              institutionId: userDetails.institutionUsersId,
-              nextToken,
-            });
-            const result = await client.graphql({
-              query: LIST_BORROWERS_QUERY,
-              variables: {
-                institutionId: userDetails.institutionUsersId,
-                nextToken,
-              },
-            });
-
-            const listResult = result?.data?.listBorrowers || {};
-            const batchItems = Array.isArray(listResult.items)
-              ? listResult.items
-              : [];
-            allBorrowersList.push(...batchItems);
-
-            const newNextToken = listResult.nextToken || null;
-            if (!newNextToken) {
-              break;
-            }
-            nextToken = newNextToken;
-          }
-          setBorrowers(allBorrowersList);
-
-          // Fetch Loan Products
+          // Fetch Loan Products always
           let allLoanProductsList = [];
-          nextToken = null;
+          let nextToken = null;
           while (true) {
             console.log("API Call: LIST_LOAN_PRODUCTS_QUERY", {
               institutionId: userDetails.institutionUsersId,
@@ -237,13 +215,50 @@ const CreateLoan = forwardRef(
             nextToken = newNextToken;
           }
           setLoanProducts(allLoanProductsList);
+
+          // Only fetch Borrowers if no borrower is pre-selected
+          if (!propBorrower) {
+            let allBorrowersList = [];
+            nextToken = null;
+            while (true) {
+              console.log("API Call: LIST_BORROWERS_QUERY", {
+                branchId: userDetails.branchUsersId,
+                nextToken,
+              });
+              const result = await client.graphql({
+                query: LIST_BORROWERS_QUERY,
+                variables: {
+                  branchId: userDetails.branchUsersId,
+                  nextToken,
+                },
+              });
+
+              const listResult = result?.data?.listBorrowers || {};
+              const batchItems = Array.isArray(listResult.items)
+                ? listResult.items
+                : [];
+              allBorrowersList.push(...batchItems);
+
+              const newNextToken = listResult.nextToken || null;
+              if (!newNextToken) {
+                break;
+              }
+              nextToken = newNextToken;
+            }
+            setBorrowers(allBorrowersList);
+            setBorrowersLoaded(true);
+          } else {
+            // If borrower is pre-selected, mark as loaded
+            setBorrowersLoaded(true);
+          }
         } catch (err) {
           console.error("Error fetching borrowers or loan products:", err);
+          setBorrowersLoaded(true); // Set loaded even on error to show form
         }
       };
 
       fetchBorrowersAndProducts();
-    }, [userDetails?.institutionUsersId, client]);
+    }, [userDetails?.institutionUsersId, client, propBorrower]);
 
     // Use prop initialValues if provided, otherwise use default
     const formInitialValues = React.useMemo(() => {
@@ -254,7 +269,10 @@ const CreateLoan = forwardRef(
           }
         : baseInitialValues;
       if (propBorrower) {
-        base.borrower = propBorrower.id;
+        base.borrower =
+          `${propBorrower.firstname || ""} ${propBorrower.othername || ""} ${
+            propBorrower.businessName || ""
+          }`.trim() || propBorrower.uniqueIdNumber;
       }
       return base;
     }, [propInitialValues, propBorrower]);
@@ -262,16 +280,25 @@ const CreateLoan = forwardRef(
     const updatedCreateLoanForm = React.useMemo(() => {
       return createLoanForm.map((field) => {
         if (field.name === "borrower") {
-          return {
-            ...field,
-            options: borrowers.map((borrower) => ({
+          if (propBorrower) {
+            return {
+              ...field,
+              type: "text",
+              readOnly: true,
+            };
+          } else {
+            const borrowerOptions = borrowers.map((borrower) => ({
               value: borrower.id,
               label:
                 `${borrower.firstname || ""} ${borrower.othername || ""} ${
                   borrower.businessName || ""
                 }`.trim() || borrower.uniqueIdNumber,
-            })),
-          };
+            }));
+            return {
+              ...field,
+              options: borrowerOptions,
+            };
+          }
         }
         if (field.name === "loanProduct") {
           return {
@@ -284,12 +311,17 @@ const CreateLoan = forwardRef(
         }
         return field;
       });
-    }, [borrowers, loanProducts]);
+    }, [borrowers, loanProducts, propBorrower]);
 
     const handleSubmit = async (values, { setSubmitting, resetForm }) => {
       setSubmitError("");
       setSubmitSuccess("");
       setSubmitting(true);
+
+      // If borrower is pre-selected, use the ID instead of the display name
+      if (propBorrower) {
+        values.borrower = propBorrower.id;
+      }
 
       console.log("CreateLoan Form Values:", values);
 
@@ -333,8 +365,62 @@ const CreateLoan = forwardRef(
       }
     };
 
+    // Show loading state while checking for borrowers
+    if (!borrowersLoaded) {
+      return (
+        <>
+          <Typography variant="h4" sx={{ fontWeight: 600, mb: 3 }}>
+            Create a new Loan
+          </Typography>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              minHeight: "300px",
+            }}
+          >
+            <CircularProgress />
+          </Box>
+        </>
+      );
+    }
+
     return (
       <>
+        <Typography variant="h4" sx={{ fontWeight: 600, mb: 3 }}>
+          Create a new Loan
+        </Typography>
+        {!propBorrower && borrowersLoaded && borrowers.length === 0 && (
+          <Box
+            sx={{
+              mb: 3,
+              p: 2,
+              backgroundColor: "#fff3cd",
+              border: "1px solid #ffc107",
+              borderRadius: 1,
+            }}
+          >
+            <Typography variant="body1" sx={{ color: "#856404" }}>
+              No borrowers found in the system.{" "}
+              <Link
+                component={RouterLink}
+                to="/borrowers"
+                sx={{
+                  color: "#0056b3",
+                  fontWeight: 600,
+                  textDecoration: "underline",
+                  "&:hover": {
+                    color: "#003d82",
+                  },
+                }}
+              >
+                Add a borrower
+              </Link>{" "}
+              before creating a loan.
+            </Typography>
+          </Box>
+        )}
         <Formik
           initialValues={formInitialValues}
           validationSchema={baseValidationSchema}

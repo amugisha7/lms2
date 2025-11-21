@@ -170,27 +170,7 @@ const CreateLoan = forwardRef(
 
       // Map through the original form fields
       createLoanForm.forEach((field) => {
-        if (field.name === "borrower") {
-          if (propBorrower) {
-            formFields.push({
-              ...field,
-              type: "text",
-              readOnly: true,
-            });
-          } else {
-            const borrowerOptions = borrowers.map((borrower) => ({
-              value: borrower.id,
-              label:
-                `${borrower.firstname || ""} ${borrower.othername || ""} ${
-                  borrower.businessName || ""
-                }`.trim() || borrower.uniqueIdNumber,
-            }));
-            formFields.push({
-              ...field,
-              options: borrowerOptions,
-            });
-          }
-        } else if (field.name === "loanProduct") {
+        if (field.name === "loanProduct") {
           // Skip loan product field
         } else {
           formFields.push(field);

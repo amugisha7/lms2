@@ -3,9 +3,7 @@ import { Formik, Form } from "formik";
 import * as Yup from "yup";
 import { Box, Grid, Typography, CircularProgress } from "@mui/material";
 import { styled } from "@mui/material/styles";
-import { generateClient } from "aws-amplify/api";
-import { Link as RouterLink, useNavigate } from "react-router-dom";
-import Link from "@mui/material/Link";
+import { useNavigate } from "react-router-dom";
 
 import createLoanForm from "./createLoanForm";
 import TextInput from "../../../Resources/FormComponents/TextInput";
@@ -14,11 +12,7 @@ import DropDownSearchable from "../../../Resources/FormComponents/DropDownSearch
 import OrderedList from "../../../Resources/FormComponents/OrderedList";
 import CreateFormButtons from "../../../ModelAssets/CreateFormButtons";
 import { UserContext } from "../../../App";
-import {
-  createLoan,
-  buildLoanInput,
-  fetchLoanProducts,
-} from "./createLoanHelpers";
+import { createLoan, buildLoanInput } from "./createLoanHelpers";
 import FormLabel from "../../../Resources/FormComponents/FormLabel";
 import RadioGroup from "../../../Resources/FormComponents/RadioGroup";
 import ClickableText from "../../../ComponentAssets/ClickableText";
@@ -135,6 +129,8 @@ const UseLoanProduct = forwardRef(
       onCancel,
       borrowers,
       borrowersLoading,
+      loanProducts,
+      loanProductsLoading,
     },
     ref
   ) => {
@@ -142,31 +138,10 @@ const UseLoanProduct = forwardRef(
     const navigate = useNavigate();
     const [submitError, setSubmitError] = useState("");
     const [submitSuccess, setSubmitSuccess] = useState("");
-    const [loanProducts, setLoanProducts] = useState([]);
-    const [loanProductsLoaded, setLoanProductsLoaded] = useState(false);
 
     useEffect(() => {
       window.scrollTo({ top: 0, behavior: "smooth" });
     }, []);
-
-    useEffect(() => {
-      const loadData = async () => {
-        if (!userDetails?.institutionUsersId) return;
-
-        try {
-          const productsList = await fetchLoanProducts(
-            userDetails.institutionUsersId
-          );
-          setLoanProducts(productsList);
-          setLoanProductsLoaded(true);
-        } catch (err) {
-          console.error("Error loading loan products:", err);
-          setLoanProductsLoaded(true);
-        }
-      };
-
-      loadData();
-    }, [userDetails?.institutionUsersId]);
 
     const formInitialValues = React.useMemo(() => {
       const base = propInitialValues
@@ -230,7 +205,7 @@ const UseLoanProduct = forwardRef(
       }
     };
 
-    if (borrowersLoading || !loanProductsLoaded) {
+    if (borrowersLoading || loanProductsLoading) {
       return (
         <Box
           sx={{
@@ -267,28 +242,19 @@ const UseLoanProduct = forwardRef(
             sx={{
               mb: 3,
               p: 2,
-              backgroundColor: "#fff3cd",
-              border: "1px solid #ffc107",
+              //   backgroundColor: "#fff3cd",
+              border: "1px solid",
               borderRadius: 1,
             }}
           >
-            <Typography variant="body1" sx={{ color: "#856404" }}>
+            <Typography>
               No loan products found.{" "}
-              <Link
-                component={RouterLink}
-                to="/admin/add-loan-product"
-                sx={{
-                  color: "#0056b3",
-                  fontWeight: 600,
-                  textDecoration: "underline",
-                  "&:hover": {
-                    color: "#003d82",
-                  },
-                }}
+              <ClickableText
+                onClick={() => navigate("/admin/add-loan-product")}
               >
-                Create a loan product
-              </Link>{" "}
-              before creating a loan.
+                Create a Loan Product
+              </ClickableText>
+              {` `}to use as a template for creating loans.
             </Typography>
           </Box>
         ) : (
@@ -373,28 +339,7 @@ const UseLoanProduct = forwardRef(
 
                   if (formik.values.loanProduct) {
                     createLoanForm.forEach((field) => {
-                      if (field.name === "borrower") {
-                        if (propBorrower) {
-                          formFields.push({
-                            ...field,
-                            type: "text",
-                            readOnly: true,
-                          });
-                        } else {
-                          const borrowerOptions = borrowers.map((borrower) => ({
-                            value: borrower.id,
-                            label:
-                              `${borrower.firstname || ""} ${
-                                borrower.othername || ""
-                              } ${borrower.businessName || ""}`.trim() ||
-                              borrower.uniqueIdNumber,
-                          }));
-                          formFields.push({
-                            ...field,
-                            options: borrowerOptions,
-                          });
-                        }
-                      } else if (field.name === "loanProduct") {
+                      if (field.name === "loanProduct") {
                         // Skip original loanProduct field as we added it manually
                       } else {
                         formFields.push(field);

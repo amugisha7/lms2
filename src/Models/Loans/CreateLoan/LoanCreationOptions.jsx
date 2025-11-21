@@ -1,9 +1,10 @@
 import React, { useState, useContext, useEffect } from "react";
-import { Box, Tabs, Tab, Typography, useTheme } from "@mui/material";
+import { Box, Tabs, Tab, Typography, useTheme, Grid } from "@mui/material";
 import CreateLoan from "./CreateLoan";
 import UseLoanProduct from "./UseLoanProduct";
 import { UserContext } from "../../../App";
-import { fetchBorrowers } from "./createLoanHelpers";
+import { fetchBorrowers, fetchLoanProducts } from "./createLoanHelpers";
+import DropDownSearchable from "../../../Resources/FormComponents/DropDownSearchable";
 
 export default function LoanCreationOptions(props) {
   const theme = useTheme();
@@ -11,6 +12,9 @@ export default function LoanCreationOptions(props) {
   const { userDetails } = useContext(UserContext);
   const [borrowers, setBorrowers] = useState([]);
   const [borrowersLoading, setBorrowersLoading] = useState(true);
+  const [loanProducts, setLoanProducts] = useState([]);
+  const [loanProductsLoading, setLoanProductsLoading] = useState(true);
+  const [selectedBorrower, setSelectedBorrower] = useState(null);
 
   useEffect(() => {
     const loadBorrowers = async () => {
@@ -32,6 +36,28 @@ export default function LoanCreationOptions(props) {
     loadBorrowers();
   }, [userDetails?.branchUsersId]);
 
+  useEffect(() => {
+    const loadLoanProducts = async () => {
+      if (!userDetails?.institutionUsersId) {
+        setLoanProductsLoading(false);
+        return;
+      }
+
+      try {
+        const productsList = await fetchLoanProducts(
+          userDetails.institutionUsersId
+        );
+        setLoanProducts(productsList);
+      } catch (err) {
+        console.error("Error loading loan products:", err);
+      } finally {
+        setLoanProductsLoading(false);
+      }
+    };
+
+    loadLoanProducts();
+  }, [userDetails?.institutionUsersId]);
+
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
   };
@@ -42,12 +68,34 @@ export default function LoanCreationOptions(props) {
         Create a new Loan
       </Typography>
       <Box sx={{ width: "100%", mb: 2 }}>
+        <DropDownSearchable
+          label="Select Borrower"
+          name="borrower"
+          placeholder="type to search borrowers..."
+          required={true}
+          options={borrowers.map((borrower) => ({
+            value: borrower.id,
+            label:
+              `${borrower.firstname || ""} ${borrower.othername || ""} ${
+                borrower.businessName || ""
+              }`.trim() || borrower.uniqueIdNumber,
+          }))}
+          value={selectedBorrower?.id || ""}
+          onChange={(e) => {
+            const selectedId = e.target.value;
+            const borrower = borrowers.find((b) => b.id === selectedId);
+            setSelectedBorrower(borrower || null);
+          }}
+          helperText="Choose a borrower for the loan."
+        />
+      </Box>
+      <Box sx={{ width: "100%", mb: 2 }}>
         <Box
           sx={{
             borderBottom: 1,
             borderColor: theme.palette.divider,
             backgroundColor: theme.palette.background.paper,
-            borderRadius: "8px 8px 0 0",
+            // borderRadius: "8px 8px 0 0",
           }}
         >
           <Tabs
@@ -89,8 +137,8 @@ export default function LoanCreationOptions(props) {
               },
             }}
           >
-            <Tab label="Use blank form" />
-            <Tab label="Use Loan Product template" />
+            <Tab label="Use Blank Form" />
+            <Tab label="Use Loan Product Template" />
           </Tabs>
         </Box>
       </Box>
@@ -100,6 +148,7 @@ export default function LoanCreationOptions(props) {
           {...props}
           borrowers={borrowers}
           borrowersLoading={borrowersLoading}
+          borrower={selectedBorrower}
         />
       )}
       {tabValue === 1 && (
@@ -107,6 +156,9 @@ export default function LoanCreationOptions(props) {
           {...props}
           borrowers={borrowers}
           borrowersLoading={borrowersLoading}
+          borrower={selectedBorrower}
+          loanProducts={loanProducts}
+          loanProductsLoading={loanProductsLoading}
         />
       )}
     </Box>

@@ -11,7 +11,6 @@ import {
   TextField,
   Autocomplete,
 } from "@mui/material";
-import { useField } from "formik";
 import { tokens } from "../../theme";
 
 const DropDownSearchable = ({
@@ -30,9 +29,9 @@ const DropDownSearchable = ({
   validationPattern,
   validationMessage,
   maxLength,
+  placeholder,
   ...props
 }) => {
-  const [field, meta, helpers] = useField(name);
   const isReadOnly = readOnly || editing === false || disabled;
 
   const StyledOutlinedInput = styled(OutlinedInput)(({ theme }) => {
@@ -44,14 +43,16 @@ const DropDownSearchable = ({
 
   // Find the label for the current value
   const selectedOption = options?.find(
-    (option) => option.value === field.value
+    (option) => option.value === props.value
   );
 
   // Get the current value object for Autocomplete
   const currentValue = selectedOption || null;
 
   const handleChange = (event, newValue) => {
-    helpers.setValue(newValue ? newValue.value : "");
+    if (props.onChange) {
+      props.onChange({ target: { value: newValue ? newValue.value : "" } });
+    }
   };
 
   return (
@@ -97,7 +98,7 @@ const DropDownSearchable = ({
         <FormControl
           fullWidth
           variant="filled"
-          error={meta.touched && Boolean(meta.error)}
+          error={false}
           sx={{
             flex: { xs: "unset", sm: 3 },
             width: { xs: "100%", sm: "auto" },
@@ -118,8 +119,8 @@ const DropDownSearchable = ({
             renderInput={(params) => (
               <TextField
                 {...params}
-                placeholder={`Select ${label}`}
-                error={meta.touched && Boolean(meta.error)}
+                placeholder={placeholder}
+                error={false}
                 InputProps={{
                   ...params.InputProps,
                   readOnly: isReadOnly,
@@ -150,9 +151,7 @@ const DropDownSearchable = ({
               },
             }}
           />
-          <FormHelperText>
-            {meta.touched && meta.error ? meta.error : helperText}
-          </FormHelperText>
+          <FormHelperText>{helperText}</FormHelperText>
         </FormControl>
       ) : (
         <Typography

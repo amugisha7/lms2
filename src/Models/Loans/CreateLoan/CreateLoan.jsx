@@ -20,12 +20,7 @@ import DropDownSearchable from "../../../Resources/FormComponents/DropDownSearch
 import OrderedList from "../../../Resources/FormComponents/OrderedList";
 import CreateFormButtons from "../../../ModelAssets/CreateFormButtons";
 import { UserContext } from "../../../App";
-import {
-  createLoan,
-  buildLoanInput,
-  fetchBorrowers,
-  fetchLoanProducts,
-} from "./createLoanHelpers";
+import { createLoan, buildLoanInput } from "./createLoanHelpers";
 import FormLabel from "../../../Resources/FormComponents/FormLabel";
 import RadioGroup from "../../../Resources/FormComponents/RadioGroup";
 
@@ -44,18 +39,9 @@ const baseInitialValues = createLoanForm.reduce((acc, field) => {
   return acc;
 }, {});
 
-// Add useLoanProduct toggle field
-baseInitialValues.useLoanProduct = "false";
-
 const buildValidationSchema = () => {
   const validationShape = {
     borrower: Yup.string().required("Borrower is required"),
-    useLoanProduct: Yup.string().required("Please select an option"),
-    loanProduct: Yup.string().when("useLoanProduct", {
-      is: "true",
-      then: (schema) => schema.required("Loan Product is required"),
-      otherwise: (schema) => schema.notRequired(),
-    }),
     principalAmount: Yup.number()
       .required("Principal Amount is required")
       .min(0, "Principal Amount must be at least 0"),
@@ -108,8 +94,8 @@ const renderFormField = (field, formikValues) => {
     case "number":
       return <TextInput {...field} />;
     case "select":
-      // Use DropDownSearchable for borrower and loanProduct fields
-      if (field.name === "borrower" || field.name === "loanProduct") {
+      // Use DropDownSearchable for borrower field
+      if (field.name === "borrower") {
         return <DropDownSearchable {...field} />;
       }
       return <Dropdown {...field} />;
@@ -146,62 +132,20 @@ const CreateLoan = forwardRef(
       isEditMode = false,
       hideCancel,
       onCancel,
+      borrowers,
+      borrowersLoading,
     },
     ref
   ) => {
     const { userDetails } = useContext(UserContext);
     const [submitError, setSubmitError] = useState("");
     const [submitSuccess, setSubmitSuccess] = useState("");
-    const [borrowers, setBorrowers] = useState([]);
-    const [loanProducts, setLoanProducts] = useState([]);
-    const [borrowersLoaded, setBorrowersLoaded] = useState(false);
-    const [loanProductsFetched, setLoanProductsFetched] = useState(false);
     const client = React.useMemo(() => generateClient(), []);
 
     // Scroll to top on component mount
     useEffect(() => {
       window.scrollTo({ top: 0, behavior: "smooth" });
     }, []);
-
-    useEffect(() => {
-      const loadBorrowers = async () => {
-        if (!userDetails?.branchUsersId) return;
-
-        try {
-          // Only fetch Borrowers if no borrower is pre-selected
-          if (!propBorrower) {
-            const borrowersList = await fetchBorrowers(
-              userDetails.branchUsersId
-            );
-            setBorrowers(borrowersList);
-            setBorrowersLoaded(true);
-          } else {
-            // If borrower is pre-selected, mark as loaded
-            setBorrowersLoaded(true);
-          }
-        } catch (err) {
-          console.error("Error loading borrowers:", err);
-          setBorrowersLoaded(true); // Set loaded even on error to show form
-        }
-      };
-
-      loadBorrowers();
-    }, [userDetails?.branchUsersId, propBorrower]);
-
-    // Function to load loan products only when toggle is set to "yes"
-    const loadLoanProducts = React.useCallback(async () => {
-      if (!userDetails?.institutionUsersId || loanProductsFetched) return;
-
-      try {
-        const productsList = await fetchLoanProducts(
-          userDetails.institutionUsersId
-        );
-        setLoanProducts(productsList);
-        setLoanProductsFetched(true);
-      } catch (err) {
-        console.error("Error loading loan products:", err);
-      }
-    }, [userDetails?.institutionUsersId, loanProductsFetched]);
 
     // Use prop initialValues if provided, otherwise use default
     const formInitialValues = React.useMemo(() => {
@@ -211,11 +155,6 @@ const CreateLoan = forwardRef(
             ...propInitialValues,
           }
         : { ...baseInitialValues };
-
-      // Ensure useLoanProduct always has a value
-      if (!base.useLoanProduct) {
-        base.useLoanProduct = "false";
-      }
 
       if (propBorrower) {
         base.borrower =
@@ -227,26 +166,7 @@ const CreateLoan = forwardRef(
     }, [propInitialValues, propBorrower]);
 
     const updatedCreateLoanForm = React.useMemo(() => {
-      const formFields = [
-        // Add the toggle field first
-        {
-          name: "useLoanProduct",
-          label: "Show Loan Products",
-          type: "radio",
-          span: 12,
-          options: [
-            { value: "true", label: "Yes" },
-            { value: "false", label: "No" },
-          ],
-          helperText: "Enable to select from pre-configured loan products",
-          onChange: (e) => {
-            // Trigger fetch when toggle is set to "yes" for the first time
-            if (e.target.value === "true" && !loanProductsFetched) {
-              loadLoanProducts();
-            }
-          },
-        },
-      ];
+      const formFields = [];
 
       // Map through the original form fields
       createLoanForm.forEach((field) => {
@@ -271,29 +191,14 @@ const CreateLoan = forwardRef(
             });
           }
         } else if (field.name === "loanProduct") {
-          // Add the loan product field with conditional display
-          formFields.push({
-            ...field,
-            options: loanProducts.map((product) => ({
-              value: product.id,
-              label: product.name,
-            })),
-            dependsOn: "useLoanProduct",
-            dependsOnValue: "true",
-          });
+          // Skip loan product field
         } else {
           formFields.push(field);
         }
       });
 
       return formFields;
-    }, [
-      borrowers,
-      loanProducts,
-      propBorrower,
-      loanProductsFetched,
-      loadLoanProducts,
-    ]);
+    }, [borrowers, propBorrower]);
 
     const handleSubmit = async (values, { setSubmitting, resetForm }) => {
       setSubmitError("");
@@ -348,12 +253,9 @@ const CreateLoan = forwardRef(
     };
 
     // Show loading state while checking for borrowers
-    if (!borrowersLoaded) {
+    if (borrowersLoading) {
       return (
         <>
-          <Typography variant="h4" sx={{ fontWeight: 600, mb: 3 }}>
-            Create a new Loan
-          </Typography>
           <Box
             sx={{
               display: "flex",
@@ -370,10 +272,7 @@ const CreateLoan = forwardRef(
 
     return (
       <>
-        <Typography variant="h4" sx={{ fontWeight: 600, mb: 3 }}>
-          Create a new Loan
-        </Typography>
-        {!propBorrower && borrowersLoaded && borrowers.length === 0 && (
+        {!propBorrower && !borrowersLoading && borrowers.length === 0 && (
           <Box
             sx={{
               mb: 3,

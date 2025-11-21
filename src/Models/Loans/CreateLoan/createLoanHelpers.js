@@ -86,7 +86,41 @@ export const fetchLoanProducts = async (institutionId) => {
         nextToken,
       });
       const result = await client.graphql({
-        query: LIST_LOAN_PRODUCTS_QUERY,
+        query: `
+          query ListLoanProducts($institutionId: ID!, $nextToken: String) {
+            listLoanProducts(
+              filter: { institutionLoanProductsId: { eq: $institutionId } }
+              limit: 100
+              nextToken: $nextToken
+            ) {
+              nextToken
+              items {
+                id
+                name
+                calculateInterestOn
+                durationPeriod
+                extendLoanAfterMaturity
+                interestCalculationMethod
+                interestPeriod
+                interestRateDefault
+                interestRateMax
+                interestRateMin
+                interestType
+                interestTypeMaturity
+                loanInterestRateAfterMaturity
+                principalAmountDefault
+                principalAmountMax
+                principalAmountMin
+                recurringPeriodAfterMaturityUnit
+                repaymentFrequency
+                repaymentOrder
+                termDurationDefault
+                termDurationMax
+                termDurationMin
+              }
+            }
+          }
+        `,
         variables: {
           institutionId,
           nextToken,

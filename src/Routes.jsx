@@ -35,6 +35,7 @@ import CreateAccounts from "./Models/Accounts/CreateAccounts/CreateAccount";
 // Loans imports
 import Loans from "./Models/Loans/Loans";
 import CreateLoan from "./Models/Loans/CreateLoan/CreateLoan";
+import LoanCreationOptions from "./Models/Loans/CreateLoan/LoanCreationOptions";
 
 export default function AppRoutes({ userExists }) {
   return (
@@ -75,7 +76,7 @@ export default function AppRoutes({ userExists }) {
               <Route path="admin/loan-products" element={<LoanProducts />} />
 
               {/* Loans routes */}
-              <Route path="admin/add-loan" element={<CreateLoan />} />
+              <Route path="admin/add-loan" element={<LoanCreationOptions />} />
               <Route path="admin/loans" element={<Loans />} />
 
               {/* Loan Fees route */}

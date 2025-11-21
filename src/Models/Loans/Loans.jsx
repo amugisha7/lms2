@@ -12,6 +12,7 @@ import ClickableText from "../../ComponentAssets/ClickableText";
 import EditLoan from "./EditLoan/EditLoan";
 import ListBorrowers from "./CreateLoan/ListBorrowers";
 import CreateLoan from "./CreateLoan/CreateLoan";
+import LoanCreationOptions from "./CreateLoan/LoanCreationOptions";
 
 const LIST_LOAN_LOAN_FEES_QUERY = `
   query ListLoanLoanFees($filter: ModelLoanLoanFeesFilterInput) {
@@ -471,7 +472,7 @@ export default function Loans() {
         maxWidth="md"
         fullWidth
       >
-        <CreateLoan
+        <LoanCreationOptions
           borrower={selectedBorrower}
           onClose={handleCreateDialogClose}
           onCreateSuccess={handleCreateSuccess}

@@ -27,7 +27,9 @@ const LIST_LOAN_PRODUCT_LOAN_FEES_CONFIGS_QUERY = `
 
 const DELETE_LOAN_PRODUCT_LOAN_FEES_CONFIG_MUTATION = `
   mutation DeleteLoanProductLoanFeesConfig($input: DeleteLoanProductLoanFeesConfigInput!) {
-    deleteLoanProductLoanFeesConfig(input: $input)
+    deleteLoanProductLoanFeesConfig(input: $input) {
+    
+      id}
   }
 `;
 

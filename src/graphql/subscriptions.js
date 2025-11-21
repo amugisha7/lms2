@@ -49,6 +49,10 @@ export const onCreateInstitution = /* GraphQL */ `
         nextToken
         __typename
       }
+      accounts {
+        nextToken
+        __typename
+      }
       status
       createdAt
       updatedAt
@@ -104,6 +108,10 @@ export const onUpdateInstitution = /* GraphQL */ `
         nextToken
         __typename
       }
+      accounts {
+        nextToken
+        __typename
+      }
       status
       createdAt
       updatedAt
@@ -156,6 +164,10 @@ export const onDeleteInstitution = /* GraphQL */ `
         __typename
       }
       loanFeesConfigs {
+        nextToken
+        __typename
+      }
+      accounts {
         nextToken
         __typename
       }
@@ -2054,8 +2066,15 @@ export const onCreateLoanProduct = /* GraphQL */ `
         updatedAt
         __typename
       }
-      branches {
-        nextToken
+      branch {
+        id
+        name
+        branchCode
+        address
+        status
+        createdAt
+        updatedAt
+        institutionBranchesId
         __typename
       }
       loanFees {
@@ -2081,6 +2100,7 @@ export const onCreateLoanProduct = /* GraphQL */ `
       createdAt
       updatedAt
       institutionLoanProductsId
+      branchLoanProductsId
       __typename
     }
   }
@@ -2143,8 +2163,15 @@ export const onUpdateLoanProduct = /* GraphQL */ `
         updatedAt
         __typename
       }
-      branches {
-        nextToken
+      branch {
+        id
+        name
+        branchCode
+        address
+        status
+        createdAt
+        updatedAt
+        institutionBranchesId
         __typename
       }
       loanFees {
@@ -2170,6 +2197,7 @@ export const onUpdateLoanProduct = /* GraphQL */ `
       createdAt
       updatedAt
       institutionLoanProductsId
+      branchLoanProductsId
       __typename
     }
   }
@@ -2232,8 +2260,15 @@ export const onDeleteLoanProduct = /* GraphQL */ `
         updatedAt
         __typename
       }
-      branches {
-        nextToken
+      branch {
+        id
+        name
+        branchCode
+        address
+        status
+        createdAt
+        updatedAt
+        institutionBranchesId
         __typename
       }
       loanFees {
@@ -2259,6 +2294,7 @@ export const onDeleteLoanProduct = /* GraphQL */ `
       createdAt
       updatedAt
       institutionLoanProductsId
+      branchLoanProductsId
       __typename
     }
   }
@@ -3224,6 +3260,7 @@ export const onCreateApplication = /* GraphQL */ `
         createdAt
         updatedAt
         institutionLoanProductsId
+        branchLoanProductsId
         __typename
       }
       createdByEmployeeID
@@ -3392,6 +3429,7 @@ export const onUpdateApplication = /* GraphQL */ `
         createdAt
         updatedAt
         institutionLoanProductsId
+        branchLoanProductsId
         __typename
       }
       createdByEmployeeID
@@ -3560,6 +3598,7 @@ export const onDeleteApplication = /* GraphQL */ `
         createdAt
         updatedAt
         institutionLoanProductsId
+        branchLoanProductsId
         __typename
       }
       createdByEmployeeID
@@ -3981,6 +4020,7 @@ export const onCreateLoan = /* GraphQL */ `
         createdAt
         updatedAt
         institutionLoanProductsId
+        branchLoanProductsId
         __typename
       }
       createdByEmployeeID
@@ -4176,6 +4216,7 @@ export const onUpdateLoan = /* GraphQL */ `
         createdAt
         updatedAt
         institutionLoanProductsId
+        branchLoanProductsId
         __typename
       }
       createdByEmployeeID
@@ -4371,6 +4412,7 @@ export const onDeleteLoan = /* GraphQL */ `
         createdAt
         updatedAt
         institutionLoanProductsId
+        branchLoanProductsId
         __typename
       }
       createdByEmployeeID
@@ -4605,7 +4647,7 @@ export const onCreateLoanFees = /* GraphQL */ `
         createdByEmployeeID
         createdAt
         updatedAt
-        branchAccountsId
+        institutionAccountsId
         __typename
       }
       loanFeesConfigs {
@@ -4693,7 +4735,7 @@ export const onUpdateLoanFees = /* GraphQL */ `
         createdByEmployeeID
         createdAt
         updatedAt
-        branchAccountsId
+        institutionAccountsId
         __typename
       }
       loanFeesConfigs {
@@ -4781,7 +4823,7 @@ export const onDeleteLoanFees = /* GraphQL */ `
         createdByEmployeeID
         createdAt
         updatedAt
-        branchAccountsId
+        institutionAccountsId
         __typename
       }
       loanFeesConfigs {
@@ -4869,7 +4911,7 @@ export const onCreatePenalty = /* GraphQL */ `
         createdByEmployeeID
         createdAt
         updatedAt
-        branchAccountsId
+        institutionAccountsId
         __typename
       }
       createdAt
@@ -4953,7 +4995,7 @@ export const onUpdatePenalty = /* GraphQL */ `
         createdByEmployeeID
         createdAt
         updatedAt
-        branchAccountsId
+        institutionAccountsId
         __typename
       }
       createdAt
@@ -5037,7 +5079,7 @@ export const onDeletePenalty = /* GraphQL */ `
         createdByEmployeeID
         createdAt
         updatedAt
-        branchAccountsId
+        institutionAccountsId
         __typename
       }
       createdAt
@@ -5177,15 +5219,37 @@ export const onCreateAccount = /* GraphQL */ `
       interestAccruedDate
       accountStatus
       status
-      branch {
+      institution {
         id
         name
-        branchCode
-        address
+        currencyCode
+        subscriptionTier
+        subscriptionStatus
+        trialEndDate
+        nextBillingDate
+        stripeCustomerID
+        stripeSubscriptionID
+        defaultDateFormat
+        defaultCurrencyFormat
+        defaultLanguage
+        regulatoryRegion
+        maxUsers
+        maxBranches
+        maxStaffPerBranch
+        saccoFeaturesEnabled
+        staffManagementEnabled
+        payrollEnabled
+        collectionsModuleEnabled
+        customWorkflowsEnabled
+        advancedReportingEnabled
+        apiIntegrationSettings
         status
         createdAt
         updatedAt
-        institutionBranchesId
+        __typename
+      }
+      branches {
+        nextToken
         __typename
       }
       moneyTransactions {
@@ -5271,7 +5335,7 @@ export const onCreateAccount = /* GraphQL */ `
       }
       createdAt
       updatedAt
-      branchAccountsId
+      institutionAccountsId
       __typename
     }
   }
@@ -5295,15 +5359,37 @@ export const onUpdateAccount = /* GraphQL */ `
       interestAccruedDate
       accountStatus
       status
-      branch {
+      institution {
         id
         name
-        branchCode
-        address
+        currencyCode
+        subscriptionTier
+        subscriptionStatus
+        trialEndDate
+        nextBillingDate
+        stripeCustomerID
+        stripeSubscriptionID
+        defaultDateFormat
+        defaultCurrencyFormat
+        defaultLanguage
+        regulatoryRegion
+        maxUsers
+        maxBranches
+        maxStaffPerBranch
+        saccoFeaturesEnabled
+        staffManagementEnabled
+        payrollEnabled
+        collectionsModuleEnabled
+        customWorkflowsEnabled
+        advancedReportingEnabled
+        apiIntegrationSettings
         status
         createdAt
         updatedAt
-        institutionBranchesId
+        __typename
+      }
+      branches {
+        nextToken
         __typename
       }
       moneyTransactions {
@@ -5389,7 +5475,7 @@ export const onUpdateAccount = /* GraphQL */ `
       }
       createdAt
       updatedAt
-      branchAccountsId
+      institutionAccountsId
       __typename
     }
   }
@@ -5413,15 +5499,37 @@ export const onDeleteAccount = /* GraphQL */ `
       interestAccruedDate
       accountStatus
       status
-      branch {
+      institution {
         id
         name
-        branchCode
-        address
+        currencyCode
+        subscriptionTier
+        subscriptionStatus
+        trialEndDate
+        nextBillingDate
+        stripeCustomerID
+        stripeSubscriptionID
+        defaultDateFormat
+        defaultCurrencyFormat
+        defaultLanguage
+        regulatoryRegion
+        maxUsers
+        maxBranches
+        maxStaffPerBranch
+        saccoFeaturesEnabled
+        staffManagementEnabled
+        payrollEnabled
+        collectionsModuleEnabled
+        customWorkflowsEnabled
+        advancedReportingEnabled
+        apiIntegrationSettings
         status
         createdAt
         updatedAt
-        institutionBranchesId
+        __typename
+      }
+      branches {
+        nextToken
         __typename
       }
       moneyTransactions {
@@ -5507,7 +5615,7 @@ export const onDeleteAccount = /* GraphQL */ `
       }
       createdAt
       updatedAt
-      branchAccountsId
+      institutionAccountsId
       __typename
     }
   }
@@ -5551,7 +5659,7 @@ export const onCreateMoneyTransaction = /* GraphQL */ `
         createdByEmployeeID
         createdAt
         updatedAt
-        branchAccountsId
+        institutionAccountsId
         __typename
       }
       approvedByEmployees {
@@ -5653,7 +5761,7 @@ export const onUpdateMoneyTransaction = /* GraphQL */ `
         createdByEmployeeID
         createdAt
         updatedAt
-        branchAccountsId
+        institutionAccountsId
         __typename
       }
       approvedByEmployees {
@@ -5755,7 +5863,7 @@ export const onDeleteMoneyTransaction = /* GraphQL */ `
         createdByEmployeeID
         createdAt
         updatedAt
-        branchAccountsId
+        institutionAccountsId
         __typename
       }
       approvedByEmployees {
@@ -5883,7 +5991,7 @@ export const onCreatePayment = /* GraphQL */ `
         createdByEmployeeID
         createdAt
         updatedAt
-        branchAccountsId
+        institutionAccountsId
         __typename
       }
       receivingEmployeeID
@@ -6015,7 +6123,7 @@ export const onUpdatePayment = /* GraphQL */ `
         createdByEmployeeID
         createdAt
         updatedAt
-        branchAccountsId
+        institutionAccountsId
         __typename
       }
       receivingEmployeeID
@@ -6147,7 +6255,7 @@ export const onDeletePayment = /* GraphQL */ `
         createdByEmployeeID
         createdAt
         updatedAt
-        branchAccountsId
+        institutionAccountsId
         __typename
       }
       receivingEmployeeID
@@ -6251,7 +6359,7 @@ export const onCreateExpense = /* GraphQL */ `
         createdByEmployeeID
         createdAt
         updatedAt
-        branchAccountsId
+        institutionAccountsId
         __typename
       }
       loans {
@@ -6363,7 +6471,7 @@ export const onUpdateExpense = /* GraphQL */ `
         createdByEmployeeID
         createdAt
         updatedAt
-        branchAccountsId
+        institutionAccountsId
         __typename
       }
       loans {
@@ -6475,7 +6583,7 @@ export const onDeleteExpense = /* GraphQL */ `
         createdByEmployeeID
         createdAt
         updatedAt
-        branchAccountsId
+        institutionAccountsId
         __typename
       }
       loans {
@@ -7534,14 +7642,14 @@ export const onDeleteNotification = /* GraphQL */ `
     }
   }
 `;
-export const onCreateBranchLoanProduct = /* GraphQL */ `
-  subscription OnCreateBranchLoanProduct(
-    $filter: ModelSubscriptionBranchLoanProductFilterInput
+export const onCreateAccountBranch = /* GraphQL */ `
+  subscription OnCreateAccountBranch(
+    $filter: ModelSubscriptionAccountBranchFilterInput
   ) {
-    onCreateBranchLoanProduct(filter: $filter) {
+    onCreateAccountBranch(filter: $filter) {
       id
       branchId
-      loanProductId
+      accountId
       branch {
         id
         name
@@ -7553,34 +7661,27 @@ export const onCreateBranchLoanProduct = /* GraphQL */ `
         institutionBranchesId
         __typename
       }
-      loanProduct {
+      account {
         id
         name
+        accountType
+        accountNumber
         description
-        principalAmountMin
-        principalAmountMax
-        principalAmountDefault
-        interestRateMin
-        interestRateMax
-        interestRateDefault
+        currency
+        currentBalance
+        openingBalance
+        interestRate
         interestCalculationMethod
-        interestType
-        interestPeriod
-        termDurationMin
-        termDurationMax
-        termDurationDefault
-        durationPeriod
-        repaymentFrequency
-        repaymentOrder
-        extendLoanAfterMaturity
-        interestTypeMaturity
-        calculateInterestOn
-        loanInterestRateAfterMaturity
-        recurringPeriodAfterMaturityUnit
+        interestPostingFrequency
+        interestPostingDate
+        interestAccrued
+        interestAccruedDate
+        accountStatus
         status
+        createdByEmployeeID
         createdAt
         updatedAt
-        institutionLoanProductsId
+        institutionAccountsId
         __typename
       }
       createdAt
@@ -7589,14 +7690,14 @@ export const onCreateBranchLoanProduct = /* GraphQL */ `
     }
   }
 `;
-export const onUpdateBranchLoanProduct = /* GraphQL */ `
-  subscription OnUpdateBranchLoanProduct(
-    $filter: ModelSubscriptionBranchLoanProductFilterInput
+export const onUpdateAccountBranch = /* GraphQL */ `
+  subscription OnUpdateAccountBranch(
+    $filter: ModelSubscriptionAccountBranchFilterInput
   ) {
-    onUpdateBranchLoanProduct(filter: $filter) {
+    onUpdateAccountBranch(filter: $filter) {
       id
       branchId
-      loanProductId
+      accountId
       branch {
         id
         name
@@ -7608,34 +7709,27 @@ export const onUpdateBranchLoanProduct = /* GraphQL */ `
         institutionBranchesId
         __typename
       }
-      loanProduct {
+      account {
         id
         name
+        accountType
+        accountNumber
         description
-        principalAmountMin
-        principalAmountMax
-        principalAmountDefault
-        interestRateMin
-        interestRateMax
-        interestRateDefault
+        currency
+        currentBalance
+        openingBalance
+        interestRate
         interestCalculationMethod
-        interestType
-        interestPeriod
-        termDurationMin
-        termDurationMax
-        termDurationDefault
-        durationPeriod
-        repaymentFrequency
-        repaymentOrder
-        extendLoanAfterMaturity
-        interestTypeMaturity
-        calculateInterestOn
-        loanInterestRateAfterMaturity
-        recurringPeriodAfterMaturityUnit
+        interestPostingFrequency
+        interestPostingDate
+        interestAccrued
+        interestAccruedDate
+        accountStatus
         status
+        createdByEmployeeID
         createdAt
         updatedAt
-        institutionLoanProductsId
+        institutionAccountsId
         __typename
       }
       createdAt
@@ -7644,14 +7738,14 @@ export const onUpdateBranchLoanProduct = /* GraphQL */ `
     }
   }
 `;
-export const onDeleteBranchLoanProduct = /* GraphQL */ `
-  subscription OnDeleteBranchLoanProduct(
-    $filter: ModelSubscriptionBranchLoanProductFilterInput
+export const onDeleteAccountBranch = /* GraphQL */ `
+  subscription OnDeleteAccountBranch(
+    $filter: ModelSubscriptionAccountBranchFilterInput
   ) {
-    onDeleteBranchLoanProduct(filter: $filter) {
+    onDeleteAccountBranch(filter: $filter) {
       id
       branchId
-      loanProductId
+      accountId
       branch {
         id
         name
@@ -7663,34 +7757,27 @@ export const onDeleteBranchLoanProduct = /* GraphQL */ `
         institutionBranchesId
         __typename
       }
-      loanProduct {
+      account {
         id
         name
+        accountType
+        accountNumber
         description
-        principalAmountMin
-        principalAmountMax
-        principalAmountDefault
-        interestRateMin
-        interestRateMax
-        interestRateDefault
+        currency
+        currentBalance
+        openingBalance
+        interestRate
         interestCalculationMethod
-        interestType
-        interestPeriod
-        termDurationMin
-        termDurationMax
-        termDurationDefault
-        durationPeriod
-        repaymentFrequency
-        repaymentOrder
-        extendLoanAfterMaturity
-        interestTypeMaturity
-        calculateInterestOn
-        loanInterestRateAfterMaturity
-        recurringPeriodAfterMaturityUnit
+        interestPostingFrequency
+        interestPostingDate
+        interestAccrued
+        interestAccruedDate
+        accountStatus
         status
+        createdByEmployeeID
         createdAt
         updatedAt
-        institutionLoanProductsId
+        institutionAccountsId
         __typename
       }
       createdAt
@@ -10405,6 +10492,7 @@ export const onCreateLoanProductLoanFees = /* GraphQL */ `
         createdAt
         updatedAt
         institutionLoanProductsId
+        branchLoanProductsId
         __typename
       }
       loanFees {
@@ -10470,6 +10558,7 @@ export const onUpdateLoanProductLoanFees = /* GraphQL */ `
         createdAt
         updatedAt
         institutionLoanProductsId
+        branchLoanProductsId
         __typename
       }
       loanFees {
@@ -10535,6 +10624,7 @@ export const onDeleteLoanProductLoanFees = /* GraphQL */ `
         createdAt
         updatedAt
         institutionLoanProductsId
+        branchLoanProductsId
         __typename
       }
       loanFees {
@@ -10600,6 +10690,7 @@ export const onCreateLoanProductLoanFeesConfig = /* GraphQL */ `
         createdAt
         updatedAt
         institutionLoanProductsId
+        branchLoanProductsId
         __typename
       }
       loanFeesConfig {
@@ -10658,6 +10749,7 @@ export const onUpdateLoanProductLoanFeesConfig = /* GraphQL */ `
         createdAt
         updatedAt
         institutionLoanProductsId
+        branchLoanProductsId
         __typename
       }
       loanFeesConfig {
@@ -10716,6 +10808,7 @@ export const onDeleteLoanProductLoanFeesConfig = /* GraphQL */ `
         createdAt
         updatedAt
         institutionLoanProductsId
+        branchLoanProductsId
         __typename
       }
       loanFeesConfig {
@@ -10774,6 +10867,7 @@ export const onCreateLoanProductPenalty = /* GraphQL */ `
         createdAt
         updatedAt
         institutionLoanProductsId
+        branchLoanProductsId
         __typename
       }
       penalty {
@@ -10839,6 +10933,7 @@ export const onUpdateLoanProductPenalty = /* GraphQL */ `
         createdAt
         updatedAt
         institutionLoanProductsId
+        branchLoanProductsId
         __typename
       }
       penalty {
@@ -10904,6 +10999,7 @@ export const onDeleteLoanProductPenalty = /* GraphQL */ `
         createdAt
         updatedAt
         institutionLoanProductsId
+        branchLoanProductsId
         __typename
       }
       penalty {
@@ -12934,7 +13030,7 @@ export const onCreateLoanAccount = /* GraphQL */ `
         createdByEmployeeID
         createdAt
         updatedAt
-        branchAccountsId
+        institutionAccountsId
         __typename
       }
       createdAt
@@ -13003,7 +13099,7 @@ export const onUpdateLoanAccount = /* GraphQL */ `
         createdByEmployeeID
         createdAt
         updatedAt
-        branchAccountsId
+        institutionAccountsId
         __typename
       }
       createdAt
@@ -13072,7 +13168,7 @@ export const onDeleteLoanAccount = /* GraphQL */ `
         createdByEmployeeID
         createdAt
         updatedAt
-        branchAccountsId
+        institutionAccountsId
         __typename
       }
       createdAt
@@ -13334,7 +13430,7 @@ export const onCreateInvestmentAccount = /* GraphQL */ `
         createdByEmployeeID
         createdAt
         updatedAt
-        branchAccountsId
+        institutionAccountsId
         __typename
       }
       createdAt
@@ -13395,7 +13491,7 @@ export const onUpdateInvestmentAccount = /* GraphQL */ `
         createdByEmployeeID
         createdAt
         updatedAt
-        branchAccountsId
+        institutionAccountsId
         __typename
       }
       createdAt
@@ -13456,7 +13552,7 @@ export const onDeleteInvestmentAccount = /* GraphQL */ `
         createdByEmployeeID
         createdAt
         updatedAt
-        branchAccountsId
+        institutionAccountsId
         __typename
       }
       createdAt
@@ -13640,7 +13736,7 @@ export const onCreateOtherIncomeAccount = /* GraphQL */ `
         createdByEmployeeID
         createdAt
         updatedAt
-        branchAccountsId
+        institutionAccountsId
         __typename
       }
       otherIncome {
@@ -13689,7 +13785,7 @@ export const onUpdateOtherIncomeAccount = /* GraphQL */ `
         createdByEmployeeID
         createdAt
         updatedAt
-        branchAccountsId
+        institutionAccountsId
         __typename
       }
       otherIncome {
@@ -13738,7 +13834,7 @@ export const onDeleteOtherIncomeAccount = /* GraphQL */ `
         createdByEmployeeID
         createdAt
         updatedAt
-        branchAccountsId
+        institutionAccountsId
         __typename
       }
       otherIncome {

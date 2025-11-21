@@ -47,6 +47,10 @@ export const getInstitution = /* GraphQL */ `
         nextToken
         __typename
       }
+      accounts {
+        nextToken
+        __typename
+      }
       status
       createdAt
       updatedAt
@@ -1009,8 +1013,15 @@ export const getLoanProduct = /* GraphQL */ `
         updatedAt
         __typename
       }
-      branches {
-        nextToken
+      branch {
+        id
+        name
+        branchCode
+        address
+        status
+        createdAt
+        updatedAt
+        institutionBranchesId
         __typename
       }
       loanFees {
@@ -1036,6 +1047,7 @@ export const getLoanProduct = /* GraphQL */ `
       createdAt
       updatedAt
       institutionLoanProductsId
+      branchLoanProductsId
       __typename
     }
   }
@@ -1075,6 +1087,7 @@ export const listLoanProducts = /* GraphQL */ `
         createdAt
         updatedAt
         institutionLoanProductsId
+        branchLoanProductsId
         __typename
       }
       nextToken
@@ -1552,6 +1565,7 @@ export const getApplication = /* GraphQL */ `
         createdAt
         updatedAt
         institutionLoanProductsId
+        branchLoanProductsId
         __typename
       }
       createdByEmployeeID
@@ -1884,6 +1898,7 @@ export const getLoan = /* GraphQL */ `
         createdAt
         updatedAt
         institutionLoanProductsId
+        branchLoanProductsId
         __typename
       }
       createdByEmployeeID
@@ -2128,7 +2143,7 @@ export const getLoanFees = /* GraphQL */ `
         createdByEmployeeID
         createdAt
         updatedAt
-        branchAccountsId
+        institutionAccountsId
         __typename
       }
       loanFeesConfigs {
@@ -2249,7 +2264,7 @@ export const getPenalty = /* GraphQL */ `
         createdByEmployeeID
         createdAt
         updatedAt
-        branchAccountsId
+        institutionAccountsId
         __typename
       }
       createdAt
@@ -2378,15 +2393,37 @@ export const getAccount = /* GraphQL */ `
       interestAccruedDate
       accountStatus
       status
-      branch {
+      institution {
         id
         name
-        branchCode
-        address
+        currencyCode
+        subscriptionTier
+        subscriptionStatus
+        trialEndDate
+        nextBillingDate
+        stripeCustomerID
+        stripeSubscriptionID
+        defaultDateFormat
+        defaultCurrencyFormat
+        defaultLanguage
+        regulatoryRegion
+        maxUsers
+        maxBranches
+        maxStaffPerBranch
+        saccoFeaturesEnabled
+        staffManagementEnabled
+        payrollEnabled
+        collectionsModuleEnabled
+        customWorkflowsEnabled
+        advancedReportingEnabled
+        apiIntegrationSettings
         status
         createdAt
         updatedAt
-        institutionBranchesId
+        __typename
+      }
+      branches {
+        nextToken
         __typename
       }
       moneyTransactions {
@@ -2472,7 +2509,7 @@ export const getAccount = /* GraphQL */ `
       }
       createdAt
       updatedAt
-      branchAccountsId
+      institutionAccountsId
       __typename
     }
   }
@@ -2504,7 +2541,7 @@ export const listAccounts = /* GraphQL */ `
         createdByEmployeeID
         createdAt
         updatedAt
-        branchAccountsId
+        institutionAccountsId
         __typename
       }
       nextToken
@@ -2549,7 +2586,7 @@ export const getMoneyTransaction = /* GraphQL */ `
         createdByEmployeeID
         createdAt
         updatedAt
-        branchAccountsId
+        institutionAccountsId
         __typename
       }
       approvedByEmployees {
@@ -2714,7 +2751,7 @@ export const getPayment = /* GraphQL */ `
         createdByEmployeeID
         createdAt
         updatedAt
-        branchAccountsId
+        institutionAccountsId
         __typename
       }
       receivingEmployeeID
@@ -2847,7 +2884,7 @@ export const getExpense = /* GraphQL */ `
         createdByEmployeeID
         createdAt
         updatedAt
-        branchAccountsId
+        institutionAccountsId
         __typename
       }
       loans {
@@ -3435,12 +3472,12 @@ export const listNotifications = /* GraphQL */ `
     }
   }
 `;
-export const getBranchLoanProduct = /* GraphQL */ `
-  query GetBranchLoanProduct($id: ID!) {
-    getBranchLoanProduct(id: $id) {
+export const getAccountBranch = /* GraphQL */ `
+  query GetAccountBranch($id: ID!) {
+    getAccountBranch(id: $id) {
       id
       branchId
-      loanProductId
+      accountId
       branch {
         id
         name
@@ -3452,34 +3489,27 @@ export const getBranchLoanProduct = /* GraphQL */ `
         institutionBranchesId
         __typename
       }
-      loanProduct {
+      account {
         id
         name
+        accountType
+        accountNumber
         description
-        principalAmountMin
-        principalAmountMax
-        principalAmountDefault
-        interestRateMin
-        interestRateMax
-        interestRateDefault
+        currency
+        currentBalance
+        openingBalance
+        interestRate
         interestCalculationMethod
-        interestType
-        interestPeriod
-        termDurationMin
-        termDurationMax
-        termDurationDefault
-        durationPeriod
-        repaymentFrequency
-        repaymentOrder
-        extendLoanAfterMaturity
-        interestTypeMaturity
-        calculateInterestOn
-        loanInterestRateAfterMaturity
-        recurringPeriodAfterMaturityUnit
+        interestPostingFrequency
+        interestPostingDate
+        interestAccrued
+        interestAccruedDate
+        accountStatus
         status
+        createdByEmployeeID
         createdAt
         updatedAt
-        institutionLoanProductsId
+        institutionAccountsId
         __typename
       }
       createdAt
@@ -3488,21 +3518,17 @@ export const getBranchLoanProduct = /* GraphQL */ `
     }
   }
 `;
-export const listBranchLoanProducts = /* GraphQL */ `
-  query ListBranchLoanProducts(
-    $filter: ModelBranchLoanProductFilterInput
+export const listAccountBranches = /* GraphQL */ `
+  query ListAccountBranches(
+    $filter: ModelAccountBranchFilterInput
     $limit: Int
     $nextToken: String
   ) {
-    listBranchLoanProducts(
-      filter: $filter
-      limit: $limit
-      nextToken: $nextToken
-    ) {
+    listAccountBranches(filter: $filter, limit: $limit, nextToken: $nextToken) {
       items {
         id
         branchId
-        loanProductId
+        accountId
         createdAt
         updatedAt
         __typename
@@ -4696,6 +4722,7 @@ export const getLoanProductLoanFees = /* GraphQL */ `
         createdAt
         updatedAt
         institutionLoanProductsId
+        branchLoanProductsId
         __typename
       }
       loanFees {
@@ -4783,6 +4810,7 @@ export const getLoanProductLoanFeesConfig = /* GraphQL */ `
         createdAt
         updatedAt
         institutionLoanProductsId
+        branchLoanProductsId
         __typename
       }
       loanFeesConfig {
@@ -4863,6 +4891,7 @@ export const getLoanProductPenalty = /* GraphQL */ `
         createdAt
         updatedAt
         institutionLoanProductsId
+        branchLoanProductsId
         __typename
       }
       penalty {
@@ -5873,7 +5902,7 @@ export const getLoanAccount = /* GraphQL */ `
         createdByEmployeeID
         createdAt
         updatedAt
-        branchAccountsId
+        institutionAccountsId
         __typename
       }
       createdAt
@@ -6037,7 +6066,7 @@ export const getInvestmentAccount = /* GraphQL */ `
         createdByEmployeeID
         createdAt
         updatedAt
-        branchAccountsId
+        institutionAccountsId
         __typename
       }
       createdAt
@@ -6167,7 +6196,7 @@ export const getOtherIncomeAccount = /* GraphQL */ `
         createdByEmployeeID
         createdAt
         updatedAt
-        branchAccountsId
+        institutionAccountsId
         __typename
       }
       otherIncome {
@@ -6822,7 +6851,7 @@ export const accountsByCreatedByEmployeeID = /* GraphQL */ `
         createdByEmployeeID
         createdAt
         updatedAt
-        branchAccountsId
+        institutionAccountsId
         __typename
       }
       nextToken
@@ -7153,15 +7182,15 @@ export const notificationsByInstitutionMessagesId = /* GraphQL */ `
     }
   }
 `;
-export const branchLoanProductsByBranchId = /* GraphQL */ `
-  query BranchLoanProductsByBranchId(
+export const accountBranchesByBranchId = /* GraphQL */ `
+  query AccountBranchesByBranchId(
     $branchId: ID!
     $sortDirection: ModelSortDirection
-    $filter: ModelBranchLoanProductFilterInput
+    $filter: ModelAccountBranchFilterInput
     $limit: Int
     $nextToken: String
   ) {
-    branchLoanProductsByBranchId(
+    accountBranchesByBranchId(
       branchId: $branchId
       sortDirection: $sortDirection
       filter: $filter
@@ -7171,7 +7200,7 @@ export const branchLoanProductsByBranchId = /* GraphQL */ `
       items {
         id
         branchId
-        loanProductId
+        accountId
         createdAt
         updatedAt
         __typename
@@ -7181,16 +7210,16 @@ export const branchLoanProductsByBranchId = /* GraphQL */ `
     }
   }
 `;
-export const branchLoanProductsByLoanProductId = /* GraphQL */ `
-  query BranchLoanProductsByLoanProductId(
-    $loanProductId: ID!
+export const accountBranchesByAccountId = /* GraphQL */ `
+  query AccountBranchesByAccountId(
+    $accountId: ID!
     $sortDirection: ModelSortDirection
-    $filter: ModelBranchLoanProductFilterInput
+    $filter: ModelAccountBranchFilterInput
     $limit: Int
     $nextToken: String
   ) {
-    branchLoanProductsByLoanProductId(
-      loanProductId: $loanProductId
+    accountBranchesByAccountId(
+      accountId: $accountId
       sortDirection: $sortDirection
       filter: $filter
       limit: $limit
@@ -7199,7 +7228,7 @@ export const branchLoanProductsByLoanProductId = /* GraphQL */ `
       items {
         id
         branchId
-        loanProductId
+        accountId
         createdAt
         updatedAt
         __typename

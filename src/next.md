@@ -1,2 +1,4 @@
 - Create loans form. Also create from loan product.
-  - prepopulate the createLoan form with the selected borrower.
+  - prepopulate the createLoan form with the loan product.
+  - Move the loanproducts to belong to the branch
+  - implement testing for when there is no data.

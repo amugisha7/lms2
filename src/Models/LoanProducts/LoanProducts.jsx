@@ -2,7 +2,6 @@ import React from "react";
 import { generateClient } from "aws-amplify/api";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
 import { UserContext } from "../../App";
 import CustomDataGrid from "../../ComponentAssets/CustomDataGrid";
 import CustomSlider from "../../ComponentAssets/CustomSlider";
@@ -11,9 +10,7 @@ import { useTheme } from "@mui/material/styles";
 import ClickableText from "../../ComponentAssets/ClickableText";
 import EditLoanProduct from "./EditLoanProduct/EditLoanProduct";
 import CreateLoanProduct from "./CreateLoanProduct/CreateLoanProduct";
-
-// Guard to ensure we only fetch loan products once per page load (even under React StrictMode)
-let __loanProductsFetchedOnce = false;
+import PlusButtonMain from "../../ModelAssets/PlusButtonMain";
 
 const LIST_LOAN_PRODUCT_LOAN_FEES_CONFIGS_QUERY = `
   query ListLoanProductLoanFeesConfigs($filter: ModelLoanProductLoanFeesConfigFilterInput) {
@@ -30,24 +27,6 @@ const DELETE_LOAN_PRODUCT_LOAN_FEES_CONFIG_MUTATION = `
     deleteLoanProductLoanFeesConfig(input: $input) {
     
       id}
-  }
-`;
-
-const LIST_BRANCH_LOAN_PRODUCTS_QUERY = `
-  query ListBranchLoanProducts($filter: ModelBranchLoanProductFilterInput) {
-    listBranchLoanProducts(filter: $filter) {
-      items {
-        id
-      }
-    }
-  }
-`;
-
-const DELETE_BRANCH_LOAN_PRODUCT_MUTATION = `
-  mutation DeleteBranchLoanProduct($input: DeleteBranchLoanProductInput!) {
-    deleteBranchLoanProduct(input: $input) {
-      branchId
-    }
   }
 `;
 
@@ -68,13 +47,14 @@ export default function LoanProducts() {
   const formRef = React.useRef();
   const { userDetails } = React.useContext(UserContext);
   const theme = useTheme();
+  const lastBranchIdRef = React.useRef();
 
   React.useEffect(() => {
     const fetchLoanProducts = async () => {
       setLoading(true);
       try {
         const client = generateClient();
-        if (!userDetails?.institutionUsersId) {
+        if (!userDetails?.branchId) {
           setLoanProducts([]);
           setLoading(false);
           return;
@@ -86,9 +66,9 @@ export default function LoanProducts() {
         do {
           const result = await client.graphql({
             query: `
-              query ListLoanProducts($institutionId: ID!, $nextToken: String) {
+              query ListLoanProducts($branchId: ID!, $nextToken: String) {
                 listLoanProducts(
-                  filter: { institutionLoanProductsId: { eq: $institutionId } }
+                  filter: { branchLoanProductsId: { eq: $branchId } }
                   limit: 100
                   nextToken: $nextToken
                 ) {
@@ -116,13 +96,9 @@ export default function LoanProducts() {
                     termDurationDefault
                     termDurationMax
                     termDurationMin
-                    branches {
-                      items {
-                        branch {
-                          name
-                          id
-                        }
-                      }
+                    branch {
+                      name
+                      id
                     }
                     loanFeesConfigs {
                       items {
@@ -138,7 +114,7 @@ export default function LoanProducts() {
               }
             `,
             variables: {
-              institutionId: userDetails.institutionUsersId,
+              branchId: userDetails.branchId,
               nextToken: nextToken,
             },
           });
@@ -157,11 +133,16 @@ export default function LoanProducts() {
         setLoading(false);
       }
     };
-    if (userDetails?.institutionUsersId && !__loanProductsFetchedOnce) {
-      __loanProductsFetchedOnce = true;
+    if (
+      userDetails?.branchId &&
+      userDetails.branchId !== lastBranchIdRef.current
+    ) {
+      lastBranchIdRef.current = userDetails.branchId;
       fetchLoanProducts();
+    } else if (!userDetails?.branchId) {
+      setLoading(false);
     }
-  }, [userDetails?.institutionUsersId]);
+  }, [userDetails?.branchId]);
 
   const handleEditDialogOpen = (row) => {
     setEditDialogRow(row);
@@ -204,27 +185,6 @@ export default function LoanProducts() {
     setDeleteError("");
     try {
       const client = generateClient();
-
-      // First, clear relationships with branches
-      console.log(
-        "Clearing BranchLoanProducts for loan product:",
-        deleteDialogRow.id
-      );
-      const branchLoanProductsResult = await client.graphql({
-        query: LIST_BRANCH_LOAN_PRODUCTS_QUERY,
-        variables: { filter: { loanProductId: { eq: deleteDialogRow.id } } },
-      });
-      const branchItems =
-        branchLoanProductsResult.data.listBranchLoanProducts.items;
-      console.log(`Found ${branchItems.length} BranchLoanProducts to delete`);
-      for (const item of branchItems) {
-        console.log("Deleting BranchLoanProduct:", item.id);
-        await client.graphql({
-          query: DELETE_BRANCH_LOAN_PRODUCT_MUTATION,
-          variables: { input: { id: item.id } },
-        });
-      }
-      console.log("Finished clearing BranchLoanProducts");
 
       // Then, clear relationships with loan fees configs
       console.log(
@@ -324,17 +284,12 @@ export default function LoanProducts() {
       ),
     },
     {
-      field: "branches",
-      headerName: "Branches",
+      field: "branch",
+      headerName: "Branch",
       width: 300,
       renderCell: (params) => {
-        const branchNames =
-          params.row.branches?.items
-            ?.map((item) => item.branch?.name)
-            .filter(Boolean) || [];
-        return branchNames.length > 0
-          ? branchNames.join(", ")
-          : "No branches assigned";
+        const branchName = params.row.branch?.name;
+        return branchName || "No branch assigned";
       },
     },
     {
@@ -383,21 +338,16 @@ export default function LoanProducts() {
           </Typography>
         </Typography>
         <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-          <Button
-            variant="contained"
-            color="success"
+          <PlusButtonMain
             onClick={handleCreateDialogOpen}
-          >
-            Add Loan Product
-          </Button>
+            buttonText="NEW LOAN PRODUCT"
+          />
         </Box>
       </Box>
       <Box sx={{ width: "100%" }}>
         {/* Show info text if no loan products */}
         {!loading && loanProducts.length === 0 && (
-          <Typography
-            sx={{ mb: 2, color: theme.palette.blueText?.main || "#1976d2" }}
-          >
+          <Typography sx={{ mb: 2 }}>
             No loan products found. Please create a loan product to get started.
           </Typography>
         )}

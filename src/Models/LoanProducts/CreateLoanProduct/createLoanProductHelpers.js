@@ -37,28 +37,6 @@ export const createLoanProduct = async (input) => {
   return result?.data?.createLoanProduct;
 };
 
-export const associateBranchWithLoanProduct = async (
-  loanProductId,
-  branchId
-) => {
-  const client = generateClient();
-  await client.graphql({
-    query: `
-      mutation CreateBranchLoanProduct($input: CreateBranchLoanProductInput!) {
-        createBranchLoanProduct(input: $input) {
-          id
-        }
-      }
-    `,
-    variables: {
-      input: {
-        branchId,
-        loanProductId,
-      },
-    },
-  });
-};
-
 export const associateFeeWithLoanProduct = async (loanProductId, loanFeesConfigId) => {
   const client = generateClient();
   await client.graphql({
@@ -113,5 +91,5 @@ export const buildLoanProductInput = (values, userDetails) => ({
     : null,
   recurringPeriodAfterMaturityUnit:
     values.recurringPeriodAfterMaturityUnit || null,
-  institutionLoanProductsId: userDetails?.institutionUsersId || null,
+  branchLoanProductsId: values.branch || null,
 });

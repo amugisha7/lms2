@@ -5,9 +5,8 @@ import Typography from "@mui/material/Typography";
 import { useTheme, useMediaQuery } from "@mui/material";
 import CustomDataGrid from "../../../ModelAssets/CustomDataGrid";
 import ClickableText from "../../../ModelAssets/ClickableText";
-import Button from "@mui/material/Button";
+import PlusButtonSmall from "../../../ModelAssets/PlusButtonSmall";
 import { useNavigate } from "react-router-dom";
-import Add from "@mui/icons-material/Add";
 
 export default function ListBorrowers({ borrowers, onSelect, onClose }) {
   const [search, setSearch] = React.useState("");
@@ -47,29 +46,7 @@ export default function ListBorrowers({ borrowers, onSelect, onClose }) {
       width: 120,
       renderCell: (params) => (
         <Box sx={{ display: "flex", alignItems: "center", height: "100%" }}>
-          <Button
-            variant="outlined"
-            onClick={() => onSelect(params.row)}
-            startIcon={
-              <Add
-                sx={{ color: theme.palette.blueText.main, fontSize: "0.5rem" }}
-              />
-            }
-            sx={{
-              padding: "2px 5px",
-              fontSize: "0.7rem",
-              borderColor: theme.palette.blueText.main,
-              color: theme.palette.blueText.main,
-              backgroundColor: "transparent",
-              "&:hover": {
-                backgroundColor: "transparent",
-                borderColor: theme.palette.blueText.main,
-                borderWidth: "2px",
-              },
-            }}
-          >
-            ADD LOAN
-          </Button>
+          <PlusButtonSmall onClick={() => onSelect(params.row)} />
         </Box>
       ),
     },

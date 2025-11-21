@@ -26,10 +26,7 @@ import {
   buildLoanProductUpdateInput,
   fetchBranchesAndFees,
 } from "./editLoanProductHelpers";
-import {
-  associateBranchWithLoanProduct,
-  associateFeeWithLoanProduct,
-} from "../CreateLoanProduct/createLoanProductHelpers"; // Re-use association helpers
+import { associateFeeWithLoanProduct } from "../CreateLoanProduct/createLoanProductHelpers"; // Re-use association helpers
 
 const FormGrid = styled(Grid)(({ theme }) => ({
   display: "flex",
@@ -246,6 +243,7 @@ const buildValidationSchema = () => {
         "lump_sum",
       ])
       .nullable(),
+    branch: Yup.string().required("Branch is required"),
   };
 
   return Yup.object().shape(validationShape);
@@ -362,7 +360,7 @@ const EditLoanProduct = forwardRef(
             ? JSON.parse(dbData.repaymentOrder)
             : dbData.repaymentOrder
           : ["Penalty", "Fees", "Interest", "Principal"],
-        branch: dbData.branches?.items.map((b) => b.branch.id) || [],
+        branch: dbData.branch?.id || "",
         loanFees:
           dbData.loanFeesConfigs?.items.map((f) => f.loanFeesConfig?.id) || [],
         extendLoanAfterMaturity: dbData.extendLoanAfterMaturity ? "yes" : "no",
@@ -384,11 +382,14 @@ const EditLoanProduct = forwardRef(
 
     useEffect(() => {
       if (propInitialValues) {
-        const branchOptions =
-          propInitialValues.branches?.items?.map((item) => ({
-            value: item.branch.id,
-            label: item.branch.name,
-          })) || [];
+        const branchOptions = propInitialValues.branch
+          ? [
+              {
+                value: propInitialValues.branch.id,
+                label: propInitialValues.branch.name,
+              },
+            ]
+          : [];
         setViewBranches(branchOptions);
 
         const feeOptions =
@@ -449,41 +450,8 @@ const EditLoanProduct = forwardRef(
         console.log("API Mutation: updateLoanProduct", { input });
         const result = await updateLoanProduct(input);
 
-        // This is a simplified version. In a real app, you'd want to diff the arrays and only add/remove what's necessary.
-        // For now, we remove all and re-add.
+        // Handle fees associations
         const client = generateClient();
-        console.log("API Query: ListBranchLoanProducts", {
-          variables: { loanProductId: propInitialValues.id },
-        });
-        const existingBranches = await client.graphql({
-          query: `query ListBranchLoanProducts($loanProductId: ID!) {
-            listBranchLoanProducts(filter: {loanProductId: {eq: $loanProductId}}) {
-                items { id }
-            }
-        }`,
-          variables: { loanProductId: propInitialValues.id },
-        });
-        for (const item of existingBranches.data.listBranchLoanProducts.items) {
-          console.log("API Mutation: DeleteBranchLoanProduct", {
-            variables: { input: { id: item.id } },
-          });
-          await client.graphql({
-            query: `mutation DeleteBranchLoanProduct($input: DeleteBranchLoanProductInput!) {
-                deleteBranchLoanProduct(input: $input) { id }
-            }`,
-            variables: { input: { id: item.id } },
-          });
-        }
-
-        if (values.branch && Array.isArray(values.branch)) {
-          for (const branchId of values.branch) {
-            await associateBranchWithLoanProduct(
-              propInitialValues.id,
-              branchId
-            );
-          }
-        }
-
         console.log("API Query: ListLoanProductLoanFeesConfigs", {
           variables: { loanProductId: propInitialValues.id },
         });
@@ -514,22 +482,13 @@ const EditLoanProduct = forwardRef(
           }
         }
 
+        // Find the branch details
+        const branchDetails = branches.find((b) => b.id === values.branch);
+
         // Construct the updated loan product with the complete data structure
         const updatedLoanProduct = {
           ...result, // Contains all the updated field values from the mutation
-          branches: {
-            items: values.branch
-              ? values.branch.map((branchId) => {
-                  const branchDetails = branches.find((b) => b.id === branchId);
-                  return {
-                    branch: {
-                      id: branchId,
-                      name: branchDetails?.name || "",
-                    },
-                  };
-                })
-              : [],
-          },
+          branch: branchDetails,
           loanFeesConfigs: {
             items: values.loanFees
               ? values.loanFees.map((feeId) => {

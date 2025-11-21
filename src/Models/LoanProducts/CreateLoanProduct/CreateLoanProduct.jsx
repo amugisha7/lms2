@@ -14,6 +14,7 @@ import { generateClient } from "aws-amplify/api";
 import createLoanProductForm from "./createLoanProductForm";
 import TextInput from "../../../Resources/FormComponents/TextInput";
 import Dropdown from "../../../Resources/FormComponents/Dropdown";
+import DropDownSearchable from "../../../Resources/FormComponents/DropDownSearchable";
 import MultipleDropDown from "../../../Resources/FormComponents/MultipleDropDown";
 import OrderedList from "../../../Resources/FormComponents/OrderedList";
 import RadioGroup from "../../../Resources/FormComponents/RadioGroup";
@@ -22,7 +23,6 @@ import CustomEditFormButtons from "../../../ModelAssets/CustomEditFormButtons";
 import { UserContext } from "../../../App";
 import {
   createLoanProduct,
-  associateBranchWithLoanProduct,
   associateFeeWithLoanProduct,
   buildLoanProductInput,
 } from "./createLoanProductHelpers";
@@ -49,10 +49,7 @@ const buildValidationSchema = () => {
     name: Yup.string()
       .required("Loan Product Name is required")
       .max(100, "Name too long"),
-    branch: Yup.array()
-      .of(Yup.string())
-      .min(1, "At least one branch must be selected")
-      .required("Branch is required"),
+    branch: Yup.string().required("Branch is required"),
     minPrincipal: Yup.number()
       .min(0, "Minimum Principal must be at least 0")
       .nullable()
@@ -283,6 +280,16 @@ const renderFormField = (field, formikValues) => {
         <TextInput {...field} label={displayLabel} disabled={isDisabled} />
       );
     case "select":
+      if (field.name === "branch") {
+        return (
+          <DropDownSearchable
+            {...field}
+            label={displayLabel}
+            disabled={isDisabled}
+            placeholder={"Type to search branches"}
+          />
+        );
+      }
       return <Dropdown {...field} label={displayLabel} disabled={isDisabled} />;
     case "selectMultiple":
       return <MultipleDropDown {...field} disabled={isDisabled} />;
@@ -466,7 +473,7 @@ const CreateLoanProduct = forwardRef(
             ? JSON.parse(dbData.repaymentOrder)
             : dbData.repaymentOrder
           : ["Penalty", "Fees", "Interest", "Principal"],
-        branch: dbData.branch || [],
+        branch: dbData.branch?.id || "",
         loanFees: dbData.loanFees || [],
         extendLoanAfterMaturity: dbData.extendLoanAfterMaturity ? "yes" : "no",
         interestTypeMaturity: dbData.interestTypeMaturity || "percentage",
@@ -558,29 +565,6 @@ const CreateLoanProduct = forwardRef(
           const loanProductId = result?.id;
 
           if (loanProductId) {
-            // Associate branches
-            const branchAssociations = [];
-            if (values.branch && Array.isArray(values.branch)) {
-              for (const branchId of values.branch) {
-                console.log("API Call: associateBranchWithLoanProduct", {
-                  loanProductId,
-                  branchId,
-                });
-                await associateBranchWithLoanProduct(loanProductId, branchId);
-                // Find the branch details from the branches state
-                const branchDetails = branches.find((b) => b.id === branchId);
-                if (branchDetails) {
-                  branchAssociations.push({
-                    id: `${loanProductId}-${branchId}`,
-                    branch: {
-                      id: branchDetails.id,
-                      name: branchDetails.name,
-                    },
-                  });
-                }
-              }
-            }
-
             // Associate loan fees
             const feeAssociations = [];
             if (values.loanFees && Array.isArray(values.loanFees)) {
@@ -603,12 +587,13 @@ const CreateLoanProduct = forwardRef(
               }
             }
 
+            // Find the branch details
+            const branchDetails = branches.find((b) => b.id === values.branch);
+
             // Construct the complete loan product object with associations
             const completeLoanProduct = {
               ...result,
-              branches: {
-                items: branchAssociations,
-              },
+              branch: branchDetails,
               loanFeesConfigs: {
                 items: feeAssociations,
               },

@@ -43,7 +43,10 @@ const MultipleDropDown = ({
     [options]
   );
   
-  const currentValues = field.value || [];
+  const currentValues = React.useMemo(
+    () => field.value || [],
+    [field.value]
+  );
   
   const allSelected = React.useMemo(
     () => allValues.length > 0 && allValues.every(val => currentValues.includes(val)),
@@ -67,11 +70,12 @@ const MultipleDropDown = ({
     
     // Check if "Select All" was clicked
     if (selectedValues.includes(SELECT_ALL_VALUE)) {
+      // Toggle between selecting all and deselecting all
       // If all items are already selected, deselect all
+      // Otherwise, select all items regardless of current state
       if (allSelected) {
         helpers.setValue([]);
       } else {
-        // Otherwise, select all items
         helpers.setValue(allValues);
       }
     } else {
@@ -165,6 +169,7 @@ const MultipleDropDown = ({
                 <Checkbox 
                   checked={allSelected} 
                   indeterminate={someSelected}
+                  onClick={(e) => e.stopPropagation()}
                 />
                 Select all {label}
               </MenuItem>

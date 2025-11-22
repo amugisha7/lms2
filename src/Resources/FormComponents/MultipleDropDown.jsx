@@ -65,8 +65,7 @@ const MultipleDropDown = ({
     .join(", ");
 
   const handleChange = (event) => {
-    const value = event.target.value;
-    const selectedValues = typeof value === "string" ? value.split(",") : value;
+    const selectedValues = event.target.value;
     
     // Check if "Select All" was clicked
     if (selectedValues.includes(SELECT_ALL_VALUE)) {
@@ -169,9 +168,8 @@ const MultipleDropDown = ({
                 <Checkbox 
                   checked={allSelected} 
                   indeterminate={someSelected}
-                  onClick={(e) => e.stopPropagation()}
                 />
-                Select all {label}
+                Select all {label?.toLowerCase() || "items"}
               </MenuItem>
             )}
             {options?.map((option) => (

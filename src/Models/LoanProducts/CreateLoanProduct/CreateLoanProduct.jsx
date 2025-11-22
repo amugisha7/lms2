@@ -280,16 +280,16 @@ const renderFormField = (field, formikValues) => {
         <TextInput {...field} label={displayLabel} disabled={isDisabled} />
       );
     case "select":
-      if (field.name === "branch") {
-        return (
-          <DropDownSearchable
-            {...field}
-            label={displayLabel}
-            disabled={isDisabled}
-            placeholder={"Type to search branches"}
-          />
-        );
-      }
+      // if (field.name === "branch") {
+      //   return (
+      //     <DropDownSearchable
+      //       {...field}
+      //       label={displayLabel}
+      //       disabled={isDisabled}
+      //       placeholder={"Type to search branches"}
+      //     />
+      //   );
+      // }
       return <Dropdown {...field} label={displayLabel} disabled={isDisabled} />;
     case "selectMultiple":
       return <MultipleDropDown {...field} disabled={isDisabled} />;

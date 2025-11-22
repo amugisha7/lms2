@@ -12,12 +12,12 @@ const createLoanProductForm = [
   {
     label: "Branch",
     name: "branch",
-    type: "select",
+    type: "selectMultiple",
     span: 12,
     options: [], // Will be populated dynamically
     dynamicoptions: "true",
     required: true,
-    helperText: "This loan product will be assigned to the selected Branch."
+    helperText: "This loan product will only be available to the selected Branch."
   },
   // Principal Settings
   {

@@ -1013,15 +1013,8 @@ export const getLoanProduct = /* GraphQL */ `
         updatedAt
         __typename
       }
-      branch {
-        id
-        name
-        branchCode
-        address
-        status
-        createdAt
-        updatedAt
-        institutionBranchesId
+      branches {
+        nextToken
         __typename
       }
       loanFees {
@@ -1047,7 +1040,6 @@ export const getLoanProduct = /* GraphQL */ `
       createdAt
       updatedAt
       institutionLoanProductsId
-      branchLoanProductsId
       __typename
     }
   }
@@ -1087,7 +1079,6 @@ export const listLoanProducts = /* GraphQL */ `
         createdAt
         updatedAt
         institutionLoanProductsId
-        branchLoanProductsId
         __typename
       }
       nextToken
@@ -1565,7 +1556,6 @@ export const getApplication = /* GraphQL */ `
         createdAt
         updatedAt
         institutionLoanProductsId
-        branchLoanProductsId
         __typename
       }
       createdByEmployeeID
@@ -1898,7 +1888,6 @@ export const getLoan = /* GraphQL */ `
         createdAt
         updatedAt
         institutionLoanProductsId
-        branchLoanProductsId
         __typename
       }
       createdByEmployeeID
@@ -3538,6 +3527,83 @@ export const listAccountBranches = /* GraphQL */ `
     }
   }
 `;
+export const getBranchLoanProduct = /* GraphQL */ `
+  query GetBranchLoanProduct($id: ID!) {
+    getBranchLoanProduct(id: $id) {
+      id
+      branchId
+      loanProductId
+      branch {
+        id
+        name
+        branchCode
+        address
+        status
+        createdAt
+        updatedAt
+        institutionBranchesId
+        __typename
+      }
+      loanProduct {
+        id
+        name
+        description
+        principalAmountMin
+        principalAmountMax
+        principalAmountDefault
+        interestRateMin
+        interestRateMax
+        interestRateDefault
+        interestCalculationMethod
+        interestType
+        interestPeriod
+        termDurationMin
+        termDurationMax
+        termDurationDefault
+        durationPeriod
+        repaymentFrequency
+        repaymentOrder
+        extendLoanAfterMaturity
+        interestTypeMaturity
+        calculateInterestOn
+        loanInterestRateAfterMaturity
+        recurringPeriodAfterMaturityUnit
+        status
+        createdAt
+        updatedAt
+        institutionLoanProductsId
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const listBranchLoanProducts = /* GraphQL */ `
+  query ListBranchLoanProducts(
+    $filter: ModelBranchLoanProductFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listBranchLoanProducts(
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        branchId
+        loanProductId
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
 export const getBranchLoanFeesConfig = /* GraphQL */ `
   query GetBranchLoanFeesConfig($id: ID!) {
     getBranchLoanFeesConfig(id: $id) {
@@ -4722,7 +4788,6 @@ export const getLoanProductLoanFees = /* GraphQL */ `
         createdAt
         updatedAt
         institutionLoanProductsId
-        branchLoanProductsId
         __typename
       }
       loanFees {
@@ -4810,7 +4875,6 @@ export const getLoanProductLoanFeesConfig = /* GraphQL */ `
         createdAt
         updatedAt
         institutionLoanProductsId
-        branchLoanProductsId
         __typename
       }
       loanFeesConfig {
@@ -4891,7 +4955,6 @@ export const getLoanProductPenalty = /* GraphQL */ `
         createdAt
         updatedAt
         institutionLoanProductsId
-        branchLoanProductsId
         __typename
       }
       penalty {
@@ -7229,6 +7292,62 @@ export const accountBranchesByAccountId = /* GraphQL */ `
         id
         branchId
         accountId
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const branchLoanProductsByBranchId = /* GraphQL */ `
+  query BranchLoanProductsByBranchId(
+    $branchId: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelBranchLoanProductFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    branchLoanProductsByBranchId(
+      branchId: $branchId
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        branchId
+        loanProductId
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const branchLoanProductsByLoanProductId = /* GraphQL */ `
+  query BranchLoanProductsByLoanProductId(
+    $loanProductId: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelBranchLoanProductFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    branchLoanProductsByLoanProductId(
+      loanProductId: $loanProductId
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        branchId
+        loanProductId
         createdAt
         updatedAt
         __typename

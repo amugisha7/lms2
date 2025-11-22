@@ -2121,15 +2121,8 @@ export const createLoanProduct = /* GraphQL */ `
         updatedAt
         __typename
       }
-      branch {
-        id
-        name
-        branchCode
-        address
-        status
-        createdAt
-        updatedAt
-        institutionBranchesId
+      branches {
+        nextToken
         __typename
       }
       loanFees {
@@ -2155,7 +2148,6 @@ export const createLoanProduct = /* GraphQL */ `
       createdAt
       updatedAt
       institutionLoanProductsId
-      branchLoanProductsId
       __typename
     }
   }
@@ -2219,15 +2211,8 @@ export const updateLoanProduct = /* GraphQL */ `
         updatedAt
         __typename
       }
-      branch {
-        id
-        name
-        branchCode
-        address
-        status
-        createdAt
-        updatedAt
-        institutionBranchesId
+      branches {
+        nextToken
         __typename
       }
       loanFees {
@@ -2253,7 +2238,6 @@ export const updateLoanProduct = /* GraphQL */ `
       createdAt
       updatedAt
       institutionLoanProductsId
-      branchLoanProductsId
       __typename
     }
   }
@@ -2317,15 +2301,8 @@ export const deleteLoanProduct = /* GraphQL */ `
         updatedAt
         __typename
       }
-      branch {
-        id
-        name
-        branchCode
-        address
-        status
-        createdAt
-        updatedAt
-        institutionBranchesId
+      branches {
+        nextToken
         __typename
       }
       loanFees {
@@ -2351,7 +2328,6 @@ export const deleteLoanProduct = /* GraphQL */ `
       createdAt
       updatedAt
       institutionLoanProductsId
-      branchLoanProductsId
       __typename
     }
   }
@@ -3339,7 +3315,6 @@ export const createApplication = /* GraphQL */ `
         createdAt
         updatedAt
         institutionLoanProductsId
-        branchLoanProductsId
         __typename
       }
       createdByEmployeeID
@@ -3509,7 +3484,6 @@ export const updateApplication = /* GraphQL */ `
         createdAt
         updatedAt
         institutionLoanProductsId
-        branchLoanProductsId
         __typename
       }
       createdByEmployeeID
@@ -3679,7 +3653,6 @@ export const deleteApplication = /* GraphQL */ `
         createdAt
         updatedAt
         institutionLoanProductsId
-        branchLoanProductsId
         __typename
       }
       createdByEmployeeID
@@ -4107,7 +4080,6 @@ export const createLoan = /* GraphQL */ `
         createdAt
         updatedAt
         institutionLoanProductsId
-        branchLoanProductsId
         __typename
       }
       createdByEmployeeID
@@ -4306,7 +4278,6 @@ export const updateLoan = /* GraphQL */ `
         createdAt
         updatedAt
         institutionLoanProductsId
-        branchLoanProductsId
         __typename
       }
       createdByEmployeeID
@@ -4505,7 +4476,6 @@ export const deleteLoan = /* GraphQL */ `
         createdAt
         updatedAt
         institutionLoanProductsId
-        branchLoanProductsId
         __typename
       }
       createdByEmployeeID
@@ -7966,6 +7936,174 @@ export const deleteAccountBranch = /* GraphQL */ `
     }
   }
 `;
+export const createBranchLoanProduct = /* GraphQL */ `
+  mutation CreateBranchLoanProduct(
+    $input: CreateBranchLoanProductInput!
+    $condition: ModelBranchLoanProductConditionInput
+  ) {
+    createBranchLoanProduct(input: $input, condition: $condition) {
+      id
+      branchId
+      loanProductId
+      branch {
+        id
+        name
+        branchCode
+        address
+        status
+        createdAt
+        updatedAt
+        institutionBranchesId
+        __typename
+      }
+      loanProduct {
+        id
+        name
+        description
+        principalAmountMin
+        principalAmountMax
+        principalAmountDefault
+        interestRateMin
+        interestRateMax
+        interestRateDefault
+        interestCalculationMethod
+        interestType
+        interestPeriod
+        termDurationMin
+        termDurationMax
+        termDurationDefault
+        durationPeriod
+        repaymentFrequency
+        repaymentOrder
+        extendLoanAfterMaturity
+        interestTypeMaturity
+        calculateInterestOn
+        loanInterestRateAfterMaturity
+        recurringPeriodAfterMaturityUnit
+        status
+        createdAt
+        updatedAt
+        institutionLoanProductsId
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const updateBranchLoanProduct = /* GraphQL */ `
+  mutation UpdateBranchLoanProduct(
+    $input: UpdateBranchLoanProductInput!
+    $condition: ModelBranchLoanProductConditionInput
+  ) {
+    updateBranchLoanProduct(input: $input, condition: $condition) {
+      id
+      branchId
+      loanProductId
+      branch {
+        id
+        name
+        branchCode
+        address
+        status
+        createdAt
+        updatedAt
+        institutionBranchesId
+        __typename
+      }
+      loanProduct {
+        id
+        name
+        description
+        principalAmountMin
+        principalAmountMax
+        principalAmountDefault
+        interestRateMin
+        interestRateMax
+        interestRateDefault
+        interestCalculationMethod
+        interestType
+        interestPeriod
+        termDurationMin
+        termDurationMax
+        termDurationDefault
+        durationPeriod
+        repaymentFrequency
+        repaymentOrder
+        extendLoanAfterMaturity
+        interestTypeMaturity
+        calculateInterestOn
+        loanInterestRateAfterMaturity
+        recurringPeriodAfterMaturityUnit
+        status
+        createdAt
+        updatedAt
+        institutionLoanProductsId
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const deleteBranchLoanProduct = /* GraphQL */ `
+  mutation DeleteBranchLoanProduct(
+    $input: DeleteBranchLoanProductInput!
+    $condition: ModelBranchLoanProductConditionInput
+  ) {
+    deleteBranchLoanProduct(input: $input, condition: $condition) {
+      id
+      branchId
+      loanProductId
+      branch {
+        id
+        name
+        branchCode
+        address
+        status
+        createdAt
+        updatedAt
+        institutionBranchesId
+        __typename
+      }
+      loanProduct {
+        id
+        name
+        description
+        principalAmountMin
+        principalAmountMax
+        principalAmountDefault
+        interestRateMin
+        interestRateMax
+        interestRateDefault
+        interestCalculationMethod
+        interestType
+        interestPeriod
+        termDurationMin
+        termDurationMax
+        termDurationDefault
+        durationPeriod
+        repaymentFrequency
+        repaymentOrder
+        extendLoanAfterMaturity
+        interestTypeMaturity
+        calculateInterestOn
+        loanInterestRateAfterMaturity
+        recurringPeriodAfterMaturityUnit
+        status
+        createdAt
+        updatedAt
+        institutionLoanProductsId
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
 export const createBranchLoanFeesConfig = /* GraphQL */ `
   mutation CreateBranchLoanFeesConfig(
     $input: CreateBranchLoanFeesConfigInput!
@@ -10718,7 +10856,6 @@ export const createLoanProductLoanFees = /* GraphQL */ `
         createdAt
         updatedAt
         institutionLoanProductsId
-        branchLoanProductsId
         __typename
       }
       loanFees {
@@ -10785,7 +10922,6 @@ export const updateLoanProductLoanFees = /* GraphQL */ `
         createdAt
         updatedAt
         institutionLoanProductsId
-        branchLoanProductsId
         __typename
       }
       loanFees {
@@ -10852,7 +10988,6 @@ export const deleteLoanProductLoanFees = /* GraphQL */ `
         createdAt
         updatedAt
         institutionLoanProductsId
-        branchLoanProductsId
         __typename
       }
       loanFees {
@@ -10919,7 +11054,6 @@ export const createLoanProductLoanFeesConfig = /* GraphQL */ `
         createdAt
         updatedAt
         institutionLoanProductsId
-        branchLoanProductsId
         __typename
       }
       loanFeesConfig {
@@ -10979,7 +11113,6 @@ export const updateLoanProductLoanFeesConfig = /* GraphQL */ `
         createdAt
         updatedAt
         institutionLoanProductsId
-        branchLoanProductsId
         __typename
       }
       loanFeesConfig {
@@ -11039,7 +11172,6 @@ export const deleteLoanProductLoanFeesConfig = /* GraphQL */ `
         createdAt
         updatedAt
         institutionLoanProductsId
-        branchLoanProductsId
         __typename
       }
       loanFeesConfig {
@@ -11099,7 +11231,6 @@ export const createLoanProductPenalty = /* GraphQL */ `
         createdAt
         updatedAt
         institutionLoanProductsId
-        branchLoanProductsId
         __typename
       }
       penalty {
@@ -11166,7 +11297,6 @@ export const updateLoanProductPenalty = /* GraphQL */ `
         createdAt
         updatedAt
         institutionLoanProductsId
-        branchLoanProductsId
         __typename
       }
       penalty {
@@ -11233,7 +11363,6 @@ export const deleteLoanProductPenalty = /* GraphQL */ `
         createdAt
         updatedAt
         institutionLoanProductsId
-        branchLoanProductsId
         __typename
       }
       penalty {

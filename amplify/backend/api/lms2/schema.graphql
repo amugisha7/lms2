@@ -79,7 +79,7 @@ type Branch @model {
   employees: [Employee] @hasMany
   accounts: [Account] @manyToMany(relationName: "AccountBranch")
   documents: [Document] @hasMany
-  loanProducts: [LoanProduct] @hasMany
+  loanProducts: [LoanProduct] @manyToMany(relationName: "BranchLoanProduct")
 
   payrolls: [Payroll] @hasMany
   financialReports: [FinancialReport] @hasMany
@@ -323,7 +323,7 @@ type LoanProduct @model {
 
   # Relationships
   institution: Institution @belongsTo
-  branch: Branch @belongsTo
+  branches: [Branch] @manyToMany(relationName: "BranchLoanProduct")
   loanFees: [LoanFees] @manyToMany(relationName: "LoanProductLoanFees")
   loanFeesConfigs: [LoanFeesConfig]
     @manyToMany(relationName: "LoanProductLoanFeesConfig")

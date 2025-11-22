@@ -1,4 +1,7 @@
 - Create loans form. Also create from loan product.
-  - prepopulate the createLoan form with the loan product.
-  - Move the loanproducts to belong to the branch
+  - move loanproducts back to manytomany rshp with branches.
+  - filter for loanproducts that belong to required branches; loop if necessary to get all.
+  - prepopulate the createLoan form with the loan products.
+  - ensure loan creation is working well.
+  - display loan draft after creation.
   - implement testing for when there is no data.

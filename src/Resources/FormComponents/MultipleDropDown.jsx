@@ -38,7 +38,9 @@ const MultipleDropDown = ({
 
   const SELECT_ALL_VALUE = "__SELECT_ALL__";
   const allValues = options?.map(option => option.value) || [];
-  const allSelected = allValues.length > 0 && allValues.every(val => field.value?.includes(val));
+  const currentValues = field.value || [];
+  const allSelected = allValues.length > 0 && allValues.every(val => currentValues.includes(val));
+  const someSelected = currentValues.length > 0 && currentValues.length < allValues.length;
 
   // Find the labels for the current values
   const selectedLabels = options
@@ -60,7 +62,9 @@ const MultipleDropDown = ({
         helpers.setValue(allValues);
       }
     } else {
-      helpers.setValue(selectedValues);
+      // Filter out SELECT_ALL_VALUE if it somehow got included
+      const filteredValues = selectedValues.filter(val => val !== SELECT_ALL_VALUE);
+      helpers.setValue(filteredValues);
     }
   };
 
@@ -145,7 +149,10 @@ const MultipleDropDown = ({
                   },
                 }}
               >
-                <Checkbox checked={allSelected} />
+                <Checkbox 
+                  checked={allSelected} 
+                  indeterminate={someSelected}
+                />
                 Select all {label}
               </MenuItem>
             )}

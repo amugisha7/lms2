@@ -68,6 +68,8 @@ const MultipleDropDown = ({
     const selectedValues = event.target.value;
     
     // Check if "Select All" was clicked
+    // Note: selectedValues may contain SELECT_ALL_VALUE along with other values,
+    // but we intentionally ignore the other values and toggle all/none
     if (selectedValues.includes(SELECT_ALL_VALUE)) {
       // Toggle between selecting all and deselecting all
       // If all items are already selected, deselect all
@@ -153,7 +155,7 @@ const MultipleDropDown = ({
               input: { readOnly: isReadOnly },
             }}
           >
-            {showSelectAll && options && options.length > 0 && (
+            {showSelectAll && options?.length > 0 && (
               <MenuItem
                 key={SELECT_ALL_VALUE}
                 value={SELECT_ALL_VALUE}

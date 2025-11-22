@@ -1,5 +1,9 @@
 import { generateClient } from "aws-amplify/api";
 
+// Constants
+export const ACCOUNT_STATUS_ACTIVE = "active";
+export const ACCOUNT_TYPE_USER = "user";
+
 // GraphQL queries and mutations
 export const LIST_ACCOUNTS_QUERY = `
   query ListAccounts($institutionId: ID!, $nextToken: String) {
@@ -160,9 +164,9 @@ export const createAccount = async (client, values, userDetails) => {
     institutionAccountsId: userDetails.institutionUsersId,
     name: values.name?.trim() || null,
     openingBalance: parseFloat(values.openingBalance) || 0,
-    status: "active",
+    status: ACCOUNT_STATUS_ACTIVE,
     currency: values.currency || userDetails.institution.currencyCode,
-    accountType: "user",
+    accountType: ACCOUNT_TYPE_USER,
     description: values.description?.trim() || null,
   };
 
@@ -191,9 +195,9 @@ export const updateAccount = async (client, values, initialValues, userDetails) 
     id: initialValues.id,
     name: values.name?.trim() || null,
     openingBalance: parseFloat(values.openingBalance) || 0,
-    status: values.status || "active",
+    status: values.status || ACCOUNT_STATUS_ACTIVE,
     currency: values.currency || userDetails.institution.currencyCode,
-    accountType: "user",
+    accountType: ACCOUNT_TYPE_USER,
     description: values.description?.trim() || null,
   };
 

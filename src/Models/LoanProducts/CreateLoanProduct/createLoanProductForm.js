@@ -17,7 +17,8 @@ const createLoanProductForm = [
     options: [], // Will be populated dynamically
     dynamicoptions: "true",
     required: true,
-    helperText: "This loan product will only be available to the selected Branch."
+    placeholder: "Select Branches",
+    helperText: "This loan product will only be available to the selected Branches."
   },
   // Principal Settings
   {

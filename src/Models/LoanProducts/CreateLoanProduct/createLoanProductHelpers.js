@@ -56,6 +56,25 @@ export const associateFeeWithLoanProduct = async (loanProductId, loanFeesConfigI
   });
 };
 
+export const associateBranchWithLoanProduct = async (loanProductId, branchId) => {
+  const client = generateClient();
+  await client.graphql({
+    query: `
+      mutation CreateBranchLoanProduct($input: CreateBranchLoanProductInput!) {
+        createBranchLoanProduct(input: $input) {
+          id
+        }
+      }
+    `,
+    variables: {
+      input: {
+        branchId,
+        loanProductId,
+      },
+    },
+  });
+};
+
 export const buildLoanProductInput = (values, userDetails) => ({
   name: values.name,
   description: "",
@@ -91,5 +110,4 @@ export const buildLoanProductInput = (values, userDetails) => ({
     : null,
   recurringPeriodAfterMaturityUnit:
     values.recurringPeriodAfterMaturityUnit || null,
-  branchLoanProductsId: values.branch || null,
 });

@@ -28,9 +28,13 @@ export const updateLoanProduct = async (input) => {
           calculateInterestOn
           loanInterestRateAfterMaturity
           recurringPeriodAfterMaturityUnit
-          branch {
-            id
-            name
+          branches {
+            items {
+              branch {
+                id
+                name
+              }
+            }
           }
           loanFeesConfigs {
             items {
@@ -76,9 +80,13 @@ export const getLoanProductById = async (id) => {
                     calculateInterestOn
                     loanInterestRateAfterMaturity
                     recurringPeriodAfterMaturityUnit
-                    branch {
-                        id
-                        name
+                    branches {
+                        items {
+                            branch {
+                                id
+                                name
+                            }
+                        }
                     }
                     loanFeesConfigs {
                         items {
@@ -131,7 +139,6 @@ export const buildLoanProductUpdateInput = (values, userDetails, id) => ({
     : null,
   recurringPeriodAfterMaturityUnit:
     values.recurringPeriodAfterMaturityUnit || null,
-  branchLoanProductsId: values.branch || null,
 });
 
 export const LIST_BRANCHES_QUERY = `

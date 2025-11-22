@@ -4,6 +4,7 @@ import React, {
   useImperativeHandle,
   useEffect,
   useContext,
+  useRef,
 } from "react";
 import { Formik, Form } from "formik";
 import * as Yup from "yup";
@@ -24,6 +25,7 @@ import { UserContext } from "../../../App";
 import {
   createLoanProduct,
   associateFeeWithLoanProduct,
+  associateBranchWithLoanProduct,
   buildLoanProductInput,
 } from "./createLoanProductHelpers";
 import FormLabel from "../../../Resources/FormComponents/FormLabel";
@@ -40,7 +42,10 @@ const baseInitialValues = createLoanProductForm.reduce((acc, field) => {
   // Skip label fields as they don't need values
   if (field.type === "label") return acc;
   // For multi-select fields, use an empty array instead of empty string
-  acc[field.name] = field.multiple ? [] : field.defaultValue || "";
+  acc[field.name] =
+    field.multiple || field.type === "selectMultiple"
+      ? []
+      : field.defaultValue || "";
   return acc;
 }, {});
 
@@ -49,7 +54,9 @@ const buildValidationSchema = () => {
     name: Yup.string()
       .required("Loan Product Name is required")
       .max(100, "Name too long"),
-    branch: Yup.string().required("Branch is required"),
+    branch: Yup.array()
+      .min(1, "At least one branch is required")
+      .required("Branch is required"),
     minPrincipal: Yup.number()
       .min(0, "Minimum Principal must be at least 0")
       .nullable()
@@ -370,6 +377,7 @@ const CreateLoanProduct = forwardRef(
     const [loanFees, setLoanFees] = useState([]);
     const [editMode, setEditMode] = useState(forceEditMode || !isEditMode);
     const client = React.useMemo(() => generateClient(), []);
+    const hasFetchedRef = useRef(false);
 
     // Scroll to top on component mount
     useEffect(() => {
@@ -378,7 +386,9 @@ const CreateLoanProduct = forwardRef(
 
     useEffect(() => {
       const fetchBranchesAndFees = async () => {
-        if (!userDetails?.institutionUsersId) return;
+        if (!userDetails?.institutionUsersId || hasFetchedRef.current) return;
+
+        hasFetchedRef.current = true;
 
         try {
           // Fetch Branches
@@ -473,7 +483,7 @@ const CreateLoanProduct = forwardRef(
             ? JSON.parse(dbData.repaymentOrder)
             : dbData.repaymentOrder
           : ["Penalty", "Fees", "Interest", "Principal"],
-        branch: dbData.branch?.id || "",
+        branch: dbData.branches?.items?.map((b) => b.branch.id) || [],
         loanFees: dbData.loanFees || [],
         extendLoanAfterMaturity: dbData.extendLoanAfterMaturity ? "yes" : "no",
         interestTypeMaturity: dbData.interestTypeMaturity || "percentage",
@@ -587,13 +597,34 @@ const CreateLoanProduct = forwardRef(
               }
             }
 
-            // Find the branch details
-            const branchDetails = branches.find((b) => b.id === values.branch);
+            // Associate branches
+            const branchAssociations = [];
+            if (values.branch && Array.isArray(values.branch)) {
+              for (const branchId of values.branch) {
+                console.log("API Call: associateBranchWithLoanProduct", {
+                  loanProductId,
+                  branchId,
+                });
+                await associateBranchWithLoanProduct(loanProductId, branchId);
+                // Find the branch details from the branches state
+                const branchDetails = branches.find((b) => b.id === branchId);
+                if (branchDetails) {
+                  branchAssociations.push({
+                    branch: {
+                      id: branchDetails.id,
+                      name: branchDetails.name,
+                    },
+                  });
+                }
+              }
+            }
 
             // Construct the complete loan product object with associations
             const completeLoanProduct = {
               ...result,
-              branch: branchDetails,
+              branches: {
+                items: branchAssociations,
+              },
               loanFeesConfigs: {
                 items: feeAssociations,
               },

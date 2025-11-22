@@ -19,12 +19,14 @@ const MultipleDropDown = ({
   options,
   helperText,
   required,
+  placeholder,
   readOnly = false,
   editing = true,
   ...props
 }) => {
   const [field, meta, helpers] = useField(name);
   const isReadOnly = readOnly || editing === false;
+  const textPlaceholder = placeholder || `Select ${label}`;
 
   const StyledOutlinedInput = styled(OutlinedInput)(({ theme }) => {
     const colors = tokens(theme.palette.mode);
@@ -103,7 +105,7 @@ const MultipleDropDown = ({
             input={<StyledOutlinedInput label={label} />}
             renderValue={(selected) => {
               if (!selected || selected.length === 0) {
-                return <em>Select {label}</em>;
+                return <em> {textPlaceholder}</em>;
               }
               return options
                 ?.filter((option) => selected.includes(option.value))

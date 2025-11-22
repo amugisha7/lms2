@@ -25,8 +25,26 @@ const LIST_LOAN_PRODUCT_LOAN_FEES_CONFIGS_QUERY = `
 const DELETE_LOAN_PRODUCT_LOAN_FEES_CONFIG_MUTATION = `
   mutation DeleteLoanProductLoanFeesConfig($input: DeleteLoanProductLoanFeesConfigInput!) {
     deleteLoanProductLoanFeesConfig(input: $input) {
-    
-      id}
+      id
+    }
+  }
+`;
+
+const LIST_BRANCH_LOAN_PRODUCTS_QUERY = `
+  query ListBranchLoanProducts($filter: ModelBranchLoanProductFilterInput) {
+    listBranchLoanProducts(filter: $filter) {
+      items {
+        id
+      }
+    }
+  }
+`;
+
+const DELETE_BRANCH_LOAN_PRODUCT_MUTATION = `
+  mutation DeleteBranchLoanProduct($input: DeleteBranchLoanProductInput!) {
+    deleteBranchLoanProduct(input: $input) {
+      id
+    }
   }
 `;
 
@@ -66,49 +84,54 @@ export default function LoanProducts() {
         do {
           const result = await client.graphql({
             query: `
-              query ListLoanProducts($branchId: ID!, $nextToken: String) {
-                listLoanProducts(
-                  filter: { branchLoanProductsId: { eq: $branchId } }
+              query ListBranchLoanProducts($branchId: ID!, $nextToken: String) {
+                listBranchLoanProducts(
+                  filter: { branchId: { eq: $branchId } }
                   limit: 100
                   nextToken: $nextToken
                 ) {
                   nextToken
                   items {
-                    calculateInterestOn
-                    durationPeriod
-                    extendLoanAfterMaturity
-                    id
-                    interestCalculationMethod
-                    interestPeriod
-                    interestRateDefault
-                    interestRateMax
-                    interestRateMin
-                    interestType
-                    interestTypeMaturity
-                    loanInterestRateAfterMaturity
-                    name
-                    principalAmountDefault
-                    principalAmountMax
-                    principalAmountMin
-                    recurringPeriodAfterMaturityUnit
-                    repaymentFrequency
-                    repaymentOrder
-                    termDurationDefault
-                    termDurationMax
-                    termDurationMin
-                    branch {
-                      name
+                    loanProduct {
+                      calculateInterestOn
+                      durationPeriod
+                      extendLoanAfterMaturity
                       id
-                    }
-                    loanFeesConfigs {
-                      items {
-                        loanFeesConfig {
-                          id
-                          name
+                      interestCalculationMethod
+                      interestPeriod
+                      interestRateDefault
+                      interestRateMax
+                      interestRateMin
+                      interestType
+                      interestTypeMaturity
+                      loanInterestRateAfterMaturity
+                      name
+                      principalAmountDefault
+                      principalAmountMax
+                      principalAmountMin
+                      recurringPeriodAfterMaturityUnit
+                      repaymentFrequency
+                      repaymentOrder
+                      termDurationDefault
+                      termDurationMax
+                      termDurationMin
+                      branches {
+                        items {
+                          branch {
+                            id
+                            name
+                          }
+                        }
+                      }
+                      loanFeesConfigs {
+                        items {
+                          loanFeesConfig {
+                            id
+                            name
+                          }
                         }
                       }
                     }
-                    
                   }
                 }
               }
@@ -119,13 +142,22 @@ export default function LoanProducts() {
             },
           });
 
-          const items = result.data.listLoanProducts.items || [];
-          allLoanProducts = [...allLoanProducts, ...items];
-          nextToken = result.data.listLoanProducts.nextToken;
+          const items = result.data.listBranchLoanProducts.items || [];
+          // Extract loanProduct from the relationship
+          const loanProducts = items
+            .map((item) => item.loanProduct)
+            .filter((lp) => lp !== null);
+          allLoanProducts = [...allLoanProducts, ...loanProducts];
+          nextToken = result.data.listBranchLoanProducts.nextToken;
         } while (nextToken);
 
-        setLoanProducts(allLoanProducts);
-        console.log("allLoanProducts::: ", allLoanProducts);
+        // Remove duplicates if any (though unlikely with this query structure unless a loan product is linked to the same branch multiple times which shouldn't happen)
+        const uniqueLoanProducts = Array.from(
+          new Map(allLoanProducts.map((item) => [item.id, item])).values()
+        );
+
+        setLoanProducts(uniqueLoanProducts);
+        console.log("allLoanProducts::: ", uniqueLoanProducts);
       } catch (err) {
         console.log("err::: ", err);
         setLoanProducts([]);
@@ -209,6 +241,27 @@ export default function LoanProducts() {
       }
       console.log("Finished clearing LoanProductLoanFeesConfigs");
 
+      // Clear relationships with branches
+      console.log(
+        "Clearing BranchLoanProducts for loan product:",
+        deleteDialogRow.id
+      );
+      const branchLoanProductsResult = await client.graphql({
+        query: LIST_BRANCH_LOAN_PRODUCTS_QUERY,
+        variables: { filter: { loanProductId: { eq: deleteDialogRow.id } } },
+      });
+      const branchItems =
+        branchLoanProductsResult.data.listBranchLoanProducts.items;
+      console.log(`Found ${branchItems.length} BranchLoanProducts to delete`);
+      for (const item of branchItems) {
+        console.log("Deleting BranchLoanProduct:", item.id);
+        await client.graphql({
+          query: DELETE_BRANCH_LOAN_PRODUCT_MUTATION,
+          variables: { input: { id: item.id } },
+        });
+      }
+      console.log("Finished clearing BranchLoanProducts");
+
       // Placeholder mutation for deleting a loan product
       await client.graphql({
         query: `
@@ -288,8 +341,12 @@ export default function LoanProducts() {
       headerName: "Branch",
       width: 300,
       renderCell: (params) => {
-        const branchName = params.row.branch?.name;
-        return branchName || "No branch assigned";
+        const branches = params.row.branches?.items || [];
+        const branchNames = branches
+          .map((item) => item.branch?.name)
+          .filter(Boolean)
+          .join(", ");
+        return branchNames || "No branch assigned";
       },
     },
     {

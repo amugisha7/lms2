@@ -37,10 +37,23 @@ const MultipleDropDown = ({
   });
 
   const SELECT_ALL_VALUE = "__SELECT_ALL__";
-  const allValues = options?.map(option => option.value) || [];
+  
+  const allValues = React.useMemo(
+    () => options?.map(option => option.value) || [],
+    [options]
+  );
+  
   const currentValues = field.value || [];
-  const allSelected = allValues.length > 0 && allValues.every(val => currentValues.includes(val));
-  const someSelected = currentValues.length > 0 && !allSelected;
+  
+  const allSelected = React.useMemo(
+    () => allValues.length > 0 && allValues.every(val => currentValues.includes(val)),
+    [allValues, currentValues]
+  );
+  
+  const someSelected = React.useMemo(
+    () => currentValues.length > 0 && !allSelected,
+    [currentValues, allSelected]
+  );
 
   // Find the labels for the current values
   const selectedLabels = options

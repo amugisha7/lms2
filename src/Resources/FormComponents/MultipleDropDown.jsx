@@ -22,6 +22,7 @@ const MultipleDropDown = ({
   placeholder,
   readOnly = false,
   editing = true,
+  showSelectAll = false,
   ...props
 }) => {
   const [field, meta, helpers] = useField(name);
@@ -35,6 +36,28 @@ const MultipleDropDown = ({
     };
   });
 
+  const SELECT_ALL_VALUE = "__SELECT_ALL__";
+  
+  const allValues = React.useMemo(
+    () => options?.map(option => option.value) || [],
+    [options]
+  );
+  
+  const currentValues = React.useMemo(
+    () => field.value || [],
+    [field.value]
+  );
+  
+  const allSelected = React.useMemo(
+    () => allValues.length > 0 && allValues.every(val => currentValues.includes(val)),
+    [allValues, currentValues]
+  );
+  
+  const someSelected = React.useMemo(
+    () => currentValues.length > 0 && !allSelected,
+    [currentValues, allSelected]
+  );
+
   // Find the labels for the current values
   const selectedLabels = options
     ?.filter((option) => field.value?.includes(option.value))
@@ -42,8 +65,24 @@ const MultipleDropDown = ({
     .join(", ");
 
   const handleChange = (event) => {
-    const value = event.target.value;
-    helpers.setValue(typeof value === "string" ? value.split(",") : value);
+    const selectedValues = event.target.value;
+    
+    // Check if "Select All" was clicked
+    // Note: selectedValues may contain SELECT_ALL_VALUE along with other values,
+    // but we intentionally ignore the other values and toggle all/none
+    if (selectedValues.includes(SELECT_ALL_VALUE)) {
+      // Toggle between selecting all and deselecting all
+      // If all items are already selected, deselect all
+      // Otherwise, select all items regardless of current state
+      if (allSelected) {
+        helpers.setValue([]);
+      } else {
+        helpers.setValue(allValues);
+      }
+    } else {
+      // Normal selection - just update the field value
+      helpers.setValue(selectedValues);
+    }
   };
 
   return (
@@ -116,6 +155,24 @@ const MultipleDropDown = ({
               input: { readOnly: isReadOnly },
             }}
           >
+            {showSelectAll && options?.length > 0 && (
+              <MenuItem
+                key={SELECT_ALL_VALUE}
+                value={SELECT_ALL_VALUE}
+                sx={{
+                  "&:hover": {
+                    color: "#fff",
+                    backgroundColor: "primary.main",
+                  },
+                }}
+              >
+                <Checkbox 
+                  checked={allSelected} 
+                  indeterminate={someSelected}
+                />
+                Select all {label}
+              </MenuItem>
+            )}
             {options?.map((option) => (
               <MenuItem
                 key={option.value}

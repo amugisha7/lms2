@@ -7,72 +7,18 @@ import CollectionsTemplate from "../../ModelAssets/CollectionsTemplate";
 import { useCrudOperations } from "../../hooks/useCrudOperations";
 import { generateClient } from "aws-amplify/api";
 import NotificationBar from "../../ModelAssets/NotificationBar";
+import {
+  LIST_ACCOUNTS_QUERY,
+  CREATE_ACCOUNT_MUTATION,
+  DELETE_ACCOUNT_MUTATION,
+  UPDATE_ACCOUNT_MUTATION,
+  fetchAccounts as fetchAccountsHelper,
+  createAccount,
+  updateAccount,
+} from "./accountHelpers";
 
 // Guard to ensure we only fetch accounts once per page load (even under React StrictMode)
 let __accountsFetchedOnce = false;
-
-const LIST_ACCOUNTS_QUERY = `
-  query ListAccounts($institutionId: ID!, $nextToken: String) {
-    listAccounts(
-      filter: { institutionAccountsId: { eq: $institutionId } }
-      limit: 100
-      nextToken: $nextToken
-    ) {
-      items {
-        id
-        name
-        openingBalance
-        status
-        currency
-        accountType
-        description
-        createdAt
-        updatedAt
-      }
-      nextToken
-    }
-  }
-`;
-
-const CREATE_ACCOUNT_MUTATION = `
-  mutation CreateAccount($input: CreateAccountInput!) {
-    createAccount(input: $input) {
-      id
-      name
-      openingBalance
-      status
-      currency
-      accountType
-      description
-      createdAt
-      updatedAt
-    }
-  }
-`;
-
-const DELETE_ACCOUNT_MUTATION = `
-  mutation DeleteAccount($input: DeleteAccountInput!) {
-    deleteAccount(input: $input) {
-      id
-    }
-  }
-`;
-
-const UPDATE_ACCOUNT_MUTATION = `
-  mutation UpdateAccount($input: UpdateAccountInput!) {
-    updateAccount(input: $input) {
-      id
-      name
-      openingBalance
-      status
-      currency
-      accountType
-      description
-      createdAt
-      updatedAt
-    }
-  }
-`;
 
 export default function Accounts() {
   const [editMode, setEditMode] = React.useState(false);
@@ -120,69 +66,13 @@ export default function Accounts() {
   // Custom fetch function with pagination support
   const fetchAccounts = React.useCallback(
     async (variables = {}) => {
-      console.log("Fetching accounts with pagination...");
-      setAccountsLoading(true);
       try {
-        let allAccountsList = [];
-        let nextToken = null;
-        let iteration = 0;
-        while (true) {
-          const queryVariables = {
-            ...variables,
-            ...(nextToken && { nextToken }),
-          };
-          console.log(
-            `Fetching batch ${iteration + 1} with nextToken: ${
-              nextToken || "null"
-            }`
-          );
-          console.log("API Query: LIST_ACCOUNTS_QUERY", {
-            variables: queryVariables,
-          });
-          const result = await client.graphql({
-            query: LIST_ACCOUNTS_QUERY,
-            variables: queryVariables,
-          });
-          // Defensive: handle unexpected shapes
-          const listResult = result?.data?.listAccounts || {};
-          const batchItems = Array.isArray(listResult.items)
-            ? listResult.items
-            : [];
-          allAccountsList.push(...batchItems);
-          const newNextToken = listResult.nextToken || null;
-          console.log(
-            `Fetched ${batchItems.length} accounts in this batch. Total: ${allAccountsList.length}. NextToken: ${newNextToken}`
-          );
-          // Break conditions
-          if (!newNextToken) {
-            console.log("No nextToken returned. Pagination complete.");
-            break;
-          }
-          if (newNextToken === nextToken) {
-            console.warn(
-              "Next token did not advance. Stopping to prevent infinite loop."
-            );
-            break;
-          }
-          if (++iteration > 50) {
-            console.warn(
-              "Safety cap (50 iterations) reached. Stopping pagination."
-            );
-            break;
-          }
-          nextToken = newNextToken;
-        }
-        console.log(
-          `Finished fetching all accounts. Total count: ${allAccountsList.length}`
-        );
+        const allAccountsList = await fetchAccountsHelper(client, variables, setAccountsLoading);
         setAllAccounts(allAccountsList);
         return allAccountsList;
       } catch (err) {
-        console.error("Error fetching accounts with pagination:", err);
         setAllAccounts([]);
         throw err;
-      } finally {
-        setAccountsLoading(false);
       }
     },
     [client]
@@ -190,52 +80,12 @@ export default function Accounts() {
 
   // API handler for creating account
   const handleCreateAccountAPI = async (values) => {
-    if (!userDetails?.institutionUsersId) {
-      throw new Error("Error: Please try refreshing the page.");
-    }
-
-    const input = {
-      institutionAccountsId: userDetails.institutionUsersId,
-      name: values.name?.trim() || null,
-      openingBalance: parseFloat(values.openingBalance) || 0,
-      status: "active",
-      currency: values.currency || userDetails.institution.currencyCode,
-      accountType: "user",
-      description: values.description?.trim() || null,
-    };
-
-    console.log("API Mutation: CREATE_ACCOUNT_MUTATION", {
-      variables: { input },
-    });
-    const result = await client.graphql({
-      query: CREATE_ACCOUNT_MUTATION,
-      variables: { input },
-    });
-
-    return result.data.createAccount;
+    return await createAccount(client, values, userDetails);
   };
 
   // API handler for updating account
   const handleUpdateAccountAPI = async (values, initialValues) => {
-    const input = {
-      id: initialValues.id,
-      name: values.name?.trim() || null,
-      openingBalance: parseFloat(values.openingBalance) || 0,
-      status: values.status || "active",
-      currency: values.currency || userDetails.institution.currencyCode,
-      accountType: "user",
-      description: values.description?.trim() || null,
-    };
-
-    console.log("API Mutation: UPDATE_ACCOUNT_MUTATION", {
-      variables: { input },
-    });
-    const result = await client.graphql({
-      query: UPDATE_ACCOUNT_MUTATION,
-      variables: { input },
-    });
-
-    return result.data.updateAccount;
+    return await updateAccount(client, values, initialValues, userDetails);
   };
 
   // Custom handleCreateSuccess to update allAccounts state and show notification

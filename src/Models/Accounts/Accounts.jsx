@@ -9,11 +9,8 @@ import { generateClient } from "aws-amplify/api";
 import NotificationBar from "../../ModelAssets/NotificationBar";
 import PlusButtonSmall from "../../ModelAssets/PlusButtonSmall";
 import CustomPopUp from "../../ModelAssets/CustomPopUp";
-import NumberInput from "../../Resources/FormComponents/NumberInput";
-import TextInput from "../../Resources/FormComponents/TextInput";
-import { Formik, Form } from "formik";
-import * as Yup from "yup";
-import { Box, Button } from "@mui/material";
+import CreateMoneyTransaction from "./MoneyTransactions/CreateMoneyTransaction";
+import { Box } from "@mui/material";
 import Remove from "@mui/icons-material/Remove";
 import Add from "@mui/icons-material/Add";
 import {
@@ -21,7 +18,6 @@ import {
   CREATE_ACCOUNT_MUTATION,
   DELETE_ACCOUNT_MUTATION,
   UPDATE_ACCOUNT_MUTATION,
-  CREATE_MONEY_TRANSACTION_MUTATION,
 } from "./accountHelpers";
 
 // Guard to ensure we only fetch accounts once per page load (even under React StrictMode)
@@ -56,39 +52,8 @@ export default function Accounts() {
     setSelectedAccount(null);
   };
 
-  const handleTransactionSubmit = async (values, { setSubmitting }) => {
-    try {
-      const input = {
-        amount: parseFloat(values.amount),
-        accountMoneyTransactionsId: selectedAccount.id,
-        transactionType: transactionType,
-        description: values.description,
-        transactionDate: new Date().toISOString().split("T")[0],
-        status: "completed",
-      };
-
-      await client.graphql({
-        query: CREATE_MONEY_TRANSACTION_MUTATION,
-        variables: { input },
-      });
-
-      setNotification({
-        message: `${
-          transactionType === "deposit" ? "Deposit" : "Withdrawal"
-        } successful!`,
-        color: "green",
-      });
-      handleTransactionClose();
-      fetchAccounts({ institutionId: userDetails.institutionUsersId });
-    } catch (error) {
-      console.error("Transaction error:", error);
-      setNotification({
-        message: `Error processing transaction: ${error.message}`,
-        color: "red",
-      });
-    } finally {
-      setSubmitting(false);
-    }
+  const handleTransactionSuccess = () => {
+    fetchAccounts({ institutionId: userDetails.institutionUsersId });
   };
 
   const {
@@ -371,72 +336,6 @@ export default function Accounts() {
     },
   ];
 
-  const TransactionForm = ({ onClose, onSubmit, type, account }) => {
-    const theme = useTheme();
-
-    const validationSchema = Yup.object().shape({
-      amount: Yup.number()
-        .required("Amount is required")
-        .positive("Amount must be positive"),
-      description: Yup.string(),
-    });
-
-    return (
-      <Formik
-        initialValues={{ amount: "", description: "" }}
-        validationSchema={validationSchema}
-        onSubmit={onSubmit}
-      >
-        {({ values, handleChange, touched, errors, isSubmitting }) => (
-          <Form>
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-              <NumberInput
-                label="Amount"
-                name="amount"
-                value={values.amount}
-                onChange={handleChange}
-                error={touched.amount && Boolean(errors.amount)}
-                helperText={touched.amount && errors.amount}
-                fullWidth
-              />
-              <TextInput
-                label="Description"
-                name="description"
-                value={values.description}
-                onChange={handleChange}
-                error={touched.description && Boolean(errors.description)}
-                helperText={touched.description && errors.description}
-                fullWidth
-                multiline
-                rows={3}
-              />
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "flex-end",
-                  gap: 2,
-                  mt: 2,
-                }}
-              >
-                <Button onClick={onClose} color="inherit">
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  variant="contained"
-                  color="primary"
-                  disabled={isSubmitting}
-                >
-                  {type === "deposit" ? "Deposit" : "Withdraw"}
-                </Button>
-              </Box>
-            </Box>
-          </Form>
-        )}
-      </Formik>
-    );
-  };
-
   return (
     <>
       <NotificationBar
@@ -503,11 +402,12 @@ export default function Accounts() {
         showEdit={false}
         showDelete={false}
       >
-        <TransactionForm
+        <CreateMoneyTransaction
           onClose={handleTransactionClose}
-          onSubmit={handleTransactionSubmit}
+          onSuccess={handleTransactionSuccess}
           type={transactionType}
           account={selectedAccount}
+          setNotification={setNotification}
         />
       </CustomPopUp>
     </>

@@ -21,6 +21,7 @@ const TextInput = ({
   dynamicLabel,
   dependsOn,
   dependsOnValue,
+  placeholder,
   defaultValue, // extract to prevent passing to TextField
   ...props
 }) => {
@@ -76,6 +77,7 @@ const TextInput = ({
         type={type}
         fullWidth
         variant="filled"
+        placeholder={placeholder}
         required={required}
         error={isReadOnly ? false : meta.touched && Boolean(meta.error)} // hide error state when read-only
         helperText={

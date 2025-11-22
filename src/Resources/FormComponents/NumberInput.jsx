@@ -39,6 +39,11 @@ const NumberInput = ({
         }}
       >
         {label}
+        {required && (
+          <Box component="span" sx={{ color: "error.main", ml: 0.5 }}>
+            *
+          </Box>
+        )}
       </Typography>
       <TextField
         {...field}

@@ -1,7 +1,7 @@
 import React from "react";
 import Button from "@mui/material/Button";
 import Add from "@mui/icons-material/Add";
-import { useTheme } from "@mui/material";
+import { useTheme, Box } from "@mui/material";
 
 const PlusButtonMain = ({ onClick, buttonText, startIcon, color }) => {
   const theme = useTheme();
@@ -14,26 +14,30 @@ const PlusButtonMain = ({ onClick, buttonText, startIcon, color }) => {
   const buttonColor = color || theme.palette.blueText.main;
 
   return (
-    <Button
-      variant="outlined"
-      onClick={onClick}
-      startIcon={startIcon || defaultStartIcon}
-      sx={{
-        padding: "5px 10px",
-        fontSize: "0.8rem",
-        borderColor: buttonColor,
-        color: buttonColor,
-        backgroundColor: "transparent",
-        borderRadius: "0px",
-        "&:hover": {
-          backgroundColor: "transparent",
-          borderColor: buttonColor,
-          borderWidth: "2px",
-        },
-      }}
+    <Box
+      sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}
     >
-      {buttonText}
-    </Button>
+      <Button
+        variant="outlined"
+        onClick={onClick}
+        startIcon={startIcon || defaultStartIcon}
+        sx={{
+          padding: "5px 10px",
+          fontSize: "0.8rem",
+          borderColor: buttonColor,
+          color: buttonColor,
+          backgroundColor: "transparent",
+          borderRadius: "0px",
+          "&:hover": {
+            backgroundColor: "transparent",
+            borderColor: buttonColor,
+            borderWidth: "2px",
+          },
+        }}
+      >
+        {buttonText}
+      </Button>
+    </Box>
   );
 };
 

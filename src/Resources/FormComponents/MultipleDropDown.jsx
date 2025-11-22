@@ -22,6 +22,7 @@ const MultipleDropDown = ({
   placeholder,
   readOnly = false,
   editing = true,
+  showSelectAll = false,
   ...props
 }) => {
   const [field, meta, helpers] = useField(name);
@@ -35,6 +36,10 @@ const MultipleDropDown = ({
     };
   });
 
+  const SELECT_ALL_VALUE = "__SELECT_ALL__";
+  const allValues = options?.map(option => option.value) || [];
+  const allSelected = allValues.length > 0 && allValues.every(val => field.value?.includes(val));
+
   // Find the labels for the current values
   const selectedLabels = options
     ?.filter((option) => field.value?.includes(option.value))
@@ -43,7 +48,20 @@ const MultipleDropDown = ({
 
   const handleChange = (event) => {
     const value = event.target.value;
-    helpers.setValue(typeof value === "string" ? value.split(",") : value);
+    const selectedValues = typeof value === "string" ? value.split(",") : value;
+    
+    // Check if "Select All" was clicked
+    if (selectedValues.includes(SELECT_ALL_VALUE)) {
+      // If all items are already selected, deselect all
+      if (allSelected) {
+        helpers.setValue([]);
+      } else {
+        // Otherwise, select all items
+        helpers.setValue(allValues);
+      }
+    } else {
+      helpers.setValue(selectedValues);
+    }
   };
 
   return (
@@ -116,6 +134,21 @@ const MultipleDropDown = ({
               input: { readOnly: isReadOnly },
             }}
           >
+            {showSelectAll && options && options.length > 0 && (
+              <MenuItem
+                key={SELECT_ALL_VALUE}
+                value={SELECT_ALL_VALUE}
+                sx={{
+                  "&:hover": {
+                    color: "#fff",
+                    backgroundColor: "primary.main",
+                  },
+                }}
+              >
+                <Checkbox checked={allSelected} />
+                Select all {label}
+              </MenuItem>
+            )}
             {options?.map((option) => (
               <MenuItem
                 key={option.value}

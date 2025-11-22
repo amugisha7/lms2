@@ -40,7 +40,7 @@ const MultipleDropDown = ({
   const allValues = options?.map(option => option.value) || [];
   const currentValues = field.value || [];
   const allSelected = allValues.length > 0 && allValues.every(val => currentValues.includes(val));
-  const someSelected = currentValues.length > 0 && currentValues.length < allValues.length;
+  const someSelected = currentValues.length > 0 && !allSelected;
 
   // Find the labels for the current values
   const selectedLabels = options
@@ -62,7 +62,7 @@ const MultipleDropDown = ({
         helpers.setValue(allValues);
       }
     } else {
-      // Filter out SELECT_ALL_VALUE if it somehow got included
+      // Filter out SELECT_ALL_VALUE as a safety measure (shouldn't normally be included)
       const filteredValues = selectedValues.filter(val => val !== SELECT_ALL_VALUE);
       helpers.setValue(filteredValues);
     }

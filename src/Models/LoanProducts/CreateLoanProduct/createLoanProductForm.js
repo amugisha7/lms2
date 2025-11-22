@@ -10,7 +10,7 @@ const createLoanProductForm = [
     maxLength: 100,
   },
   {
-    label: "Branch",
+    label: "Branches",
     name: "branch",
     type: "selectMultiple",
     span: 12,

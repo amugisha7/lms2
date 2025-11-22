@@ -78,9 +78,8 @@ const MultipleDropDown = ({
         helpers.setValue(allValues);
       }
     } else {
-      // Filter out SELECT_ALL_VALUE as a safety measure (shouldn't normally be included)
-      const filteredValues = selectedValues.filter(val => val !== SELECT_ALL_VALUE);
-      helpers.setValue(filteredValues);
+      // Normal selection - just update the field value
+      helpers.setValue(selectedValues);
     }
   };
 
@@ -169,7 +168,7 @@ const MultipleDropDown = ({
                   checked={allSelected} 
                   indeterminate={someSelected}
                 />
-                Select all {label?.toLowerCase() || "items"}
+                Select all {label}
               </MenuItem>
             )}
             {options?.map((option) => (

@@ -3,7 +3,11 @@ import Button from "@mui/material/Button";
 import Add from "@mui/icons-material/Add";
 import { useTheme } from "@mui/material";
 
-const PlusButtonSmall = ({ onClick }) => {
+const PlusButtonSmall = ({
+  onClick,
+  label = "ADD LOAN",
+  IconComponent = Add,
+}) => {
   const theme = useTheme();
 
   return (
@@ -11,7 +15,9 @@ const PlusButtonSmall = ({ onClick }) => {
       variant="outlined"
       onClick={onClick}
       startIcon={
-        <Add sx={{ color: theme.palette.blueText.main, fontSize: "0.5rem" }} />
+        <IconComponent
+          sx={{ color: theme.palette.blueText.main, fontSize: "0.5rem" }}
+        />
       }
       sx={{
         padding: "2px 5px",
@@ -26,7 +32,7 @@ const PlusButtonSmall = ({ onClick }) => {
         },
       }}
     >
-      ADD LOAN
+      {label}
     </Button>
   );
 };

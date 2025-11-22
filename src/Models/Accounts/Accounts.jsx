@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { UserContext } from "../../App";
 import ClickableText from "../../ModelAssets/ClickableText";
 import CreateAccounts from "./CreateAccounts/CreateAccount";
@@ -7,72 +7,25 @@ import CollectionsTemplate from "../../ModelAssets/CollectionsTemplate";
 import { useCrudOperations } from "../../hooks/useCrudOperations";
 import { generateClient } from "aws-amplify/api";
 import NotificationBar from "../../ModelAssets/NotificationBar";
+import PlusButtonSmall from "../../ModelAssets/PlusButtonSmall";
+import CustomPopUp from "../../ModelAssets/CustomPopUp";
+import NumberInput from "../../Resources/FormComponents/NumberInput";
+import TextInput from "../../Resources/FormComponents/TextInput";
+import { Formik, Form } from "formik";
+import * as Yup from "yup";
+import { Box, Button } from "@mui/material";
+import Remove from "@mui/icons-material/Remove";
+import Add from "@mui/icons-material/Add";
+import {
+  LIST_ACCOUNTS_QUERY,
+  CREATE_ACCOUNT_MUTATION,
+  DELETE_ACCOUNT_MUTATION,
+  UPDATE_ACCOUNT_MUTATION,
+  CREATE_MONEY_TRANSACTION_MUTATION,
+} from "./accountHelpers";
 
 // Guard to ensure we only fetch accounts once per page load (even under React StrictMode)
 let __accountsFetchedOnce = false;
-
-const LIST_ACCOUNTS_QUERY = `
-  query ListAccounts($institutionId: ID!, $nextToken: String) {
-    listAccounts(
-      filter: { institutionAccountsId: { eq: $institutionId } }
-      limit: 100
-      nextToken: $nextToken
-    ) {
-      items {
-        id
-        name
-        openingBalance
-        status
-        currency
-        accountType
-        description
-        createdAt
-        updatedAt
-      }
-      nextToken
-    }
-  }
-`;
-
-const CREATE_ACCOUNT_MUTATION = `
-  mutation CreateAccount($input: CreateAccountInput!) {
-    createAccount(input: $input) {
-      id
-      name
-      openingBalance
-      status
-      currency
-      accountType
-      description
-      createdAt
-      updatedAt
-    }
-  }
-`;
-
-const DELETE_ACCOUNT_MUTATION = `
-  mutation DeleteAccount($input: DeleteAccountInput!) {
-    deleteAccount(input: $input) {
-      id
-    }
-  }
-`;
-
-const UPDATE_ACCOUNT_MUTATION = `
-  mutation UpdateAccount($input: UpdateAccountInput!) {
-    updateAccount(input: $input) {
-      id
-      name
-      openingBalance
-      status
-      currency
-      accountType
-      description
-      createdAt
-      updatedAt
-    }
-  }
-`;
 
 export default function Accounts() {
   const [editMode, setEditMode] = React.useState(false);
@@ -87,6 +40,56 @@ export default function Accounts() {
     color: "green",
   });
   const client = React.useMemo(() => generateClient(), []); // stabilize client so effect does not re-trigger infinitely
+
+  const [transactionDialogOpen, setTransactionDialogOpen] = useState(false);
+  const [transactionType, setTransactionType] = useState("deposit");
+  const [selectedAccount, setSelectedAccount] = useState(null);
+
+  const handleTransactionClick = (account, type) => {
+    setSelectedAccount(account);
+    setTransactionType(type);
+    setTransactionDialogOpen(true);
+  };
+
+  const handleTransactionClose = () => {
+    setTransactionDialogOpen(false);
+    setSelectedAccount(null);
+  };
+
+  const handleTransactionSubmit = async (values, { setSubmitting }) => {
+    try {
+      const input = {
+        amount: parseFloat(values.amount),
+        accountMoneyTransactionsId: selectedAccount.id,
+        transactionType: transactionType,
+        description: values.description,
+        transactionDate: new Date().toISOString().split("T")[0],
+        status: "completed",
+      };
+
+      await client.graphql({
+        query: CREATE_MONEY_TRANSACTION_MUTATION,
+        variables: { input },
+      });
+
+      setNotification({
+        message: `${
+          transactionType === "deposit" ? "Deposit" : "Withdrawal"
+        } successful!`,
+        color: "green",
+      });
+      handleTransactionClose();
+      fetchAccounts({ institutionId: userDetails.institutionUsersId });
+    } catch (error) {
+      console.error("Transaction error:", error);
+      setNotification({
+        message: `Error processing transaction: ${error.message}`,
+        color: "red",
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const {
     items: accounts,
@@ -342,7 +345,97 @@ export default function Accounts() {
           ? params.value.charAt(0).toUpperCase() + params.value.slice(1)
           : "",
     },
+    {
+      field: "deposit",
+      headerName: "",
+      width: 120,
+      renderCell: (params) => (
+        <PlusButtonSmall
+          label="DEPOSIT"
+          IconComponent={Add}
+          onClick={() => handleTransactionClick(params.row, "deposit")}
+        />
+      ),
+    },
+    {
+      field: "withdraw",
+      headerName: "",
+      width: 120,
+      renderCell: (params) => (
+        <PlusButtonSmall
+          label="WITHDRAW"
+          IconComponent={Remove}
+          onClick={() => handleTransactionClick(params.row, "withdraw")}
+        />
+      ),
+    },
   ];
+
+  const TransactionForm = ({ onClose, onSubmit, type, account }) => {
+    const theme = useTheme();
+
+    const validationSchema = Yup.object().shape({
+      amount: Yup.number()
+        .required("Amount is required")
+        .positive("Amount must be positive"),
+      description: Yup.string(),
+    });
+
+    return (
+      <Formik
+        initialValues={{ amount: "", description: "" }}
+        validationSchema={validationSchema}
+        onSubmit={onSubmit}
+      >
+        {({ values, handleChange, touched, errors, isSubmitting }) => (
+          <Form>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              <NumberInput
+                label="Amount"
+                name="amount"
+                value={values.amount}
+                onChange={handleChange}
+                error={touched.amount && Boolean(errors.amount)}
+                helperText={touched.amount && errors.amount}
+                fullWidth
+              />
+              <TextInput
+                label="Description"
+                name="description"
+                value={values.description}
+                onChange={handleChange}
+                error={touched.description && Boolean(errors.description)}
+                helperText={touched.description && errors.description}
+                fullWidth
+                multiline
+                rows={3}
+              />
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  gap: 2,
+                  mt: 2,
+                }}
+              >
+                <Button onClick={onClose} color="inherit">
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  color="primary"
+                  disabled={isSubmitting}
+                >
+                  {type === "deposit" ? "Deposit" : "Withdraw"}
+                </Button>
+              </Box>
+            </Box>
+          </Form>
+        )}
+      </Formik>
+    );
+  };
 
   return (
     <>
@@ -401,6 +494,22 @@ export default function Accounts() {
         enableSearch={true}
         searchPlaceholder="Search accounts..."
       />
+      <CustomPopUp
+        open={transactionDialogOpen}
+        onClose={handleTransactionClose}
+        title={`${
+          transactionType === "deposit" ? "Deposit to" : "Withdraw from"
+        } ${selectedAccount?.name}`}
+        showEdit={false}
+        showDelete={false}
+      >
+        <TransactionForm
+          onClose={handleTransactionClose}
+          onSubmit={handleTransactionSubmit}
+          type={transactionType}
+          account={selectedAccount}
+        />
+      </CustomPopUp>
     </>
   );
 }

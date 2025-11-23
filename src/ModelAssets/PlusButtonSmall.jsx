@@ -33,6 +33,8 @@ const PlusButtonSmall = ({
           fontSize: "0.7rem",
           borderColor: theme.palette.blueText.main,
           color: theme.palette.blueText.main,
+          borderRadius: "0px",
+
           backgroundColor: "transparent",
           "&:hover": {
             backgroundColor: "transparent",

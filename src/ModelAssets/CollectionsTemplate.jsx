@@ -1,12 +1,12 @@
 import React from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import { useTheme } from "@mui/material/styles";
 import CustomSlider from "./CustomSlider";
 import CustomDataGrid from "./CustomDataGrid";
 import DeleteDialog from "./DeleteDialog";
+import PlusButtonMain from "./PlusButtonMain";
 
 // Create context for edit state
 const EditClickedContext = React.createContext();
@@ -94,22 +94,10 @@ export default function CollectionsTemplate({
           <Typography variant="h4" sx={{ fontWeight: 600 }}>
             {title}
           </Typography>
-          <Button
-            variant="outlined"
+          <PlusButtonMain
             onClick={onCreateClick}
-            sx={{
-              borderColor: theme.palette.blueText.main,
-              color: theme.palette.blueText.main,
-              backgroundColor: "transparent",
-              "&:hover": {
-                backgroundColor: "transparent",
-                borderColor: theme.palette.blueText.main,
-                borderWidth: "2px",
-              },
-            }}
-          >
-            {createButtonText}
-          </Button>
+            buttonText={createButtonText}
+          />
         </Box>
 
         {/* Default data grid if no children provided */}

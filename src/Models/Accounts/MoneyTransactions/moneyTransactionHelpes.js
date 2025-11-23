@@ -11,3 +11,19 @@ export const CREATE_MONEY_TRANSACTION_MUTATION = `
     }
   }
 `;
+
+export const UPDATE_MONEY_TRANSACTION_MUTATION = `
+  mutation UpdateMoneyTransaction($input: UpdateMoneyTransactionInput!) {
+    updateMoneyTransaction(input: $input) {
+      id
+      transactionType
+      amount
+      description
+      transactionDate
+      status
+      accountMoneyTransactionsId
+      referenceNumber
+      notes
+    }
+  }
+`;

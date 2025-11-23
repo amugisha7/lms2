@@ -2716,6 +2716,10 @@ export const createDocument = /* GraphQL */ `
         nextToken
         __typename
       }
+      moneyTransactions {
+        nextToken
+        __typename
+      }
       createdByEmployeeID
       createdByEmployee {
         id
@@ -2823,6 +2827,10 @@ export const updateDocument = /* GraphQL */ `
         nextToken
         __typename
       }
+      moneyTransactions {
+        nextToken
+        __typename
+      }
       createdByEmployeeID
       createdByEmployee {
         id
@@ -2927,6 +2935,10 @@ export const deleteDocument = /* GraphQL */ `
         __typename
       }
       payments {
+        nextToken
+        __typename
+      }
+      moneyTransactions {
         nextToken
         __typename
       }
@@ -5769,6 +5781,10 @@ export const createMoneyTransaction = /* GraphQL */ `
         nextToken
         __typename
       }
+      documents {
+        nextToken
+        __typename
+      }
       createdByEmployeeID
       createdByEmployee {
         id
@@ -5872,6 +5888,10 @@ export const updateMoneyTransaction = /* GraphQL */ `
         nextToken
         __typename
       }
+      documents {
+        nextToken
+        __typename
+      }
       createdByEmployeeID
       createdByEmployee {
         id
@@ -5972,6 +5992,10 @@ export const deleteMoneyTransaction = /* GraphQL */ `
         __typename
       }
       approvedByEmployees {
+        nextToken
+        __typename
+      }
+      documents {
         nextToken
         __typename
       }
@@ -12170,6 +12194,165 @@ export const deletePaymentDocument = /* GraphQL */ `
         createdAt
         updatedAt
         loanPaymentsId
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const createMoneyTransactionDocument = /* GraphQL */ `
+  mutation CreateMoneyTransactionDocument(
+    $input: CreateMoneyTransactionDocumentInput!
+    $condition: ModelMoneyTransactionDocumentConditionInput
+  ) {
+    createMoneyTransactionDocument(input: $input, condition: $condition) {
+      id
+      documentId
+      moneyTransactionId
+      document {
+        id
+        documentType
+        documentName
+        documentDescription
+        serialNumber
+        documentDate
+        s3Key
+        fileName
+        contentType
+        status
+        createdByEmployeeID
+        createdAt
+        updatedAt
+        branchDocumentsId
+        __typename
+      }
+      moneyTransaction {
+        id
+        transactionType
+        transactionDate
+        amount
+        description
+        referenceNumber
+        relatedEntityType
+        approvalStatus
+        approvedDate
+        category
+        notes
+        paymentMethod
+        deviceInfo
+        status
+        createdByEmployeeID
+        createdAt
+        updatedAt
+        accountMoneyTransactionsId
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const updateMoneyTransactionDocument = /* GraphQL */ `
+  mutation UpdateMoneyTransactionDocument(
+    $input: UpdateMoneyTransactionDocumentInput!
+    $condition: ModelMoneyTransactionDocumentConditionInput
+  ) {
+    updateMoneyTransactionDocument(input: $input, condition: $condition) {
+      id
+      documentId
+      moneyTransactionId
+      document {
+        id
+        documentType
+        documentName
+        documentDescription
+        serialNumber
+        documentDate
+        s3Key
+        fileName
+        contentType
+        status
+        createdByEmployeeID
+        createdAt
+        updatedAt
+        branchDocumentsId
+        __typename
+      }
+      moneyTransaction {
+        id
+        transactionType
+        transactionDate
+        amount
+        description
+        referenceNumber
+        relatedEntityType
+        approvalStatus
+        approvedDate
+        category
+        notes
+        paymentMethod
+        deviceInfo
+        status
+        createdByEmployeeID
+        createdAt
+        updatedAt
+        accountMoneyTransactionsId
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const deleteMoneyTransactionDocument = /* GraphQL */ `
+  mutation DeleteMoneyTransactionDocument(
+    $input: DeleteMoneyTransactionDocumentInput!
+    $condition: ModelMoneyTransactionDocumentConditionInput
+  ) {
+    deleteMoneyTransactionDocument(input: $input, condition: $condition) {
+      id
+      documentId
+      moneyTransactionId
+      document {
+        id
+        documentType
+        documentName
+        documentDescription
+        serialNumber
+        documentDate
+        s3Key
+        fileName
+        contentType
+        status
+        createdByEmployeeID
+        createdAt
+        updatedAt
+        branchDocumentsId
+        __typename
+      }
+      moneyTransaction {
+        id
+        transactionType
+        transactionDate
+        amount
+        description
+        referenceNumber
+        relatedEntityType
+        approvalStatus
+        approvedDate
+        category
+        notes
+        paymentMethod
+        deviceInfo
+        status
+        createdByEmployeeID
+        createdAt
+        updatedAt
+        accountMoneyTransactionsId
         __typename
       }
       createdAt

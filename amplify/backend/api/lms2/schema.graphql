@@ -368,6 +368,8 @@ type Document @model {
   contracts: [Contract] @manyToMany(relationName: "ContractDocument")
   expenses: [Expense] @manyToMany(relationName: "ExpenseDocument")
   payments: [Payment] @manyToMany(relationName: "PaymentDocument")
+  moneyTransactions: [MoneyTransaction]
+    @manyToMany(relationName: "MoneyTransactionDocument")
   createdByEmployeeID: ID @index(name: "byCreatedByEmployeeID")
   createdByEmployee: Employee @belongsTo(fields: ["createdByEmployeeID"])
 }
@@ -612,6 +614,7 @@ type MoneyTransaction @model {
   account: Account @belongsTo
   approvedByEmployees: [Employee]
     @manyToMany(relationName: "MoneyTransactionApprovedByEmployee")
+  documents: [Document] @manyToMany(relationName: "MoneyTransactionDocument")
   createdByEmployeeID: ID @index(name: "byCreatedByEmployeeID")
   createdByEmployee: Employee @belongsTo(fields: ["createdByEmployeeID"])
 }

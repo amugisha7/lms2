@@ -9,7 +9,7 @@ import { generateClient } from "aws-amplify/api";
 import NotificationBar from "../../ModelAssets/NotificationBar";
 import PlusButtonSmall from "../../ModelAssets/PlusButtonSmall";
 import CustomPopUp from "../../ModelAssets/CustomPopUp";
-import CreateMoneyTransaction from "./MoneyTransactions/CreateMoneyTransaction";
+import MoneyTransactions from "./MoneyTransactions/MoneyTransactions";
 import { Box } from "@mui/material";
 import Remove from "@mui/icons-material/Remove";
 import Add from "@mui/icons-material/Add";
@@ -26,6 +26,7 @@ let __accountsFetchedOnce = false;
 export default function Accounts() {
   const [editMode, setEditMode] = React.useState(false);
   const formRef = useRef();
+  const hasFetchedRef = useRef(false);
   const { userDetails } = React.useContext(UserContext);
   const theme = useTheme();
   const [processedAccounts, setProcessedAccounts] = React.useState([]);
@@ -248,8 +249,8 @@ export default function Accounts() {
   };
 
   React.useEffect(() => {
-    if (userDetails?.institutionUsersId && !__accountsFetchedOnce) {
-      __accountsFetchedOnce = true;
+    if (userDetails?.institutionUsersId && !hasFetchedRef.current) {
+      hasFetchedRef.current = true;
       fetchAccounts({ institutionId: userDetails.institutionUsersId });
     }
   }, [userDetails?.institutionUsersId, fetchAccounts]);
@@ -402,12 +403,11 @@ export default function Accounts() {
         showEdit={false}
         showDelete={false}
       >
-        <CreateMoneyTransaction
+        <MoneyTransactions
           onClose={handleTransactionClose}
           onSuccess={handleTransactionSuccess}
           type={transactionType}
           account={selectedAccount}
-          setNotification={setNotification}
         />
       </CustomPopUp>
     </>

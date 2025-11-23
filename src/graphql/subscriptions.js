@@ -2653,6 +2653,10 @@ export const onCreateDocument = /* GraphQL */ `
         nextToken
         __typename
       }
+      moneyTransactions {
+        nextToken
+        __typename
+      }
       createdByEmployeeID
       createdByEmployee {
         id
@@ -2757,6 +2761,10 @@ export const onUpdateDocument = /* GraphQL */ `
         nextToken
         __typename
       }
+      moneyTransactions {
+        nextToken
+        __typename
+      }
       createdByEmployeeID
       createdByEmployee {
         id
@@ -2858,6 +2866,10 @@ export const onDeleteDocument = /* GraphQL */ `
         __typename
       }
       payments {
+        nextToken
+        __typename
+      }
+      moneyTransactions {
         nextToken
         __typename
       }
@@ -5636,6 +5648,10 @@ export const onCreateMoneyTransaction = /* GraphQL */ `
         nextToken
         __typename
       }
+      documents {
+        nextToken
+        __typename
+      }
       createdByEmployeeID
       createdByEmployee {
         id
@@ -5738,6 +5754,10 @@ export const onUpdateMoneyTransaction = /* GraphQL */ `
         nextToken
         __typename
       }
+      documents {
+        nextToken
+        __typename
+      }
       createdByEmployeeID
       createdByEmployee {
         id
@@ -5837,6 +5857,10 @@ export const onDeleteMoneyTransaction = /* GraphQL */ `
         __typename
       }
       approvedByEmployees {
+        nextToken
+        __typename
+      }
+      documents {
         nextToken
         __typename
       }
@@ -11918,6 +11942,162 @@ export const onDeletePaymentDocument = /* GraphQL */ `
         createdAt
         updatedAt
         loanPaymentsId
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onCreateMoneyTransactionDocument = /* GraphQL */ `
+  subscription OnCreateMoneyTransactionDocument(
+    $filter: ModelSubscriptionMoneyTransactionDocumentFilterInput
+  ) {
+    onCreateMoneyTransactionDocument(filter: $filter) {
+      id
+      documentId
+      moneyTransactionId
+      document {
+        id
+        documentType
+        documentName
+        documentDescription
+        serialNumber
+        documentDate
+        s3Key
+        fileName
+        contentType
+        status
+        createdByEmployeeID
+        createdAt
+        updatedAt
+        branchDocumentsId
+        __typename
+      }
+      moneyTransaction {
+        id
+        transactionType
+        transactionDate
+        amount
+        description
+        referenceNumber
+        relatedEntityType
+        approvalStatus
+        approvedDate
+        category
+        notes
+        paymentMethod
+        deviceInfo
+        status
+        createdByEmployeeID
+        createdAt
+        updatedAt
+        accountMoneyTransactionsId
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onUpdateMoneyTransactionDocument = /* GraphQL */ `
+  subscription OnUpdateMoneyTransactionDocument(
+    $filter: ModelSubscriptionMoneyTransactionDocumentFilterInput
+  ) {
+    onUpdateMoneyTransactionDocument(filter: $filter) {
+      id
+      documentId
+      moneyTransactionId
+      document {
+        id
+        documentType
+        documentName
+        documentDescription
+        serialNumber
+        documentDate
+        s3Key
+        fileName
+        contentType
+        status
+        createdByEmployeeID
+        createdAt
+        updatedAt
+        branchDocumentsId
+        __typename
+      }
+      moneyTransaction {
+        id
+        transactionType
+        transactionDate
+        amount
+        description
+        referenceNumber
+        relatedEntityType
+        approvalStatus
+        approvedDate
+        category
+        notes
+        paymentMethod
+        deviceInfo
+        status
+        createdByEmployeeID
+        createdAt
+        updatedAt
+        accountMoneyTransactionsId
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onDeleteMoneyTransactionDocument = /* GraphQL */ `
+  subscription OnDeleteMoneyTransactionDocument(
+    $filter: ModelSubscriptionMoneyTransactionDocumentFilterInput
+  ) {
+    onDeleteMoneyTransactionDocument(filter: $filter) {
+      id
+      documentId
+      moneyTransactionId
+      document {
+        id
+        documentType
+        documentName
+        documentDescription
+        serialNumber
+        documentDate
+        s3Key
+        fileName
+        contentType
+        status
+        createdByEmployeeID
+        createdAt
+        updatedAt
+        branchDocumentsId
+        __typename
+      }
+      moneyTransaction {
+        id
+        transactionType
+        transactionDate
+        amount
+        description
+        referenceNumber
+        relatedEntityType
+        approvalStatus
+        approvedDate
+        category
+        notes
+        paymentMethod
+        deviceInfo
+        status
+        createdByEmployeeID
+        createdAt
+        updatedAt
+        accountMoneyTransactionsId
         __typename
       }
       createdAt

@@ -3,12 +3,15 @@ import { useTheme, styled } from "@mui/material/styles";
 import { Formik, Form } from "formik";
 import * as Yup from "yup";
 import { Box, Grid } from "@mui/material";
-import NumberInput from "../../../Resources/FormComponents/NumberInput";
-import TextInput from "../../../Resources/FormComponents/TextInput";
-import DateInput from "../../../Resources/FormComponents/DateInput";
+import NumberInput from "../../../../Resources/FormComponents/NumberInput";
+import TextInput from "../../../../Resources/FormComponents/TextInput";
+import DateInput from "../../../../Resources/FormComponents/DateInput";
 import { generateClient } from "aws-amplify/api";
-import { CREATE_MONEY_TRANSACTION_MUTATION } from "./moneyTransactionHelpes";
-import CreateFormButtons from "../../../ComponentAssets/CreateFormButtons";
+import {
+  CREATE_MONEY_TRANSACTION_MUTATION,
+  UPDATE_MONEY_TRANSACTION_MUTATION,
+} from "../moneyTransactionHelpes";
+import CreateFormButtons from "../../../../ComponentAssets/CreateFormButtons";
 import createMoneyTransactionsForm from "./createMoneyTransactionsForm";
 
 const FormGrid = styled(Grid)(({ theme }) => ({
@@ -25,14 +28,18 @@ export default function CreateMoneyTransaction({
   type,
   account,
   setNotification,
+  initialValues: propInitialValues,
+  isEditMode = false,
 }) {
   const theme = useTheme();
   const client = React.useMemo(() => generateClient(), []);
 
-  const initialValues = createMoneyTransactionsForm.reduce((acc, field) => {
-    acc[field.name] = field.defaultValue || "";
-    return acc;
-  }, {});
+  const initialValues =
+    propInitialValues ||
+    createMoneyTransactionsForm.reduce((acc, field) => {
+      acc[field.name] = field.defaultValue || "";
+      return acc;
+    }, {});
 
   const validationSchema = Yup.object().shape(
     createMoneyTransactionsForm.reduce((acc, field) => {
@@ -59,8 +66,6 @@ export default function CreateMoneyTransaction({
     try {
       const input = {
         amount: parseFloat(values.amount),
-        accountMoneyTransactionsId: account.id,
-        transactionType: type,
         description: values.description,
         transactionDate: values.transactionDate,
         referenceNumber: values.referenceNumber,
@@ -68,17 +73,37 @@ export default function CreateMoneyTransaction({
         status: "completed",
       };
 
-      await client.graphql({
-        query: CREATE_MONEY_TRANSACTION_MUTATION,
-        variables: { input },
-      });
+      if (isEditMode) {
+        input.id = values.id;
 
-      setNotification({
-        message: `${type === "deposit" ? "Deposit" : "Withdrawal"} successful!`,
-        color: "green",
-      });
-      onSuccess(); // This will trigger fetchAccounts in parent
-      onClose();
+        await client.graphql({
+          query: UPDATE_MONEY_TRANSACTION_MUTATION,
+          variables: { input },
+        });
+
+        setNotification({
+          message: "Transaction updated successful!",
+          color: "green",
+        });
+      } else {
+        input.accountMoneyTransactionsId = account.id;
+        input.transactionType = type;
+
+        await client.graphql({
+          query: CREATE_MONEY_TRANSACTION_MUTATION,
+          variables: { input },
+        });
+
+        setNotification({
+          message: `${
+            type === "deposit" ? "Deposit" : "Withdrawal"
+          } successful!`,
+          color: "green",
+        });
+      }
+
+      if (onSuccess) onSuccess(isEditMode ? values : undefined);
+      if (onClose) onClose();
     } catch (error) {
       console.error("Transaction error:", error);
       setNotification({
@@ -95,6 +120,7 @@ export default function CreateMoneyTransaction({
       initialValues={initialValues}
       validationSchema={validationSchema}
       onSubmit={handleSubmit}
+      enableReinitialize
     >
       {(formik) => (
         <Form>
@@ -158,7 +184,13 @@ export default function CreateMoneyTransaction({
                   setEditMode={() => {}}
                   setSubmitError={() => {}}
                   setSubmitSuccess={() => {}}
-                  submitLabel={type === "deposit" ? "Deposit" : "Withdraw"}
+                  submitLabel={
+                    isEditMode
+                      ? "Update"
+                      : type === "deposit"
+                      ? "Deposit"
+                      : "Withdraw"
+                  }
                 />
               </Box>
             </Grid>

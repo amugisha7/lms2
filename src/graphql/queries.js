@@ -1269,6 +1269,10 @@ export const getDocument = /* GraphQL */ `
         nextToken
         __typename
       }
+      moneyTransactions {
+        nextToken
+        __typename
+      }
       createdByEmployeeID
       createdByEmployee {
         id
@@ -2579,6 +2583,10 @@ export const getMoneyTransaction = /* GraphQL */ `
         __typename
       }
       approvedByEmployees {
+        nextToken
+        __typename
+      }
+      documents {
         nextToken
         __typename
       }
@@ -5362,6 +5370,80 @@ export const listPaymentDocuments = /* GraphQL */ `
         id
         documentId
         paymentId
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const getMoneyTransactionDocument = /* GraphQL */ `
+  query GetMoneyTransactionDocument($id: ID!) {
+    getMoneyTransactionDocument(id: $id) {
+      id
+      documentId
+      moneyTransactionId
+      document {
+        id
+        documentType
+        documentName
+        documentDescription
+        serialNumber
+        documentDate
+        s3Key
+        fileName
+        contentType
+        status
+        createdByEmployeeID
+        createdAt
+        updatedAt
+        branchDocumentsId
+        __typename
+      }
+      moneyTransaction {
+        id
+        transactionType
+        transactionDate
+        amount
+        description
+        referenceNumber
+        relatedEntityType
+        approvalStatus
+        approvedDate
+        category
+        notes
+        paymentMethod
+        deviceInfo
+        status
+        createdByEmployeeID
+        createdAt
+        updatedAt
+        accountMoneyTransactionsId
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const listMoneyTransactionDocuments = /* GraphQL */ `
+  query ListMoneyTransactionDocuments(
+    $filter: ModelMoneyTransactionDocumentFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listMoneyTransactionDocuments(
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        documentId
+        moneyTransactionId
         createdAt
         updatedAt
         __typename
@@ -8468,6 +8550,62 @@ export const paymentDocumentsByPaymentId = /* GraphQL */ `
         id
         documentId
         paymentId
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const moneyTransactionDocumentsByDocumentId = /* GraphQL */ `
+  query MoneyTransactionDocumentsByDocumentId(
+    $documentId: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelMoneyTransactionDocumentFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    moneyTransactionDocumentsByDocumentId(
+      documentId: $documentId
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        documentId
+        moneyTransactionId
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const moneyTransactionDocumentsByMoneyTransactionId = /* GraphQL */ `
+  query MoneyTransactionDocumentsByMoneyTransactionId(
+    $moneyTransactionId: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelMoneyTransactionDocumentFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    moneyTransactionDocumentsByMoneyTransactionId(
+      moneyTransactionId: $moneyTransactionId
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        documentId
+        moneyTransactionId
         createdAt
         updatedAt
         __typename

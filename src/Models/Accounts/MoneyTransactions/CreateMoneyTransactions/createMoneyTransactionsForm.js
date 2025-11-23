@@ -1,4 +1,4 @@
-import { rows } from "../../../muiTemplates/dashboard/internals/data/gridData";
+import { rows } from "../../../../muiTemplates/dashboard/internals/data/gridData";
 
 const createMoneyTransactionsForm = [
   {

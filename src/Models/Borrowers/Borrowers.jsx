@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
-import { Box, Typography, Button } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { useNavigate } from "react-router-dom";
 import { generateClient } from "aws-amplify/api";
@@ -11,6 +11,7 @@ import CustomSlider from "../../ModelAssets/CustomSlider";
 import DeleteDialog from "../../ModelAssets/DeleteDialog";
 import NotificationBar from "../../ModelAssets/NotificationBar";
 import ClickableText from "../../ModelAssets/ClickableText";
+import PlusButtonMain from "../../ModelAssets/PlusButtonMain";
 
 // Model-specific components
 import CreateBorrower from "./CreateBorrower/CreateBorrower";
@@ -267,24 +268,16 @@ export default function Borrowers() {
             Borrowers
           </Typography>
           {canCreateBorrower && (
-            <Button
-              variant="outlined"
+            <PlusButtonMain
               onClick={() => setCreateDialogOpen(true)}
-              sx={{
-                borderColor: theme.palette.blueText.main,
-                color: theme.palette.blueText.main,
-                backgroundColor: "transparent",
-                "&:hover": {
-                  backgroundColor: "transparent",
-                  borderColor: theme.palette.blueText.main,
-                  borderWidth: "2px",
-                },
-              }}
-            >
-              Create Borrower
-            </Button>
+              buttonText="Create Borrower"
+            />
           )}
         </Box>
+        <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
+          Click on a Borrower to view or edit their details, add files and
+          custom fields.
+        </Typography>
 
         {/* Data Grid */}
         <CustomDataGrid

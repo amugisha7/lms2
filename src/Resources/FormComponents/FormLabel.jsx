@@ -8,10 +8,16 @@ const FormLabel = ({
   variant = "body2",
   fontWeight = 600,
   editing,
+  onlyVisibleInCreate = false,
+  isEditMode = false,
   ...props
 }) => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
+
+  if (onlyVisibleInCreate && isEditMode) {
+    return null;
+  }
 
   return (
     <Box

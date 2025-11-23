@@ -2,6 +2,11 @@ import { countries } from "../../../Resources/listOfCountries";
 
 const createBorrowerForm = [
   {
+    label: "Identification Details",
+    type: "label",
+    span: 12,
+  },
+  {
     label: "First Name:",
     name: "firstname",
     type: "text",
@@ -36,6 +41,52 @@ const createBorrowerForm = [
     validationMessage: "Invalid characters found. Cannot use , \" ' ! { }",
   },
   {
+    label: "Gender:",
+    name: "gender",
+    type: "select",
+    required: false,
+    span: 6,
+    options: [
+      { value: "Male", label: "Male" },
+      { value: "Female", label: "Female" },
+      { value: "Decline to State", label: "Decline to State" },
+    ],
+  },
+  {
+    label: "Title:",
+    name: "title",
+    type: "select",
+    required: false,
+    span: 6,
+    options: [
+      { value: "Mr.", label: "Mr." },
+      { value: "Mrs.", label: "Mrs." },
+      { value: "Ms.", label: "Ms." },
+      { value: "Miss", label: "Miss" },
+      { value: "Dr.", label: "Dr." },
+      { value: "Prof.", label: "Prof." },
+      { value: "Rev.", label: "Rev." },
+      { value: "Hon.", label: "Hon." },
+      { value: "Eng.", label: "Eng." },
+    ],
+  },
+  {
+    label: "Date of Birth:",
+    name: "dateOfBirth", // updated
+    type: "date",
+    required: false,
+    span: 6,
+    validationType: "date",
+  },
+  {
+    label: "Country:",
+    name: "nationality", // updated
+    type: "select",
+    required: false,
+    span: 6,
+    options: countries.map(c => ({ value: c, label: c })),
+  },
+  {
     label: "Unique Identification Number:",
     name: "uniqueIdNumber", // updated
     type: "text",
@@ -47,11 +98,16 @@ const createBorrowerForm = [
     validationMessage: "Invalid characters found. Cannot use , \" ' ! { }",
   },
   {
-    label: "Mobile Number:",
+    label: "Contact Information",
+    type: "label",
+    span: 12,
+  },
+  {
+    label: "Phone Number:",
     name: "phoneNumber", // updated
     type: "tel",
     required: false,
-    span: 6,
+    span: 12,
     placeholder: "numbers only",    
     inputProps: { inputMode: "numeric", pattern: "[0-9]*" },
     helperText: "Do not put country code, spaces, or characters in the mobile field otherwise you won't be able to send SMS to the mobile.",
@@ -86,42 +142,9 @@ const createBorrowerForm = [
     validationMessage: "Invalid email address",
   },
   {
-    label: "Gender:",
-    name: "gender",
-    type: "select",
-    required: false,
-    span: 6,
-    options: [
-      { value: "Male", label: "Male" },
-      { value: "Female", label: "Female" },
-      { value: "Decline to State", label: "Decline to State" },
-    ],
-  },
-  {
-    label: "Title:",
-    name: "title",
-    type: "select",
-    required: false,
-    span: 6,
-    options: [
-      { value: "Mr.", label: "Mr." },
-      { value: "Mrs.", label: "Mrs." },
-      { value: "Ms.", label: "Ms." },
-      { value: "Miss", label: "Miss" },
-      { value: "Dr.", label: "Dr." },
-      { value: "Prof.", label: "Prof." },
-      { value: "Rev.", label: "Rev." },
-      { value: "Hon.", label: "Hon." },
-      { value: "Eng.", label: "Eng." },
-    ],
-  },
-  {
-    label: "Country:",
-    name: "nationality", // updated
-    type: "select",
-    required: false,
-    span: 6,
-    options: countries.map(c => ({ value: c, label: c })),
+    label: "Address Information",
+    type: "label",
+    span: 12,
   },
   {
     label: "Address:",
@@ -164,12 +187,9 @@ const createBorrowerForm = [
     validationMessage: "Invalid characters found. Cannot use , \" ' ! { }",
   },
   {
-    label: "Date of Birth:",
-    name: "dateOfBirth", // updated
-    type: "date",
-    required: false,
-    span: 6,
-    validationType: "date",
+    label: "Employment & Financial Information",
+    type: "label",
+    span: 12,
   },
   {
     label: "Working Status:",
@@ -208,6 +228,19 @@ const createBorrowerForm = [
     validationType: "string",
     validationPattern: /^[^,"'!{}]+$/,
     validationMessage: "Invalid characters found. Cannot use , \" ' ! { }",
+  },
+  {
+    label: "Files & Custom fields",
+    type: "label",
+    span: 12,
+    onlyVisibleInCreate: true,
+  },
+  {
+    type: "notice",
+    span: 12,
+    message:
+      "You can add files and custom fields after creating the borrower.",
+      onlyVisibleInCreate: true,
   },
 
 ];

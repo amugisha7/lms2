@@ -16,6 +16,8 @@ import createBorrowerForm from "./createBorrowerForm";
 import TextInput from "../../../Resources/FormComponents/TextInput";
 import Dropdown from "../../../Resources/FormComponents/Dropdown";
 import DateInput from "../../../Resources/FormComponents/DateInput";
+import FormNotice from "../../../Resources/FormComponents/FormNotice";
+import FormLabel from "../../../Resources/FormComponents/FormLabel";
 import CreateFormButtons from "../../../ComponentAssets/CreateFormButtons";
 import CustomEditFormButtons from "../../../ComponentAssets/CustomEditFormButtons";
 // import CustomFields from "../../AdminScreens/CustomFields/CustomFields";
@@ -124,6 +126,10 @@ const renderFormField = (field) => {
       return <Dropdown {...field} />;
     case "date":
       return <DateInput {...field} />;
+    case "notice":
+      return <FormNotice {...field} />;
+    case "label":
+      return <FormLabel {...field} />;
     default:
       return <TextInput {...field} />;
   }
@@ -321,7 +327,11 @@ const CreateBorrower = forwardRef(
                       size={{ xs: 12, md: field.span }}
                       key={field.name}
                     >
-                      {renderFormField({ ...field, editing: editMode })}
+                      {renderFormField({
+                        ...field,
+                        editing: editMode,
+                        isEditMode: isEditMode,
+                      })}
                     </FormGrid>
                   ))}
 

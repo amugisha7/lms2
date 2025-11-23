@@ -1,4 +1,5 @@
 import React, { useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { UserContext } from "../../App";
 import ClickableText from "../../ModelAssets/ClickableText";
 import CreateAccounts from "./CreateAccounts/CreateAccount";
@@ -24,6 +25,7 @@ import {
 let __accountsFetchedOnce = false;
 
 export default function Accounts() {
+  const navigate = useNavigate();
   const [editMode, setEditMode] = React.useState(false);
   const formRef = useRef();
   const hasFetchedRef = useRef(false);
@@ -287,7 +289,9 @@ export default function Accounts() {
       headerName: "Name",
       width: 220,
       renderCell: (params) => (
-        <ClickableText onClick={() => handleEditDialogOpen(params.row)}>
+        <ClickableText
+          onClick={() => navigate(`/admin/accounts/${params.row.id}`)}
+        >
           {params.value}
         </ClickableText>
       ),

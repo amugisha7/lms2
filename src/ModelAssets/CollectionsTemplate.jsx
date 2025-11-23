@@ -94,10 +94,12 @@ export default function CollectionsTemplate({
           <Typography variant="h4" sx={{ fontWeight: 600 }}>
             {title}
           </Typography>
-          <PlusButtonMain
-            onClick={onCreateClick}
-            buttonText={createButtonText}
-          />
+          {onCreateClick && (
+            <PlusButtonMain
+              onClick={onCreateClick}
+              buttonText={createButtonText}
+            />
+          )}
         </Box>
 
         {/* Default data grid if no children provided */}

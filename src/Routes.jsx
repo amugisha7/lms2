@@ -31,6 +31,7 @@ import Notifications from "./Screens/Notifications/Notifications";
 //old loan products
 import Accounts from "./Models/Accounts/Accounts";
 import CreateAccounts from "./Models/Accounts/CreateAccounts/CreateAccount";
+import AccountTabs from "./Models/Accounts/AccountTabs";
 
 // Loans imports
 import Loans from "./Models/Loans/Loans";
@@ -95,6 +96,7 @@ export default function AppRoutes({ userExists }) {
 
               {/* Accounts routes */}
               <Route path="admin/accounts" element={<Accounts />} />
+              <Route path="admin/accounts/:id" element={<AccountTabs />} />
               <Route
                 path="admin/add-account"
                 element={<CreateAccounts hideCancel />}

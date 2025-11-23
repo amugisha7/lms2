@@ -7,6 +7,7 @@ import {
   Tab,
   IconButton,
   CircularProgress,
+  Button,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useTheme } from "@mui/material/styles";
@@ -179,7 +180,7 @@ export default function MoneyTransactions({
               }}
             >
               <Tab label="Transaction Details" id="transaction-tab-0" />
-              {transactionId && <Tab label="Files" id="transaction-tab-1" />}
+              <Tab label="Files" id="transaction-tab-1" />
             </Tabs>
           </Box>
 
@@ -197,15 +198,25 @@ export default function MoneyTransactions({
             />
           </TabPanel>
 
-          {transactionId && (
-            <TabPanel value={tabValue} index={1}>
+          <TabPanel value={tabValue} index={1}>
+            {transactionId ? (
               <MoneyTransactionsFiles
                 transaction={transaction}
                 setTransaction={setTransaction}
                 setNotification={setNotification}
               />
-            </TabPanel>
-          )}
+            ) : (
+              <Box sx={{ textAlign: "center", p: 3 }}>
+                <Typography variant="body1" sx={{ mb: 2 }}>
+                  The transaction must be created first. Files can be uploaded
+                  after creating the transaction.
+                </Typography>
+                <Button variant="contained" onClick={() => setTabValue(0)}>
+                  Go to Transaction Details
+                </Button>
+              </Box>
+            )}
+          </TabPanel>
         </Box>
       </Box>
     </>

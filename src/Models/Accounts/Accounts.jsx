@@ -250,6 +250,88 @@ export default function Accounts() {
     originalHandleEditSuccess(updatedAccount);
   };
 
+  const calculateCurrentBalance = (data) => {
+    if (!data) return 0;
+
+    let allTransactions = [];
+
+    // Money Transactions
+    if (data.moneyTransactions?.items) {
+      data.moneyTransactions.items.forEach((item) => {
+        allTransactions.push({
+          amount: item.amount,
+          type: item.transactionType === "deposit" ? "credit" : "debit",
+        });
+      });
+    }
+
+    // Payments (Credit)
+    if (data.payments?.items) {
+      data.payments.items.forEach((item) => {
+        allTransactions.push({
+          amount: item.amount,
+          type: "credit",
+        });
+      });
+    }
+
+    // Penalties (Debit)
+    if (data.penalties?.items) {
+      data.penalties.items.forEach((item) => {
+        allTransactions.push({
+          amount: item.amount,
+          type: "debit",
+        });
+      });
+    }
+
+    // Loans (Credit - Disbursement)
+    if (data.loans?.items) {
+      data.loans.items.forEach((item) => {
+        const loan = item.loan;
+        if (loan) {
+          allTransactions.push({
+            amount: loan.principal,
+            type: "credit",
+          });
+        }
+      });
+    }
+
+    // Loan Fees (Debit)
+    if (data.loanFees?.items) {
+      data.loanFees.items.forEach((item) => {
+        allTransactions.push({
+          amount: item.amount,
+          type: "debit",
+        });
+      });
+    }
+
+    // Expenses (Debit)
+    if (data.expenses?.items) {
+      data.expenses.items.forEach((item) => {
+        allTransactions.push({
+          amount: item.amount,
+          type: "debit",
+        });
+      });
+    }
+
+    // Calculate Running Balance
+    let runningBalance = data.openingBalance || 0;
+
+    allTransactions.forEach((tx) => {
+      if (tx.type === "credit") {
+        runningBalance += tx.amount;
+      } else {
+        runningBalance -= tx.amount;
+      }
+    });
+
+    return runningBalance;
+  };
+
   React.useEffect(() => {
     if (userDetails?.institutionUsersId && !hasFetchedRef.current) {
       hasFetchedRef.current = true;
@@ -259,7 +341,10 @@ export default function Accounts() {
 
   React.useEffect(() => {
     if (allAccounts && Array.isArray(allAccounts)) {
-      const processed = [...allAccounts];
+      const processed = allAccounts.map((account) => ({
+        ...account,
+        currentBalance: calculateCurrentBalance(account),
+      }));
       processed.sort((a, b) =>
         a.name.localeCompare(b.name, undefined, {
           sensitivity: "base",
@@ -290,16 +375,28 @@ export default function Accounts() {
       width: 220,
       renderCell: (params) => (
         <ClickableText
-          onClick={() => navigate(`/admin/accounts/${params.row.id}`)}
+          onClick={() =>
+            navigate(`/admin/accounts/${params.row.id}`, {
+              state: { account: params.row },
+            })
+          }
         >
           {params.value}
         </ClickableText>
       ),
     },
     {
-      field: "openingBalance",
-      headerName: "Opening Balance",
+      field: "currentBalance",
+      headerName: "Current Balance",
       width: 180,
+      type: "number",
+      valueFormatter: (value) => {
+        if (value == null) return "";
+        return value.toLocaleString(undefined, {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        });
+      },
     },
     {
       field: "currency",
@@ -335,7 +432,7 @@ export default function Accounts() {
         <PlusButtonSmall
           label="WITHDRAW"
           IconComponent={Remove}
-          onClick={() => handleTransactionClick(params.row, "withdraw")}
+          onClick={() => handleTransactionClick(params.row, "withdrawal")}
         />
       ),
     },

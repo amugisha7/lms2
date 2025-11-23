@@ -25,7 +25,7 @@ export default function AccountTransactions({
   };
 
   const handleWithdraw = () => {
-    setTransactionType("withdraw");
+    setTransactionType("withdrawal");
     setOpen(true);
   };
 
@@ -58,9 +58,13 @@ export default function AccountTransactions({
       flex: 1,
     },
     {
-      field: "source",
+      field: "displayType",
       headerName: "Type",
       width: 150,
+      valueFormatter: (value) => {
+        if (value) return value.charAt(0).toUpperCase() + value.slice(1);
+        return "";
+      },
     },
     {
       field: "amount",

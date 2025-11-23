@@ -15,6 +15,58 @@ export const LIST_ACCOUNTS_QUERY = `
         description
         createdAt
         updatedAt
+        moneyTransactions {
+          items {
+            amount
+            transactionDate
+            transactionType
+            id
+            description
+          }
+        }
+        payments {
+          items {
+            amount
+            paymentDate
+            id
+          }
+        }
+        penalties {
+          items {
+            amount
+            penaltyDate
+            id
+          }
+        }
+        loans {
+          items {
+            loan {
+              id
+              principal
+              createdAt
+              borrower {
+                businessName
+                firstname
+                othername
+              }
+            }
+          }
+        }
+        loanFees {
+          items {
+            id
+            amount
+            loanFeesDescription
+          }
+        }
+        expenses {
+          items {
+            amount
+            id
+            description
+            type
+          }
+        }
       }
       nextToken
     }

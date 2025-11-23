@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import {
   Box,
   Tab,
@@ -10,74 +10,8 @@ import {
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useTheme } from "@mui/material/styles";
-import { generateClient } from "aws-amplify/api";
 import AccountTransactions from "./AccountTransactions/AccountTransactions";
 import CreateAccount from "./CreateAccounts/CreateAccount";
-
-const GET_ACCOUNT_DETAILS = `
-  query GetAccountDetails($id: ID!) {
-    getAccount(id: $id) {
-      id
-      name
-      openingBalance
-      currency
-      description
-      status
-      moneyTransactions {
-        items {
-          amount
-          transactionDate
-          transactionType
-          id
-          description
-        }
-      }
-      payments {
-        items {
-          amount
-          paymentDate
-          id
-        }
-      }
-      penalties {
-        items {
-          amount
-          penaltyDate
-          id
-        }
-      }
-      loans {
-        items {
-          loan {
-            id
-            principal
-            createdAt
-            borrower {
-              businessName
-              firstname
-              othername
-            }
-          }
-        }
-      }
-      loanFees {
-        items {
-          id
-          amount
-          loanFeesDescription
-        }
-      }
-      expenses {
-        items {
-          amount
-          id
-          description
-          type
-        }
-      }
-    }
-  }
-`;
 
 function CustomTabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -98,38 +32,30 @@ function CustomTabPanel(props) {
 export default function AccountTabs() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const theme = useTheme();
   const [value, setValue] = useState(0);
   const [accountData, setAccountData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [transactions, setTransactions] = useState([]);
-  const client = generateClient();
 
   const handleChange = (event, newValue) => {
     setValue(newValue);
   };
 
-  const fetchAccountDetails = async () => {
-    try {
-      const result = await client.graphql({
-        query: GET_ACCOUNT_DETAILS,
-        variables: { id },
-      });
-      const data = result.data.getAccount;
-      setAccountData(data);
-      processTransactions(data);
-    } catch (error) {
-      console.error("Error fetching account details:", error);
-    } finally {
+  useEffect(() => {
+    if (location.state?.account) {
+      setAccountData(location.state.account);
+      processTransactions(location.state.account);
+      setLoading(false);
+    } else {
+      // Handle case where state is missing (e.g. direct link)
+      // Since we deleted the query, we can't fetch.
+      // Maybe redirect back to accounts list?
+      // navigate("/admin/accounts");
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    if (id) {
-      fetchAccountDetails();
-    }
-  }, [id]);
+  }, [location.state]);
 
   const processTransactions = (data) => {
     if (!data) return;
@@ -145,6 +71,7 @@ export default function AccountTabs() {
           description: item.description || item.transactionType,
           amount: item.amount,
           type: item.transactionType === "deposit" ? "credit" : "debit",
+          displayType: item.transactionType,
           source: "Money Transaction",
         });
       });
@@ -159,6 +86,7 @@ export default function AccountTabs() {
           description: "Payment Received",
           amount: item.amount,
           type: "credit",
+          displayType: "Payment",
           source: "Payment",
         });
       });
@@ -173,6 +101,7 @@ export default function AccountTabs() {
           description: "Penalty Applied",
           amount: item.amount,
           type: "debit",
+          displayType: "Penalty",
           source: "Penalty",
         });
       });
@@ -195,6 +124,7 @@ export default function AccountTabs() {
             description: `Loan Disbursement - ${borrowerName}`,
             amount: loan.principal,
             type: "credit", // Assuming money coming IN to the account from a loan
+            displayType: "Loan Disbursement",
             source: "Loan",
           });
         }
@@ -217,6 +147,7 @@ export default function AccountTabs() {
           description: item.loanFeesDescription || "Loan Fee",
           amount: item.amount,
           type: "debit",
+          displayType: "Loan Fee",
           source: "Loan Fee",
         });
       });
@@ -231,6 +162,7 @@ export default function AccountTabs() {
           description: item.description || item.type,
           amount: item.amount,
           type: "debit",
+          displayType: "Expense",
           source: "Expense",
         });
       });
@@ -372,7 +304,7 @@ export default function AccountTabs() {
         <AccountTransactions
           transactions={transactions}
           account={accountData}
-          onTransactionSuccess={fetchAccountDetails}
+          onTransactionSuccess={() => {}}
         />
       </CustomTabPanel>
       <CustomTabPanel value={value} index={1}>

@@ -1,7 +1,11 @@
 - Create loans form. Also create from loan product.
-  - move loanproducts back to manytomany rshp with branches.
   - filter for loanproducts that belong to required branches; loop if necessary to get all.
   - prepopulate the createLoan form with the loan products.
+  * clicking transction should show its details
+  - add files to transactions.
+  - Add transactions to accounts. Display them when the account is clicked.
+  - Let accounts retrieve all transactinos, payments etc to get the balance.
+  - select account for disbursement of the loan.
   - ensure loan creation is working well.
   - display loan draft after creation.
   - implement testing for when there is no data.

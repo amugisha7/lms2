@@ -261,6 +261,7 @@ export default function CustomSlider({
   onDelete,
   showEdit = true,
   showDelete = true,
+  showPdf = true,
   editMode = false,
 }) {
   const theme = useTheme();
@@ -345,7 +346,7 @@ export default function CustomSlider({
             </ClickableText>
           )}
 
-          {showEdit && onEdit && !editClicked && (
+          {showPdf && showEdit && onEdit && !editClicked && (
             <Button
               onClick={() =>
                 downloadPdf(printableRef, colorMode, theme.palette.mode)

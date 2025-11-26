@@ -40,7 +40,15 @@ const createMoneyTransactionsForm = [
     placeholder: "(optional)",
     validationType: "string",
   },
-  
+  {
+    label: "Files Attachments / Links",
+    name: "attachments",
+    type: "fileUpload",
+    required: false,
+    span: 12,
+    defaultValue: [],
+    validationType: "array",
+  },
 ];
 
 export default createMoneyTransactionsForm;

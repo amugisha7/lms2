@@ -62,10 +62,12 @@ export default function MoneyTransactions({
 
       try {
         setLoading(true);
+        console.log("Fetching transaction with id:", transactionId);
         const result = await client.graphql({
           query: getMoneyTransaction,
           variables: { id: transactionId },
         });
+        console.log("Fetch transaction result:", result);
 
         const transactionData = result.data.getMoneyTransaction;
         if (transactionData) {

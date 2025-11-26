@@ -1,11 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Box } from "@mui/material";
 import { Add, Remove } from "@mui/icons-material";
-import CollectionsTemplate from "../../../ModelAssets/CollectionsTemplate";
+import CollectionsTemplate, {
+  EditClickedContext,
+} from "../../../ModelAssets/CollectionsTemplate";
 import PlusButtonSmall from "../../../ModelAssets/PlusButtonSmall";
 import CustomPopUp from "../../../ModelAssets/CustomPopUp";
+import CustomSlider from "../../../ModelAssets/CustomSlider";
 import CreateMoneyTransaction from "../MoneyTransactions/CreateMoneyTransactions/CreateMoneyTransaction";
 import NotificationBar from "../../../ModelAssets/NotificationBar";
+import ClickableText from "../../../ComponentAssets/ClickableText";
 
 export default function AccountTransactions({
   transactions,
@@ -18,6 +22,12 @@ export default function AccountTransactions({
     message: "",
     color: "green",
   });
+
+  // State for viewing/editing transaction details
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState(null);
+  const [editClicked, setEditClicked] = useState(false);
+  const formRef = useRef();
 
   const handleDeposit = () => {
     setTransactionType("deposit");
@@ -37,8 +47,36 @@ export default function AccountTransactions({
     if (onTransactionSuccess) {
       onTransactionSuccess();
     }
-    // Notification is handled inside CreateMoneyTransaction or we can do it here if CreateMoneyTransaction doesn't
-    // But CreateMoneyTransaction takes setNotification prop.
+  };
+
+  // Handle clicking on a transaction to view details
+  const handleTransactionClick = (transaction) => {
+    setSelectedTransaction(transaction);
+    setViewDialogOpen(true);
+    setEditClicked(false);
+  };
+
+  // Handle closing the view dialog
+  const handleViewDialogClose = () => {
+    setViewDialogOpen(false);
+    setSelectedTransaction(null);
+    setEditClicked(false);
+  };
+
+  // Handle edit click in the slider
+  const handleEditClick = () => {
+    setEditClicked(true);
+    if (formRef.current?.toggleEdit) {
+      formRef.current.toggleEdit();
+    }
+  };
+
+  // Handle successful edit
+  const handleEditSuccess = (updatedTransaction) => {
+    setEditClicked(false);
+    if (onTransactionSuccess) {
+      onTransactionSuccess();
+    }
   };
 
   const columns = [
@@ -56,6 +94,14 @@ export default function AccountTransactions({
       headerName: "Description",
       width: 300,
       flex: 1,
+      renderCell: (params) =>
+        params.row.description == "Opening Balance" ? (
+          "Opening Balance"
+        ) : (
+          <ClickableText onClick={() => handleTransactionClick(params.row)}>
+            {params.value}
+          </ClickableText>
+        ),
     },
     {
       field: "displayType",
@@ -71,12 +117,17 @@ export default function AccountTransactions({
       headerName: "Amount",
       width: 150,
       type: "number",
-      valueFormatter: (value) => {
-        if (value == null) return "";
-        return value.toLocaleString(undefined, {
+      renderCell: (params) => {
+        if (params.value == null) return "";
+        const formatted = params.value.toLocaleString(undefined, {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
         });
+        // Show withdrawals in brackets
+        if (params.row.type === "debit") {
+          return `(${formatted})`;
+        }
+        return formatted;
       },
     },
     {
@@ -144,6 +195,71 @@ export default function AccountTransactions({
           setNotification={setNotification}
         />
       </CustomPopUp>
+
+      {/* View/Edit Transaction Slider */}
+      <EditClickedContext.Provider value={{ editClicked, setEditClicked }}>
+        {selectedTransaction && (
+          <CustomSlider
+            open={viewDialogOpen}
+            onClose={handleViewDialogClose}
+            title={selectedTransaction.description || "Transaction Details"}
+            onEdit={handleEditClick}
+            showEdit={true}
+            showDelete={false}
+            showPdf={false}
+            editMode={editClicked}
+          >
+            <CreateMoneyTransaction
+              ref={formRef}
+              onClose={handleViewDialogClose}
+              onSuccess={handleEditSuccess}
+              type={
+                selectedTransaction.displayType ||
+                selectedTransaction.transactionType
+              }
+              account={account}
+              setNotification={setNotification}
+              initialValues={{
+                id: selectedTransaction.id,
+                amount: selectedTransaction.amount,
+                description: selectedTransaction.description,
+                transactionDate:
+                  selectedTransaction.date ||
+                  selectedTransaction.transactionDate,
+                referenceNumber: selectedTransaction.referenceNumber || "",
+                notes: selectedTransaction.notes || "",
+                // Use processed attachments array if available, otherwise try to map from documents.items
+                attachments:
+                  selectedTransaction.attachments ||
+                  (selectedTransaction.documents?.items || []).map(
+                    (docItem) => ({
+                      id: docItem.document?.id || docItem.id,
+                      fileName:
+                        docItem.document?.fileName ||
+                        docItem.document?.documentName ||
+                        docItem.fileName,
+                      description:
+                        docItem.document?.documentDescription ||
+                        docItem.description ||
+                        "",
+                      type:
+                        docItem.document?.contentType === "link"
+                          ? "link"
+                          : "file",
+                      fileType: docItem.document?.contentType || "file",
+                      s3Key: docItem.document?.s3Key || null,
+                      uploadDate:
+                        docItem.document?.createdAt || docItem.createdAt,
+                      isExisting: true,
+                      joinRecordId: docItem.id,
+                    })
+                  ),
+              }}
+              isEditMode={true}
+            />
+          </CustomSlider>
+        )}
+      </EditClickedContext.Provider>
     </>
   );
 }

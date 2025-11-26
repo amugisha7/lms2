@@ -1,41 +1,31 @@
-import React, { useState, useContext } from "react";
-import { useTheme, styled } from "@mui/material/styles";
+import React, {
+  useState,
+  forwardRef,
+  useImperativeHandle,
+  useEffect,
+  useContext,
+} from "react";
+import { styled } from "@mui/material/styles";
 import { Formik, Form } from "formik";
 import * as Yup from "yup";
-import {
-  Box,
-  Grid,
-  Typography,
-  Button,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  IconButton,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemSecondaryAction,
-} from "@mui/material";
-import {
-  ExpandMore,
-  CloudUpload,
-  Add,
-  Delete,
-  InsertDriveFile,
-  Link as LinkIcon,
-} from "@mui/icons-material";
+import { Box, Grid, Typography } from "@mui/material";
 import NumberInput from "../../../../Resources/FormComponents/NumberInput";
 import TextInput from "../../../../Resources/FormComponents/TextInput";
 import DateInput from "../../../../Resources/FormComponents/DateInput";
+import FileLinksUpload from "../../../../Resources/FormComponents/FileLinksUpload";
 import { generateClient } from "aws-amplify/api";
+import { uploadData as amplifyUploadData } from "aws-amplify/storage";
 import {
   CREATE_MONEY_TRANSACTION_MUTATION,
   UPDATE_MONEY_TRANSACTION_MUTATION,
+  CREATE_DOCUMENT_MUTATION,
+  CREATE_MONEY_TRANSACTION_DOCUMENT_MUTATION,
 } from "../moneyTransactionHelpes";
 import CreateFormButtons from "../../../../ComponentAssets/CreateFormButtons";
-import createMoneyTransactionsForm from "./createMoneyTransactionsForm";
-import UploadDialogBox from "../../../../ModelAssets/UploadDialogBox";
+import CustomEditFormButtons from "../../../../ModelAssets/CustomEditFormButtons";
+import { EditClickedContext } from "../../../../ModelAssets/CollectionsTemplate";
 import { UserContext } from "../../../../App";
+import createMoneyTransactionsForm from "./createMoneyTransactionsForm";
 
 const FormGrid = styled(Grid)(({ theme }) => ({
   display: "flex",
@@ -45,130 +35,39 @@ const FormGrid = styled(Grid)(({ theme }) => ({
   },
 }));
 
-export default function CreateMoneyTransaction({
-  onClose,
-  onSuccess,
-  type,
-  account,
-  setNotification,
-  initialValues: propInitialValues,
-  isEditMode = false,
-}) {
-  const theme = useTheme();
+const CreateMoneyTransaction = forwardRef(function CreateMoneyTransaction(
+  {
+    onClose,
+    onSuccess,
+    type,
+    account,
+    setNotification,
+    initialValues: propInitialValues,
+    isEditMode = false,
+  },
+  ref
+) {
   const client = React.useMemo(() => generateClient(), []);
   const { userDetails } = useContext(UserContext);
+  const [editMode, setEditMode] = useState(!isEditMode);
+  const [submitError, setSubmitError] = useState("");
+  const [submitSuccess, setSubmitSuccess] = useState("");
+  const editClickedContext = useContext(EditClickedContext);
 
-  // File upload state
-  const [filesExpanded, setFilesExpanded] = useState(false);
-  const [pendingFiles, setPendingFiles] = useState([]);
-  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
-  const [uploadMode, setUploadMode] = useState("file");
-  const [uploadFileData, setUploadFileData] = useState({
-    file: null,
-    description: "",
-  });
+  // Expose methods to parent via ref
+  useImperativeHandle(ref, () => ({
+    toggleEdit: () => {
+      setEditMode((prev) => !prev);
+    },
+    getEditMode: () => editMode,
+  }));
 
-  const maxFileSize = 10 * 1024 * 1024; // 10MB
-
-  const handleFileSelect = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      setUploadFileData({ ...uploadFileData, file });
+  // Respond to editClicked from context
+  useEffect(() => {
+    if (editClickedContext?.editClicked && isEditMode && !editMode) {
+      setEditMode(true);
     }
-  };
-
-  const handleAddFile = (values) => {
-    if (uploadMode === "file") {
-      const allowedTypes = [
-        "image/jpeg",
-        "image/png",
-        "image/gif",
-        "image/bmp",
-        "image/tiff",
-        "image/svg+xml",
-        "application/pdf",
-        "application/msword",
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        "text/plain",
-        "application/vnd.ms-excel",
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        "application/vnd.ms-powerpoint",
-        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-      ];
-
-      if (!uploadFileData.file) {
-        setNotification({
-          message: "Please select a file",
-          color: "red",
-        });
-        return;
-      }
-
-      if (!allowedTypes.includes(uploadFileData.file.type)) {
-        setNotification({
-          message:
-            "File type not allowed. Please select a document or image file.",
-          color: "red",
-        });
-        return;
-      }
-
-      if (uploadFileData.file.size > maxFileSize) {
-        setNotification({
-          message: "File size exceeds 10MB limit.",
-          color: "red",
-        });
-        return;
-      }
-
-      const newFile = {
-        id: Date.now().toString(),
-        file: uploadFileData.file,
-        fileName: uploadFileData.file.name,
-        description: values.description?.trim() || "",
-        type: "file",
-        fileSize: uploadFileData.file.size,
-        fileType: uploadFileData.file.type,
-      };
-
-      setPendingFiles([...pendingFiles, newFile]);
-      setUploadDialogOpen(false);
-      setUploadFileData({ file: null, description: "" });
-    } else {
-      if (!values.url?.trim()) {
-        setNotification({
-          message: "Please enter a URL",
-          color: "red",
-        });
-        return;
-      }
-
-      const newLink = {
-        id: Date.now().toString(),
-        fileName: values.url.trim(),
-        description: values.description?.trim() || "",
-        type: "link",
-      };
-
-      setPendingFiles([...pendingFiles, newLink]);
-      setUploadDialogOpen(false);
-      setUploadFileData({ file: null, description: "" });
-      setUploadMode("file");
-    }
-  };
-
-  const handleRemoveFile = (fileId) => {
-    setPendingFiles(pendingFiles.filter((f) => f.id !== fileId));
-  };
-
-  const formatFileSize = (bytes) => {
-    if (bytes === undefined || bytes === null) return "";
-    if (bytes === 0) return "0 Bytes";
-    const k = 1024;
-    const sizes = ["Bytes", "KB", "MB", "GB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
-  };
+  }, [editClickedContext?.editClicked, isEditMode, editMode]);
 
   const initialValues =
     propInitialValues ||
@@ -183,6 +82,8 @@ export default function CreateMoneyTransaction({
       if (field.validationType === "number") {
         validator = Yup.number();
         if (field.min !== undefined) validator = validator.min(field.min);
+      } else if (field.validationType === "array") {
+        validator = Yup.array();
       } else {
         validator = Yup.string();
       }
@@ -198,7 +99,10 @@ export default function CreateMoneyTransaction({
     }, {})
   );
 
-  const handleSubmit = async (values, { setSubmitting }) => {
+  const handleSubmit = async (values, { setSubmitting, resetForm }) => {
+    setSubmitError("");
+    setSubmitSuccess("");
+
     try {
       const input = {
         amount: parseFloat(values.amount),
@@ -209,50 +113,205 @@ export default function CreateMoneyTransaction({
         status: "completed",
       };
 
-      // Include pending files data
-      if (pendingFiles.length > 0) {
-        input.pendingFiles = pendingFiles;
-      }
+      // Get ONLY new pending files/links (not existing ones) for upload
+      const allFiles = values.attachments || [];
+      const pendingFiles = allFiles.filter((f) => !f.isExisting);
 
       if (isEditMode) {
-        input.id = values.id;
+        input.id = propInitialValues.id;
 
-        await client.graphql({
+        console.log("Updating transaction with input:", input);
+        const result = await client.graphql({
           query: UPDATE_MONEY_TRANSACTION_MUTATION,
           variables: { input },
         });
+        console.log("Update transaction result:", result);
 
-        setNotification({
-          message: "Transaction updated successful!",
-          color: "green",
-        });
+        const updatedTransaction = result.data.updateMoneyTransaction;
+
+        // Upload only NEW files and create document relationships for edit mode
+        if (pendingFiles.length > 0) {
+          await uploadFilesAndLinkToTransaction(
+            pendingFiles,
+            updatedTransaction.id
+          );
+        }
+
+        setSubmitSuccess("Transaction updated!");
+        setEditMode(false);
+        setTimeout(() => setSubmitSuccess(""), 2000);
+
+        if (setNotification) {
+          setNotification({
+            message: "Transaction updated successfully!",
+            color: "green",
+          });
+        }
+
+        if (onSuccess)
+          onSuccess({ ...propInitialValues, ...values }, pendingFiles);
       } else {
         input.accountMoneyTransactionsId = account.id;
         input.transactionType = type;
 
-        await client.graphql({
+        console.log("Creating transaction with input:", input);
+        const result = await client.graphql({
           query: CREATE_MONEY_TRANSACTION_MUTATION,
           variables: { input },
         });
+        console.log("Create transaction result:", result);
 
-        setNotification({
-          message: `${
-            type === "deposit" ? "Deposit" : "Withdrawal"
-          } successful!`,
-          color: "green",
-        });
+        const newTransaction = result.data.createMoneyTransaction;
+
+        // Upload files and create document relationships
+        if (pendingFiles.length > 0) {
+          await uploadFilesAndLinkToTransaction(
+            pendingFiles,
+            newTransaction.id
+          );
+        }
+
+        setSubmitSuccess("Transaction created!");
+        resetForm();
+
+        if (setNotification) {
+          setNotification({
+            message: `${
+              type === "deposit" ? "Deposit" : "Withdrawal"
+            } successful!`,
+            color: "green",
+          });
+        }
+
+        if (onSuccess) onSuccess(undefined, pendingFiles);
+        if (onClose) onClose();
       }
-
-      if (onSuccess) onSuccess(isEditMode ? values : undefined, pendingFiles);
-      if (onClose) onClose();
     } catch (error) {
       console.error("Transaction error:", error);
-      setNotification({
-        message: `Error processing transaction: ${error.message}`,
-        color: "red",
-      });
+      setSubmitError(error.message || "Failed to process transaction.");
+      if (setNotification) {
+        setNotification({
+          message: `Error processing transaction: ${error.message}`,
+          color: "red",
+        });
+      }
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  /**
+   * Upload files to S3 and create Document records linked to the MoneyTransaction
+   */
+  const uploadFilesAndLinkToTransaction = async (
+    pendingFiles,
+    transactionId
+  ) => {
+    for (const fileItem of pendingFiles) {
+      try {
+        if (fileItem.type === "file" && fileItem.file) {
+          // Upload file to S3
+          const timestamp = new Date().getTime();
+          const s3Key = `transaction-${transactionId}/${timestamp}-${fileItem.fileName}`;
+
+          console.log("Uploading file to S3:", {
+            key: s3Key,
+            contentType: fileItem.fileType,
+          });
+          const uploadResult = await amplifyUploadData({
+            key: s3Key,
+            data: fileItem.file,
+            options: {
+              contentType: fileItem.fileType,
+            },
+          });
+          console.log("S3 upload result:", uploadResult);
+
+          // Create Document record
+          const documentInput = {
+            documentName: fileItem.fileName,
+            documentDescription: fileItem.description || "",
+            documentDate: new Date().toISOString().split("T")[0],
+            s3Key: s3Key,
+            fileName: fileItem.fileName,
+            contentType: fileItem.fileType,
+            status: "active",
+            branchDocumentsId:
+              account?.branchAccountsId || userDetails?.branchUsersId,
+            createdByEmployeeID: userDetails?.id,
+          };
+
+          console.log("Creating document with input:", documentInput);
+          const docResult = await client.graphql({
+            query: CREATE_DOCUMENT_MUTATION,
+            variables: { input: documentInput },
+          });
+          console.log("Create document result:", docResult);
+          const newDocument = docResult.data.createDocument;
+
+          // Link Document to MoneyTransaction
+          console.log("Linking document to transaction:", {
+            moneyTransactionId: transactionId,
+            documentId: newDocument.id,
+          });
+          const linkResult = await client.graphql({
+            query: CREATE_MONEY_TRANSACTION_DOCUMENT_MUTATION,
+            variables: {
+              input: {
+                moneyTransactionId: transactionId,
+                documentId: newDocument.id,
+              },
+            },
+          });
+          console.log("Link document result:", linkResult);
+        } else if (fileItem.type === "link") {
+          // Create Document record for link
+          const documentInput = {
+            documentName: fileItem.fileName,
+            documentDescription: fileItem.description || "",
+            documentDate: new Date().toISOString().split("T")[0],
+            fileName: fileItem.fileName,
+            contentType: "link",
+            status: "active",
+            branchDocumentsId:
+              account?.branchAccountsId || userDetails?.branchUsersId,
+            createdByEmployeeID: userDetails?.id,
+          };
+
+          console.log("Creating link document with input:", documentInput);
+          const docResult = await client.graphql({
+            query: CREATE_DOCUMENT_MUTATION,
+            variables: { input: documentInput },
+          });
+          console.log("Create link document result:", docResult);
+          const newDocument = docResult.data.createDocument;
+
+          // Link Document to MoneyTransaction
+          console.log("Linking link document to transaction:", {
+            moneyTransactionId: transactionId,
+            documentId: newDocument.id,
+          });
+          const linkResult = await client.graphql({
+            query: CREATE_MONEY_TRANSACTION_DOCUMENT_MUTATION,
+            variables: {
+              input: {
+                moneyTransactionId: transactionId,
+                documentId: newDocument.id,
+              },
+            },
+          });
+          console.log("Link document result:", linkResult);
+        }
+      } catch (fileError) {
+        console.error("Error uploading file:", fileError);
+        // Continue with other files even if one fails
+        if (setNotification) {
+          setNotification({
+            message: `Warning: Failed to upload ${fileItem.fileName}`,
+            color: "orange",
+          });
+        }
+      }
     }
   };
 
@@ -266,6 +325,16 @@ export default function CreateMoneyTransaction({
       {(formik) => (
         <Form>
           <Box sx={{ width: "100%" }}>
+            {/* Show edit mode header when in edit mode */}
+            {isEditMode && editMode ? (
+              <CustomEditFormButtons
+                formik={formik}
+                setEditMode={setEditMode}
+                setSubmitError={setSubmitError}
+                setSubmitSuccess={setSubmitSuccess}
+              />
+            ) : null}
+
             <Grid container spacing={1}>
               {createMoneyTransactionsForm.map((fieldConfig) => {
                 const commonProps = {
@@ -282,6 +351,7 @@ export default function CreateMoneyTransaction({
                   required: fieldConfig.required,
                   fullWidth: true,
                   placeholder: fieldConfig.placeholder,
+                  editing: editMode,
                 };
 
                 let fieldComponent;
@@ -302,6 +372,18 @@ export default function CreateMoneyTransaction({
                       rows={fieldConfig.rows}
                     />
                   );
+                } else if (fieldConfig.type === "fileUpload") {
+                  fieldComponent = (
+                    <FileLinksUpload
+                      key={fieldConfig.name}
+                      name={fieldConfig.name}
+                      label={fieldConfig.label}
+                      required={fieldConfig.required}
+                      onError={setNotification}
+                      editing={editMode}
+                      transactionId={isEditMode ? propInitialValues?.id : null}
+                    />
+                  );
                 } else {
                   fieldComponent = (
                     <TextInput key={fieldConfig.name} {...commonProps} />
@@ -318,230 +400,45 @@ export default function CreateMoneyTransaction({
                 );
               })}
 
-              {/* Expandable Files/Links Section */}
-              <Grid item xs={12} sx={{ mt: 2 }}>
-                <Accordion
-                  expanded={filesExpanded}
-                  onChange={() => setFilesExpanded(!filesExpanded)}
+              {/* Only show create buttons when not in isEditMode (i.e., creating new transaction) */}
+              {!isEditMode && (
+                <Box
                   sx={{
-                    backgroundColor: theme.palette.background.paper,
-                    boxShadow: "none",
-                    border: `1px solid ${theme.palette.divider}`,
-                    borderRadius: "8px !important",
-                    "&:before": { display: "none" },
+                    display: "flex",
+                    pr: 2,
+                    justifyContent: { xs: "center", md: "flex-end" },
+                    width: "100%",
                   }}
                 >
-                  <AccordionSummary
-                    expandIcon={<ExpandMore />}
-                    sx={{
-                      borderRadius: "8px",
-                      "&:hover": {
-                        backgroundColor: theme.palette.action.hover,
-                      },
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        width: "100%",
-                        justifyContent: "space-between",
-                      }}
-                    >
-                      <Typography
-                        variant="subtitle1"
-                        sx={{
-                          fontWeight: 600,
-                          color: theme.palette.text.primary,
-                        }}
-                      >
-                        Attachments ({pendingFiles.length})
-                      </Typography>
-                    </Box>
-                  </AccordionSummary>
-                  <AccordionDetails>
-                    {/* Upload Buttons */}
-                    <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        startIcon={
-                          <CloudUpload
-                            sx={{ color: theme.palette.blueText.main }}
-                          />
-                        }
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setUploadMode("file");
-                          setUploadDialogOpen(true);
-                        }}
-                        sx={{
-                          borderColor: theme.palette.blueText.main,
-                          color: theme.palette.blueText.main,
-                          backgroundColor: "transparent",
-                          "&:hover": {
-                            backgroundColor: "transparent",
-                            borderColor: theme.palette.blueText.dark,
-                            borderWidth: "2px",
-                            color: theme.palette.blueText.dark,
-                          },
-                        }}
-                      >
-                        Upload File
-                      </Button>
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        startIcon={
-                          <Add sx={{ color: theme.palette.blueText.main }} />
-                        }
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setUploadMode("link");
-                          setUploadDialogOpen(true);
-                        }}
-                        sx={{
-                          borderColor: theme.palette.blueText.main,
-                          color: theme.palette.blueText.main,
-                          backgroundColor: "transparent",
-                          "&:hover": {
-                            backgroundColor: "transparent",
-                            borderColor: theme.palette.blueText.dark,
-                            borderWidth: "2px",
-                            color: theme.palette.blueText.dark,
-                          },
-                        }}
-                      >
-                        Add Link
-                      </Button>
-                    </Box>
+                  <CreateFormButtons
+                    formik={formik}
+                    onClose={onClose}
+                    setEditMode={setEditMode}
+                    setSubmitError={setSubmitError}
+                    setSubmitSuccess={setSubmitSuccess}
+                    submitLabel={type === "deposit" ? "Deposit" : "Withdraw"}
+                  />
+                </Box>
+              )}
 
-                    {/* Files List */}
-                    {pendingFiles.length > 0 ? (
-                      <List dense sx={{ py: 0 }}>
-                        {pendingFiles.map((file) => (
-                          <ListItem
-                            key={file.id}
-                            sx={{
-                              backgroundColor: theme.palette.action.hover,
-                              borderRadius: "4px",
-                              mb: 1,
-                              pr: 6,
-                            }}
-                          >
-                            {file.type === "link" ? (
-                              <LinkIcon
-                                sx={{
-                                  mr: 1.5,
-                                  color: theme.palette.blueText.main,
-                                }}
-                              />
-                            ) : (
-                              <InsertDriveFile
-                                sx={{
-                                  mr: 1.5,
-                                  color: theme.palette.blueText.main,
-                                }}
-                              />
-                            )}
-                            <ListItemText
-                              primary={file.fileName}
-                              secondary={
-                                file.type === "link"
-                                  ? file.description || "Link"
-                                  : `${
-                                      file.description || "No description"
-                                    } • ${formatFileSize(file.fileSize)}`
-                              }
-                              primaryTypographyProps={{
-                                noWrap: true,
-                                sx: {
-                                  maxWidth: "250px",
-                                  color: theme.palette.text.primary,
-                                },
-                              }}
-                              secondaryTypographyProps={{
-                                noWrap: true,
-                                sx: { maxWidth: "250px" },
-                              }}
-                            />
-                            <ListItemSecondaryAction>
-                              <IconButton
-                                edge="end"
-                                size="small"
-                                onClick={() => handleRemoveFile(file.id)}
-                                sx={{
-                                  color: theme.palette.error.main,
-                                  "&:hover": {
-                                    backgroundColor:
-                                      theme.palette.error.light + "20",
-                                  },
-                                }}
-                              >
-                                <Delete fontSize="small" />
-                              </IconButton>
-                            </ListItemSecondaryAction>
-                          </ListItem>
-                        ))}
-                      </List>
-                    ) : (
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          color: theme.palette.text.secondary,
-                          textAlign: "center",
-                          py: 2,
-                        }}
-                      >
-                        No files or links added yet
-                      </Typography>
-                    )}
-                  </AccordionDetails>
-                </Accordion>
-              </Grid>
-
-              <Box
-                sx={{
-                  display: "flex",
-                  pr: 2,
-                  justifyContent: { xs: "center", md: "flex-end" },
-                  width: "100%",
-                }}
-              >
-                <CreateFormButtons
-                  formik={formik}
-                  onClose={onClose}
-                  setEditMode={() => {}}
-                  setSubmitError={() => {}}
-                  setSubmitSuccess={() => {}}
-                  submitLabel={
-                    isEditMode
-                      ? "Update"
-                      : type === "deposit"
-                      ? "Deposit"
-                      : "Withdraw"
-                  }
-                />
-              </Box>
+              {submitError && (
+                <Typography color="error" sx={{ mt: 2, px: 2 }}>
+                  {submitError}
+                </Typography>
+              )}
+              {submitSuccess && (
+                <Typography color="primary" sx={{ mt: 2, px: 2 }}>
+                  {submitSuccess}
+                </Typography>
+              )}
             </Grid>
           </Box>
-
-          {/* Upload Dialog */}
-          <UploadDialogBox
-            open={uploadDialogOpen}
-            onClose={() => {
-              setUploadDialogOpen(false);
-              setUploadFileData({ file: null, description: "" });
-            }}
-            uploadMode={uploadMode}
-            uploadFileData={uploadFileData}
-            setUploadFileData={setUploadFileData}
-            handleFileSelect={handleFileSelect}
-            handleUpload={handleAddFile}
-            loading={false}
-          />
         </Form>
       )}
     </Formik>
   );
-}
+});
+
+CreateMoneyTransaction.displayName = "CreateMoneyTransaction";
+
+export default CreateMoneyTransaction;

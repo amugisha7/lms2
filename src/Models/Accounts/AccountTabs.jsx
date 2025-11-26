@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import {
   Box,
@@ -10,8 +10,10 @@ import {
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useTheme } from "@mui/material/styles";
+import { generateClient } from "aws-amplify/api";
 import AccountTransactions from "./AccountTransactions/AccountTransactions";
 import CreateAccount from "./CreateAccounts/CreateAccount";
+import { GET_ACCOUNT_WITH_TRANSACTIONS_QUERY } from "./accountHelpers";
 
 function CustomTabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -34,6 +36,7 @@ export default function AccountTabs() {
   const navigate = useNavigate();
   const location = useLocation();
   const theme = useTheme();
+  const client = React.useMemo(() => generateClient(), []);
   const [value, setValue] = useState(0);
   const [accountData, setAccountData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -43,19 +46,48 @@ export default function AccountTabs() {
     setValue(newValue);
   };
 
+  // Fetch account data from API
+  const fetchAccountData = useCallback(
+    async (accountId) => {
+      try {
+        setLoading(true);
+        const result = await client.graphql({
+          query: GET_ACCOUNT_WITH_TRANSACTIONS_QUERY,
+          variables: { id: accountId },
+        });
+        const fetchedAccount = result.data.getAccount;
+        if (fetchedAccount) {
+          setAccountData(fetchedAccount);
+          processTransactions(fetchedAccount);
+        }
+      } catch (error) {
+        console.error("Error fetching account data:", error);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [client]
+  );
+
+  // Handler for when a transaction is created/updated
+  const handleTransactionSuccess = useCallback(() => {
+    if (id) {
+      fetchAccountData(id);
+    }
+  }, [id, fetchAccountData]);
+
   useEffect(() => {
     if (location.state?.account) {
       setAccountData(location.state.account);
       processTransactions(location.state.account);
       setLoading(false);
+    } else if (id) {
+      // Fetch from API if state is missing (e.g. direct link or refresh)
+      fetchAccountData(id);
     } else {
-      // Handle case where state is missing (e.g. direct link)
-      // Since we deleted the query, we can't fetch.
-      // Maybe redirect back to accounts list?
-      // navigate("/admin/accounts");
       setLoading(false);
     }
-  }, [location.state]);
+  }, [location.state, id, fetchAccountData]);
 
   const processTransactions = (data) => {
     if (!data) return;
@@ -65,6 +97,25 @@ export default function AccountTabs() {
     // Money Transactions
     if (data.moneyTransactions?.items) {
       data.moneyTransactions.items.forEach((item) => {
+        // Map documents to attachments format for FileLinksUpload
+        const attachments = (item.documents?.items || [])
+          .filter((docItem) => docItem.document)
+          .map((docItem) => ({
+            id: docItem.document.id,
+            fileName:
+              docItem.document.fileName || docItem.document.documentName,
+            description: docItem.document.documentDescription || "",
+            type: docItem.document.contentType === "link" ? "link" : "file",
+            fileType: docItem.document.contentType,
+            fileSize: docItem.document.fileSize || null, // Document model doesn't store fileSize currently
+            s3Key: docItem.document.s3Key,
+            uploadDate: docItem.document.createdAt,
+            // Mark as existing so FileLinksUpload knows not to re-upload
+            isExisting: true,
+            // Store the join table record ID for deletion
+            joinRecordId: docItem.id,
+          }));
+
         allTransactions.push({
           id: item.id,
           date: item.transactionDate,
@@ -73,6 +124,9 @@ export default function AccountTabs() {
           type: item.transactionType === "deposit" ? "credit" : "debit",
           displayType: item.transactionType,
           source: "Money Transaction",
+          referenceNumber: item.referenceNumber,
+          notes: item.notes,
+          attachments: attachments,
         });
       });
     }
@@ -304,7 +358,7 @@ export default function AccountTabs() {
         <AccountTransactions
           transactions={transactions}
           account={accountData}
-          onTransactionSuccess={() => {}}
+          onTransactionSuccess={handleTransactionSuccess}
         />
       </CustomTabPanel>
       <CustomTabPanel value={value} index={1}>

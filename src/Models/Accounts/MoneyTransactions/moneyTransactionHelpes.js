@@ -27,3 +27,69 @@ export const UPDATE_MONEY_TRANSACTION_MUTATION = `
     }
   }
 `;
+
+export const CREATE_DOCUMENT_MUTATION = `
+  mutation CreateDocument($input: CreateDocumentInput!) {
+    createDocument(input: $input) {
+      id
+      documentType
+      documentName
+      documentDescription
+      serialNumber
+      documentDate
+      s3Key
+      fileName
+      contentType
+      status
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+export const CREATE_MONEY_TRANSACTION_DOCUMENT_MUTATION = `
+  mutation CreateMoneyTransactionDocument($input: CreateMoneyTransactionDocumentInput!) {
+    createMoneyTransactionDocument(input: $input) {
+      id
+      moneyTransactionId
+      documentId
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+export const DELETE_DOCUMENT_MUTATION = `
+  mutation DeleteDocument($input: DeleteDocumentInput!) {
+    deleteDocument(input: $input) {
+      id
+    }
+  }
+`;
+
+export const DELETE_MONEY_TRANSACTION_DOCUMENT_MUTATION = `
+  mutation DeleteMoneyTransactionDocument($input: DeleteMoneyTransactionDocumentInput!) {
+    deleteMoneyTransactionDocument(input: $input) {
+      id
+    }
+  }
+`;
+
+export const LIST_MONEY_TRANSACTION_DOCUMENTS_QUERY = `
+  query ListMoneyTransactionDocuments(
+    $filter: ModelMoneyTransactionDocumentFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listMoneyTransactionDocuments(filter: $filter, limit: $limit, nextToken: $nextToken) {
+      items {
+        id
+        moneyTransactionId
+        documentId
+        createdAt
+        updatedAt
+      }
+      nextToken
+    }
+  }
+`;

@@ -22,6 +22,23 @@ export const LIST_ACCOUNTS_QUERY = `
             transactionType
             id
             description
+            referenceNumber
+            notes
+            documents {
+              items {
+                id
+                document {
+                  id
+                  documentName
+                  documentDescription
+                  s3Key
+                  fileName
+                  contentType
+                  status
+                  createdAt
+                }
+              }
+            }
           }
         }
         payments {
@@ -109,6 +126,91 @@ export const UPDATE_ACCOUNT_MUTATION = `
       description
       createdAt
       updatedAt
+    }
+  }
+`;
+
+export const GET_ACCOUNT_WITH_TRANSACTIONS_QUERY = `
+  query GetAccount($id: ID!) {
+    getAccount(id: $id) {
+      id
+      name
+      openingBalance
+      status
+      currency
+      accountType
+      description
+      createdAt
+      updatedAt
+      moneyTransactions {
+        items {
+          id
+          amount
+          transactionDate
+          transactionType
+          description
+          referenceNumber
+          notes
+          documents {
+            items {
+              id
+              document {
+                id
+                documentName
+                documentDescription
+                s3Key
+                fileName
+                contentType
+                status
+                createdAt
+              }
+            }
+          }
+        }
+      }
+      payments {
+        items {
+          amount
+          paymentDate
+          id
+        }
+      }
+      penalties {
+        items {
+          amount
+          penaltyDate
+          id
+        }
+      }
+      loans {
+        items {
+          loan {
+            id
+            principal
+            createdAt
+            borrower {
+              businessName
+              firstname
+              othername
+            }
+          }
+        }
+      }
+      loanFees {
+        items {
+          id
+          amount
+          loanFeesDescription
+        }
+      }
+      expenses {
+        items {
+          amount
+          id
+          description
+          type
+        }
+      }
     }
   }
 `;

@@ -7,7 +7,7 @@ import CollectionsTemplate, {
 import PlusButtonSmall from "../../../ModelAssets/PlusButtonSmall";
 import CustomPopUp from "../../../ModelAssets/CustomPopUp";
 import CustomSlider from "../../../ModelAssets/CustomSlider";
-import CreateMoneyTransaction from "../MoneyTransactions/CreateMoneyTransactions/CreateMoneyTransaction";
+import MoneyTransactions from "../MoneyTransactions/MoneyTransactions";
 import NotificationBar from "../../../ModelAssets/NotificationBar";
 import ClickableText from "../../../ComponentAssets/ClickableText";
 
@@ -187,12 +187,14 @@ export default function AccountTransactions({
         showEdit={false}
         showDelete={false}
       >
-        <CreateMoneyTransaction
-          onClose={handleClose}
-          onSuccess={handleSuccess}
+        <MoneyTransactions
           type={transactionType}
           account={account}
-          setNotification={setNotification}
+          onSuccess={() => {
+            handleClose();
+            handleSuccess();
+          }}
+          onClose={handleClose}
         />
       </CustomPopUp>
 
@@ -209,53 +211,16 @@ export default function AccountTransactions({
             showPdf={false}
             editMode={editClicked}
           >
-            <CreateMoneyTransaction
-              ref={formRef}
-              onClose={handleViewDialogClose}
-              onSuccess={handleEditSuccess}
+            <MoneyTransactions
+              transactionId={selectedTransaction.id}
               type={
                 selectedTransaction.displayType ||
                 selectedTransaction.transactionType
               }
               account={account}
-              setNotification={setNotification}
-              initialValues={{
-                id: selectedTransaction.id,
-                amount: selectedTransaction.amount,
-                description: selectedTransaction.description,
-                transactionDate:
-                  selectedTransaction.date ||
-                  selectedTransaction.transactionDate,
-                referenceNumber: selectedTransaction.referenceNumber || "",
-                notes: selectedTransaction.notes || "",
-                // Use processed attachments array if available, otherwise try to map from documents.items
-                attachments:
-                  selectedTransaction.attachments ||
-                  (selectedTransaction.documents?.items || []).map(
-                    (docItem) => ({
-                      id: docItem.document?.id || docItem.id,
-                      fileName:
-                        docItem.document?.fileName ||
-                        docItem.document?.documentName ||
-                        docItem.fileName,
-                      description:
-                        docItem.document?.documentDescription ||
-                        docItem.description ||
-                        "",
-                      type:
-                        docItem.document?.contentType === "link"
-                          ? "link"
-                          : "file",
-                      fileType: docItem.document?.contentType || "file",
-                      s3Key: docItem.document?.s3Key || null,
-                      uploadDate:
-                        docItem.document?.createdAt || docItem.createdAt,
-                      isExisting: true,
-                      joinRecordId: docItem.id,
-                    })
-                  ),
-              }}
-              isEditMode={true}
+              onSuccess={handleEditSuccess}
+              onClose={handleViewDialogClose}
+              editMode={editClicked}
             />
           </CustomSlider>
         )}

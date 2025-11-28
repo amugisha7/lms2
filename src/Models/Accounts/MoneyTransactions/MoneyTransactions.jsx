@@ -12,8 +12,8 @@ import {
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useTheme } from "@mui/material/styles";
 import { generateClient } from "aws-amplify/api";
-import { getMoneyTransaction } from "../../../graphql/queries";
 import CreateMoneyTransaction from "./CreateMoneyTransactions/CreateMoneyTransaction";
+import { GET_MONEY_TRANSACTION_WITH_DOCUMENTS } from "./moneyTransactionHelpes";
 import MoneyTransactionsFiles from "./MoneyTransactionsFiles/MoneyTransactionsFiles";
 import NotificationBar from "../../../ComponentAssets/NotificationBar";
 
@@ -37,6 +37,7 @@ export default function MoneyTransactions({
   account,
   onSuccess,
   onClose,
+  editMode = false,
 }) {
   const { transactionId: paramTransactionId } = useParams();
   const transactionId = propTransactionId || paramTransactionId;
@@ -64,7 +65,7 @@ export default function MoneyTransactions({
         setLoading(true);
         console.log("Fetching transaction with id:", transactionId);
         const result = await client.graphql({
-          query: getMoneyTransaction,
+          query: GET_MONEY_TRANSACTION_WITH_DOCUMENTS,
           variables: { id: transactionId },
         });
         console.log("Fetch transaction result:", result);
@@ -87,8 +88,17 @@ export default function MoneyTransactions({
   }, [transactionId]);
 
   const handleTabChange = (event, newValue) => {
+    // Don't allow tab change when in edit mode
+    if (editMode) return;
     setTabValue(newValue);
   };
+
+  // Reset to first tab when entering edit mode
+  useEffect(() => {
+    if (editMode) {
+      setTabValue(0);
+    }
+  }, [editMode]);
 
   const handleUpdateSuccess = (updatedValues) => {
     if (onSuccess) onSuccess(updatedValues);
@@ -182,7 +192,7 @@ export default function MoneyTransactions({
               }}
             >
               <Tab label="Transaction Details" id="transaction-tab-0" />
-              <Tab label="Files" id="transaction-tab-1" />
+              {!editMode && <Tab label="Files" id="transaction-tab-1" />}
             </Tabs>
           </Box>
 

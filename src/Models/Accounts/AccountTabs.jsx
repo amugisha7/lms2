@@ -107,7 +107,6 @@ export default function AccountTabs() {
             description: docItem.document.documentDescription || "",
             type: docItem.document.contentType === "link" ? "link" : "file",
             fileType: docItem.document.contentType,
-            fileSize: docItem.document.fileSize || null, // Document model doesn't store fileSize currently
             s3Key: docItem.document.s3Key,
             uploadDate: docItem.document.createdAt,
             // Mark as existing so FileLinksUpload knows not to re-upload

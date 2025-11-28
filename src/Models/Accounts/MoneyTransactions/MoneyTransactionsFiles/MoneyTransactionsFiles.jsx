@@ -52,9 +52,20 @@ const MoneyTransactionsFiles = ({
   const [uploadMode, setUploadMode] = useState("file");
 
   // Initialize files from transaction data
+  // Documents come from a join table, so we need to map the nested document object
   useEffect(() => {
     if (transaction?.documents?.items) {
-      setFiles(transaction.documents.items);
+      const mappedFiles = transaction.documents.items
+        .filter((item) => item.document) // Filter out any items without a document
+        .map((item) => ({
+          ...item.document,
+          uploadDate: item.document.createdAt,
+          // Check if it's a link based on contentType
+          type: item.document.contentType === "link" ? "link" : "file",
+          // Store join record ID for potential use
+          joinRecordId: item.id,
+        }));
+      setFiles(mappedFiles);
     } else {
       setFiles([]);
     }
@@ -153,34 +164,33 @@ const MoneyTransactionsFiles = ({
           documentId: newDocument.id,
         };
 
-        await client.graphql({
+        const linkResult = await client.graphql({
           query: createMoneyTransactionDocument,
           variables: { input: linkInput },
         });
+        const joinRecord = linkResult.data.createMoneyTransactionDocument;
 
-        // Update files array
-        // We need to add the new document to the list.
-        // Note: The new document object might need some fields to match the grid columns if they differ from schema
-        // But schema fields match columns (fileName, description, etc.)
-        // We add 'uploadDate' which is not in Document schema directly (it has documentDate and createdAt)
-        // The columns use 'uploadDate'. Let's map it.
+        // Create file object for local state (flat structure for display)
         const fileForState = {
           ...newDocument,
           uploadDate: newDocument.createdAt,
-          fileSize: uploadFileData.file.size, // Document schema doesn't have size, but we can add it to state for display
+          fileSize: uploadFileData.file.size,
+          type: "file",
+          joinRecordId: joinRecord.id,
         };
 
         const updatedFiles = [...files, fileForState];
         setFiles(updatedFiles);
 
-        // Update parent transaction state if needed (though we just updated local files)
-        // If parent re-fetches, it will get the new list.
-        // We can update parent state to reflect the change immediately
+        // Update parent transaction state with nested structure
         setTransaction((prev) => ({
           ...prev,
           documents: {
             ...prev.documents,
-            items: updatedFiles,
+            items: [
+              ...(prev.documents?.items || []),
+              { id: joinRecord.id, document: newDocument },
+            ],
           },
         }));
 
@@ -238,25 +248,32 @@ const MoneyTransactionsFiles = ({
           documentId: newDocument.id,
         };
 
-        await client.graphql({
+        const linkResult = await client.graphql({
           query: createMoneyTransactionDocument,
           variables: { input: linkInput },
         });
+        const joinRecord = linkResult.data.createMoneyTransactionDocument;
 
+        // Create file object for local state (flat structure for display)
         const fileForState = {
           ...newDocument,
           uploadDate: newDocument.createdAt,
-          type: "link", // For column rendering
+          type: "link",
+          joinRecordId: joinRecord.id,
         };
 
         const updatedFiles = [...files, fileForState];
         setFiles(updatedFiles);
 
+        // Update parent transaction state with nested structure
         setTransaction((prev) => ({
           ...prev,
           documents: {
             ...prev.documents,
-            items: updatedFiles,
+            items: [
+              ...(prev.documents?.items || []),
+              { id: joinRecord.id, document: newDocument },
+            ],
           },
         }));
 
@@ -314,6 +331,9 @@ const MoneyTransactionsFiles = ({
   const handleDelete = async () => {
     if (!fileToDelete) return;
 
+    const fileId = fileToDelete.id;
+    const fileS3Key = fileToDelete.s3Key;
+
     setDeleteLoading(true);
     try {
       // 1. Find the join record
@@ -322,7 +342,7 @@ const MoneyTransactionsFiles = ({
         variables: {
           filter: {
             moneyTransactionId: { eq: transaction.id },
-            documentId: { eq: fileToDelete.id },
+            documentId: { eq: fileId },
           },
         },
       });
@@ -344,23 +364,26 @@ const MoneyTransactionsFiles = ({
       // 3. Delete Document record
       await client.graphql({
         query: deleteDocument,
-        variables: { input: { id: fileToDelete.id } },
+        variables: { input: { id: fileId } },
       });
 
       // 4. Remove from S3 if it has a key
-      if (fileToDelete.s3Key) {
-        await remove({ key: fileToDelete.s3Key });
+      if (fileS3Key) {
+        await remove({ key: fileS3Key });
       }
 
-      // Update files array
-      const updatedFiles = files.filter((f) => f.id !== fileToDelete.id);
+      // Update local files state
+      const updatedFiles = files.filter((f) => f.id !== fileId);
       setFiles(updatedFiles);
 
+      // Update parent transaction state with nested structure
       setTransaction((prev) => ({
         ...prev,
         documents: {
           ...prev.documents,
-          items: updatedFiles,
+          items: (prev.documents?.items || []).filter(
+            (item) => item.document?.id !== fileId
+          ),
         },
       }));
 
@@ -368,9 +391,6 @@ const MoneyTransactionsFiles = ({
         message: "File deleted successfully!",
         color: "green",
       });
-
-      setDeleteDialogOpen(false);
-      setFileToDelete(null);
     } catch (error) {
       console.error("Error deleting file:", error);
       setNotification({
@@ -378,7 +398,10 @@ const MoneyTransactionsFiles = ({
         color: "red",
       });
     } finally {
+      // Always close the dialog and reset state
       setDeleteLoading(false);
+      setDeleteDialogOpen(false);
+      setFileToDelete(null);
     }
   };
 

@@ -1,3 +1,33 @@
+export const GET_MONEY_TRANSACTION_WITH_DOCUMENTS = `
+  query GetMoneyTransaction($id: ID!) {
+    getMoneyTransaction(id: $id) {
+      id
+      transactionType
+      transactionDate
+      amount
+      description
+      referenceNumber
+      status
+      
+      documents {
+        items {
+          id
+          document {
+            id
+            documentName
+            documentDescription
+            s3Key
+            fileName
+            contentType
+            status
+            createdAt
+          }
+        }
+      }
+    }
+  }
+`;
+
 export const CREATE_MONEY_TRANSACTION_MUTATION = `
   mutation CreateMoneyTransaction($input: CreateMoneyTransactionInput!) {
     createMoneyTransaction(input: $input) {

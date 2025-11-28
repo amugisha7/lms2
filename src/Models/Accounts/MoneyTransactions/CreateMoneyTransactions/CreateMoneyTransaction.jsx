@@ -106,10 +106,9 @@ const CreateMoneyTransaction = forwardRef(function CreateMoneyTransaction(
     try {
       const input = {
         amount: parseFloat(values.amount),
-        description: values.description,
+        description: values.description?.trim() || "",
         transactionDate: values.transactionDate,
-        referenceNumber: values.referenceNumber,
-        notes: values.notes,
+        referenceNumber: values.referenceNumber?.trim() || null,
         status: "completed",
       };
 

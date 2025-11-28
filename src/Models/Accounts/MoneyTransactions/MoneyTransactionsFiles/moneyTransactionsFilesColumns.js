@@ -47,27 +47,11 @@ export const getMoneyTransactionsFilesColumns = (theme, handleDownload, openDele
     },
   },
   {
-    field: "description",
+    field: "documentDescription",
     headerName: "Description",
     width: 205,
   },
-  {
-    field: "fileSize",
-    headerName: "Size",
-    width: 70,
-    renderCell: (params) => (
-      <Typography
-        sx={{
-          fontSize: "0.75rem",
-          display: "flex",
-          alignItems: "center",
-          height: "100%",
-        }}
-      >
-        {formatFileSize(params.value)}
-      </Typography>
-    ),
-  },
+  
   {
     field: "uploadDate",
     headerName: "Upload Date",
@@ -85,27 +69,30 @@ export const getMoneyTransactionsFilesColumns = (theme, handleDownload, openDele
       </Typography>
     ),
   },
-  ...(canDelete
-    ? [
-        {
-          field: "actions",
-          headerName: "",
-          width: 50,
-          sortable: false,
-          renderCell: (params) => (
-            <IconButton onClick={() => openDeleteDialog(params.row)}>
-              <Delete
-                sx={{
-                  color: theme.palette.error.main,
-                  "&:hover": {
-                    color: theme.palette.error.dark,
-                  },
-                  fontSize: 20,
-                }}
-              />
-            </IconButton>
-          ),
-        },
-      ]
-    : []),
+  {
+    field: "actions",
+    headerName: "",
+    width: 50,
+    sortable: false,
+    renderCell: (params) => (
+      <IconButton
+        onClick={() => openDeleteDialog(params.row)}
+        disabled={!canDelete}
+      >
+        <Delete
+          sx={{
+            color: canDelete
+              ? theme.palette.error.main
+              : theme.palette.action.disabled,
+            "&:hover": {
+              color: canDelete
+                ? theme.palette.error.dark
+                : theme.palette.action.disabled,
+            },
+            fontSize: 20,
+          }}
+        />
+      </IconButton>
+    ),
+  },
 ];

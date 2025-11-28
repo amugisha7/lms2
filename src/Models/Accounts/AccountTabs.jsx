@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  useContext,
+} from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import {
   Box,
@@ -13,7 +19,14 @@ import { useTheme } from "@mui/material/styles";
 import { generateClient } from "aws-amplify/api";
 import AccountTransactions from "./AccountTransactions/AccountTransactions";
 import CreateAccount from "./CreateAccounts/CreateAccount";
-import { GET_ACCOUNT_WITH_TRANSACTIONS_QUERY } from "./accountHelpers";
+import {
+  GET_ACCOUNT_WITH_TRANSACTIONS_QUERY,
+  UPDATE_ACCOUNT_MUTATION,
+} from "./accountHelpers";
+import { useHasPermission } from "../../ModelAssets/Permissions/permissions";
+import { UserContext } from "../../App";
+import ClickableText from "../../ModelAssets/ClickableText";
+import { EditClickedContext } from "../../ModelAssets/CollectionsTemplate";
 
 function CustomTabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -41,6 +54,13 @@ export default function AccountTabs() {
   const [accountData, setAccountData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [transactions, setTransactions] = useState([]);
+  const { userDetails } = useContext(UserContext);
+  const canEditAccount = useHasPermission("update", "account");
+  const [editClicked, setEditClicked] = useState(false);
+
+  const handleEditClick = () => {
+    setEditClicked(true);
+  };
 
   const handleChange = (event, newValue) => {
     setValue(newValue);
@@ -75,6 +95,46 @@ export default function AccountTabs() {
       fetchAccountData(id);
     }
   }, [id, fetchAccountData]);
+
+  // API handler for updating account
+  const handleUpdateAccountAPI = useCallback(
+    async (values, initialValues) => {
+      const input = {
+        id: initialValues.id,
+        name: values.name?.trim() || null,
+        openingBalance: parseFloat(values.openingBalance) || 0,
+        status: values.status || "active",
+        currency: values.currency || userDetails?.institution?.currencyCode,
+        accountType: "user",
+        description: values.description?.trim() || null,
+      };
+
+      const result = await client.graphql({
+        query: UPDATE_ACCOUNT_MUTATION,
+        variables: { input },
+      });
+
+      return result.data.updateAccount;
+    },
+    [client, userDetails]
+  );
+
+  // Handler for when account is successfully edited
+  const handleEditSuccess = useCallback(
+    (updatedAccount) => {
+      setAccountData((prev) => ({
+        ...prev,
+        ...updatedAccount,
+      }));
+      // Reset edit mode
+      setEditClicked(false);
+      // Refresh transactions if opening balance changed
+      if (id) {
+        fetchAccountData(id);
+      }
+    },
+    [id, fetchAccountData]
+  );
 
   useEffect(() => {
     if (location.state?.account) {
@@ -361,23 +421,38 @@ export default function AccountTabs() {
         />
       </CustomTabPanel>
       <CustomTabPanel value={value} index={1}>
-        {accountData && (
-          <CreateAccount
-            initialValues={accountData}
-            isEditMode={true} // To show values
-            // We might need to pass a prop to disable editing or just not provide update handlers
-            // The user said "readOnly". CreateAccount might not support readOnly prop directly.
-            // I'll check CreateAccount.jsx again.
-            // It has `isEditMode`. If I don't pass `onUpdateAccountAPI`, it might show error or just not save.
-            // But to make it truly read-only (disabled inputs), I might need to modify CreateAccount or pass a flag.
-            // For now, I'll pass isEditMode={true} and maybe a new prop `readOnly={true}` if I can modify CreateAccount,
-            // or just rely on the fact that without a save handler it's effectively view-only (though editable in UI).
-            // The user said "shows the CreateAccount.jsx in readOnly".
-            // I will modify CreateAccount to accept a readOnly prop.
-            readOnly={true}
-            hideCancel={true}
-          />
-        )}
+        <EditClickedContext.Provider value={{ editClicked, setEditClicked }}>
+          {accountData && (
+            <>
+              {canEditAccount && (
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    mb: 2,
+                  }}
+                >
+                  <ClickableText
+                    onClick={handleEditClick}
+                    sx={{
+                      color: theme.palette.blueText.main,
+                      fontSize: "0.9rem",
+                    }}
+                  >
+                    Edit
+                  </ClickableText>
+                </Box>
+              )}
+              <CreateAccount
+                initialValues={accountData}
+                isEditMode={true}
+                onEditSuccess={handleEditSuccess}
+                onUpdateAccountAPI={handleUpdateAccountAPI}
+                hideCancel={true}
+              />
+            </>
+          )}
+        </EditClickedContext.Provider>
       </CustomTabPanel>
     </Box>
   );

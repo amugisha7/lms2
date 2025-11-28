@@ -7,6 +7,7 @@ const PlusButtonSmall = ({
   onClick,
   label = "ADD LOAN",
   IconComponent = Add,
+  disabled = false,
 }) => {
   const theme = useTheme();
 
@@ -23,9 +24,15 @@ const PlusButtonSmall = ({
       <Button
         variant="outlined"
         onClick={onClick}
+        disabled={disabled}
         startIcon={
           <IconComponent
-            sx={{ color: theme.palette.blueText.main, fontSize: "0.5rem" }}
+            sx={{
+              color: disabled
+                ? theme.palette.action.disabled
+                : theme.palette.blueText.main,
+              fontSize: "0.5rem",
+            }}
           />
         }
         sx={{
@@ -40,6 +47,10 @@ const PlusButtonSmall = ({
             backgroundColor: "transparent",
             borderColor: theme.palette.blueText.main,
             borderWidth: "2px",
+          },
+          "&.Mui-disabled": {
+            borderColor: theme.palette.action.disabled,
+            color: "grey",
           },
         }}
       >

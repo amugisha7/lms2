@@ -134,6 +134,8 @@ const CreateAccountForm = forwardRef(
             value: code,
             label: `${code} - ${currenciesObj[code].name}`,
           })),
+          // Disable currency field in edit mode - currency is set at creation only
+          disabled: isEditMode,
         };
       }
       return field;

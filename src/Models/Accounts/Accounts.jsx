@@ -421,6 +421,7 @@ export default function Accounts() {
           label="DEPOSIT"
           IconComponent={Add}
           onClick={() => handleTransactionClick(params.row, "deposit")}
+          disabled={params.row.status?.toLowerCase() === "inactive"}
         />
       ),
     },
@@ -433,6 +434,7 @@ export default function Accounts() {
           label="WITHDRAW"
           IconComponent={Remove}
           onClick={() => handleTransactionClick(params.row, "withdrawal")}
+          disabled={params.row.status?.toLowerCase() === "inactive"}
         />
       ),
     },

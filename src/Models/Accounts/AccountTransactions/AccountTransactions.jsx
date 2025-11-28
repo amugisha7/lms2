@@ -145,6 +145,8 @@ export default function AccountTransactions({
     },
   ];
 
+  const isAccountInactive = account?.status?.toLowerCase() === "inactive";
+
   return (
     <>
       <NotificationBar
@@ -157,6 +159,7 @@ export default function AccountTransactions({
             label="DEPOSIT"
             IconComponent={Add}
             onClick={handleDeposit}
+            disabled={isAccountInactive}
           />
         </Box>
         <Box sx={{ width: "120px" }}>
@@ -164,6 +167,7 @@ export default function AccountTransactions({
             label="WITHDRAW"
             IconComponent={Remove}
             onClick={handleWithdraw}
+            disabled={isAccountInactive}
           />
         </Box>
       </Box>

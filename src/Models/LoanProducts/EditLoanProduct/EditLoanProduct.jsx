@@ -246,7 +246,9 @@ const buildValidationSchema = () => {
         "lump_sum",
       ])
       .nullable(),
-    branch: Yup.string().required("Branch is required"),
+    branch: Yup.array()
+      .min(1, "At least one branch is required")
+      .required("Branch is required"),
   };
 
   return Yup.object().shape(validationShape);

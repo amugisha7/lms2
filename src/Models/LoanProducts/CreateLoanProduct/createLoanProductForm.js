@@ -63,9 +63,14 @@ const createLoanProductForm = [
     type: "select",
     span: 6,
     options: [
-      { value: "flat", label: "Flat" },
-      { value: "declining_balance", label: "Declining Balance" },
-    ],
+    { value: "flat", label: "Flat" },
+    { value: "declining_balance", label: "Declining Balance" },
+    { value: "reducing_balance_equal_installments", label: "Reducing Balance - Equal Installments" },
+    { value: "reducing_balance_equal_principal", label: "Reducing Balance - Equal Principal" },
+    { value: "interest_only", label: "Interest-Only" },
+    { value: "compound_interest_accrued", label: "Compound Interest - Accrued" },
+    { value: "compound_interest_equal_installments", label: "Compound Interest - Equal Installments" },
+],
   },
   {
     label: "Interest Type",

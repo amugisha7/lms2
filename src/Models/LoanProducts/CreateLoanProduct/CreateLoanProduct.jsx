@@ -8,9 +8,10 @@ import React, {
 } from "react";
 import { Formik, Form } from "formik";
 import * as Yup from "yup";
-import { Box, Grid, Typography } from "@mui/material";
+import { Box, Grid, Typography, Alert } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { generateClient } from "aws-amplify/api";
+import { Link } from "react-router-dom";
 
 import createLoanProductForm from "./createLoanProductForm";
 import TextInput from "../../../Resources/FormComponents/TextInput";
@@ -299,7 +300,19 @@ const renderFormField = (field, formikValues) => {
       // }
       return <Dropdown {...field} label={displayLabel} disabled={isDisabled} />;
     case "selectMultiple":
-      return <MultipleDropDown {...field} disabled={isDisabled} />;
+      return (
+        <>
+          <MultipleDropDown {...field} disabled={isDisabled} />
+          {field.name === "loanFees" && field.options?.length === 0 && (
+            <Alert severity="info" sx={{ mt: 1 }}>
+              No loan fees found.{" "}
+              <Link to="/admin/add-loan-fee" style={{ fontWeight: "bold" }}>
+                Click here to create loan fees
+              </Link>
+            </Alert>
+          )}
+        </>
+      );
     case "radio":
       return <RadioGroup {...field} disabled={isDisabled} />;
     case "orderedList":

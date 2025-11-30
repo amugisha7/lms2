@@ -11,7 +11,11 @@ export default function AdminPage() {
   const settingsLinks = [
     {
       category: "Loans",
-      links: [{ label: "Loan Products", href: "/admin/loan-products" }],
+      links: [
+        { label: "Loan Products", href: "/admin/loan-products" },
+        { label: "Loan Fees", href: "/admin/loan-fees" },
+        { label: "Add Loan Fee", href: "/admin/add-loan-fee" },
+      ],
     },
     {
       category: "Branches",

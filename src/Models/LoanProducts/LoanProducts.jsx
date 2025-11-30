@@ -68,11 +68,18 @@ export default function LoanProducts() {
   const lastBranchIdRef = React.useRef();
 
   React.useEffect(() => {
+    console.log("LoanProducts useEffect triggered");
+    console.log("userDetails:", userDetails);
+    console.log("userDetails?.branchUsersId:", userDetails?.branchUsersId);
+    console.log("lastBranchIdRef.current:", lastBranchIdRef.current);
+
     const fetchLoanProducts = async () => {
+      console.log("fetchLoanProducts called");
       setLoading(true);
       try {
         const client = generateClient();
-        if (!userDetails?.branchId) {
+        if (!userDetails?.branchUsersId) {
+          console.log("No branchUsersId, returning early");
           setLoanProducts([]);
           setLoading(false);
           return;
@@ -139,10 +146,12 @@ export default function LoanProducts() {
               }
             `,
             variables: {
-              branchId: userDetails.branchId,
+              branchId: userDetails.branchUsersId,
               nextToken: nextToken,
             },
           });
+
+          console.log("listLoanProducts response::: ", result);
 
           const items = result.data.listLoanProducts.items || [];
           // Extract loanProducts that have matching branch relationships
@@ -169,15 +178,19 @@ export default function LoanProducts() {
       }
     };
     if (
-      userDetails?.branchId &&
-      userDetails.branchId !== lastBranchIdRef.current
+      userDetails?.branchUsersId &&
+      userDetails.branchUsersId !== lastBranchIdRef.current
     ) {
-      lastBranchIdRef.current = userDetails.branchId;
+      console.log("Condition met - calling fetchLoanProducts");
+      lastBranchIdRef.current = userDetails.branchUsersId;
       fetchLoanProducts();
-    } else if (!userDetails?.branchId) {
+    } else if (!userDetails?.branchUsersId) {
+      console.log("No branchUsersId - setting loading to false");
       setLoading(false);
+    } else {
+      console.log("branchUsersId same as last time, skipping fetch");
     }
-  }, [userDetails?.branchId]);
+  }, [userDetails?.branchUsersId]);
 
   const handleEditDialogOpen = (row) => {
     setEditDialogRow(row);

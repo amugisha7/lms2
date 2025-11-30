@@ -110,6 +110,9 @@ function App({ signOut, user }) {
                 status 
                 institutionUsersId 
                 branchUsersId 
+                branch {
+                  name
+                }
                 institution {
                   name
                   currencyCode

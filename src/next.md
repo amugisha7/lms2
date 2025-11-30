@@ -1,5 +1,5 @@
 - Create loans form. Also create from loan product.
-  - Fix the loanProducts fetch
+  - update the loanfees form and check loanfees retrieval in loanproducts creation/editing.
   * filter for loanproducts that belong to required branches; loop if necessary to get all.
   * prepopulate the createLoan form with the loan products.
   * select account for disbursement of the loan.

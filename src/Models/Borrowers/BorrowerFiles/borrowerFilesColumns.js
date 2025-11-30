@@ -3,7 +3,7 @@ import { Typography, IconButton } from "@mui/material";
 import { Delete } from "@mui/icons-material";
 import ClickableText from "../../../ComponentAssets/ClickableText";
 
-export const getBorrowerFilesColumns = (theme, handleDownload, openDeleteDialog, formatFileSize, formatDate, canDelete) => [
+export const getBorrowerFilesColumns = (theme, handleDownload, openDeleteDialog, formatDate, canDelete) => [
   {
     field: "fileName",
     headerName: "File Name",
@@ -50,23 +50,6 @@ export const getBorrowerFilesColumns = (theme, handleDownload, openDeleteDialog,
     field: "description",
     headerName: "Description",
     width: 205,
-  },
-  {
-    field: "fileSize",
-    headerName: "Size",
-    width: 70,
-    renderCell: (params) => (
-      <Typography
-        sx={{
-          fontSize: "0.75rem",
-          display: "flex",
-          alignItems: "center",
-          height: "100%",
-        }}
-      >
-        {formatFileSize(params.value)}
-      </Typography>
-    ),
   },
   {
     field: "uploadDate",

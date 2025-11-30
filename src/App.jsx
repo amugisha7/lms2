@@ -118,6 +118,7 @@ function App({ signOut, user }) {
             }`,
             variables: { id: user.userId },
           });
+          console.log("GetUser response:", res);
           const userData = res.data.getUser;
           setUserDetails(userData || null);
           setError(false);

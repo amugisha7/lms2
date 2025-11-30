@@ -104,11 +104,59 @@ export default function Borrowers() {
       : borrower.businessName || "Unnamed Borrower";
   };
 
+  // Valid borrower fields for GraphQL input
+  const validBorrowerFields = [
+    "firstname",
+    "othername",
+    "businessName",
+    "typeOfBusiness",
+    "uniqueIdNumber",
+    "phoneNumber",
+    "otherPhoneNumber",
+    "email",
+    "gender",
+    "dateOfBirth",
+    "nationality",
+    "address",
+    "city",
+    "state",
+    "title",
+    "zipcode",
+    "employmentStatus",
+    "employerName",
+    "creditScore",
+    "customFieldsData",
+    "status",
+    "nationalIdPicture",
+    "passportPicture",
+    "points",
+    "borrowerOpeningBalance",
+    "borrowerClosingBalance",
+    "borrowerInterestRate",
+    "additionalNote1",
+    "additionalNote2",
+    "borrowerDocuments",
+  ];
+
   // CRUD operations
   const handleCreate = async (formData) => {
     try {
+      // Filter to only include valid GraphQL fields
+      const filteredData = Object.keys(formData)
+        .filter((key) => validBorrowerFields.includes(key))
+        .reduce((obj, key) => {
+          if (
+            formData[key] !== "" &&
+            formData[key] !== null &&
+            formData[key] !== undefined
+          ) {
+            obj[key] = formData[key];
+          }
+          return obj;
+        }, {});
+
       const input = {
-        ...formData,
+        ...filteredData,
         branchBorrowersId: userDetails.branchUsersId,
       };
 
@@ -138,9 +186,23 @@ export default function Borrowers() {
 
   const handleUpdate = async (formData) => {
     try {
+      // Filter to only include valid GraphQL fields
+      const filteredData = Object.keys(formData)
+        .filter((key) => validBorrowerFields.includes(key))
+        .reduce((obj, key) => {
+          if (
+            formData[key] !== "" &&
+            formData[key] !== null &&
+            formData[key] !== undefined
+          ) {
+            obj[key] = formData[key];
+          }
+          return obj;
+        }, {});
+
       const input = {
         id: selectedBorrower.id,
-        ...formData,
+        ...filteredData,
       };
 
       console.log("API Call: Updating borrower"); // <-- Added

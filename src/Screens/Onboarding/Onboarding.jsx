@@ -182,7 +182,8 @@ const AccountSettingsForm = () => {
 
       // 2. Create Branch under Institution
       const branchInput = {
-        name: "Branch #01",
+        name: "Branch #001",
+        status: "system",
         institutionBranchesId: institutionId,
       };
 

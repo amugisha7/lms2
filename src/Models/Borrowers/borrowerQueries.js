@@ -43,7 +43,6 @@ export const CREATE_BORROWER_MUTATION = `
       firstname
       othername
       businessName
-      typeOfBusiness
       uniqueIdNumber
       phoneNumber
       otherPhoneNumber
@@ -60,6 +59,7 @@ export const CREATE_BORROWER_MUTATION = `
       employerName
       creditScore
       customFieldsData
+      branchBorrowersId
       createdAt
       updatedAt
     }

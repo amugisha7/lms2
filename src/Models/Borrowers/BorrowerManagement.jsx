@@ -15,7 +15,7 @@ import { UserContext } from "../../App";
 import CreateBorrower from "./CreateBorrower/CreateBorrower";
 import NotificationBar from "../../ComponentAssets/NotificationBar";
 import ClickableText from "../../ComponentAssets/ClickableText";
-import EditContentPopup from "../../ModelAssets/EditContentPopup";
+import CustomSlider from "../../ModelAssets/CustomSlider";
 import CustomBorrowerFields from "./CustomBorrowerFields/CustomBorrowerFields";
 import EditableCustomBorrowerFields from "./CustomBorrowerFields/EditableCustomBorrowerFields";
 import DeleteDialog from "../../ModelAssets/DeleteDialog";
@@ -584,12 +584,14 @@ export default function BorrowerManagement() {
         color={notification.color}
       />
 
-      {/* Edit Popup */}
-      <EditContentPopup
+      {/* Edit Slider */}
+      <CustomSlider
         open={editPopupOpen}
         onClose={handleEditPopupClose}
         title={`Edit ${getBorrowerName()}`}
-        maxWidth="lg"
+        showEdit={false}
+        showDelete={false}
+        showPdf={false}
       >
         <CreateBorrower
           initialValues={borrower}
@@ -600,14 +602,16 @@ export default function BorrowerManagement() {
           setNotification={setNotification}
           onCancel={handleEditPopupClose}
         />
-      </EditContentPopup>
+      </CustomSlider>
 
-      {/* Edit Custom Fields Popup */}
-      <EditContentPopup
+      {/* Edit Custom Fields Slider */}
+      <CustomSlider
         open={editCustomFieldsPopupOpen}
         onClose={handleEditCustomFieldsPopupClose}
         title={`Edit Custom Fields - ${getBorrowerName()}`}
-        maxWidth="lg"
+        showEdit={false}
+        showDelete={false}
+        showPdf={false}
       >
         <EditableCustomBorrowerFields
           customFields={customFields}
@@ -617,7 +621,7 @@ export default function BorrowerManagement() {
           onCancel={handleEditCustomFieldsPopupClose}
           setNotification={setNotification}
         />
-      </EditContentPopup>
+      </CustomSlider>
 
       {/* Delete Confirmation Dialog */}
       <DeleteDialog

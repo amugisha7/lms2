@@ -382,6 +382,9 @@ export default function Branches() {
     },
   ];
 
+  // Check if a branch can be deleted (system branches cannot be deleted)
+  const canDeleteBranch = (branch) => branch?.status !== "system";
+
   return (
     <>
       <NotificationBar
@@ -428,6 +431,9 @@ export default function Branches() {
         onEditClick={handleEditClick}
         // reactivate to enable deleting of branches
         // onPopupDeleteClick={handlePopupDeleteClick}
+        onPopupDeleteClick={
+          canDeleteBranch(editDialogRow) ? handlePopupDeleteClick : null
+        }
         editMode={editMode}
         // Delete dialog props
         deleteDialogOpen={deleteDialogOpen}

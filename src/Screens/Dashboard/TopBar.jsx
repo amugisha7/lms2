@@ -136,6 +136,18 @@ const TopBar = ({ onMenuClick }) => {
                 >
                   {institutionName}
                 </Typography>
+
+                <Typography
+                  variant="body2"
+                  sx={{
+                    fontWeight: 400,
+                    color: theme.palette.text.secondary,
+                    fontStyle: "italic",
+                    ml: 1,
+                  }}
+                >
+                  — {userDetails?.branch?.name || "Main Branch"}
+                </Typography>
               </Box>
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <IconButton>

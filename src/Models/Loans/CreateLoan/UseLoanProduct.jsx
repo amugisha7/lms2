@@ -248,13 +248,13 @@ const UseLoanProduct = forwardRef(
             }}
           >
             <Typography>
-              No loan products found.{" "}
+              No loan products found.{" "} Manage{" "}
               <ClickableText
-                onClick={() => navigate("/admin/add-loan-product")}
+                onClick={() => navigate("/admin/loan-products")}
               >
-                Create a Loan Product
+                Loan Products.
               </ClickableText>
-              {` `}to use as a template for creating loans.
+         
             </Typography>
           </Box>
         ) : (

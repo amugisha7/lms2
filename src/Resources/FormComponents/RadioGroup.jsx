@@ -75,7 +75,13 @@ const RadioGroup = ({
           minWidth: 0,
         }}
       >
-        <MuiRadioGroup {...field} {...otherProps} onChange={handleChange} row>
+        <MuiRadioGroup
+          {...field}
+          value={field.value ?? ""}
+          {...otherProps}
+          onChange={handleChange}
+          row
+        >
           {options?.map((option) => (
             <FormControlLabel
               key={option.value}

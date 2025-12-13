@@ -8,6 +8,7 @@ export const updateLoanProduct = async (input) => {
         updateLoanProduct(input: $input) {
           id
           name
+          status
           principalAmountMin
           principalAmountMax
           principalAmountDefault
@@ -53,13 +54,14 @@ export const updateLoanProduct = async (input) => {
 };
 
 export const getLoanProductById = async (id) => {
-    const client = generateClient();
-    const result = await client.graphql({
-        query: `
+  const client = generateClient();
+  const result = await client.graphql({
+    query: `
             query GetLoanProduct($id: ID!) {
                 getLoanProduct(id: $id) {
                     id
                     name
+                    status
                     principalAmountMin
                     principalAmountMax
                     principalAmountDefault
@@ -99,14 +101,16 @@ export const getLoanProductById = async (id) => {
                 }
             }
         `,
-        variables: { id }
-    });
-    return result?.data?.getLoanProduct;
+    variables: { id }
+  });
+  return result?.data?.getLoanProduct;
 }
 
 export const buildLoanProductUpdateInput = (values, userDetails, id) => ({
   id: id,
+  institutionLoanProductsId: userDetails.institutionUsersId,
   name: values.name,
+  status: values.status || "Active",
   principalAmountMin: values.minPrincipal ? Number(values.minPrincipal) : null,
   principalAmountMax: values.maxPrincipal ? Number(values.maxPrincipal) : null,
   principalAmountDefault: values.defaultPrincipal

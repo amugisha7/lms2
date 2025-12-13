@@ -28,7 +28,7 @@ export const createLoanProduct = async (input) => {
           termDurationDefault
           termDurationMax
           termDurationMin
-          
+          status
         }
       }
     `,
@@ -76,7 +76,9 @@ export const associateBranchWithLoanProduct = async (loanProductId, branchId) =>
 };
 
 export const buildLoanProductInput = (values, userDetails) => ({
+  institutionLoanProductsId: userDetails.institutionUsersId,
   name: values.name,
+  status: values.status,
   description: "",
   principalAmountMin: values.minPrincipal ? Number(values.minPrincipal) : null,
   principalAmountMax: values.maxPrincipal ? Number(values.maxPrincipal) : null,
@@ -98,7 +100,9 @@ export const buildLoanProductInput = (values, userDetails) => ({
     : null,
   durationPeriod: values.durationPeriod || null,
   repaymentFrequency: values.repaymentFrequency || null,
-  repaymentOrder: values.repaymentOrder ? JSON.stringify(values.repaymentOrder) : null,
+  repaymentOrder: values.repaymentOrder
+    ? JSON.stringify(values.repaymentOrder)
+    : null,
   extendLoanAfterMaturity:
     values.extendLoanAfterMaturity === ""
       ? null

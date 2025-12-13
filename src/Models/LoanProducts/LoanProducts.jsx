@@ -91,53 +91,52 @@ export default function LoanProducts() {
         do {
           const result = await client.graphql({
             query: `
-              query ListLoanProducts($branchId: ID!, $nextToken: String) {
-                listLoanProducts(limit: 100, nextToken: $nextToken) {
+              query ListLoanProducts($institutionId: ID!, $nextToken: String) {
+                listLoanProducts(
+                  filter: { institutionLoanProductsId: { eq: $institutionId } }
+                  limit: 100
+                  nextToken: $nextToken
+                ) {
                   nextToken
                   items {
-                    branches(filter: { branchId: { eq: $branchId } }) {
+                    calculateInterestOn
+                    description
+                    durationPeriod
+                    extendLoanAfterMaturity
+                    id
+                    institutionLoanProductsId
+                    interestCalculationMethod
+                    interestPeriod
+                    interestRateDefault
+                    interestRateMax
+                    interestRateMin
+                    interestType
+                    interestTypeMaturity
+                    loanInterestRateAfterMaturity
+                    name
+                    status
+                    principalAmountDefault
+                    principalAmountMax
+                    principalAmountMin
+                    recurringPeriodAfterMaturityUnit
+                    repaymentFrequency
+                    repaymentOrder
+                    termDurationDefault
+                    termDurationMax
+                    termDurationMin
+                    branches {
                       items {
-                        loanProduct {
-                          calculateInterestOn
-                          description
-                          durationPeriod
-                          extendLoanAfterMaturity
+                        branch {
                           id
-                          institutionLoanProductsId
-                          interestCalculationMethod
-                          interestPeriod
-                          interestRateDefault
-                          interestRateMax
-                          interestRateMin
-                          interestType
-                          interestTypeMaturity
-                          loanInterestRateAfterMaturity
                           name
-                          principalAmountDefault
-                          principalAmountMax
-                          principalAmountMin
-                          recurringPeriodAfterMaturityUnit
-                          repaymentFrequency
-                          repaymentOrder
-                          termDurationDefault
-                          termDurationMax
-                          termDurationMin
-                          branches {
-                            items {
-                              branch {
-                                id
-                                name
-                              }
-                            }
-                          }
-                          loanFeesConfigs {
-                            items {
-                              loanFeesConfig {
-                                id
-                                name
-                              }
-                            }
-                          }
+                        }
+                      }
+                    }
+                    loanFeesConfigs {
+                      items {
+                        loanFeesConfig {
+                          id
+                          name
                         }
                       }
                     }
@@ -146,7 +145,7 @@ export default function LoanProducts() {
               }
             `,
             variables: {
-              branchId: userDetails.branchUsersId,
+              institutionId: userDetails.institutionUsersId,
               nextToken: nextToken,
             },
           });
@@ -154,12 +153,7 @@ export default function LoanProducts() {
           console.log("listLoanProducts response::: ", result);
 
           const items = result.data.listLoanProducts.items || [];
-          // Extract loanProducts that have matching branch relationships
-          const loanProducts = items
-            .filter((item) => item.branches?.items?.length > 0)
-            .map((item) => item.branches.items[0].loanProduct)
-            .filter((lp) => lp !== null);
-          allLoanProducts = [...allLoanProducts, ...loanProducts];
+          allLoanProducts = [...allLoanProducts, ...items];
           nextToken = result.data.listLoanProducts.nextToken;
         } while (nextToken);
 

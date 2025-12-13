@@ -289,14 +289,16 @@ const renderFormField = (field, formikValues) => {
       return (
         <>
           <MultipleDropDown {...field} disabled={isDisabled} />
-          {field.name === "loanFees" && field.options?.length === 0 && (
-            <Alert severity="info" sx={{ mt: 1 }}>
-              No loan fees found.{" "}
-              <Link to="/admin/add-loan-fee" style={{ fontWeight: "bold" }}>
-                Click here to create loan fees
-              </Link>
-            </Alert>
-          )}
+          {field.name === "loanFees" &&
+            field.options?.length === 0 &&
+            field.editing && (
+              <Alert severity="info" sx={{ mt: 1 }}>
+                No loan fees found.{" "}
+                <Link to="/admin/add-loan-fee" style={{ fontWeight: "bold" }}>
+                  Click here to create loan fees
+                </Link>
+              </Alert>
+            )}
         </>
       );
     case "radio":
@@ -359,6 +361,7 @@ const EditLoanProduct = forwardRef(
 
       return {
         name: dbData.name || "",
+        status: dbData.status || "Active",
         minPrincipal: dbData.principalAmountMin || "",
         maxPrincipal: dbData.principalAmountMax || "",
         defaultPrincipal: dbData.principalAmountDefault || "",

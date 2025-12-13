@@ -58,6 +58,11 @@ export const menuItems = [
         icon: <ListAltIcon sx={{ color: "white" }} />,
         route: "/admin/loans",
       },
+      {
+        name: "Loan Fees",
+        icon: <ListAltIcon sx={{ color: "white" }} />,
+        route: "/admin/loan-fees",
+      },
     ],
   },
   {

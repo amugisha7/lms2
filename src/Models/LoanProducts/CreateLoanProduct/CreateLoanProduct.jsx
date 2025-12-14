@@ -20,6 +20,7 @@ import DropDownSearchable from "../../../Resources/FormComponents/DropDownSearch
 import MultipleDropDown from "../../../Resources/FormComponents/MultipleDropDown";
 import OrderedList from "../../../Resources/FormComponents/OrderedList";
 import RadioGroup from "../../../Resources/FormComponents/RadioGroup";
+import RadioGroupNoLabel from "../../../Resources/FormComponents/RadioGroupNoLabel";
 import CreateFormButtons from "../../../ModelAssets/CreateFormButtons";
 import CustomEditFormButtons from "../../../ModelAssets/CustomEditFormButtons";
 import { UserContext } from "../../../App";
@@ -281,28 +282,32 @@ const renderFormField = (field, formikValues) => {
         : "Interest Rate After Maturity";
   }
 
+  const { dynamicHelperText, ...fieldProps } = field;
+
   switch (field.type) {
     case "text":
     case "number":
       return (
-        <TextInput {...field} label={displayLabel} disabled={isDisabled} />
+        <TextInput {...fieldProps} label={displayLabel} disabled={isDisabled} />
       );
     case "select":
       // if (field.name === "branch") {
       //   return (
       //     <DropDownSearchable
-      //       {...field}
+      //       {...fieldProps}
       //       label={displayLabel}
       //       disabled={isDisabled}
       //       placeholder={"Type to search branches"}
       //     />
       //   );
       // }
-      return <Dropdown {...field} label={displayLabel} disabled={isDisabled} />;
+      return (
+        <Dropdown {...fieldProps} label={displayLabel} disabled={isDisabled} />
+      );
     case "selectMultiple":
       return (
         <>
-          <MultipleDropDown {...field} disabled={isDisabled} />
+          <MultipleDropDown {...fieldProps} disabled={isDisabled} />
           {field.name === "loanFees" &&
             field.options?.length === 0 &&
             field.editing && (
@@ -316,7 +321,9 @@ const renderFormField = (field, formikValues) => {
         </>
       );
     case "radio":
-      return <RadioGroup {...field} disabled={isDisabled} />;
+      return <RadioGroup {...fieldProps} disabled={isDisabled} />;
+    case "radioNoLabel":
+      return <RadioGroupNoLabel {...fieldProps} disabled={isDisabled} />;
     case "orderedList":
       return (
         <OrderedList
@@ -333,7 +340,7 @@ const renderFormField = (field, formikValues) => {
     case "label":
       return <FormLabel label={field.label} />;
     default:
-      return <TextInput {...field} />;
+      return <TextInput {...fieldProps} />;
   }
 };
 
@@ -700,17 +707,30 @@ const CreateLoanProduct = forwardRef(
                   />
                 ) : null}
                 <Grid container spacing={1}>
-                  {updatedCreateLoanProductForm.map((field, index) => (
-                    <FormGrid
-                      size={{ xs: 12, md: field.span }}
-                      key={`${field.name}-${index}`}
-                    >
-                      {renderFormField(
-                        { ...field, formik, editing: editMode },
-                        formik.values
-                      )}
-                    </FormGrid>
-                  ))}
+                  {updatedCreateLoanProductForm.map((field, index) => {
+                    let helperText = field.helperText;
+                    if (field.dynamicHelperText) {
+                      const currentValue = formik.values[field.name];
+                      if (
+                        currentValue &&
+                        field.dynamicHelperText[currentValue]
+                      ) {
+                        helperText = field.dynamicHelperText[currentValue];
+                      }
+                    }
+
+                    return (
+                      <FormGrid
+                        size={{ xs: 12, md: field.span }}
+                        key={`${field.name}-${index}`}
+                      >
+                        {renderFormField(
+                          { ...field, formik, editing: editMode, helperText },
+                          formik.values
+                        )}
+                      </FormGrid>
+                    );
+                  })}
                   <Box
                     sx={{
                       display: "flex",

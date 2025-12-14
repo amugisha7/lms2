@@ -1,5 +1,21 @@
 import { generateClient } from "aws-amplify/api";
 
+const LIST_ACCOUNTS_MINIMAL_QUERY = `
+  query ListAccounts($institutionId: ID!, $nextToken: String) {
+    listAccounts(
+      filter: { institutionAccountsId: { eq: $institutionId } }
+      limit: 100
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        name
+      }
+      nextToken
+    }
+  }
+`;
+
 const LIST_BORROWERS_QUERY = `
   query ListBorrowers($branchId: ID!, $nextToken: String) {
     listBorrowers(
@@ -142,6 +158,44 @@ export const fetchLoanProducts = async (institutionId) => {
     return allLoanProductsList;
   } catch (err) {
     console.error("Error fetching loan products:", err);
+    throw err;
+  }
+};
+
+export const fetchAccounts = async (institutionId) => {
+  const client = generateClient();
+  let allAccountsList = [];
+  let nextToken = null;
+
+  try {
+    while (true) {
+      console.log("API Call: LIST_ACCOUNTS_MINIMAL_QUERY", {
+        institutionId,
+        nextToken,
+      });
+      const result = await client.graphql({
+        query: LIST_ACCOUNTS_MINIMAL_QUERY,
+        variables: {
+          institutionId,
+          nextToken,
+        },
+      });
+
+      const listResult = result?.data?.listAccounts || {};
+      const batchItems = Array.isArray(listResult.items)
+        ? listResult.items
+        : [];
+      allAccountsList.push(...batchItems);
+
+      const newNextToken = listResult.nextToken || null;
+      if (!newNextToken) {
+        break;
+      }
+      nextToken = newNextToken;
+    }
+    return allAccountsList;
+  } catch (err) {
+    console.error("Error fetching accounts:", err);
     throw err;
   }
 };

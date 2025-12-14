@@ -1,4 +1,5 @@
 - Create loans form. Also create from loan product.
+- replace the radio options for interest type with the radio group labeless
   - update the loanfees form and check loanfees retrieval in loanproducts creation/editing.
   * filter for loanproducts that belong to required branches; loop if necessary to get all.
   * prepopulate the createLoan form with the loan products.

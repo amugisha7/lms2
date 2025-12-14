@@ -20,9 +20,13 @@ import DropDownSearchable from "../../../Resources/FormComponents/DropDownSearch
 import OrderedList from "../../../Resources/FormComponents/OrderedList";
 import CreateFormButtons from "../../../ModelAssets/CreateFormButtons";
 import { UserContext } from "../../../App";
-import { createLoan, buildLoanInput } from "./createLoanHelpers";
+import { createLoan, buildLoanInput, fetchAccounts } from "./createLoanHelpers";
 import FormLabel from "../../../Resources/FormComponents/FormLabel";
 import RadioGroup from "../../../Resources/FormComponents/RadioGroup";
+import RadioGroupNoLabel from "../../../Resources/FormComponents/RadioGroupNoLabel";
+import TextAndRadio from "../../../Resources/FormComponents/TextAndRadio";
+import TextAndDropdown from "../../../Resources/FormComponents/TextAndDropdown";
+import MultipleDropDown from "../../../Resources/FormComponents/MultipleDropDown";
 
 const FormGrid = styled(Grid)(({ theme }) => ({
   display: "flex",
@@ -35,7 +39,24 @@ const FormGrid = styled(Grid)(({ theme }) => ({
 const baseInitialValues = createLoanForm.reduce((acc, field) => {
   // Skip label fields as they don't need values
   if (field.type === "label") return acc;
-  acc[field.name] = field.defaultValue || "";
+
+  // Handle textAndDropdown fields with separate defaults
+  if (field.type === "textAndDropdown") {
+    acc[field.textName] =
+      field.textDefaultValue !== undefined ? field.textDefaultValue : "";
+    acc[field.dropdownName] =
+      field.dropdownDefaultValue !== undefined
+        ? field.dropdownDefaultValue
+        : "";
+  } else if (field.type === "textAndRadio") {
+    acc[field.textName] =
+      field.textDefaultValue !== undefined ? field.textDefaultValue : "";
+    acc[field.radioName] =
+      field.radioDefaultValue !== undefined ? field.radioDefaultValue : "";
+  } else {
+    acc[field.name] =
+      field.defaultValue !== undefined ? field.defaultValue : "";
+  }
   return acc;
 }, {});
 
@@ -57,6 +78,9 @@ const buildValidationSchema = () => {
       .required("Duration Period is required"),
     disbursementDate: Yup.string().required("Disbursement Date is required"),
     maturityDate: Yup.string().required("Maturity Date is required"),
+    repaymentFrequencyType: Yup.string()
+      .oneOf(["interval", "setDays", "setDates"])
+      .required("Repayment Frequency Type is required"),
     repaymentFrequency: Yup.string()
       .oneOf([
         "daily",
@@ -89,16 +113,50 @@ const buildValidationSchema = () => {
 const baseValidationSchema = buildValidationSchema();
 
 const renderFormField = (field, formikValues) => {
+  const { dynamicHelperText, dynamicLabelMap, ...fieldProps } = field;
+
+  // Handle dynamic labels
+  let displayLabel = field.label;
+  if (field.dynamicLabel) {
+    if (field.name === "calculateInterestOn") {
+      displayLabel =
+        formikValues.interestTypeMaturity === "fixed"
+          ? "Calculate Interest if there is"
+          : "Calculate Interest on";
+    } else if (field.name === "loanInterestRateAfterMaturity") {
+      displayLabel =
+        formikValues.interestTypeMaturity === "fixed"
+          ? "Interest Amount After Maturity"
+          : "Interest Rate After Maturity";
+    } else if (field.name === "interestRate") {
+      displayLabel =
+        formikValues.interestType === "fixed"
+          ? "Interest Amount"
+          : "Interest Rate";
+    }
+  }
+
+  // Handle dynamic label mapping for textAndDropdown fields
+  let displayTextLabel = field.textLabel;
+  if (field.dynamicLabelMap && field.dependsOn) {
+    const dependencyValue = formikValues[field.dependsOn];
+    if (dependencyValue && field.dynamicLabelMap[dependencyValue]) {
+      displayTextLabel = field.dynamicLabelMap[dependencyValue];
+    }
+  }
+
   switch (field.type) {
     case "text":
     case "number":
-      return <TextInput {...field} />;
+      return <TextInput {...fieldProps} label={displayLabel} />;
     case "select":
       // Use DropDownSearchable for borrower field
       if (field.name === "borrower") {
-        return <DropDownSearchable {...field} />;
+        return <DropDownSearchable {...fieldProps} label={displayLabel} />;
       }
-      return <Dropdown {...field} />;
+      return <Dropdown {...fieldProps} label={displayLabel} />;
+    case "selectMultiple":
+      return <MultipleDropDown {...fieldProps} label={displayLabel} />;
     case "orderedList":
       return (
         <OrderedList
@@ -115,9 +173,31 @@ const renderFormField = (field, formikValues) => {
     case "label":
       return <FormLabel label={field.label} />;
     case "radio":
-      return <RadioGroup {...field} />;
+      return <RadioGroup {...fieldProps} />;
+    case "radioNoLabel":
+      return <RadioGroupNoLabel {...fieldProps} />;
+    case "textAndRadio":
+      return (
+        <TextAndRadio
+          {...fieldProps}
+          textLabel={displayLabel}
+          editing={field.editing}
+          readOnly={field.readOnly}
+          disabled={field.disabled}
+        />
+      );
+    case "textAndDropdown":
+      return (
+        <TextAndDropdown
+          {...fieldProps}
+          textLabel={displayTextLabel}
+          editing={field.editing}
+          readOnly={field.readOnly}
+          disabled={field.disabled}
+        />
+      );
     default:
-      return <TextInput {...field} />;
+      return <TextInput {...fieldProps} />;
   }
 };
 
@@ -140,12 +220,30 @@ const CreateLoan = forwardRef(
     const { userDetails } = useContext(UserContext);
     const [submitError, setSubmitError] = useState("");
     const [submitSuccess, setSubmitSuccess] = useState("");
+    const [accounts, setAccounts] = useState([]);
+    const [accountsLoading, setAccountsLoading] = useState(false);
     const client = React.useMemo(() => generateClient(), []);
 
     // Scroll to top on component mount
     useEffect(() => {
       window.scrollTo({ top: 0, behavior: "smooth" });
     }, []);
+
+    useEffect(() => {
+      if (userDetails?.institutionUsersId) {
+        setAccountsLoading(true);
+        fetchAccounts(userDetails.institutionUsersId)
+          .then((data) => {
+            setAccounts(data);
+          })
+          .catch((err) => {
+            console.error("Error fetching accounts:", err);
+          })
+          .finally(() => {
+            setAccountsLoading(false);
+          });
+      }
+    }, [userDetails?.institutionUsersId]);
 
     // Use prop initialValues if provided, otherwise use default
     const formInitialValues = React.useMemo(() => {
@@ -162,8 +260,14 @@ const CreateLoan = forwardRef(
             propBorrower.businessName || ""
           }`.trim() || propBorrower.uniqueIdNumber;
       }
+
+      // Set the first account as default Source Account
+      if (accounts.length > 0 && !base.accountLoansId) {
+        base.accountLoansId = accounts[0].id;
+      }
+
       return base;
-    }, [propInitialValues, propBorrower]);
+    }, [propInitialValues, propBorrower, accounts]);
 
     const updatedCreateLoanForm = React.useMemo(() => {
       const formFields = [];
@@ -172,13 +276,21 @@ const CreateLoan = forwardRef(
       createLoanForm.forEach((field) => {
         if (field.name === "loanProduct") {
           // Skip loan product field
+        } else if (field.name === "accountLoansId") {
+          formFields.push({
+            ...field,
+            options: accounts.map((account) => ({
+              value: account.id,
+              label: account.name,
+            })),
+          });
         } else {
           formFields.push(field);
         }
       });
 
       return formFields;
-    }, [borrowers, propBorrower]);
+    }, [borrowers, propBorrower, accounts]);
 
     const handleSubmit = async (values, { setSubmitting, resetForm }) => {
       setSubmitError("");
@@ -252,36 +364,6 @@ const CreateLoan = forwardRef(
 
     return (
       <>
-        {!propBorrower && !borrowersLoading && borrowers.length === 0 && (
-          <Box
-            sx={{
-              mb: 3,
-              p: 2,
-              backgroundColor: "#fff3cd",
-              border: "1px solid #ffc107",
-              borderRadius: 1,
-            }}
-          >
-            <Typography variant="body1" sx={{ color: "#856404" }}>
-              No borrowers found in the system.{" "}
-              <Link
-                component={RouterLink}
-                to="/borrowers"
-                sx={{
-                  color: "#0056b3",
-                  fontWeight: 600,
-                  textDecoration: "underline",
-                  "&:hover": {
-                    color: "#003d82",
-                  },
-                }}
-              >
-                Add a borrower
-              </Link>{" "}
-              before creating a loan.
-            </Typography>
-          </Box>
-        )}
         <Formik
           initialValues={formInitialValues}
           validationSchema={baseValidationSchema}
@@ -308,13 +390,24 @@ const CreateLoan = forwardRef(
                       }
                     }
 
+                    let helperText = field.helperText;
+                    if (field.dynamicHelperText) {
+                      const currentValue = formik.values[field.name];
+                      if (
+                        currentValue &&
+                        field.dynamicHelperText[currentValue]
+                      ) {
+                        helperText = field.dynamicHelperText[currentValue];
+                      }
+                    }
+
                     return (
                       <FormGrid
                         size={{ xs: 12, md: field.span }}
                         key={`${field.name}-${index}`}
                       >
                         {renderFormField(
-                          { ...field, formik, editing: true },
+                          { ...field, formik, editing: true, helperText },
                           formik.values
                         )}
                       </FormGrid>

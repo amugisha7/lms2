@@ -18,6 +18,7 @@ import Dropdown from "../../../Resources/FormComponents/Dropdown";
 import MultipleDropDown from "../../../Resources/FormComponents/MultipleDropDown";
 
 import Radio from "../../../Resources/FormComponents/RadioGroup";
+import RadioGroupNoLabel from "../../../Resources/FormComponents/RadioGroupNoLabel";
 import OrderedList from "../../../Resources/FormComponents/OrderedList";
 import Label from "../../../Resources/FormComponents/FormLabel";
 import CustomEditFormButtons from "../../../ComponentAssets/CustomEditFormButtons";
@@ -279,16 +280,18 @@ const renderFormField = (field, formikValues) => {
         : "Interest Rate After Maturity";
   }
 
+  const { dynamicHelperText, ...fieldProps } = field;
+
   switch (field.type) {
     case "text":
     case "number":
-      return <TextInput {...field} disabled={isDisabled} />;
+      return <TextInput {...fieldProps} disabled={isDisabled} />;
     case "select":
-      return <Dropdown {...field} disabled={isDisabled} />;
+      return <Dropdown {...fieldProps} disabled={isDisabled} />;
     case "selectMultiple":
       return (
         <>
-          <MultipleDropDown {...field} disabled={isDisabled} />
+          <MultipleDropDown {...fieldProps} disabled={isDisabled} />
           {field.name === "loanFees" &&
             field.options?.length === 0 &&
             field.editing && (
@@ -302,20 +305,22 @@ const renderFormField = (field, formikValues) => {
         </>
       );
     case "radio":
-      return <Radio {...field} disabled={isDisabled} />;
+      return <Radio {...fieldProps} disabled={isDisabled} />;
+    case "radioNoLabel":
+      return <RadioGroupNoLabel {...fieldProps} disabled={isDisabled} />;
     case "orderedList":
       return (
         <OrderedList
-          {...field}
+          {...fieldProps} // Note: This was spreading 'field' before, so 'fieldProps' is safer
           items={formikValues[field.name]}
           onChange={(value) => field.formik.setFieldValue(field.name, value)}
           editing={field.editing && !isDisabled}
         />
       );
     case "label":
-      return <Label {...field} />;
+      return <Label {...fieldProps} />;
     default:
-      return <TextInput {...field} disabled={isDisabled} />;
+      return <TextInput {...fieldProps} disabled={isDisabled} />;
   }
 };
 
@@ -600,17 +605,30 @@ const EditLoanProduct = forwardRef(
                   />
                 ) : null}
                 <Grid container spacing={1}>
-                  {updatedEditLoanProductForm.map((field, index) => (
-                    <FormGrid
-                      size={{ xs: 12, md: field.span }}
-                      key={`${field.name}-${index}`}
-                    >
-                      {renderFormField(
-                        { ...field, formik, editing: editMode },
-                        formik.values
-                      )}
-                    </FormGrid>
-                  ))}
+                  {updatedEditLoanProductForm.map((field, index) => {
+                    let helperText = field.helperText;
+                    if (field.dynamicHelperText) {
+                      const currentValue = formik.values[field.name];
+                      if (
+                        currentValue &&
+                        field.dynamicHelperText[currentValue]
+                      ) {
+                        helperText = field.dynamicHelperText[currentValue];
+                      }
+                    }
+
+                    return (
+                      <FormGrid
+                        size={{ xs: 12, md: field.span }}
+                        key={`${field.name}-${index}`}
+                      >
+                        {renderFormField(
+                          { ...field, formik, editing: editMode, helperText },
+                          formik.values
+                        )}
+                      </FormGrid>
+                    );
+                  })}
                   {submitError && (
                     <Typography color="error" sx={{ mt: 2 }}>
                       {submitError}

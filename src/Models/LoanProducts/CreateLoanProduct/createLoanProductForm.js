@@ -82,6 +82,15 @@ const createLoanProductForm = [
       { value: "compound_interest_accrued", label: "Compound Interest - Accrued" },
       { value: "compound_interest_equal_installments", label: "Compound Interest - Equal Installments" },
     ],
+    dynamicHelperText: {
+      flat: "Interest is based on the original loan amount (principal) and stays the same throughout the loan. Interest does not change even as the borrower pays it off.",
+      declining_balance: "Interest is calculated only on the remaining loan balance. As the borrower pays off the principal, interest costs go down.",
+      reducing_balance_equal_installments: "The borrower's payment amount is the same each time (Amortized). Early payments cover mostly interest, while later payments pay off the principal.",
+      reducing_balance_equal_principal: "The borrower pays a fixed amount of principal plus the interest due. This makes the total payment decrease over time.",
+      interest_only: "The borrower only pays the interest charges for a set period. The borrowed amount (principal) is not paid back until later.",
+      compound_interest_accrued: "Any unpaid interest is added to the loan balance. Future interest is then calculated on this new, higher balance (interest on interest).",
+      compound_interest_equal_installments: "Interest compounds (accumulates on the balance), but the borrower makes fixed payments to pay it down over time.",
+    },
   },
   {
     label: "Interest Type",
@@ -139,7 +148,7 @@ const createLoanProductForm = [
   {
     label: "Duration Period",
     name: "durationPeriod",
-    type: "select",
+    type: "radioNoLabel",
     span: 6,
     options: [
       { value: "days", label: "Days" },

@@ -1,3 +1,5 @@
+import { Settings } from "@mui/icons-material";
+
 const createLoanForm = [
   {
     label: "Loan Product",
@@ -351,19 +353,62 @@ const createLoanForm = [
 
   // Fees & Charges
   {
-    label: "Fees & Charges",
+    label: "Loan Fees",
     type: "label",
     span: 12,
   },
   {
-    label: "Loan Fees",
-    name: "loanFees",
-    type: "selectMultiple",
+    label: "Loan Fees Configuration",
+    name: "loanFeesType",
+    type: "radio",
     span: 12,
-    multiple: true,
+    defaultValue: "standard",
+    options: [
+      { value: "standard", label: "Use Standard Loan Fees" },
+      { value: "custom", label: "Enter Custom Amount" },
+    ],
+    helperText: "Choose whether to use a predefined loan fees model or enter a custom fee amount.",
+  },
+  {
+    label: "Standard Loan Fees",
+    name: "loanFees",
+    type: "select",
+    span: 6,
     options: [], // Will be populated dynamically
     dynamicoptions: "true",
+    dependsOn: "loanFeesType",
+    dependsOnValue: "standard",
+    helperText: "Select a predefined loan fee.",
   },
+  {
+    label: "Custom Loan Fee Amount",
+    name: "customLoanFeeAmount",
+    type: "number",
+    span: 6,
+    validationType: "number",
+    min: 0,
+    dependsOn: "loanFeesType",
+    dependsOnValue: "custom",
+    helperText: "Enter the custom fee amount.",
+  },
+  {
+    label: "Loan Fees Account",
+    name: "loanFeesAccountId",
+    type: "select",
+    span: 6,
+    options: [], // Will be populated dynamically
+    dynamicoptions: "true",
+    helperText: "Select the account to receive the loan fees.",
+  },
+    {
+    label: "Loan Fees",
+    type: "formLink",
+    span: 12,
+    linkText: "Configure Loan Fees",
+    linkUrl: "/admin/loan-fees",
+    icon: Settings,
+  },
+
 ];
 
 export default createLoanForm;

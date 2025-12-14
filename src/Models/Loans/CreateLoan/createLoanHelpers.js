@@ -200,6 +200,64 @@ export const fetchAccounts = async (institutionId) => {
   }
 };
 
+export const fetchLoanFeesConfig = async (institutionId) => {
+  const client = generateClient();
+  let allLoanFeesConfigList = [];
+  let nextToken = null;
+
+  try {
+    while (true) {
+      console.log("API Call: LIST_LOAN_FEES_CONFIG_QUERY", {
+        institutionId,
+        nextToken,
+      });
+      const result = await client.graphql({
+        query: `
+          query ListLoanFeesConfigs($institutionId: ID!, $nextToken: String) {
+            listLoanFeesConfigs(
+              filter: { institutionLoanFeesConfigsId: { eq: $institutionId } }
+              limit: 100
+              nextToken: $nextToken
+            ) {
+              items {
+                id
+                name
+                calculationMethod
+                category
+                status
+                description
+                percentageBase
+                rate
+              }
+              nextToken
+            }
+          }
+        `,
+        variables: {
+          institutionId,
+          nextToken,
+        },
+      });
+
+      const listResult = result?.data?.listLoanFeesConfigs || {};
+      const batchItems = Array.isArray(listResult.items)
+        ? listResult.items
+        : [];
+      allLoanFeesConfigList.push(...batchItems);
+
+      const newNextToken = listResult.nextToken || null;
+      if (!newNextToken) {
+        break;
+      }
+      nextToken = newNextToken;
+    }
+    return allLoanFeesConfigList;
+  } catch (err) {
+    console.error("Error fetching loan fees config:", err);
+    throw err;
+  }
+};
+
 export const createLoan = async (input) => {
   const client = generateClient();
   const result = await client.graphql({

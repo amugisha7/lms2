@@ -20,8 +20,14 @@ import DropDownSearchable from "../../../Resources/FormComponents/DropDownSearch
 import OrderedList from "../../../Resources/FormComponents/OrderedList";
 import CreateFormButtons from "../../../ModelAssets/CreateFormButtons";
 import { UserContext } from "../../../App";
-import { createLoan, buildLoanInput, fetchAccounts } from "./createLoanHelpers";
+import {
+  createLoan,
+  buildLoanInput,
+  fetchAccounts,
+  fetchLoanFeesConfig,
+} from "./createLoanHelpers";
 import FormLabel from "../../../Resources/FormComponents/FormLabel";
+import FormLinkText from "../../../Resources/FormComponents/FormLinkText";
 import RadioGroup from "../../../Resources/FormComponents/RadioGroup";
 import RadioGroupNoLabel from "../../../Resources/FormComponents/RadioGroupNoLabel";
 import TextAndRadio from "../../../Resources/FormComponents/TextAndRadio";
@@ -37,8 +43,8 @@ const FormGrid = styled(Grid)(({ theme }) => ({
 }));
 
 const baseInitialValues = createLoanForm.reduce((acc, field) => {
-  // Skip label fields as they don't need values
-  if (field.type === "label") return acc;
+  // Skip label and formLink fields as they don't need values
+  if (field.type === "label" || field.type === "formLink") return acc;
 
   // Handle textAndDropdown fields with separate defaults
   if (field.type === "textAndDropdown") {
@@ -59,6 +65,11 @@ const baseInitialValues = createLoanForm.reduce((acc, field) => {
   }
   return acc;
 }, {});
+
+// Initialize loanFeesType separately if not in baseInitialValues
+if (!baseInitialValues.loanFeesType) {
+  baseInitialValues.loanFeesType = "template";
+}
 
 const buildValidationSchema = () => {
   const validationShape = {
@@ -172,6 +183,14 @@ const renderFormField = (field, formikValues) => {
       );
     case "label":
       return <FormLabel label={field.label} />;
+    case "formLink":
+      return (
+        <FormLinkText
+          linkText={field.linkText}
+          linkUrl={field.linkUrl}
+          icon={field.icon}
+        />
+      );
     case "radio":
       return <RadioGroup {...fieldProps} />;
     case "radioNoLabel":
@@ -222,7 +241,34 @@ const CreateLoan = forwardRef(
     const [submitSuccess, setSubmitSuccess] = useState("");
     const [accounts, setAccounts] = useState([]);
     const [accountsLoading, setAccountsLoading] = useState(false);
+    const [loanFeesConfigs, setLoanFeesConfigs] = useState([]);
+    const [loanFeesLoading, setLoanFeesLoading] = useState(false);
     const client = React.useMemo(() => generateClient(), []);
+
+    // Helper function to format loan fee amount display
+    const formatLoanFeeAmount = (loanFee, currency = "$") => {
+      const value =
+        loanFee.rate !== undefined && loanFee.rate !== null
+          ? Number(loanFee.rate).toLocaleString()
+          : "-";
+
+      if (loanFee.calculationMethod === "percentage") {
+        const percentageBaseLabels = {
+          principal: "Principal",
+          interest: "Interest",
+          principal_interest: "(Principal + Interest)",
+        };
+        const base =
+          percentageBaseLabels[loanFee.percentageBase] ||
+          loanFee.percentageBase ||
+          "";
+        return value !== "-" ? `${value}% of ${base}` : "-";
+      }
+      if (loanFee.calculationMethod === "fixed") {
+        return value !== "-" ? `${currency} ${value} (fixed)` : "-";
+      }
+      return "-";
+    };
 
     // Scroll to top on component mount
     useEffect(() => {
@@ -241,6 +287,22 @@ const CreateLoan = forwardRef(
           })
           .finally(() => {
             setAccountsLoading(false);
+          });
+      }
+    }, [userDetails?.institutionUsersId]);
+
+    useEffect(() => {
+      if (userDetails?.institutionUsersId) {
+        setLoanFeesLoading(true);
+        fetchLoanFeesConfig(userDetails.institutionUsersId)
+          .then((data) => {
+            setLoanFeesConfigs(data);
+          })
+          .catch((err) => {
+            console.error("Error fetching loan fees configs:", err);
+          })
+          .finally(() => {
+            setLoanFeesLoading(false);
           });
       }
     }, [userDetails?.institutionUsersId]);
@@ -266,11 +328,17 @@ const CreateLoan = forwardRef(
         base.accountLoansId = accounts[0].id;
       }
 
+      // Set the first account as default Loan Fees Account
+      if (accounts.length > 0 && !base.loanFeesAccountId) {
+        base.loanFeesAccountId = accounts[0].id;
+      }
+
       return base;
     }, [propInitialValues, propBorrower, accounts]);
 
     const updatedCreateLoanForm = React.useMemo(() => {
       const formFields = [];
+      const currency = userDetails?.institution?.currencyCode || "$";
 
       // Map through the original form fields
       createLoanForm.forEach((field) => {
@@ -284,13 +352,39 @@ const CreateLoan = forwardRef(
               label: account.name,
             })),
           });
+        } else if (field.name === "loanFees") {
+          formFields.push({
+            ...field,
+            options: loanFeesConfigs.map((loanFee) => ({
+              value: loanFee.id,
+              label: `${loanFee.name} - ${formatLoanFeeAmount(
+                loanFee,
+                currency
+              )}`,
+            })),
+          });
+        } else if (field.name === "loanFeesAccountId") {
+          formFields.push({
+            ...field,
+            options: accounts.map((account) => ({
+              value: account.id,
+              label: account.name,
+            })),
+          });
         } else {
           formFields.push(field);
         }
       });
 
       return formFields;
-    }, [borrowers, propBorrower, accounts]);
+    }, [
+      borrowers,
+      propBorrower,
+      accounts,
+      loanFeesConfigs,
+      userDetails,
+      formatLoanFeeAmount,
+    ]);
 
     const handleSubmit = async (values, { setSubmitting, resetForm }) => {
       setSubmitError("");

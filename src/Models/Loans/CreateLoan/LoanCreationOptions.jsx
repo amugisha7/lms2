@@ -26,6 +26,10 @@ export default function LoanCreationOptions(props) {
       try {
         const borrowersList = await fetchBorrowers(userDetails.branchUsersId);
         setBorrowers(borrowersList);
+        // If a borrower was passed as prop, set it as selected
+        if (props.borrower) {
+          setSelectedBorrower(props.borrower);
+        }
       } catch (err) {
         console.error("Error loading borrowers:", err);
       } finally {
@@ -34,7 +38,7 @@ export default function LoanCreationOptions(props) {
     };
 
     loadBorrowers();
-  }, [userDetails?.branchUsersId]);
+  }, [userDetails?.branchUsersId, props.borrower]);
 
   useEffect(() => {
     const loadLoanProducts = async () => {

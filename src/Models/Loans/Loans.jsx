@@ -2,13 +2,13 @@ import React from "react";
 import { generateClient } from "aws-amplify/api";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
 import { UserContext } from "../../App";
-import CustomDataGrid from "../../ComponentAssets/CustomDataGrid";
-import CustomSlider from "../../ComponentAssets/CustomSlider";
-import DeleteDialog from "../../ComponentAssets/DeleteDialog";
+import CustomDataGrid from "../../ModelAssets/CustomDataGrid";
+import CustomSlider from "../../ModelAssets/CustomSlider";
+import DeleteDialog from "../../ModelAssets/DeleteDialog";
 import { useTheme } from "@mui/material/styles";
-import ClickableText from "../../ComponentAssets/ClickableText";
+import ClickableText from "../../ModelAssets/ClickableText";
+import CollectionsTemplate from "../../ModelAssets/CollectionsTemplate";
 import EditLoan from "./EditLoan/EditLoan";
 import ListBorrowers from "./CreateLoan/ListBorrowers";
 import CreateLoan from "./CreateLoan/CreateLoan";
@@ -52,10 +52,9 @@ export default function Loans() {
   const [loans, setLoans] = React.useState([]);
   const [borrowers, setBorrowers] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
-  const [search] = React.useState("");
-  const [editDialogOpen, setEditDialogOpen] = React.useState(false);
   const [editDialogRow, setEditDialogRow] = React.useState(null);
   const [createDialogOpen, setCreateDialogOpen] = React.useState(false);
+  const [editDialogOpen, setEditDialogOpen] = React.useState(false);
   const [listBorrowersOpen, setListBorrowersOpen] = React.useState(false);
   const [selectedBorrower, setSelectedBorrower] = React.useState(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
@@ -63,8 +62,6 @@ export default function Loans() {
   const [deleteLoading, setDeleteLoading] = React.useState(false);
   const [deleteError, setDeleteError] = React.useState("");
   const [editMode, setEditMode] = React.useState(false);
-  const [viewDialogOpen, setViewDialogOpen] = React.useState(false);
-  const [viewDialogRow, setViewDialogRow] = React.useState(null);
   const formRef = React.useRef();
   const hasFetchedRef = React.useRef();
   const { userDetails } = React.useContext(UserContext);
@@ -174,16 +171,9 @@ export default function Loans() {
   };
 
   const handleEditSuccess = (updatedRow) => {
-    // Update the loan in the local state with the complete updated data
     setLoans((prev) =>
       prev.map((row) => (row.id === updatedRow.id ? updatedRow : row))
     );
-
-    // Also update the view dialog if it's showing the same loan
-    if (viewDialogRow && viewDialogRow.id === updatedRow.id) {
-      setViewDialogRow(updatedRow);
-    }
-
     handleEditDialogClose();
   };
 
@@ -239,7 +229,7 @@ export default function Loans() {
       }
       console.log("Finished clearing LoanPenalties");
 
-      // Placeholder mutation for deleting a loan
+      // Delete the loan
       await client.graphql({
         query: `
           mutation DeleteLoan($input: DeleteLoanInput!) {
@@ -270,10 +260,7 @@ export default function Loans() {
   };
 
   const handlePopupDeleteClick = () => {
-    setEditDialogOpen(false);
-    if (editDialogRow) {
-      handleDeleteDialogOpen(editDialogRow);
-    }
+    handleDeleteDialogOpen(editDialogRow);
   };
 
   const handleCreateDialogOpen = () => {
@@ -300,16 +287,6 @@ export default function Loans() {
     handleCreateDialogClose();
   };
 
-  const handleViewDialogOpen = (row) => {
-    setViewDialogRow(row);
-    setViewDialogOpen(true);
-  };
-
-  const handleViewDialogClose = () => {
-    setViewDialogOpen(false);
-    setViewDialogRow(null);
-  };
-
   // Updated columns to show relevant loan information
   const columns = [
     {
@@ -323,11 +300,7 @@ export default function Loans() {
               borrower.businessName || ""
             }`.trim()
           : "Unknown";
-        return (
-          <ClickableText onClick={() => handleViewDialogOpen(params.row)}>
-            {name}
-          </ClickableText>
-        );
+        return <>{name}</>;
       },
     },
     {
@@ -351,7 +324,6 @@ export default function Loans() {
       headerName: "Status",
       width: 120,
       renderCell: (params) => {
-        // Status is "Active" if not set or if explicitly active
         const status = params.row.status || "Active";
         return status;
       },
@@ -367,86 +339,52 @@ export default function Loans() {
   ];
 
   return (
-    <Box
-      sx={{
-        mx: { xs: 0, sm: "auto" },
-        mt: { xs: 0, sm: 0 },
-        p: { xs: 0, sm: 0 },
-        borderRadius: 1,
-        display: "flex",
-        flexDirection: "column",
-        maxWidth: { xs: "100%", md: 1000 },
-        width: "100%",
-        flex: 1,
-        mb: 6,
-      }}
-    >
-      <Box
-        sx={{
-          mb: 2,
-          display: "flex",
-          flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
+    <>
+      <CollectionsTemplate
+        title="Loans"
+        createButtonText="Add Loan"
+        items={loans}
+        loading={loading}
+        columns={columns}
+        searchFields={[
+          "borrower.firstname",
+          "borrower.othername",
+          "loanProduct.name",
+        ]}
+        noDataMessage="No loans found. Please create a loan to get started."
+        // Create
+        onCreateClick={handleCreateDialogOpen}
+        createDialogOpen={createDialogOpen}
+        onCreateDialogClose={handleCreateDialogClose}
+        createDialogTitle="Create Loan"
+        // Edit
+        editDialogOpen={editDialogOpen}
+        editDialogRow={editDialogRow}
+        onEditDialogClose={handleEditDialogClose}
+        onEditClick={handleEditClick}
+        onPopupDeleteClick={handlePopupDeleteClick}
+        editMode={editMode}
+        // Delete
+        deleteDialogOpen={deleteDialogOpen}
+        onDeleteDialogClose={handleDeleteDialogClose}
+        onDeleteConfirm={handleDeleteConfirm}
+        deleteLoading={deleteLoading}
+        deleteError={deleteError}
+        deleteDialogRow={deleteDialogRow}
       >
-        <Typography
-          variant="h4"
-          sx={{ mb: 2, fontWeight: 600, my: 2, textTransform: "none" }}
-        >
-          Loans{" "}
-          <Typography variant="caption" sx={{ color: "#90a4ae" }}>
-            Help
-          </Typography>
-        </Typography>
-        <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-          <Button
-            variant="contained"
-            color="success"
-            onClick={handleCreateDialogOpen}
-          >
-            Add Loan
-          </Button>
-        </Box>
-      </Box>
-      <Box sx={{ width: "100%" }}>
-        {/* Show info text if no loans */}
-        {!loading && loans.length === 0 && (
-          <Typography
-            sx={{ mb: 2, color: theme.palette.blueText?.main || "#1976d2" }}
-          >
-            No loans found. Please create a loan to get started.
-          </Typography>
-        )}
-        {loading ? (
-          <Typography sx={{ mt: 4 }}>Loading loans...</Typography>
-        ) : (
-          <CustomDataGrid
-            rows={
-              search
-                ? loans.filter(
-                    (row) =>
-                      row.borrower?.firstname
-                        ?.toLowerCase()
-                        .includes(search.toLowerCase()) ||
-                      row.borrower?.othername
-                        ?.toLowerCase()
-                        .includes(search.toLowerCase()) ||
-                      row.loanProduct?.name
-                        ?.toLowerCase()
-                        .includes(search.toLowerCase())
-                  )
-                : loans
-            }
-            columns={columns}
-            getRowId={(row) => row.id}
-            pageSize={25}
-            pageSizeOptions={[25, 50, 100]}
-            loading={loading}
+        {/* Edit Dialog - using CollectionsTemplate's EditFormComponent would require adapting EditLoan */}
+        {editDialogRow && (
+          <EditLoan
+            ref={formRef}
+            initialValues={editDialogRow}
+            onClose={handleEditDialogClose}
+            onEditSuccess={handleEditSuccess}
+            isEditMode={true}
           />
         )}
-      </Box>
+      </CollectionsTemplate>
 
+      {/* Borrower Selection Slider */}
       <CustomSlider
         open={listBorrowersOpen}
         onClose={handleListBorrowersClose}
@@ -463,6 +401,7 @@ export default function Loans() {
         />
       </CustomSlider>
 
+      {/* Loan Creation Options Slider */}
       <CustomSlider
         open={createDialogOpen}
         onClose={handleCreateDialogClose}
@@ -478,73 +417,6 @@ export default function Loans() {
           onCreateSuccess={handleCreateSuccess}
         />
       </CustomSlider>
-
-      <CustomSlider
-        open={viewDialogOpen}
-        onClose={handleViewDialogClose}
-        title={
-          viewDialogRow
-            ? `${viewDialogRow.borrower?.firstname || ""} ${
-                viewDialogRow.borrower?.othername || ""
-              } - Loan Details`
-            : "Loan Details"
-        }
-        showEdit={true}
-        showDelete={true}
-        onEdit={() => handleEditDialogOpen(viewDialogRow)}
-        onDelete={() => {
-          setViewDialogOpen(false);
-          handleDeleteDialogOpen(viewDialogRow);
-        }}
-        maxWidth="md"
-        fullWidth
-      >
-        {viewDialogRow && (
-          <EditLoan
-            initialValues={viewDialogRow}
-            onClose={handleViewDialogClose}
-            isEditMode={false}
-          />
-        )}
-      </CustomSlider>
-
-      <CustomSlider
-        open={editDialogOpen}
-        onClose={handleEditDialogClose}
-        title={
-          editDialogRow
-            ? `${editDialogRow.borrower?.firstname || ""} ${
-                editDialogRow.borrower?.othername || ""
-              } - Loan Details`
-            : "Loan Details"
-        }
-        onEdit={handleEditClick}
-        onDelete={handlePopupDeleteClick}
-        maxWidth="md"
-        fullWidth
-        editMode={editMode}
-      >
-        {editDialogRow && (
-          <EditLoan
-            ref={formRef}
-            initialValues={editDialogRow}
-            onClose={handleEditDialogClose}
-            onEditSuccess={handleEditSuccess}
-            isEditMode={true}
-          />
-        )}
-      </CustomSlider>
-
-      <DeleteDialog
-        open={deleteDialogOpen}
-        onClose={handleDeleteDialogClose}
-        onConfirm={handleDeleteConfirm}
-        loading={deleteLoading}
-        error={deleteError}
-        name={`${deleteDialogRow?.borrower?.firstname || ""} ${
-          deleteDialogRow?.borrower?.othername || ""
-        } - Loan`}
-      />
-    </Box>
+    </>
   );
 }

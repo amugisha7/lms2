@@ -1,4 +1,7 @@
 import { generateClient } from "aws-amplify/api";
+import { createLoan as createLoanMutation, createLoanInstallment as createLoanInstallmentMutation } from "../loanHelpers";
+import { calculateSchedule } from "../../Payments/servicingEngine";
+import dayjs from 'dayjs';
 
 const LIST_ACCOUNTS_MINIMAL_QUERY = `
   query ListAccounts($institutionId: ID!, $nextToken: String) {
@@ -258,49 +261,128 @@ export const fetchLoanFeesConfig = async (institutionId) => {
   }
 };
 
-export const createLoan = async (input) => {
+export const createLoanWithSchedule = async (values, userDetails) => {
   const client = generateClient();
+  const durationUnitMap = {
+    days: "day",
+    weeks: "week",
+    months: "month",
+    years: "year",
+  };
+
+  const mapRepaymentFrequency = (frequency) => {
+    switch (frequency) {
+      case "daily":
+        return "DAILY";
+      case "weekly":
+        return "WEEKLY";
+      case "biweekly":
+        return "BIWEEKLY";
+      case "monthly":
+        return "MONTHLY";
+      case "quarterly":
+        return "QUARTERLY";
+      case "semi_annual":
+        return "SEMIANNUALLY";
+      case "yearly":
+        return "ANNUALLY";
+      default:
+        return "MONTHLY";
+    }
+  };
+
+  const mapInterestMethod = (method) => {
+    if (!method) return "FLAT";
+    if (method === "flat") return "FLAT";
+    if (String(method).startsWith("compound")) return "COMPOUND";
+    return "SIMPLE";
+  };
+
+  const duration = Number(
+    values?.termDuration ?? values?.loanDuration ?? values?.duration ?? 0
+  );
+  const durationInterval = values?.durationPeriod ?? values?.durationInterval;
+  const startDate =
+    values?.disbursementDate ?? values?.loanStartDate ?? values?.startDate;
+
+  const maturityDate =
+    values?.maturityDate ||
+    (startDate && duration && durationInterval
+      ? dayjs(startDate)
+          .add(duration, durationUnitMap[durationInterval] || durationInterval)
+          .format("YYYY-MM-DD")
+      : null);
+
+  const repaymentFrequency = mapRepaymentFrequency(
+    values?.repaymentFrequency ?? values?.paymentFrequency
+  );
+  const interestMethod = mapInterestMethod(values?.interestMethod);
+  
+  // 1. Prepare Loan Input
+  const loanInput = {
+    loanNumber: `LN-${Date.now()}`,
+    borrowerID: values?.borrower,
+    branchID: userDetails?.branchUsersId,
+    ...(values?.loanProduct ? { loanProductID: values.loanProduct } : {}),
+    principal: Number(values?.principalAmount),
+    interestRate: Number(values?.interestRate),
+    duration,
+    durationInterval,
+    startDate,
+    maturityDate,
+    paymentFrequency: repaymentFrequency,
+    loanStatusEnum: "DRAFT",
+    approvalStatusEnum: "PENDING",
+    createdByEmployeeID: userDetails?.id,
+  };
+
+  // 2. Calculate Schedule
+  const schedule = calculateSchedule({
+    principal: loanInput.principal,
+    interestRate: loanInput.interestRate,
+    duration: loanInput.duration,
+    durationUnit: loanInput.durationInterval,
+    repaymentFrequency: loanInput.paymentFrequency,
+    interestMethod,
+    startDate: loanInput.startDate
+  });
+
+  // 3. Create Loan
   const result = await client.graphql({
-    query: `
-      mutation CreateLoan($input: CreateLoanInput!) {
-        createLoan(input: $input) {
-          id
-          principalAmount
-          interestRate
-          termDuration
-          durationPeriod
-          disbursementDate
-          maturityDate
-          status
-          repaymentFrequency
-          repaymentOrder
-          totalAmountDue
-          totalAmountPaid
-          outstandingBalance
-          nextPaymentDate
-          lastPaymentDate
-          borrower {
-            id
-            firstname
-            othername
-            businessName
-          }
-          loanProduct {
-            id
-            name
-          }
-          createdByEmployee {
-            id
-            firstName
-            lastName
-          }
+    query: createLoanMutation,
+    variables: { input: loanInput }
+  });
+  
+  const loan = result.data.createLoan;
+  
+  // 4. Create Installments
+  for (const inst of schedule) {
+    await client.graphql({
+      query: createLoanInstallmentMutation,
+      variables: {
+        input: {
+          loanID: loan.id,
+          dueDate: inst.dueDate,
+          principalDue: inst.principalDue,
+          interestDue: inst.interestDue,
+          feesDue: inst.feesDue,
+          penaltyDue: inst.penaltyDue,
+          totalDue: inst.totalDue,
+          principalPaid: 0,
+          interestPaid: 0,
+          feesPaid: 0,
+          penaltyPaid: 0,
+          totalPaid: 0,
+          status: 'PENDING'
         }
       }
-    `,
-    variables: { input },
-  });
-  return result?.data?.createLoan;
+    });
+  }
+  
+  return loan;
 };
+
+export const createLoan = createLoanWithSchedule;
 
 export const associateLoanWithFees = async (loanId, loanFeesId) => {
   const client = generateClient();

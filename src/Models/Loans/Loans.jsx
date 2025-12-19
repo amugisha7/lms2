@@ -1,5 +1,6 @@
 import React from "react";
 import { generateClient } from "aws-amplify/api";
+import { listLoans } from "./loanHelpers";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { UserContext } from "../../App";
@@ -9,7 +10,7 @@ import DeleteDialog from "../../ModelAssets/DeleteDialog";
 import { useTheme } from "@mui/material/styles";
 import ClickableText from "../../ModelAssets/ClickableText";
 import CollectionsTemplate from "../../ModelAssets/CollectionsTemplate";
-import EditLoan from "./EditLoan/EditLoan";
+import LoanDetail from "./LoanDetail";
 import ListBorrowers from "./CreateLoan/ListBorrowers";
 import CreateLoan from "./CreateLoan/CreateLoan";
 import LoanCreationOptions from "./CreateLoan/LoanCreationOptions";
@@ -67,90 +68,67 @@ export default function Loans() {
   const { userDetails } = React.useContext(UserContext);
   const theme = useTheme();
 
-  React.useEffect(() => {
-    const fetchLoans = async () => {
-      if (!userDetails?.branchUsersId) return;
+  const fetchLoans = async () => {
+    if (!userDetails?.branchUsersId) return;
 
-      setLoading(true);
-      try {
-        const client = generateClient();
+    setLoading(true);
+    try {
+      const client = generateClient();
 
-        let allLoans = [];
-        let nextToken = null;
-
-        do {
-          console.log("API Call: Fetching loans");
-          const result = await client.graphql({
-            query: `
-              query ListBorrowers($branchId: ID!, $nextToken: String) {
-                listBorrowers(
-                  filter: { branchBorrowersId: { eq: $branchId } }
-                  limit: 100
-                  nextToken: $nextToken
-                ) {
-                  nextToken
-                  items {
-                    id
-                    firstname
-                    othername
-                    businessName
-                    phoneNumber
-                    loans {
-                      items {
-                        id
-                        principal
-                        interestRate
-                        duration
-                        durationInterval
-                        startDate
-                        maturityDate
-                        status
-                        paymentFrequency
-                        loanProduct {
-                          name
-                        }
-                        createdByEmployee {
-                          firstName
-                          lastName
-                        }
-                      }
-                    }
-                  }
-                }
+      // Fetch borrowers
+      const resultBorrowers = await client.graphql({
+        query: `
+          query ListBorrowers($branchId: ID!) {
+            listBorrowers(
+              filter: { branchBorrowersId: { eq: $branchId } }
+              limit: 1000
+            ) {
+              items {
+                id
+                firstname
+                othername
+                businessName
+                uniqueIdNumber
               }
-            `,
-            variables: {
-              branchId: userDetails.branchUsersId,
-              nextToken: nextToken,
+            }
+          }
+        `,
+        variables: {
+          branchId: userDetails.branchUsersId,
+        },
+      });
+      setBorrowers(resultBorrowers.data.listBorrowers.items || []);
+
+      // Fetch loans
+      let allLoans = [];
+      let nextToken = null;
+      do {
+        const resultLoans = await client.graphql({
+          query: listLoans,
+          variables: {
+            filter: {
+              branchID: { eq: userDetails.branchUsersId },
             },
-          });
+            limit: 100,
+            nextToken,
+          },
+        });
+        const loansBatch = resultLoans.data.listLoans.items;
+        allLoans.push(...loansBatch);
+        nextToken = resultLoans.data.listLoans.nextToken;
+      } while (nextToken);
 
-          const borrowers = result.data.listBorrowers.items || [];
-          setBorrowers((prev) => [...prev, ...borrowers]);
-          const loansFromBorrowers = borrowers.flatMap((borrower) =>
-            borrower.loans.items.map((loan) => ({
-              ...loan,
-              borrower: {
-                firstname: borrower.firstname,
-                othername: borrower.othername,
-                businessName: borrower.businessName,
-              },
-            }))
-          );
-          allLoans = [...allLoans, ...loansFromBorrowers];
-          nextToken = result.data.listBorrowers.nextToken;
-        } while (nextToken);
+      setLoans(allLoans);
+    } catch (err) {
+      console.error("Error fetching loans or borrowers:", err);
+      setLoans([]);
+      setBorrowers([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        setLoans(allLoans);
-        console.log("allLoans::: ", allLoans);
-      } catch (err) {
-        console.log("err::: ", err);
-        setLoans([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
+  React.useEffect(() => {
     if (
       userDetails?.branchUsersId &&
       userDetails.branchUsersId !== hasFetchedRef.current
@@ -283,7 +261,7 @@ export default function Loans() {
   };
 
   const handleCreateSuccess = (newLoan) => {
-    setLoans((prev) => [...prev, newLoan]);
+    fetchLoans();
     handleCreateDialogClose();
   };
 
@@ -374,12 +352,9 @@ export default function Loans() {
       >
         {/* Edit Dialog - using CollectionsTemplate's EditFormComponent would require adapting EditLoan */}
         {editDialogRow && (
-          <EditLoan
-            ref={formRef}
-            initialValues={editDialogRow}
+          <LoanDetail
+            loanId={editDialogRow.id}
             onClose={handleEditDialogClose}
-            onEditSuccess={handleEditSuccess}
-            isEditMode={true}
           />
         )}
       </CollectionsTemplate>

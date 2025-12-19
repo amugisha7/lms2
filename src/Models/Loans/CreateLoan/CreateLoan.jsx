@@ -74,48 +74,53 @@ if (!baseInitialValues.loanFeesType) {
 const buildValidationSchema = () => {
   const validationShape = {
     borrower: Yup.string().required("Borrower is required"),
+    accountLoansId: Yup.string().required("Source Account is required"),
     principalAmount: Yup.number()
       .required("Principal Amount is required")
       .min(0, "Principal Amount must be at least 0"),
+    interestType: Yup.string()
+      .oneOf(["percentage", "fixed"])
+      .required("Interest Type is required"),
     interestRate: Yup.number()
+      .typeError("Interest Rate is required")
       .required("Interest Rate is required")
       .min(0, "Interest Rate must be at least 0")
-      .max(100, "Interest Rate cannot exceed 100%"),
-    termDuration: Yup.number()
-      .required("Term Duration is required")
-      .min(1, "Term Duration must be at least 1"),
+      .when("interestType", {
+        is: "percentage",
+        then: (schema) => schema.max(100, "Interest Rate cannot exceed 100%"),
+        otherwise: (schema) => schema,
+      }),
+    loanStartDate: Yup.string().required("Loan Start Date is required"),
+    loanDuration: Yup.number()
+      .typeError("Loan Duration is required")
+      .required("Loan Duration is required")
+      .min(1, "Loan Duration must be at least 1"),
     durationPeriod: Yup.string()
       .oneOf(["days", "weeks", "months", "years"])
       .required("Duration Period is required"),
-    disbursementDate: Yup.string().required("Disbursement Date is required"),
-    maturityDate: Yup.string().required("Maturity Date is required"),
     repaymentFrequencyType: Yup.string()
       .oneOf(["interval", "setDays", "setDates"])
       .required("Repayment Frequency Type is required"),
-    repaymentFrequency: Yup.string()
-      .oneOf([
-        "daily",
-        "weekly",
-        "biweekly",
-        "monthly",
-        "bimonthly",
-        "quarterly",
-        "every_4_months",
-        "semi_annual",
-        "every_9_months",
-        "yearly",
-        "lump_sum",
-      ])
-      .required("Repayment Frequency is required"),
-    status: Yup.string()
-      .oneOf(["Active", "Pending", "Approved", "Rejected", "Closed"])
-      .required("Status is required"),
-    totalAmountDue: Yup.number()
-      .min(0, "Total Amount Due must be at least 0")
-      .nullable()
-      .transform((value, originalValue) =>
-        originalValue === "" ? null : value
-      ),
+    repaymentFrequency: Yup.string().when("repaymentFrequencyType", {
+      is: "interval",
+      then: (schema) =>
+        schema
+          .oneOf([
+            "daily",
+            "weekly",
+            "biweekly",
+            "monthly",
+            "bimonthly",
+            "quarterly",
+            "every_4_months",
+            "semi_annual",
+            "every_9_months",
+            "yearly",
+            "lump_sum",
+          ])
+          .required("Repayment Interval is required"),
+      otherwise: (schema) => schema.notRequired(),
+    }),
   };
 
   return Yup.object().shape(validationShape);
@@ -410,9 +415,9 @@ const CreateLoan = forwardRef(
           }
         } else {
           // Fallback to direct creation
-          const input = buildLoanInput(values, userDetails);
-          console.log("API Call: createLoan", { input });
-          const result = await createLoan(input);
+          // const input = buildLoanInput(values, userDetails); // Deprecated
+          console.log("API Call: createLoan", { values });
+          const result = await createLoan(values, userDetails);
 
           if (result?.id) {
             setSubmitSuccess("Loan created successfully!");

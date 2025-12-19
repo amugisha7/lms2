@@ -18,7 +18,52 @@ const Frequency = {
   "ANNUALLY": "ANNUALLY"
 };
 
-const { Institution, Branch, User, Employee, Borrower, Guarantor, Security, UserNotification, LoanProduct, CreditScore, Document, Contract, Application, Collateral, Loan, Investment, LoanFees, Penalty, Payroll, Account, MoneyTransaction, Payment, Expense, OtherIncome, FinancialReport, CustomFormField, LoanFeesConfig, Message, Notification, BranchLoanProduct, BranchLoanFeesConfig, PayrollEmployee, LoanApprovedByEmployee, ExpenseApprovedByEmployee, ApplicationApprovedByEmployee, CreditScoreApprovedByEmployee, MoneyTransactionApprovedByEmployee, PaymentApprovedByEmployee, BorrowerLoanOfficer, BorrowerDocument, LoanGuarantor, ApplicationGuarantor, LoanProductLoanFees, LoanProductPenalty, LoanDocument, ApplicationDocument, ContractDocument, ExpenseDocument, PaymentDocument, ApplicationContract, CollateralContract, LoanContract, ApplicationCollateral, ApplicationExpense, LoanApplication, LoanCollateral, LoanAccount, LoanExpense, InvestmentAccount, LoanFeesLoanFeesConfig, OtherIncomeAccount } = initSchema(schema);
+const LoanStatus = {
+  "DRAFT": "DRAFT",
+  "APPROVED": "APPROVED",
+  "ACTIVE": "ACTIVE",
+  "CLOSED": "CLOSED",
+  "WRITTEN_OFF": "WRITTEN_OFF",
+  "VOIDED": "VOIDED"
+};
+
+const LoanApprovalStatus = {
+  "PENDING": "PENDING",
+  "APPROVED": "APPROVED",
+  "REJECTED": "REJECTED"
+};
+
+const InstallmentStatus = {
+  "PENDING": "PENDING",
+  "PARTIALLY_PAID": "PARTIALLY_PAID",
+  "PAID": "PAID",
+  "OVERDUE": "OVERDUE"
+};
+
+const DisbursementStatus = {
+  "PENDING": "PENDING",
+  "COMPLETED": "COMPLETED",
+  "FAILED": "FAILED"
+};
+
+const PaymentStatus = {
+  "PENDING": "PENDING",
+  "COMPLETED": "COMPLETED",
+  "REVERSED": "REVERSED",
+  "FAILED": "FAILED"
+};
+
+const LoanEventType = {
+  "CREATED": "CREATED",
+  "APPROVED": "APPROVED",
+  "DISBURSED": "DISBURSED",
+  "PAYMENT_POSTED": "PAYMENT_POSTED",
+  "PAYMENT_REVERSED": "PAYMENT_REVERSED",
+  "STATUS_CHANGED": "STATUS_CHANGED",
+  "OTHER": "OTHER"
+};
+
+const { Institution, Branch, User, Employee, Borrower, Guarantor, Security, UserNotification, LoanProduct, CreditScore, Document, Contract, Application, Collateral, Loan, LoanInstallment, LoanDisbursement, LoanEvent, LoanBalanceSnapshot, Investment, LoanFees, Penalty, Payroll, Account, MoneyTransaction, Payment, Expense, OtherIncome, FinancialReport, CustomFormField, LoanFeesConfig, Message, Notification, AccountBranch, BranchLoanProduct, BranchLoanFeesConfig, PayrollEmployee, LoanApprovedByEmployee, ExpenseApprovedByEmployee, ApplicationApprovedByEmployee, CreditScoreApprovedByEmployee, MoneyTransactionApprovedByEmployee, PaymentApprovedByEmployee, BorrowerLoanOfficer, BorrowerDocument, LoanGuarantor, ApplicationGuarantor, LoanProductLoanFees, LoanProductLoanFeesConfig, LoanProductPenalty, LoanDocument, ApplicationDocument, ContractDocument, ExpenseDocument, PaymentDocument, MoneyTransactionDocument, ApplicationContract, CollateralContract, LoanContract, ApplicationCollateral, ApplicationExpense, LoanApplication, LoanCollateral, LoanAccount, LoanExpense, InvestmentAccount, LoanFeesLoanFeesConfig, OtherIncomeAccount } = initSchema(schema);
 
 export {
   Institution,
@@ -36,6 +81,10 @@ export {
   Application,
   Collateral,
   Loan,
+  LoanInstallment,
+  LoanDisbursement,
+  LoanEvent,
+  LoanBalanceSnapshot,
   Investment,
   LoanFees,
   Penalty,
@@ -50,6 +99,7 @@ export {
   LoanFeesConfig,
   Message,
   Notification,
+  AccountBranch,
   BranchLoanProduct,
   BranchLoanFeesConfig,
   PayrollEmployee,
@@ -64,12 +114,14 @@ export {
   LoanGuarantor,
   ApplicationGuarantor,
   LoanProductLoanFees,
+  LoanProductLoanFeesConfig,
   LoanProductPenalty,
   LoanDocument,
   ApplicationDocument,
   ContractDocument,
   ExpenseDocument,
   PaymentDocument,
+  MoneyTransactionDocument,
   ApplicationContract,
   CollateralContract,
   LoanContract,
@@ -83,5 +135,11 @@ export {
   LoanFeesLoanFeesConfig,
   OtherIncomeAccount,
   InterestCalculationMethod,
-  Frequency
+  Frequency,
+  LoanStatus,
+  LoanApprovalStatus,
+  InstallmentStatus,
+  DisbursementStatus,
+  PaymentStatus,
+  LoanEventType
 };

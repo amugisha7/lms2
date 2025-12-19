@@ -18,6 +18,51 @@ enum Frequency {
   ANNUALLY
 }
 
+enum LoanStatus {
+  DRAFT
+  APPROVED
+  ACTIVE
+  CLOSED
+  WRITTEN_OFF
+  VOIDED
+}
+
+enum LoanApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum InstallmentStatus {
+  PENDING
+  PARTIALLY_PAID
+  PAID
+  OVERDUE
+}
+
+enum DisbursementStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  REVERSED
+  FAILED
+}
+
+enum LoanEventType {
+  CREATED
+  APPROVED
+  DISBURSED
+  PAYMENT_POSTED
+  PAYMENT_REVERSED
+  STATUS_CHANGED
+  OTHER
+}
+
 type Institution @model {
   id: ID!
   name: String
@@ -84,6 +129,7 @@ type Branch @model {
   payrolls: [Payroll] @hasMany
   financialReports: [FinancialReport] @hasMany
   customFormFields: [CustomFormField] @hasMany
+  loans: [Loan] @hasMany(indexName: "byBranch", fields: ["id"])
 
   # --- LoanFeesConfig relationship ---
   loanFeesConfigs: [LoanFeesConfig]
@@ -439,7 +485,9 @@ type Collateral @model {
 
 type Loan @model {
   id: ID!
+  loanNumber: String @index(name: "byLoanNumber")
   approvalStatus: String
+  approvalStatusEnum: LoanApprovalStatus
   approvedDate: AWSDate
   principal: Float
   fees: Float
@@ -453,6 +501,7 @@ type Loan @model {
   loanType: String
   rateInterval: String
   loanStatus: String
+  loanStatusEnum: LoanStatus
   loanCurrency: String
   loanPurpose: String
   loanComputationRecord: AWSJSON
@@ -462,8 +511,17 @@ type Loan @model {
   paymentFrequency: String
   customFieldsData: AWSJSON
   status: String
-  borrower: Borrower @belongsTo
-  payments: [Payment] @hasMany
+  borrowerID: ID @index(name: "byBorrower", sortKeyFields: ["startDate"])
+  borrower: Borrower @belongsTo(fields: ["borrowerID"])
+  branchID: ID @index(name: "byBranch", sortKeyFields: ["startDate"])
+  branch: Branch @belongsTo(fields: ["branchID"])
+  payments: [Payment] @hasMany(indexName: "byLoan", fields: ["id"])
+  installments: [LoanInstallment] @hasMany(indexName: "byLoan", fields: ["id"])
+  disbursements: [LoanDisbursement]
+    @hasMany(indexName: "byLoan", fields: ["id"])
+  events: [LoanEvent] @hasMany(indexName: "byLoan", fields: ["id"])
+  balanceSnapshots: [LoanBalanceSnapshot]
+    @hasMany(indexName: "byLoan", fields: ["id"])
   loanFees: [LoanFees] @hasMany
   penalties: [Penalty] @hasMany
   applications: [Application] @manyToMany(relationName: "LoanApplication")
@@ -475,10 +533,84 @@ type Loan @model {
   approvedByEmployees: [Employee]
     @manyToMany(relationName: "LoanApprovedByEmployee")
   documents: [Document] @manyToMany(relationName: "LoanDocument")
+  moneyTransactions: [MoneyTransaction]
+    @hasMany(indexName: "byLoan", fields: ["id"])
   loanProductID: ID @index(name: "byLoanProductID")
   loanProduct: LoanProduct @belongsTo(fields: ["loanProductID"])
   createdByEmployeeID: ID @index(name: "byCreatedByEmployeeID")
   createdByEmployee: Employee @belongsTo(fields: ["createdByEmployeeID"])
+}
+
+type LoanInstallment @model {
+  id: ID!
+  loanID: ID! @index(name: "byLoan", sortKeyFields: ["dueDate"])
+  loan: Loan @belongsTo(fields: ["loanID"])
+  dueDate: AWSDate!
+  principalDue: Float
+  interestDue: Float
+  feesDue: Float
+  penaltyDue: Float
+  totalDue: Float
+  principalPaid: Float
+  interestPaid: Float
+  feesPaid: Float
+  penaltyPaid: Float
+  totalPaid: Float
+  status: InstallmentStatus
+  calculationRecord: AWSJSON
+  events: [LoanEvent] @hasMany(indexName: "byInstallment", fields: ["id"])
+  moneyTransactions: [MoneyTransaction]
+    @hasMany(indexName: "byInstallment", fields: ["id"])
+  payments: [Payment] @hasMany(indexName: "byInstallment", fields: ["id"])
+}
+
+type LoanDisbursement @model {
+  id: ID!
+  loanID: ID! @index(name: "byLoan", sortKeyFields: ["disbursedAt"])
+  loan: Loan @belongsTo(fields: ["loanID"])
+  disbursedAt: AWSDateTime!
+  amount: Float!
+  status: DisbursementStatus
+  method: String
+  reference: String
+  accountID: ID @index(name: "byAccountID")
+  account: Account @belongsTo(fields: ["accountID"])
+  moneyTransactionID: ID @index(name: "byMoneyTransaction")
+  moneyTransaction: MoneyTransaction @belongsTo(fields: ["moneyTransactionID"])
+  moneyTransactions: [MoneyTransaction]
+    @hasMany(indexName: "byDisbursement", fields: ["id"])
+  events: [LoanEvent] @hasMany(indexName: "byDisbursement", fields: ["id"])
+}
+
+type LoanEvent @model {
+  id: ID!
+  loanID: ID! @index(name: "byLoan", sortKeyFields: ["eventAt"])
+  loan: Loan @belongsTo(fields: ["loanID"])
+  eventAt: AWSDateTime!
+  eventType: LoanEventType!
+  actorEmployeeID: ID
+  summary: String
+  payload: AWSJSON
+  paymentID: ID @index(name: "byPayment")
+  payment: Payment @belongsTo(fields: ["paymentID"])
+  installmentID: ID @index(name: "byInstallment")
+  installment: LoanInstallment @belongsTo(fields: ["installmentID"])
+  disbursementID: ID @index(name: "byDisbursement")
+  disbursement: LoanDisbursement @belongsTo(fields: ["disbursementID"])
+}
+
+type LoanBalanceSnapshot @model {
+  id: ID!
+  loanID: ID! @index(name: "byLoan", sortKeyFields: ["asOfAt"])
+  loan: Loan @belongsTo(fields: ["loanID"])
+  asOfAt: AWSDateTime!
+  principalOutstanding: Float
+  interestOutstanding: Float
+  feesOutstanding: Float
+  penaltyOutstanding: Float
+  totalOutstanding: Float
+  daysPastDue: Int
+  snapshotRecord: AWSJSON
 }
 
 type Investment @model {
@@ -591,6 +723,8 @@ type Account @model {
   otherIncomes: [OtherIncome] @manyToMany(relationName: "OtherIncomeAccount")
   loanFees: [LoanFees] @hasMany(indexName: "byAccountID", fields: ["id"])
   payments: [Payment] @hasMany(indexName: "byAccountID", fields: ["id"])
+  disbursements: [LoanDisbursement]
+    @hasMany(indexName: "byAccountID", fields: ["id"])
   penalties: [Penalty] @hasMany(indexName: "byAccountID", fields: ["id"])
   createdByEmployeeID: ID @index(name: "byCreatedByEmployeeID")
   createdByEmployee: Employee @belongsTo(fields: ["createdByEmployeeID"])
@@ -612,11 +746,24 @@ type MoneyTransaction @model {
   deviceInfo: String
   status: String
   account: Account @belongsTo
+  loanID: ID @index(name: "byLoan", sortKeyFields: ["transactionDate"])
+  loan: Loan @belongsTo(fields: ["loanID"])
+  paymentID: ID @index(name: "byPayment")
+  payment: Payment @belongsTo(fields: ["paymentID"])
+  disbursementID: ID @index(name: "byDisbursement")
+  disbursement: LoanDisbursement @belongsTo(fields: ["disbursementID"])
+  installmentID: ID @index(name: "byInstallment")
+  installment: LoanInstallment @belongsTo(fields: ["installmentID"])
   approvedByEmployees: [Employee]
     @manyToMany(relationName: "MoneyTransactionApprovedByEmployee")
   documents: [Document] @manyToMany(relationName: "MoneyTransactionDocument")
   createdByEmployeeID: ID @index(name: "byCreatedByEmployeeID")
   createdByEmployee: Employee @belongsTo(fields: ["createdByEmployeeID"])
+
+  paymentsLink: [Payment]
+    @hasMany(indexName: "byMoneyTransaction", fields: ["id"])
+  disbursementsLink: [LoanDisbursement]
+    @hasMany(indexName: "byMoneyTransaction", fields: ["id"])
 }
 
 type Payment @model {
@@ -628,8 +775,14 @@ type Payment @model {
   referenceNumber: String
   paymentMethod: String
   status: String
+  paymentStatusEnum: PaymentStatus
   notes: String
-  loan: Loan @belongsTo
+  loanID: ID @index(name: "byLoan", sortKeyFields: ["paymentDate"])
+  loan: Loan @belongsTo(fields: ["loanID"])
+  installmentID: ID @index(name: "byInstallment")
+  installment: LoanInstallment @belongsTo(fields: ["installmentID"])
+  moneyTransactionID: ID @index(name: "byMoneyTransaction")
+  moneyTransaction: MoneyTransaction @belongsTo(fields: ["moneyTransactionID"])
   accountID: ID @index(name: "byAccountID")
   account: Account @belongsTo(fields: ["accountID"])
   receivingEmployeeID: ID @index(name: "byReceivingEmployeeID")
@@ -637,6 +790,9 @@ type Payment @model {
   approvedByEmployees: [Employee]
     @manyToMany(relationName: "PaymentApprovedByEmployee")
   documents: [Document] @manyToMany(relationName: "PaymentDocument")
+  moneyTransactions: [MoneyTransaction]
+    @hasMany(indexName: "byPayment", fields: ["id"])
+  events: [LoanEvent] @hasMany(indexName: "byPayment", fields: ["id"])
 }
 
 type Expense @model {

@@ -12,7 +12,7 @@ import DropDownSearchable from "../../../Resources/FormComponents/DropDownSearch
 import OrderedList from "../../../Resources/FormComponents/OrderedList";
 import CreateFormButtons from "../../../ModelAssets/CreateFormButtons";
 import { UserContext } from "../../../App";
-import { createLoan, buildLoanInput } from "./createLoanHelpers";
+import { createLoan } from "./createLoanHelpers";
 import FormLabel from "../../../Resources/FormComponents/FormLabel";
 import RadioGroup from "../../../Resources/FormComponents/RadioGroup";
 import ClickableText from "../../../ComponentAssets/ClickableText";
@@ -26,33 +26,59 @@ const FormGrid = styled(Grid)(({ theme }) => ({
 }));
 
 const baseInitialValues = createLoanForm.reduce((acc, field) => {
-  if (field.type === "label") return acc;
-  acc[field.name] = field.defaultValue || "";
+  if (field.type === "label" || field.type === "formLink") return acc;
+
+  if (field.type === "textAndDropdown") {
+    acc[field.textName] =
+      field.textDefaultValue !== undefined ? field.textDefaultValue : "";
+    acc[field.dropdownName] =
+      field.dropdownDefaultValue !== undefined
+        ? field.dropdownDefaultValue
+        : "";
+  } else if (field.type === "textAndRadio") {
+    acc[field.textName] =
+      field.textDefaultValue !== undefined ? field.textDefaultValue : "";
+    acc[field.radioName] =
+      field.radioDefaultValue !== undefined ? field.radioDefaultValue : "";
+  } else {
+    if (field.name) {
+      acc[field.name] =
+        field.defaultValue !== undefined ? field.defaultValue : "";
+    }
+  }
   return acc;
 }, {});
 
-// Add loanProduct field to initial values
 baseInitialValues.loanProduct = "";
 
 const buildValidationSchema = () => {
   const validationShape = {
     borrower: Yup.string().required("Borrower is required"),
     loanProduct: Yup.string().required("Loan Product is required"),
+    accountLoansId: Yup.string().required("Source Account is required"),
     principalAmount: Yup.number()
       .required("Principal Amount is required")
       .min(0, "Principal Amount must be at least 0"),
+    interestType: Yup.string()
+      .oneOf(["percentage", "fixed"])
+      .required("Interest Type is required"),
     interestRate: Yup.number()
+      .typeError("Interest Rate is required")
       .required("Interest Rate is required")
       .min(0, "Interest Rate must be at least 0")
-      .max(100, "Interest Rate cannot exceed 100%"),
-    termDuration: Yup.number()
-      .required("Term Duration is required")
-      .min(1, "Term Duration must be at least 1"),
+      .when("interestType", {
+        is: "percentage",
+        then: (schema) => schema.max(100, "Interest Rate cannot exceed 100%"),
+        otherwise: (schema) => schema,
+      }),
+    loanStartDate: Yup.string().required("Loan Start Date is required"),
+    loanDuration: Yup.number()
+      .typeError("Loan Duration is required")
+      .required("Loan Duration is required")
+      .min(1, "Loan Duration must be at least 1"),
     durationPeriod: Yup.string()
       .oneOf(["days", "weeks", "months", "years"])
       .required("Duration Period is required"),
-    disbursementDate: Yup.string().required("Disbursement Date is required"),
-    maturityDate: Yup.string().required("Maturity Date is required"),
     repaymentFrequency: Yup.string()
       .oneOf([
         "daily",
@@ -67,16 +93,7 @@ const buildValidationSchema = () => {
         "yearly",
         "lump_sum",
       ])
-      .required("Repayment Frequency is required"),
-    status: Yup.string()
-      .oneOf(["Active", "Pending", "Approved", "Rejected", "Closed"])
-      .required("Status is required"),
-    totalAmountDue: Yup.number()
-      .min(0, "Total Amount Due must be at least 0")
-      .nullable()
-      .transform((value, originalValue) =>
-        originalValue === "" ? null : value
-      ),
+      .required("Repayment Interval is required"),
   };
 
   return Yup.object().shape(validationShape);
@@ -85,15 +102,39 @@ const buildValidationSchema = () => {
 const baseValidationSchema = buildValidationSchema();
 
 const renderFormField = (field, formikValues) => {
+  // Handle dynamic labels used by createLoanForm
+  let displayLabel = field.label;
+  if (field.dynamicLabel) {
+    if (field.name === "calculateInterestOn") {
+      displayLabel =
+        formikValues.interestTypeMaturity === "fixed"
+          ? "Calculate Interest if there is"
+          : "Calculate Interest on";
+    } else if (field.name === "loanInterestRateAfterMaturity") {
+      displayLabel =
+        formikValues.interestTypeMaturity === "fixed"
+          ? "Interest Amount After Maturity"
+          : "Interest Rate After Maturity";
+    } else if (field.name === "interestRate") {
+      displayLabel =
+        formikValues.interestType === "fixed"
+          ? "Interest Amount"
+          : "Interest Rate";
+    }
+  }
+
   switch (field.type) {
     case "text":
     case "number":
-      return <TextInput {...field} />;
+      return <TextInput {...field} label={displayLabel} />;
     case "select":
       if (field.name === "borrower" || field.name === "loanProduct") {
-        return <DropDownSearchable {...field} />;
+        return <DropDownSearchable {...field} label={displayLabel} />;
       }
-      return <Dropdown {...field} />;
+      return <Dropdown {...field} label={displayLabel} />;
+    case "selectMultiple":
+      // Use Dropdown for multi-selects via the existing component patterns
+      return <Dropdown {...field} label={displayLabel} />;
     case "orderedList":
       return (
         <OrderedList
@@ -111,6 +152,12 @@ const renderFormField = (field, formikValues) => {
       return <FormLabel label={field.label} />;
     case "radio":
       return <RadioGroup {...field} />;
+    case "textAndDropdown":
+      // Reuse TextInput + Dropdown components via the composite component used elsewhere
+      // createLoanForm already provides the correct props for this component in CreateLoan.jsx.
+      // Here, rely on the shared TextAndDropdown component if present in the form config.
+      // Fallback: render default.
+      return <TextInput {...field} label={displayLabel} />;
     default:
       return <TextInput {...field} />;
   }
@@ -178,8 +225,7 @@ const UseLoanProduct = forwardRef(
             onCreateSuccess(result);
           }
         } else {
-          const input = buildLoanInput(values, userDetails);
-          const result = await createLoan(input);
+          const result = await createLoan(values, userDetails);
 
           if (result?.id) {
             setSubmitSuccess("Loan created successfully!");
@@ -248,13 +294,10 @@ const UseLoanProduct = forwardRef(
             }}
           >
             <Typography>
-              No loan products found.{" "} Manage{" "}
-              <ClickableText
-                onClick={() => navigate("/admin/loan-products")}
-              >
+              No loan products found. Manage{" "}
+              <ClickableText onClick={() => navigate("/admin/loan-products")}>
                 Loan Products.
               </ClickableText>
-         
             </Typography>
           </Box>
         ) : (
@@ -308,7 +351,7 @@ const UseLoanProduct = forwardRef(
                           );
                         if (selectedProduct.termDurationDefault)
                           formik.setFieldValue(
-                            "termDuration",
+                            "loanDuration",
                             selectedProduct.termDurationDefault
                           );
                         if (selectedProduct.durationPeriod)

@@ -13,6 +13,7 @@ const LIST_ACCOUNTS_MINIMAL_QUERY = `
       items {
         id
         name
+        status
       }
       nextToken
     }

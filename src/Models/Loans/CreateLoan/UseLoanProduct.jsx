@@ -1,4 +1,10 @@
-import React, { useState, forwardRef, useEffect, useContext } from "react";
+import React, {
+  useState,
+  forwardRef,
+  useEffect,
+  useContext,
+  useRef,
+} from "react";
 import { Formik, Form } from "formik";
 import * as Yup from "yup";
 import { Box, Grid, Typography, CircularProgress } from "@mui/material";
@@ -12,7 +18,7 @@ import DropDownSearchable from "../../../Resources/FormComponents/DropDownSearch
 import OrderedList from "../../../Resources/FormComponents/OrderedList";
 import CreateFormButtons from "../../../ModelAssets/CreateFormButtons";
 import { UserContext } from "../../../App";
-import { createLoan } from "./createLoanHelpers";
+import { createLoan, fetchAccounts } from "./createLoanHelpers";
 import FormLabel from "../../../Resources/FormComponents/FormLabel";
 import RadioGroup from "../../../Resources/FormComponents/RadioGroup";
 import ClickableText from "../../../ComponentAssets/ClickableText";
@@ -329,10 +335,43 @@ const UseLoanProduct = forwardRef(
     const navigate = useNavigate();
     const [submitError, setSubmitError] = useState("");
     const [submitSuccess, setSubmitSuccess] = useState("");
+    const [accounts, setAccounts] = useState([]);
+    const [accountsLoading, setAccountsLoading] = useState(false);
+    const accountsFetchedRef = useRef(false);
+    const accountsInstitutionIdRef = useRef(null);
 
     useEffect(() => {
       window.scrollTo({ top: 0, behavior: "smooth" });
     }, []);
+
+    useEffect(() => {
+      const currentInstitutionId = userDetails?.institutionUsersId;
+      if (
+        currentInstitutionId &&
+        currentInstitutionId !== accountsInstitutionIdRef.current
+      ) {
+        accountsFetchedRef.current = false;
+        accountsInstitutionIdRef.current = currentInstitutionId;
+      }
+      if (!accountsFetchedRef.current && currentInstitutionId) {
+        setAccountsLoading(true);
+        fetchAccounts(currentInstitutionId)
+          .then((data) => {
+            // Keep only active accounts locally
+            const activeAccounts = Array.isArray(data)
+              ? data.filter((a) => a && a.status === "active")
+              : [];
+            setAccounts(activeAccounts);
+            accountsFetchedRef.current = true;
+          })
+          .catch((err) => {
+            console.error("Error fetching accounts:", err);
+          })
+          .finally(() => {
+            setAccountsLoading(false);
+          });
+      }
+    }, [userDetails?.institutionUsersId]);
 
     const formInitialValues = React.useMemo(() => {
       const base = propInitialValues
@@ -348,8 +387,15 @@ const UseLoanProduct = forwardRef(
             propBorrower.businessName || ""
           }`.trim() || propBorrower.uniqueIdNumber;
       }
+      // Set default accounts if available
+      if (accounts.length > 0 && !base.accountLoansId) {
+        base.accountLoansId = accounts[0].id;
+      }
+      if (accounts.length > 0 && !base.loanFeesAccountId) {
+        base.loanFeesAccountId = accounts[0].id;
+      }
       return base;
-    }, [propInitialValues, propBorrower]);
+    }, [propInitialValues, propBorrower, accounts]);
 
     const handleSubmit = async (values, { setSubmitting, resetForm }) => {
       setSubmitError("");
@@ -532,9 +578,32 @@ const UseLoanProduct = forwardRef(
                     createLoanForm.forEach((field) => {
                       if (field.name === "loanProduct") {
                         // Skip original loanProduct field as we added it manually
-                      } else {
-                        formFields.push(field);
+                        return;
                       }
+
+                      if (field.name === "accountLoansId") {
+                        formFields.push({
+                          ...field,
+                          options: (accounts || []).map((account) => ({
+                            value: account.id,
+                            label: account.name,
+                          })),
+                        });
+                        return;
+                      }
+
+                      if (field.name === "loanFeesAccountId") {
+                        formFields.push({
+                          ...field,
+                          options: (accounts || []).map((account) => ({
+                            value: account.id,
+                            label: account.name,
+                          })),
+                        });
+                        return;
+                      }
+
+                      formFields.push(field);
                     });
                   }
 

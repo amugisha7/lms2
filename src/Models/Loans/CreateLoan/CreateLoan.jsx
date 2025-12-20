@@ -297,7 +297,11 @@ const CreateLoan = forwardRef(
         setAccountsLoading(true);
         fetchAccounts(currentInstitutionId)
           .then((data) => {
-            setAccounts(data);
+            // Locally filter to only include active accounts
+            const activeAccounts = Array.isArray(data)
+              ? data.filter((a) => a && a.status === "active")
+              : [];
+            setAccounts(activeAccounts);
             accountsFetchedRef.current = true;
           })
           .catch((err) => {

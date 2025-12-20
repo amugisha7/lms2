@@ -9,7 +9,6 @@ import { Formik, Form } from "formik";
 import * as Yup from "yup";
 import { Box, Grid, Typography, CircularProgress } from "@mui/material";
 import { styled } from "@mui/material/styles";
-import { useNavigate } from "react-router-dom";
 
 import createLoanForm from "./createLoanForm";
 import TextInput from "../../../Resources/FormComponents/TextInput";
@@ -18,10 +17,19 @@ import DropDownSearchable from "../../../Resources/FormComponents/DropDownSearch
 import OrderedList from "../../../Resources/FormComponents/OrderedList";
 import CreateFormButtons from "../../../ModelAssets/CreateFormButtons";
 import { UserContext } from "../../../App";
-import { createLoan, fetchAccounts } from "./createLoanHelpers";
+import {
+  createLoan,
+  fetchAccounts,
+  fetchLoanFeesConfig,
+} from "./createLoanHelpers";
 import FormLabel from "../../../Resources/FormComponents/FormLabel";
+import FormLinkText from "../../../Resources/FormComponents/FormLinkText";
 import RadioGroup from "../../../Resources/FormComponents/RadioGroup";
-import ClickableText from "../../../ComponentAssets/ClickableText";
+import RadioGroupNoLabel from "../../../Resources/FormComponents/RadioGroupNoLabel";
+import TextAndRadio from "../../../Resources/FormComponents/TextAndRadio";
+import TextAndDropdown from "../../../Resources/FormComponents/TextAndDropdown";
+import MultipleDropDown from "../../../Resources/FormComponents/MultipleDropDown";
+import { Settings } from "@mui/icons-material";
 
 const FormGrid = styled(Grid)(({ theme }) => ({
   display: "flex",
@@ -65,6 +73,7 @@ const buildValidationSchema = () => {
     principalAmount: Yup.number()
       .required("Principal Amount is required")
       .min(0, "Principal Amount must be at least 0"),
+    interestMethod: Yup.string().required("Interest Method is required"),
     interestType: Yup.string()
       .oneOf(["percentage", "fixed"])
       .required("Interest Type is required"),
@@ -77,6 +86,7 @@ const buildValidationSchema = () => {
         then: (schema) => schema.max(100, "Interest Rate cannot exceed 100%"),
         otherwise: (schema) => schema,
       }),
+    interestPeriod: Yup.string().required("Interest Period is required"),
     loanStartDate: Yup.string().required("Loan Start Date is required"),
     loanDuration: Yup.number()
       .typeError("Loan Duration is required")
@@ -85,21 +95,29 @@ const buildValidationSchema = () => {
     durationPeriod: Yup.string()
       .oneOf(["days", "weeks", "months", "years"])
       .required("Duration Period is required"),
-    repaymentFrequency: Yup.string()
-      .oneOf([
-        "daily",
-        "weekly",
-        "biweekly",
-        "monthly",
-        "bimonthly",
-        "quarterly",
-        "every_4_months",
-        "semi_annual",
-        "every_9_months",
-        "yearly",
-        "lump_sum",
-      ])
-      .required("Repayment Interval is required"),
+    repaymentFrequencyType: Yup.string()
+      .oneOf(["interval", "setDays", "setDates"])
+      .required("Repayment Frequency is required"),
+    repaymentFrequency: Yup.string().when("repaymentFrequencyType", {
+      is: "interval",
+      then: (schema) =>
+        schema
+          .oneOf([
+            "daily",
+            "weekly",
+            "biweekly",
+            "monthly",
+            "bimonthly",
+            "quarterly",
+            "every_4_months",
+            "semi_annual",
+            "every_9_months",
+            "yearly",
+            "lump_sum",
+          ])
+          .required("Repayment Interval is required"),
+      otherwise: (schema) => schema.notRequired(),
+    }),
   };
 
   return Yup.object().shape(validationShape);
@@ -108,12 +126,11 @@ const buildValidationSchema = () => {
 const baseValidationSchema = buildValidationSchema();
 
 const renderFormField = (field, formikValues) => {
-  const { dynamicHelperText, dynamicLabel, dynamicLabelMap, ...rawProps } =
-    field;
+  const { dynamicHelperText, dynamicLabelMap, ...fieldProps } = field;
 
-  // Handle dynamic labels used by createLoanForm
+  // Handle dynamic labels
   let displayLabel = field.label;
-  if (dynamicLabel) {
+  if (field.dynamicLabel) {
     if (field.name === "calculateInterestOn") {
       displayLabel =
         formikValues.interestTypeMaturity === "fixed"
@@ -132,10 +149,14 @@ const renderFormField = (field, formikValues) => {
     }
   }
 
-  // Current value from Formik for this field
-  const currentValueForField = field.name
-    ? formikValues[field.name]
-    : undefined;
+  // Handle dynamic label mapping for textAndDropdown fields
+  let displayTextLabel = field.textLabel;
+  if (field.dynamicLabelMap && field.dependsOn) {
+    const dependencyValue = formikValues[field.dependsOn];
+    if (dependencyValue && field.dynamicLabelMap[dependencyValue]) {
+      displayTextLabel = field.dynamicLabelMap[dependencyValue];
+    }
+  }
 
   // Compute dynamic helper text if provided
   let computedHelperText = field.helperText;
@@ -146,87 +167,42 @@ const renderFormField = (field, formikValues) => {
     }
   }
 
-  const pick = (obj, keys) =>
-    keys.reduce((acc, k) => {
-      if (obj && Object.prototype.hasOwnProperty.call(obj, k)) {
-        acc[k] = obj[k];
-      }
-      return acc;
-    }, {});
-
   switch (field.type) {
     case "text":
-    case "number": {
-      const allowed = pick(rawProps, [
-        "name",
-        "type",
-        "placeholder",
-        "inputProps",
-        "slotProps",
-        "minLength",
-        "maxLength",
-        "readOnly",
-        "editing",
-        "disabled",
-        "required",
-        "onChange",
-      ]);
+    case "number":
+    case "date":
       return (
         <TextInput
-          {...allowed}
+          {...fieldProps}
           label={displayLabel}
           helperText={computedHelperText}
         />
       );
-    }
-    case "select": {
-      const allowed = pick(rawProps, [
-        "name",
-        "options",
-        "required",
-        "readOnly",
-        "editing",
-        "disabled",
-        "placeholder",
-        "onChange",
-      ]);
+    case "select":
       if (field.name === "borrower" || field.name === "loanProduct") {
         return (
           <DropDownSearchable
-            {...allowed}
+            {...fieldProps}
             label={displayLabel}
             helperText={computedHelperText}
-            value={currentValueForField}
           />
         );
       }
       return (
         <Dropdown
-          {...allowed}
+          {...fieldProps}
           label={displayLabel}
           helperText={computedHelperText}
         />
       );
-    }
-    case "selectMultiple": {
-      const allowed = pick(rawProps, [
-        "name",
-        "options",
-        "required",
-        "readOnly",
-        "editing",
-        "disabled",
-        "placeholder",
-        "onChange",
-      ]);
+    case "selectMultiple":
       return (
-        <Dropdown
-          {...allowed}
+        <MultipleDropDown
+          {...fieldProps}
           label={displayLabel}
           helperText={computedHelperText}
         />
       );
-    }
     case "orderedList":
       return (
         <OrderedList
@@ -242,75 +218,254 @@ const renderFormField = (field, formikValues) => {
       );
     case "label":
       return <FormLabel label={field.label} />;
-    case "radio": {
-      const allowed = pick(rawProps, [
-        "name",
-        "options",
-        "required",
-        "readOnly",
-        "editing",
-        "disabled",
-        "onChange",
-      ]);
-      return <RadioGroup {...allowed} helperText={computedHelperText} />;
-    }
-    case "textAndDropdown": {
-      const allowed = pick(rawProps, [
-        "type",
-        "placeholder",
-        "inputProps",
-        "slotProps",
-        "minLength",
-        "maxLength",
-        "readOnly",
-        "editing",
-        "disabled",
-        "required",
-        "onChange",
-      ]);
-      allowed.name = field.textName;
+    case "formLink":
       return (
-        <TextInput
-          {...allowed}
-          label={displayLabel}
-          helperText={computedHelperText}
+        <FormLinkText
+          linkText={field.linkText}
+          linkUrl={field.linkUrl}
+          icon={field.icon}
         />
       );
-    }
-    case "textAndRadio": {
-      const allowed = pick(rawProps, [
-        "type",
-        "placeholder",
-        "inputProps",
-        "slotProps",
-        "minLength",
-        "maxLength",
-        "readOnly",
-        "editing",
-        "disabled",
-        "required",
-        "onChange",
-      ]);
-      allowed.name = field.textName;
+    case "radio":
+      return <RadioGroup {...fieldProps} helperText={computedHelperText} />;
+    case "radioNoLabel":
+      return <RadioGroupNoLabel {...fieldProps} />;
+    case "textAndRadio":
       return (
-        <TextInput
-          {...allowed}
-          label={displayLabel}
-          helperText={computedHelperText}
+        <TextAndRadio
+          {...fieldProps}
+          textLabel={displayLabel}
+          editing={field.editing}
+          readOnly={field.readOnly}
+          disabled={field.disabled}
         />
       );
-    }
-    default: {
-      const allowed = pick(rawProps, [
-        "name",
-        "readOnly",
-        "editing",
-        "disabled",
-      ]);
-      if (!allowed.name) return null;
-      return <TextInput {...allowed} />;
-    }
+    case "textAndDropdown":
+      return (
+        <TextAndDropdown
+          {...fieldProps}
+          textLabel={displayTextLabel}
+          editing={field.editing}
+          readOnly={field.readOnly}
+          disabled={field.disabled}
+        />
+      );
+    default:
+      return <TextInput {...fieldProps} />;
   }
+};
+
+const normalizeEnumKey = (value) => {
+  if (value === null || value === undefined) return value;
+  const raw = String(value).trim();
+  if (!raw) return raw;
+  return raw
+    .toLowerCase()
+    .replace(/\//g, " ")
+    .replace(/-/g, "_")
+    .replace(/\s+/g, "_");
+};
+
+const coerceNumber = (value) => {
+  if (value === null || value === undefined || value === "") return value;
+  const n = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(n) ? n : value;
+};
+
+const applyLoanProductTemplateToFormik = (loanProduct, formik) => {
+  if (!loanProduct || !formik) return;
+
+  const normalizeInterestType = (v) => {
+    const key = normalizeEnumKey(v);
+    if (!key) return v;
+    if (key === "percent" || key === "percentage" || key === "percent_based") {
+      return "percentage";
+    }
+    if (key === "fixed" || key === "fixed_amount") return "fixed";
+    return key;
+  };
+
+  const normalizeDurationPeriod = (v) => {
+    const key = normalizeEnumKey(v);
+    if (!key) return v;
+    if (["day", "days"].includes(key)) return "days";
+    if (["week", "weeks"].includes(key)) return "weeks";
+    if (["month", "months"].includes(key)) return "months";
+    if (["year", "years"].includes(key)) return "years";
+    return key;
+  };
+
+  const normalizeRepaymentFrequency = (v) => {
+    const key = normalizeEnumKey(v);
+    if (!key) return v;
+    const map = {
+      bi_weekly: "biweekly",
+      biweekly: "biweekly",
+      bi_monthly: "bimonthly",
+      bimonthly: "bimonthly",
+      every_4_month: "every_4_months",
+      every_4_months: "every_4_months",
+      every_9_month: "every_9_months",
+      every_9_months: "every_9_months",
+      semi_annual: "semi_annual",
+      semi_annually: "semi_annual",
+      semiannually: "semi_annual",
+      one_off: "lump_sum",
+      one_off_lump_sum: "lump_sum",
+      lump_sum: "lump_sum",
+    };
+    return map[key] || key;
+  };
+
+  const normalizeInterestPeriod = (v) => {
+    const key = normalizeEnumKey(v);
+    if (!key) return v;
+    // LoanProduct uses per_loan_cycle but Loan form expects per_loan
+    if (key === "per_loan_cycle") return "per_loan";
+    return key;
+  };
+
+  const yesNo = (v) => {
+    if (v === true) return "yes";
+    if (v === false) return "no";
+    const key = normalizeEnumKey(v);
+    if (key === "yes" || key === "no") return key;
+    return v;
+  };
+
+  const nextValues = { ...formik.values };
+
+  // Always keep selected product id
+  nextValues.loanProduct = loanProduct.id;
+
+  if (
+    loanProduct.principalAmountDefault !== null &&
+    loanProduct.principalAmountDefault !== undefined
+  ) {
+    nextValues.principalAmount = coerceNumber(
+      loanProduct.principalAmountDefault
+    );
+  }
+  if (
+    loanProduct.interestCalculationMethod !== null &&
+    loanProduct.interestCalculationMethod !== undefined
+  ) {
+    nextValues.interestMethod = loanProduct.interestCalculationMethod;
+  }
+  if (
+    loanProduct.interestType !== null &&
+    loanProduct.interestType !== undefined
+  ) {
+    nextValues.interestType = normalizeInterestType(loanProduct.interestType);
+  }
+  if (
+    loanProduct.interestRateDefault !== null &&
+    loanProduct.interestRateDefault !== undefined
+  ) {
+    nextValues.interestRate = coerceNumber(loanProduct.interestRateDefault);
+  }
+  if (
+    loanProduct.interestPeriod !== null &&
+    loanProduct.interestPeriod !== undefined
+  ) {
+    nextValues.interestPeriod = normalizeInterestPeriod(
+      loanProduct.interestPeriod
+    );
+  }
+  if (
+    loanProduct.termDurationDefault !== null &&
+    loanProduct.termDurationDefault !== undefined
+  ) {
+    nextValues.loanDuration = coerceNumber(loanProduct.termDurationDefault);
+  }
+  if (
+    loanProduct.durationPeriod !== null &&
+    loanProduct.durationPeriod !== undefined
+  ) {
+    nextValues.durationPeriod = normalizeDurationPeriod(
+      loanProduct.durationPeriod
+    );
+  }
+  if (
+    loanProduct.repaymentFrequency !== null &&
+    loanProduct.repaymentFrequency !== undefined
+  ) {
+    nextValues.repaymentFrequencyType = "interval";
+    nextValues.repaymentFrequency = normalizeRepaymentFrequency(
+      loanProduct.repaymentFrequency
+    );
+    // Clear any custom schedule selections when using interval templates
+    nextValues.customPaymentDays = [];
+    nextValues.customPaymentDates = [];
+  }
+
+  if (
+    loanProduct.extendLoanAfterMaturity !== null &&
+    loanProduct.extendLoanAfterMaturity !== undefined
+  ) {
+    nextValues.extendLoanAfterMaturity = yesNo(
+      loanProduct.extendLoanAfterMaturity
+    );
+  }
+  if (
+    loanProduct.interestTypeMaturity !== null &&
+    loanProduct.interestTypeMaturity !== undefined
+  ) {
+    nextValues.interestTypeMaturity = normalizeInterestType(
+      loanProduct.interestTypeMaturity
+    );
+  }
+  if (
+    loanProduct.calculateInterestOn !== null &&
+    loanProduct.calculateInterestOn !== undefined
+  ) {
+    nextValues.calculateInterestOn = loanProduct.calculateInterestOn;
+  }
+  if (
+    loanProduct.loanInterestRateAfterMaturity !== null &&
+    loanProduct.loanInterestRateAfterMaturity !== undefined
+  ) {
+    nextValues.loanInterestRateAfterMaturity = coerceNumber(
+      loanProduct.loanInterestRateAfterMaturity
+    );
+  }
+  if (
+    loanProduct.recurringPeriodAfterMaturityUnit !== null &&
+    loanProduct.recurringPeriodAfterMaturityUnit !== undefined
+  ) {
+    nextValues.recurringPeriodAfterMaturityUnit =
+      loanProduct.recurringPeriodAfterMaturityUnit;
+  }
+
+  // Loan Fees Config template
+  // LoanProduct -> loanFeesConfigs is an association (LoanProductLoanFeesConfig)
+  // We default to the first active associated config.
+  const loanFeesConfigItems = Array.isArray(loanProduct?.loanFeesConfigs?.items)
+    ? loanProduct.loanFeesConfigs.items
+    : Array.isArray(loanProduct?.loanFeesConfigs)
+    ? loanProduct.loanFeesConfigs
+    : [];
+
+  const firstActiveFeeConfigAssoc =
+    loanFeesConfigItems.find(
+      (i) => (i?.loanFeesConfig?.status || "").toLowerCase() === "active"
+    ) || loanFeesConfigItems[0];
+
+  const loanFeesConfigIdFromProduct =
+    firstActiveFeeConfigAssoc?.loanFeesConfigId ||
+    firstActiveFeeConfigAssoc?.loanFeesConfig?.id;
+
+  if (loanFeesConfigIdFromProduct) {
+    nextValues.loanFeesType = "standard";
+    nextValues.loanFees = loanFeesConfigIdFromProduct;
+    nextValues.customLoanFeeAmount = "";
+  }
+
+  // Repayment order exists on the product but is not a field in the loan create form currently.
+  // Keep it on values only if the loan form expects it later.
+  // (No-op here by design.)
+
+  formik.setValues(nextValues);
 };
 
 const UseLoanProduct = forwardRef(
@@ -332,13 +487,16 @@ const UseLoanProduct = forwardRef(
     ref
   ) => {
     const { userDetails } = useContext(UserContext);
-    const navigate = useNavigate();
     const [submitError, setSubmitError] = useState("");
     const [submitSuccess, setSubmitSuccess] = useState("");
     const [accounts, setAccounts] = useState([]);
     const [accountsLoading, setAccountsLoading] = useState(false);
     const accountsFetchedRef = useRef(false);
     const accountsInstitutionIdRef = useRef(null);
+    const [loanFeesConfigs, setLoanFeesConfigs] = useState([]);
+    const [loanFeesLoading, setLoanFeesLoading] = useState(false);
+    const loanFeesFetchedRef = useRef(false);
+    const loanFeesInstitutionIdRef = useRef(null);
 
     useEffect(() => {
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -369,6 +527,31 @@ const UseLoanProduct = forwardRef(
           })
           .finally(() => {
             setAccountsLoading(false);
+          });
+      }
+    }, [userDetails?.institutionUsersId]);
+
+    useEffect(() => {
+      const currentInstitutionId = userDetails?.institutionUsersId;
+      if (
+        currentInstitutionId &&
+        currentInstitutionId !== loanFeesInstitutionIdRef.current
+      ) {
+        loanFeesFetchedRef.current = false;
+        loanFeesInstitutionIdRef.current = currentInstitutionId;
+      }
+      if (!loanFeesFetchedRef.current && currentInstitutionId) {
+        setLoanFeesLoading(true);
+        fetchLoanFeesConfig(currentInstitutionId)
+          .then((data) => {
+            setLoanFeesConfigs(Array.isArray(data) ? data : []);
+            loanFeesFetchedRef.current = true;
+          })
+          .catch((err) => {
+            console.error("Error fetching loan fees configs:", err);
+          })
+          .finally(() => {
+            setLoanFeesLoading(false);
           });
       }
     }, [userDetails?.institutionUsersId]);
@@ -456,6 +639,22 @@ const UseLoanProduct = forwardRef(
       );
     }
 
+    // Show loading state if we still need account/fee configs for dropdown options
+    if (accountsLoading || loanFeesLoading) {
+      return (
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            minHeight: "300px",
+          }}
+        >
+          <CircularProgress />
+        </Box>
+      );
+    }
+
     return (
       <>
         {!propBorrower && !borrowersLoading && borrowers.length === 0 && (
@@ -483,19 +682,23 @@ const UseLoanProduct = forwardRef(
               borderRadius: 1,
             }}
           >
-            <Typography>
-              No loan products found. Manage{" "}
-              <ClickableText onClick={() => navigate("/admin/loan-products")}>
-                Loan Products.
-              </ClickableText>
-            </Typography>
+            <Typography>No loan products found.</Typography>
+            <Box sx={{ mt: 1 }}>
+              <FormLinkText
+                linkText="Manage Loan Products"
+                linkUrl="/admin/loan-products"
+                icon={Settings}
+              />
+            </Box>
           </Box>
         ) : (
           <>
             <Box sx={{ mb: 2 }}>
-              <ClickableText onClick={() => navigate("/admin/loan-products")}>
-                Manage Loan Products
-              </ClickableText>
+              <FormLinkText
+                linkText="Manage Loan Products"
+                linkUrl="/admin/loan-products"
+                icon={Settings}
+              />
             </Box>
             <Formik
               initialValues={formInitialValues}
@@ -526,51 +729,15 @@ const UseLoanProduct = forwardRef(
                       "Select a loan product to auto-populate fields.",
                     onChange: (e, formik) => {
                       const selectedProductId = e.target.value;
-                      formik.setFieldValue("loanProduct", selectedProductId);
-
                       const selectedProduct = loanProducts.find(
                         (p) => p.id === selectedProductId
                       );
-                      if (selectedProduct) {
-                        // Populate fields
-                        if (selectedProduct.principalAmountDefault)
-                          formik.setFieldValue(
-                            "principalAmount",
-                            selectedProduct.principalAmountDefault
-                          );
-                        if (selectedProduct.interestRateDefault)
-                          formik.setFieldValue(
-                            "interestRate",
-                            selectedProduct.interestRateDefault
-                          );
-                        if (selectedProduct.termDurationDefault)
-                          formik.setFieldValue(
-                            "loanDuration",
-                            selectedProduct.termDurationDefault
-                          );
-                        if (selectedProduct.durationPeriod)
-                          formik.setFieldValue(
-                            "durationPeriod",
-                            selectedProduct.durationPeriod
-                          );
-                        if (selectedProduct.repaymentFrequency)
-                          formik.setFieldValue(
-                            "repaymentFrequency",
-                            selectedProduct.repaymentFrequency
-                          );
-                        if (selectedProduct.repaymentOrder) {
-                          try {
-                            // repaymentOrder might be a stringified array or just array
-                            const order =
-                              typeof selectedProduct.repaymentOrder === "string"
-                                ? JSON.parse(selectedProduct.repaymentOrder)
-                                : selectedProduct.repaymentOrder;
-                            formik.setFieldValue("repaymentOrder", order);
-                          } catch (e) {
-                            console.error("Error parsing repayment order", e);
-                          }
-                        }
+                      if (!selectedProduct) {
+                        formik.setFieldValue("loanProduct", selectedProductId);
+                        return;
                       }
+
+                      applyLoanProductTemplateToFormik(selectedProduct, formik);
                     },
                   });
 
@@ -587,6 +754,48 @@ const UseLoanProduct = forwardRef(
                           options: (accounts || []).map((account) => ({
                             value: account.id,
                             label: account.name,
+                          })),
+                        });
+                        return;
+                      }
+
+                      if (field.name === "loanFees") {
+                        const currency =
+                          userDetails?.institution?.currencyCode || "$";
+                        const formatLoanFeeAmount = (loanFee, currencySym) => {
+                          const value =
+                            loanFee?.rate !== undefined &&
+                            loanFee?.rate !== null
+                              ? Number(loanFee.rate).toLocaleString()
+                              : "-";
+                          if (loanFee?.calculationMethod === "percentage") {
+                            const percentageBaseLabels = {
+                              principal: "Principal",
+                              interest: "Interest",
+                              principal_interest: "(Principal + Interest)",
+                            };
+                            const base =
+                              percentageBaseLabels[loanFee?.percentageBase] ||
+                              loanFee?.percentageBase ||
+                              "";
+                            return value !== "-" ? `${value}% of ${base}` : "-";
+                          }
+                          if (loanFee?.calculationMethod === "fixed") {
+                            return value !== "-"
+                              ? `${currencySym} ${value} (fixed)`
+                              : "-";
+                          }
+                          return "-";
+                        };
+
+                        formFields.push({
+                          ...field,
+                          options: (loanFeesConfigs || []).map((loanFee) => ({
+                            value: loanFee.id,
+                            label: `${loanFee.name} - ${formatLoanFeeAmount(
+                              loanFee,
+                              currency
+                            )}`,
                           })),
                         });
                         return;
@@ -621,25 +830,48 @@ const UseLoanProduct = forwardRef(
                       }}
                     >
                       <Grid container spacing={1}>
-                        {updatedCreateLoanForm.map((field, index) => (
-                          <FormGrid
-                            size={{ xs: 12, md: field.span }}
-                            key={`${field.name}-${index}`}
-                          >
-                            {renderFormField(
-                              {
-                                ...field,
-                                formik,
-                                editing: true,
-                                // Pass custom onChange if defined
-                                onChange: field.onChange
-                                  ? (e) => field.onChange(e, formik)
-                                  : undefined,
-                              },
-                              formik.values
-                            )}
-                          </FormGrid>
-                        ))}
+                        {updatedCreateLoanForm.map((field, index) => {
+                          // Respect field dependencies
+                          if (field.dependsOn && field.dependsOnValue) {
+                            const dependencyValue =
+                              formik.values[field.dependsOn];
+                            if (dependencyValue !== field.dependsOnValue) {
+                              return null;
+                            }
+                          }
+
+                          let helperText = field.helperText;
+                          if (field.dynamicHelperText && field.name) {
+                            const currentValue = formik.values[field.name];
+                            if (
+                              currentValue &&
+                              field.dynamicHelperText[currentValue]
+                            ) {
+                              helperText =
+                                field.dynamicHelperText[currentValue];
+                            }
+                          }
+
+                          return (
+                            <FormGrid
+                              size={{ xs: 12, md: field.span }}
+                              key={`${field.name}-${index}`}
+                            >
+                              {renderFormField(
+                                {
+                                  ...field,
+                                  helperText,
+                                  formik,
+                                  editing: true,
+                                  onChange: field.onChange
+                                    ? (e) => field.onChange(e, formik)
+                                    : undefined,
+                                },
+                                formik.values
+                              )}
+                            </FormGrid>
+                          );
+                        })}
                         {formik.values.loanProduct && (
                           <Box
                             sx={{

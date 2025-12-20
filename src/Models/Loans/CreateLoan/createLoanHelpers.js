@@ -145,6 +145,20 @@ export const fetchLoanProducts = async (institutionId, branchId) => {
                     }
                   }
                 }
+                loanFeesConfigs {
+                  items {
+                    loanFeesConfigId
+                    loanFeesConfig {
+                      id
+                      name
+                      calculationMethod
+                      category
+                      status
+                      percentageBase
+                      rate
+                    }
+                  }
+                }
               }
             }
           }

@@ -448,10 +448,14 @@ const EditLoanProduct = forwardRef(
           return {
             ...field,
             options: editMode
-              ? loanFees.map((fee) => ({
-                  value: fee.id,
-                  label: fee.name,
-                }))
+              ? loanFees
+                  .filter(
+                    (fee) => (fee?.status || "").toLowerCase() === "active"
+                  )
+                  .map((fee) => ({
+                    value: fee.id,
+                    label: fee.name,
+                  }))
               : viewLoanFees,
           };
         }

@@ -363,13 +363,17 @@ const LIST_BRANCHES_QUERY = `
 const LIST_LOAN_FEES_QUERY = `
   query ListLoanFeesConfigs($institutionId: ID!, $nextToken: String) {
     listLoanFeesConfigs(
-      filter: { institutionLoanFeesConfigsId: { eq: $institutionId } }
+      filter: {
+        institutionLoanFeesConfigsId: { eq: $institutionId }
+        status: { eq: "active" }
+      }
       limit: 100
       nextToken: $nextToken
     ) {
       items {
         id
         name
+        status
       }
       nextToken
     }
@@ -547,10 +551,12 @@ const CreateLoanProduct = forwardRef(
         if (field.name === "loanFees") {
           return {
             ...field,
-            options: loanFees.map((fee) => ({
-              value: fee.id,
-              label: fee.name,
-            })),
+            options: loanFees
+              .filter((fee) => (fee?.status || "").toLowerCase() === "active")
+              .map((fee) => ({
+                value: fee.id,
+                label: fee.name,
+              })),
           };
         }
         return field;

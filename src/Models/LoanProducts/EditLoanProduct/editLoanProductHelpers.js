@@ -164,13 +164,17 @@ export const LIST_BRANCHES_QUERY = `
 export const LIST_LOAN_FEES_QUERY = `
   query ListLoanFeesConfigs($institutionId: ID!, $nextToken: String) {
     listLoanFeesConfigs(
-      filter: { institutionLoanFeesConfigsId: { eq: $institutionId } }
+      filter: {
+        institutionLoanFeesConfigsId: { eq: $institutionId }
+        status: { eq: "active" }
+      }
       limit: 100
       nextToken: $nextToken
     ) {
       items {
         id
         name
+        status
       }
       nextToken
     }

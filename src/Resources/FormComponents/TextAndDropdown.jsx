@@ -49,6 +49,24 @@ const TextAndDropdown = ({
 
   ...otherProps
 }) => {
+  // Prevent passing validation/control props to DOM by removing them from nested prop bags
+  const {
+    validationType: _textValidationType,
+    validationPattern: _textValidationPattern,
+    validationMessage: _textValidationMessage,
+    maxLength: _textMaxLength,
+    minLength: _textMinLength,
+    ...sanitizedTextInputProps
+  } = textInputProps || {};
+
+  const {
+    validationType: _dropValidationType,
+    validationPattern: _dropValidationPattern,
+    validationMessage: _dropValidationMessage,
+    maxLength: _dropMaxLength,
+    minLength: _dropMinLength,
+    ...sanitizedDropdownProps
+  } = dropdownProps || {};
   const [textField, textMeta] = useField(textName);
   const [dropdownField, dropdownMeta, dropdownHelpers] = useField(dropdownName);
 
@@ -108,7 +126,7 @@ const TextAndDropdown = ({
         </Typography>
         <TextField
           {...textField}
-          {...textInputProps}
+          {...sanitizedTextInputProps}
           type={textType}
           fullWidth
           variant="filled"
@@ -197,7 +215,7 @@ const TextAndDropdown = ({
         >
           <Select
             {...dropdownField}
-            {...dropdownProps}
+            {...sanitizedDropdownProps}
             size="small"
             displayEmpty
             input={<StyledOutlinedInput />}

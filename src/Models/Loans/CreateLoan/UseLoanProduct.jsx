@@ -102,8 +102,7 @@ const buildValidationSchema = () => {
 const baseValidationSchema = buildValidationSchema();
 
 const renderFormField = (field, formikValues) => {
-  // Remove props that shouldn't be forwarded to DOM/MUI elements
-  const { dynamicHelperText, dynamicLabel, dynamicLabelMap, ...fieldProps } =
+  const { dynamicHelperText, dynamicLabel, dynamicLabelMap, ...rawProps } =
     field;
 
   // Handle dynamic labels used by createLoanForm
@@ -141,21 +140,54 @@ const renderFormField = (field, formikValues) => {
     }
   }
 
+  const pick = (obj, keys) =>
+    keys.reduce((acc, k) => {
+      if (obj && Object.prototype.hasOwnProperty.call(obj, k)) {
+        acc[k] = obj[k];
+      }
+      return acc;
+    }, {});
+
   switch (field.type) {
     case "text":
-    case "number":
+    case "number": {
+      const allowed = pick(rawProps, [
+        "name",
+        "type",
+        "placeholder",
+        "inputProps",
+        "slotProps",
+        "minLength",
+        "maxLength",
+        "readOnly",
+        "editing",
+        "disabled",
+        "required",
+        "onChange",
+      ]);
       return (
         <TextInput
-          {...fieldProps}
+          {...allowed}
           label={displayLabel}
           helperText={computedHelperText}
         />
       );
-    case "select":
+    }
+    case "select": {
+      const allowed = pick(rawProps, [
+        "name",
+        "options",
+        "required",
+        "readOnly",
+        "editing",
+        "disabled",
+        "placeholder",
+        "onChange",
+      ]);
       if (field.name === "borrower" || field.name === "loanProduct") {
         return (
           <DropDownSearchable
-            {...fieldProps}
+            {...allowed}
             label={displayLabel}
             helperText={computedHelperText}
             value={currentValueForField}
@@ -164,19 +196,31 @@ const renderFormField = (field, formikValues) => {
       }
       return (
         <Dropdown
-          {...fieldProps}
+          {...allowed}
           label={displayLabel}
           helperText={computedHelperText}
         />
       );
-    case "selectMultiple":
+    }
+    case "selectMultiple": {
+      const allowed = pick(rawProps, [
+        "name",
+        "options",
+        "required",
+        "readOnly",
+        "editing",
+        "disabled",
+        "placeholder",
+        "onChange",
+      ]);
       return (
         <Dropdown
-          {...fieldProps}
+          {...allowed}
           label={displayLabel}
           helperText={computedHelperText}
         />
       );
+    }
     case "orderedList":
       return (
         <OrderedList
@@ -192,30 +236,74 @@ const renderFormField = (field, formikValues) => {
       );
     case "label":
       return <FormLabel label={field.label} />;
-    case "radio":
-      return <RadioGroup {...fieldProps} helperText={computedHelperText} />;
-    case "textAndDropdown":
-      // Render text part with its explicit name
+    case "radio": {
+      const allowed = pick(rawProps, [
+        "name",
+        "options",
+        "required",
+        "readOnly",
+        "editing",
+        "disabled",
+        "onChange",
+      ]);
+      return <RadioGroup {...allowed} helperText={computedHelperText} />;
+    }
+    case "textAndDropdown": {
+      const allowed = pick(rawProps, [
+        "type",
+        "placeholder",
+        "inputProps",
+        "slotProps",
+        "minLength",
+        "maxLength",
+        "readOnly",
+        "editing",
+        "disabled",
+        "required",
+        "onChange",
+      ]);
+      allowed.name = field.textName;
       return (
         <TextInput
-          {...fieldProps}
-          name={field.textName}
+          {...allowed}
           label={displayLabel}
           helperText={computedHelperText}
         />
       );
-    case "textAndRadio":
+    }
+    case "textAndRadio": {
+      const allowed = pick(rawProps, [
+        "type",
+        "placeholder",
+        "inputProps",
+        "slotProps",
+        "minLength",
+        "maxLength",
+        "readOnly",
+        "editing",
+        "disabled",
+        "required",
+        "onChange",
+      ]);
+      allowed.name = field.textName;
       return (
         <TextInput
-          {...fieldProps}
-          name={field.textName}
+          {...allowed}
           label={displayLabel}
           helperText={computedHelperText}
         />
       );
-    default:
-      if (!fieldProps.name) return null;
-      return <TextInput {...fieldProps} />;
+    }
+    default: {
+      const allowed = pick(rawProps, [
+        "name",
+        "readOnly",
+        "editing",
+        "disabled",
+      ]);
+      if (!allowed.name) return null;
+      return <TextInput {...allowed} />;
+    }
   }
 };
 

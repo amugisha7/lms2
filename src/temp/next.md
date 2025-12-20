@@ -1,7 +1,6 @@
 - Create loans form. Also create from loan product.
-  - filter for loanproducts that belong to required branches; loop if necessary to get all.
-  - filter accounts and loanproducts for active only
-  - ensure loan creation is working well.
+  - filter accounts for active only
+  - ensure loan creation is working well. b
   - display loan draft after creation.
   - implement testing for when there is no data.
   - revise the borders and layout of the forms.

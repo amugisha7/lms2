@@ -102,9 +102,13 @@ const buildValidationSchema = () => {
 const baseValidationSchema = buildValidationSchema();
 
 const renderFormField = (field, formikValues) => {
+  // Remove props that shouldn't be forwarded to DOM/MUI elements
+  const { dynamicHelperText, dynamicLabel, dynamicLabelMap, ...fieldProps } =
+    field;
+
   // Handle dynamic labels used by createLoanForm
   let displayLabel = field.label;
-  if (field.dynamicLabel) {
+  if (dynamicLabel) {
     if (field.name === "calculateInterestOn") {
       displayLabel =
         formikValues.interestTypeMaturity === "fixed"
@@ -123,18 +127,56 @@ const renderFormField = (field, formikValues) => {
     }
   }
 
+  // Current value from Formik for this field
+  const currentValueForField = field.name
+    ? formikValues[field.name]
+    : undefined;
+
+  // Compute dynamic helper text if provided
+  let computedHelperText = field.helperText;
+  if (dynamicHelperText && field.name) {
+    const currentValue = formikValues[field.name];
+    if (currentValue && dynamicHelperText[currentValue]) {
+      computedHelperText = dynamicHelperText[currentValue];
+    }
+  }
+
   switch (field.type) {
     case "text":
     case "number":
-      return <TextInput {...field} label={displayLabel} />;
+      return (
+        <TextInput
+          {...fieldProps}
+          label={displayLabel}
+          helperText={computedHelperText}
+        />
+      );
     case "select":
       if (field.name === "borrower" || field.name === "loanProduct") {
-        return <DropDownSearchable {...field} label={displayLabel} />;
+        return (
+          <DropDownSearchable
+            {...fieldProps}
+            label={displayLabel}
+            helperText={computedHelperText}
+            value={currentValueForField}
+          />
+        );
       }
-      return <Dropdown {...field} label={displayLabel} />;
+      return (
+        <Dropdown
+          {...fieldProps}
+          label={displayLabel}
+          helperText={computedHelperText}
+        />
+      );
     case "selectMultiple":
-      // Use Dropdown for multi-selects via the existing component patterns
-      return <Dropdown {...field} label={displayLabel} />;
+      return (
+        <Dropdown
+          {...fieldProps}
+          label={displayLabel}
+          helperText={computedHelperText}
+        />
+      );
     case "orderedList":
       return (
         <OrderedList
@@ -143,7 +185,7 @@ const renderFormField = (field, formikValues) => {
           onChange={(newOrder) =>
             field.formik.setFieldValue(field.name, newOrder)
           }
-          helperText={field.helperText}
+          helperText={computedHelperText}
           required={field.required}
           editing={field.editing}
         />
@@ -151,15 +193,29 @@ const renderFormField = (field, formikValues) => {
     case "label":
       return <FormLabel label={field.label} />;
     case "radio":
-      return <RadioGroup {...field} />;
+      return <RadioGroup {...fieldProps} helperText={computedHelperText} />;
     case "textAndDropdown":
-      // Reuse TextInput + Dropdown components via the composite component used elsewhere
-      // createLoanForm already provides the correct props for this component in CreateLoan.jsx.
-      // Here, rely on the shared TextAndDropdown component if present in the form config.
-      // Fallback: render default.
-      return <TextInput {...field} label={displayLabel} />;
+      // Render text part with its explicit name
+      return (
+        <TextInput
+          {...fieldProps}
+          name={field.textName}
+          label={displayLabel}
+          helperText={computedHelperText}
+        />
+      );
+    case "textAndRadio":
+      return (
+        <TextInput
+          {...fieldProps}
+          name={field.textName}
+          label={displayLabel}
+          helperText={computedHelperText}
+        />
+      );
     default:
-      return <TextInput {...field} />;
+      if (!fieldProps.name) return null;
+      return <TextInput {...fieldProps} />;
   }
 };
 
@@ -324,10 +380,14 @@ const UseLoanProduct = forwardRef(
                     type: "select",
                     required: true,
                     span: 12,
-                    options: loanProducts.map((product) => ({
-                      value: product.id,
-                      label: product.name,
-                    })),
+                    options: (loanProducts || [])
+                      .filter(
+                        (p) => (p?.status || "").toLowerCase() === "active"
+                      )
+                      .map((product) => ({
+                        value: product.id,
+                        label: product.name,
+                      })),
                     helperText:
                       "Select a loan product to auto-populate fields.",
                     onChange: (e, formik) => {

@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from "react";
+import React, { useState, useContext, useEffect, useRef } from "react";
 import { Box, Tabs, Tab, Typography, useTheme, Grid } from "@mui/material";
 import CreateLoan from "./CreateLoan";
 import UseLoanProduct from "./UseLoanProduct";
@@ -15,6 +15,8 @@ export default function LoanCreationOptions(props) {
   const [loanProducts, setLoanProducts] = useState([]);
   const [loanProductsLoading, setLoanProductsLoading] = useState(true);
   const [selectedBorrower, setSelectedBorrower] = useState(null);
+  const borrowersFetchedRef = useRef(false);
+  const loanProductsFetchedRef = useRef(null); // store last fetched branch id
 
   useEffect(() => {
     const loadBorrowers = async () => {
@@ -23,9 +25,15 @@ export default function LoanCreationOptions(props) {
         return;
       }
 
+      if (borrowersFetchedRef.current) {
+        setBorrowersLoading(false);
+        return;
+      }
+
       try {
         const borrowersList = await fetchBorrowers(userDetails.branchUsersId);
         setBorrowers(borrowersList);
+        borrowersFetchedRef.current = true;
         // If a borrower was passed as prop, set it as selected
         if (props.borrower) {
           setSelectedBorrower(props.borrower);
@@ -42,16 +50,25 @@ export default function LoanCreationOptions(props) {
 
   useEffect(() => {
     const loadLoanProducts = async () => {
-      if (!userDetails?.institutionUsersId) {
+      // Require both institution and branch to determine branch-scoped products
+      if (!userDetails?.institutionUsersId || !userDetails?.branchUsersId) {
+        setLoanProductsLoading(false);
+        return;
+      }
+
+      // If we've already fetched for this branch, skip
+      if (loanProductsFetchedRef.current === userDetails.branchUsersId) {
         setLoanProductsLoading(false);
         return;
       }
 
       try {
         const productsList = await fetchLoanProducts(
-          userDetails.institutionUsersId
+          userDetails.institutionUsersId,
+          userDetails.branchUsersId
         );
         setLoanProducts(productsList);
+        loanProductsFetchedRef.current = userDetails.branchUsersId;
       } catch (err) {
         console.error("Error loading loan products:", err);
       } finally {
@@ -60,7 +77,7 @@ export default function LoanCreationOptions(props) {
     };
 
     loadLoanProducts();
-  }, [userDetails?.institutionUsersId]);
+  }, [userDetails?.institutionUsersId, userDetails?.branchUsersId]);
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);

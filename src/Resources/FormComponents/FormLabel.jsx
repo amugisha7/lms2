@@ -4,13 +4,17 @@ import { tokens } from "../../theme";
 
 const FormLabel = ({
   label,
+  children,
   sx = {},
   variant = "body2",
   fontWeight = 600,
   editing,
   onlyVisibleInCreate = false,
   isEditMode = false,
-  ...props
+  component,
+  htmlFor,
+  required,
+  ...rest
 }) => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
@@ -38,9 +42,11 @@ const FormLabel = ({
           fontWeight: fontWeight,
           color: "#ff9800;",
         }}
-        {...props}
+        component={component}
+        htmlFor={htmlFor}
+        aria-required={required}
       >
-        {label}
+        {label || children}
       </Typography>
     </Box>
   );

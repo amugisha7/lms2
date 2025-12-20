@@ -26,9 +26,9 @@ import {
   exportPaymentHistory,
 } from "./exportHelpers";
 
-const LoanDetail = ({ loanId, onClose }) => {
+const LoanDetail = ({ loanId, onClose, initialTab = 0 }) => {
   const [loan, setLoan] = useState(null);
-  const [tabValue, setTabValue] = useState(0);
+  const [tabValue, setTabValue] = useState(initialTab ?? 0);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const { userDetails } = useContext(UserContext);
 
@@ -53,6 +53,10 @@ const LoanDetail = ({ loanId, onClose }) => {
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
   };
+
+  useEffect(() => {
+    setTabValue(initialTab ?? 0);
+  }, [initialTab]);
 
   if (!loan) return <Typography>Loading...</Typography>;
 

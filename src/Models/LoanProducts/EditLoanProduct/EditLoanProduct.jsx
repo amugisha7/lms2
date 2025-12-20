@@ -470,6 +470,8 @@ const EditLoanProduct = forwardRef(
           userDetails,
           propInitialValues.id
         );
+        // Ensure status is explicitly present
+        input.status = values.status || input.status || "Active";
         console.log("API Mutation: updateLoanProduct", { input });
         const result = await updateLoanProduct(input);
 
@@ -538,6 +540,8 @@ const EditLoanProduct = forwardRef(
         // Construct the updated loan product with the complete data structure
         const updatedLoanProduct = {
           ...result, // Contains all the updated field values from the mutation
+          // Ensure status is present on the returned object
+          status: result?.status || input.status || "Active",
           branches: {
             items: values.branch
               ? values.branch.map((branchId) => {

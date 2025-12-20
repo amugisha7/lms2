@@ -3,12 +3,12 @@ import { generateClient } from "aws-amplify/api";
 import { listLoans } from "./loanHelpers";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
+import Button from "@mui/material/Button";
 import { UserContext } from "../../App";
 import CustomDataGrid from "../../ModelAssets/CustomDataGrid";
 import CustomSlider from "../../ModelAssets/CustomSlider";
 import DeleteDialog from "../../ModelAssets/DeleteDialog";
 import { useTheme } from "@mui/material/styles";
-import ClickableText from "../../ModelAssets/ClickableText";
 import CollectionsTemplate from "../../ModelAssets/CollectionsTemplate";
 import LoanDetail from "./LoanDetail";
 import ListBorrowers from "./CreateLoan/ListBorrowers";
@@ -67,6 +67,9 @@ export default function Loans() {
   const hasFetchedRef = React.useRef();
   const { userDetails } = React.useContext(UserContext);
   const theme = useTheme();
+  const [loanDetailOpen, setLoanDetailOpen] = React.useState(false);
+  const [detailLoanRow, setDetailLoanRow] = React.useState(null);
+  const [detailInitialTab, setDetailInitialTab] = React.useState(0);
 
   const fetchLoans = async () => {
     if (!userDetails?.branchUsersId) return;
@@ -265,6 +268,28 @@ export default function Loans() {
     handleCreateDialogClose();
   };
 
+  const openLoanDetail = (row, tab = 0) => {
+    setDetailLoanRow(row);
+    setDetailInitialTab(tab);
+    setLoanDetailOpen(true);
+  };
+
+  const closeLoanDetail = () => {
+    setLoanDetailOpen(false);
+    setDetailLoanRow(null);
+    setDetailInitialTab(0);
+  };
+
+  const handleViewStatementClick = (event, row) => {
+    event?.stopPropagation();
+    openLoanDetail(row, 0);
+  };
+
+  const handleMakePaymentClick = (event, row) => {
+    event?.stopPropagation();
+    openLoanDetail(row, 1);
+  };
+
   // Updated columns to show relevant loan information
   const columns = [
     {
@@ -314,6 +339,36 @@ export default function Loans() {
         return params.value || "N/A";
       },
     },
+    {
+      field: "actions",
+      headerName: "Actions",
+      width: 220,
+      sortable: false,
+      renderCell: (params) => (
+        <Box
+          sx={{
+            display: "flex",
+            gap: 1,
+            flexWrap: "wrap",
+          }}
+        >
+          <Button
+            size="small"
+            variant="outlined"
+            onClick={(event) => handleViewStatementClick(event, params.row)}
+          >
+            Statement
+          </Button>
+          <Button
+            size="small"
+            variant="contained"
+            onClick={(event) => handleMakePaymentClick(event, params.row)}
+          >
+            Pay
+          </Button>
+        </Box>
+      ),
+    },
   ];
 
   return (
@@ -349,15 +404,30 @@ export default function Loans() {
         deleteLoading={deleteLoading}
         deleteError={deleteError}
         deleteDialogRow={deleteDialogRow}
+      ></CollectionsTemplate>
+
+      <CustomSlider
+        open={loanDetailOpen}
+        onClose={closeLoanDetail}
+        title={
+          detailLoanRow
+            ? `Loan ${detailLoanRow.loanNumber || detailLoanRow.id}`
+            : "Loan Detail"
+        }
+        showEdit={false}
+        showDelete={false}
+        showPdf={false}
+        maxWidth="lg"
+        fullWidth
       >
-        {/* Edit Dialog - using CollectionsTemplate's EditFormComponent would require adapting EditLoan */}
-        {editDialogRow && (
+        {detailLoanRow && (
           <LoanDetail
-            loanId={editDialogRow.id}
-            onClose={handleEditDialogClose}
+            loanId={detailLoanRow.id}
+            onClose={closeLoanDetail}
+            initialTab={detailInitialTab}
           />
         )}
-      </CollectionsTemplate>
+      </CustomSlider>
 
       {/* Borrower Selection Slider */}
       <CustomSlider
@@ -376,11 +446,11 @@ export default function Loans() {
         />
       </CustomSlider>
 
-      {/* Loan Creation Options Slider */}
+      {/* Loan Creation Options Slider (omit title when showing create form inside) */}
       <CustomSlider
         open={createDialogOpen}
         onClose={handleCreateDialogClose}
-        title="Create Loan"
+        /* title intentionally omitted so CreateLoan can control its heading */
         showEdit={false}
         showDelete={false}
         maxWidth="md"

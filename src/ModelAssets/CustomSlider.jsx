@@ -268,6 +268,11 @@ export default function CustomSlider({
   const colorMode = useContext(ColorModeContext);
   const { editClicked, setEditClicked } = useContext(EditClickedContext) || {};
   const printableRef = useRef(null);
+  // Hide title when mounted children include the CreateLoan component
+  const shouldHideTitle = React.Children.toArray(children).some((child) =>
+    React.isValidElement(child) &&
+    (child.type && (child.type.displayName === "CreateLoan" || child.type.name === "CreateLoan"))
+  );
 
   return (
     <Drawer
@@ -299,17 +304,19 @@ export default function CustomSlider({
         }}
         className="slider-header"
       >
-        <Typography
-          variant="h5"
-          sx={{
-            fontWeight: 600,
-            textTransform: "none",
-            width: { xs: "90%", sm: "auto" },
-            pr: { xs: 2, sm: 0 },
-          }}
-        >
-          {title}
-        </Typography>
+        {!shouldHideTitle && (
+          <Typography
+            variant="h5"
+            sx={{
+              fontWeight: 600,
+              textTransform: "none",
+              width: { xs: "90%", sm: "auto" },
+              pr: { xs: 2, sm: 0 },
+            }}
+          >
+            {title}
+          </Typography>
+        )}
         <Box
           sx={{
             display: "flex",

@@ -1,9 +1,9 @@
 import React, {
   useState,
   forwardRef,
-  useImperativeHandle,
   useEffect,
   useContext,
+  useRef,
 } from "react";
 import { Formik, Form } from "formik";
 import * as Yup from "yup";
@@ -246,8 +246,12 @@ const CreateLoan = forwardRef(
     const [submitSuccess, setSubmitSuccess] = useState("");
     const [accounts, setAccounts] = useState([]);
     const [accountsLoading, setAccountsLoading] = useState(false);
+    const accountsFetchedRef = useRef(false);
+    const accountsInstitutionIdRef = useRef(null);
     const [loanFeesConfigs, setLoanFeesConfigs] = useState([]);
     const [loanFeesLoading, setLoanFeesLoading] = useState(false);
+    const loanFeesFetchedRef = useRef(false);
+    const loanFeesInstitutionIdRef = useRef(null);
     const client = React.useMemo(() => generateClient(), []);
 
     // Helper function to format loan fee amount display
@@ -281,11 +285,20 @@ const CreateLoan = forwardRef(
     }, []);
 
     useEffect(() => {
-      if (userDetails?.institutionUsersId) {
+      const currentInstitutionId = userDetails?.institutionUsersId;
+      if (
+        currentInstitutionId &&
+        currentInstitutionId !== accountsInstitutionIdRef.current
+      ) {
+        accountsFetchedRef.current = false;
+        accountsInstitutionIdRef.current = currentInstitutionId;
+      }
+      if (!accountsFetchedRef.current && currentInstitutionId) {
         setAccountsLoading(true);
-        fetchAccounts(userDetails.institutionUsersId)
+        fetchAccounts(currentInstitutionId)
           .then((data) => {
             setAccounts(data);
+            accountsFetchedRef.current = true;
           })
           .catch((err) => {
             console.error("Error fetching accounts:", err);
@@ -297,11 +310,20 @@ const CreateLoan = forwardRef(
     }, [userDetails?.institutionUsersId]);
 
     useEffect(() => {
-      if (userDetails?.institutionUsersId) {
+      const currentInstitutionId = userDetails?.institutionUsersId;
+      if (
+        currentInstitutionId &&
+        currentInstitutionId !== loanFeesInstitutionIdRef.current
+      ) {
+        loanFeesFetchedRef.current = false;
+        loanFeesInstitutionIdRef.current = currentInstitutionId;
+      }
+      if (!loanFeesFetchedRef.current && currentInstitutionId) {
         setLoanFeesLoading(true);
-        fetchLoanFeesConfig(userDetails.institutionUsersId)
+        fetchLoanFeesConfig(currentInstitutionId)
           .then((data) => {
             setLoanFeesConfigs(data);
+            loanFeesFetchedRef.current = true;
           })
           .catch((err) => {
             console.error("Error fetching loan fees configs:", err);

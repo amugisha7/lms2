@@ -92,7 +92,7 @@ export const fetchBorrowers = async (branchId) => {
   }
 };
 
-export const fetchLoanProducts = async (institutionId) => {
+export const fetchLoanProducts = async (institutionId, branchId) => {
   const client = generateClient();
   let allLoanProductsList = [];
   let nextToken = null;
@@ -104,7 +104,7 @@ export const fetchLoanProducts = async (institutionId) => {
         institutionId,
         nextToken,
       });
-      const result = await client.graphql({
+        const result = await client.graphql({
         query: `
           query ListLoanProducts($institutionId: ID!, $nextToken: String) {
             listLoanProducts(
@@ -116,6 +116,7 @@ export const fetchLoanProducts = async (institutionId) => {
               items {
                 id
                 name
+                status
                 calculateInterestOn
                 durationPeriod
                 extendLoanAfterMaturity
@@ -136,6 +137,13 @@ export const fetchLoanProducts = async (institutionId) => {
                 termDurationDefault
                 termDurationMax
                 termDurationMin
+                branches {
+                  items {
+                    branch {
+                      id
+                    }
+                  }
+                }
               }
             }
           }
@@ -158,6 +166,15 @@ export const fetchLoanProducts = async (institutionId) => {
       }
       nextToken = newNextToken;
     }
+    // If branchId provided, filter products to those associated with the branch
+    if (branchId) {
+      const filtered = allLoanProductsList.filter((p) => {
+        const branchItems = p?.branches?.items || [];
+        return branchItems.some((bi) => bi?.branch?.id === branchId);
+      });
+      return filtered;
+    }
+
     return allLoanProductsList;
   } catch (err) {
     console.error("Error fetching loan products:", err);

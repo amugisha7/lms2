@@ -78,7 +78,7 @@ export const associateBranchWithLoanProduct = async (loanProductId, branchId) =>
 export const buildLoanProductInput = (values, userDetails) => ({
   institutionLoanProductsId: userDetails.institutionUsersId,
   name: values.name,
-  status: values.status,
+  status: values.status || "Active",
   description: "",
   principalAmountMin: values.minPrincipal ? Number(values.minPrincipal) : null,
   principalAmountMax: values.maxPrincipal ? Number(values.maxPrincipal) : null,

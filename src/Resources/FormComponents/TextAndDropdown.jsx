@@ -84,7 +84,6 @@ const TextAndDropdown = ({
           }`,
         pb: editing ? 1 : 0,
       }}
-      {...otherProps}
     >
       {/* Text Input - 50% width */}
       <Box
@@ -110,7 +109,6 @@ const TextAndDropdown = ({
         <TextField
           {...textField}
           {...textInputProps}
-          {...otherProps}
           type={textType}
           fullWidth
           variant="filled"

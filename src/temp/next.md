@@ -1,7 +1,5 @@
 - Create loans form. Also create from loan product.
-  - filter accounts for active only
-  - ensure loan creation is working well. b
-  - display loan draft after creation.
-  - implement testing for when there is no data.
-  - revise the borders and layout of the forms.
+  - create loan schedule layout.
+  * implement testing for when there is no data.
+  * revise the borders and layout of the forms.
 -

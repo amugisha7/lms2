@@ -586,6 +586,29 @@ const CreateLoan = forwardRef(
               return formFields;
             })();
 
+            const totalLoanFee = (() => {
+              const values = formik.values;
+              if (values.loanFeesType === "custom") {
+                return parseFloat(values.customLoanFeeAmount) || 0;
+              }
+              if (values.loanFeesType === "standard" && values.loanFees) {
+                const config = loanFeesConfigs.find(
+                  (c) => c.id === values.loanFees
+                );
+                if (config) {
+                  if (config.feeType === "fixed") {
+                    return parseFloat(config.feeAmount) || 0;
+                  } else if (config.feeType === "percentage") {
+                    const principal = parseFloat(values.principalAmount) || 0;
+                    return (
+                      (principal * parseFloat(config.feePercentage || 0)) / 100
+                    );
+                  }
+                }
+              }
+              return 0;
+            })();
+
             return (
               <Form>
                 <WorkingOverlay
@@ -596,7 +619,7 @@ const CreateLoan = forwardRef(
                 <CustomPopUp
                   open={scheduleOpen}
                   onClose={() => setScheduleOpen(false)}
-                  title="Loan Schedule"
+                  title="Draft Loan Schedule"
                   showEdit={false}
                   showDelete={false}
                   maxWidth="lg"
@@ -612,6 +635,7 @@ const CreateLoan = forwardRef(
                     onSaveDraft={() => formik.submitForm()}
                     onSendForApproval={handleSendForApproval}
                     onConfirmCreateLoan={handleConvertToLoan}
+                    totalLoanFee={totalLoanFee}
                   />
                 </CustomPopUp>
 

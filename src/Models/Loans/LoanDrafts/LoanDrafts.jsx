@@ -220,7 +220,7 @@ export default function LoanDrafts() {
         headerName: "Last Edited",
         width: 180,
         valueGetter: (value) =>
-          value ? dayjs(value).format("YYYY-MM-DD HH:mm") : "",
+          value ? dayjs(value).format("DD-MMM-YYYY HH:mm") : "",
       },
       {
         field: "actions",

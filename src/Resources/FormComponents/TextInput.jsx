@@ -2,6 +2,80 @@ import React from "react";
 import { Box, TextField, Typography } from "@mui/material";
 import { useField } from "formik";
 
+const stripCommas = (value) => String(value ?? "").replace(/,/g, "");
+
+const sanitizeNumericInput = (value) => {
+  const raw = stripCommas(value);
+  if (raw === "") return "";
+
+  // Keep only digits, one leading '-', and one '.'
+  let out = "";
+  let sawDot = false;
+  for (let i = 0; i < raw.length; i += 1) {
+    const ch = raw[i];
+    if (ch >= "0" && ch <= "9") {
+      out += ch;
+      continue;
+    }
+    if (ch === "-" && out.length === 0) {
+      out += ch;
+      continue;
+    }
+    if (ch === "." && !sawDot) {
+      out += ch;
+      sawDot = true;
+      continue;
+    }
+  }
+
+  // Allow partial values like '-', '.', '-.'
+  if (out === "-" || out === "." || out === "-.") return out;
+
+  // Ensure the remaining structure still looks like a number
+  if (!/^-?\d*(\.\d*)?$/.test(out)) return "";
+  return out;
+};
+
+const formatNumberWithCommas = (value) => {
+  const raw = stripCommas(value);
+  if (raw === "") return "";
+
+  // Don't force-format incomplete values
+  if (raw === "-" || raw === "." || raw === "-." || raw.endsWith(".")) {
+    const withoutTrailingDot = raw.endsWith(".") ? raw.slice(0, -1) : raw;
+    const formattedBase = formatNumberWithCommas(withoutTrailingDot);
+    return raw.endsWith(".") ? `${formattedBase}.` : formattedBase;
+  }
+
+  const isNegative = raw.startsWith("-");
+  const unsigned = isNegative ? raw.slice(1) : raw;
+  const [intPart = "", decPart] = unsigned.split(".");
+
+  // Format integer part without converting to Number (avoids precision loss for large values)
+  const intDigits =
+    intPart.replace(/^0+(?=\d)/, "") || (intPart === "" ? "" : "0");
+  const formattedInt = intDigits
+    ? intDigits.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+    : "";
+
+  const withDecimals =
+    decPart !== undefined ? `${formattedInt}.${decPart}` : formattedInt;
+  const signed = isNegative ? `-${withDecimals}` : withDecimals;
+  return signed;
+};
+
+const caretIndexFromStrippedLength = (formatted, strippedLen) => {
+  if (!formatted) return 0;
+  if (!Number.isFinite(strippedLen) || strippedLen <= 0) return 0;
+  let count = 0;
+  for (let i = 0; i < formatted.length; i += 1) {
+    if (formatted[i] === ",") continue;
+    count += 1;
+    if (count >= strippedLen) return i + 1;
+  }
+  return formatted.length;
+};
+
 const TextInput = ({
   label,
   name,
@@ -25,8 +99,19 @@ const TextInput = ({
   defaultValue, // extract to prevent passing to TextField
   ...props
 }) => {
-  const [field, meta] = useField(name);
+  const [field, meta, helpers] = useField(name);
   const isReadOnly = readOnly || editing === false || disabled;
+  const isNumberType = type === "number";
+  const [isFocused, setIsFocused] = React.useState(false);
+  const [focusedDisplayValue, setFocusedDisplayValue] = React.useState("");
+  const inputRef = React.useRef(null);
+
+  const rawValue = field.value ?? "";
+  const displayValue = React.useMemo(() => {
+    if (!isNumberType) return rawValue;
+    if (isFocused && !isReadOnly) return focusedDisplayValue;
+    return formatNumberWithCommas(rawValue);
+  }, [focusedDisplayValue, isFocused, isNumberType, isReadOnly, rawValue]);
 
   // Merge consumer-provided slotProps with our readOnly and inputProps, plus min/max length
   const mergedSlotProps = {
@@ -37,6 +122,7 @@ const TextInput = ({
       ...(minLength !== undefined ? { minLength } : {}),
       ...(maxLength !== undefined ? { maxLength } : {}),
       readOnly: isReadOnly,
+      ...(isNumberType ? { inputMode: "decimal" } : {}),
     },
   };
 
@@ -74,11 +160,64 @@ const TextInput = ({
         {...field}
         {...props}
         // label={label}
-        type={type}
+        type={isNumberType ? "text" : type}
         fullWidth
         variant="filled"
         placeholder={placeholder}
         required={required}
+        value={displayValue}
+        inputRef={inputRef}
+        onFocus={(e) => {
+          setIsFocused(true);
+          if (isNumberType) {
+            setFocusedDisplayValue(formatNumberWithCommas(rawValue));
+          }
+          props?.onFocus?.(e);
+        }}
+        onBlur={(e) => {
+          setIsFocused(false);
+          field.onBlur(e);
+          if (isNumberType) {
+            setFocusedDisplayValue("");
+          }
+          props?.onBlur?.(e);
+        }}
+        onChange={(e) => {
+          if (!isNumberType) {
+            field.onChange(e);
+            return;
+          }
+          const currentInput = e.target.value;
+          const caret = e.target.selectionStart ?? currentInput.length;
+          const strippedLenBeforeCaret = stripCommas(
+            currentInput.slice(0, caret)
+          ).length;
+
+          const nextRaw = sanitizeNumericInput(currentInput);
+          helpers.setValue(nextRaw);
+
+          const nextFormatted = formatNumberWithCommas(nextRaw);
+          setFocusedDisplayValue(nextFormatted);
+
+          // Restore caret based on logical (comma-stripped) position.
+          const targetStrippedLen = Math.min(
+            strippedLenBeforeCaret,
+            stripCommas(nextFormatted).length
+          );
+          const nextCaret = caretIndexFromStrippedLength(
+            nextFormatted,
+            targetStrippedLen
+          );
+          setTimeout(() => {
+            const el = inputRef.current;
+            if (!el || typeof el.setSelectionRange !== "function") return;
+            try {
+              el.setSelectionRange(nextCaret, nextCaret);
+            } catch {
+              // ignore
+            }
+          }, 0);
+        }}
         error={isReadOnly ? false : meta.touched && Boolean(meta.error)} // hide error state when read-only
         helperText={
           isReadOnly

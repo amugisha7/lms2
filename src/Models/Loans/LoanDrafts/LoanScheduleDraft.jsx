@@ -13,20 +13,16 @@ import {
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import PlusButtonMain from "../../../ModelAssets/PlusButtonMain";
+import WorkingOverlay from "../../../ModelAssets/WorkingOverlay";
 import { generateSchedulePreviewFromDraftValues } from "../loanComputations";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
-
-const money = (n, currency = "") => {
-  const num = Number(n);
-  if (!Number.isFinite(num)) return "";
-  return `${currency}${num.toFixed(2)}`;
-};
+import { formatMoneyParts } from "../../../Resources/formatting";
 
 const fmtDate = (d) => {
   if (!d) return "";
   const parsed = dayjs(d);
-  return parsed.isValid() ? parsed.format("YYYY-MM-DD") : String(d);
+  return parsed.isValid() ? parsed.format("DD-MMM-YYYY") : String(d);
 };
 
 const chunk = (items, size) => {
@@ -50,9 +46,42 @@ export default function LoanScheduleDraft({
   onSaveDraft,
   onSendForApproval,
   onConfirmCreateLoan,
+  totalLoanFee = 0,
 }) {
   const theme = useTheme();
   const printAreaRef = React.useRef(null);
+  const [exportingPdf, setExportingPdf] = React.useState(false);
+
+  const currencyCode = userDetails?.institution?.currencyCode;
+
+  const Money = ({ value }) => {
+    const parts = formatMoneyParts(value, currency, currencyCode);
+    if (!parts?.number) return "";
+    return (
+      <Box
+        component="span"
+        sx={{
+          whiteSpace: "nowrap",
+          display: "inline-flex",
+          alignItems: "baseline",
+        }}
+      >
+        {parts.prefix ? (
+          <Box
+            component="span"
+            sx={{
+              fontSize: "0.8em",
+              verticalAlign: "baseline",
+              marginRight: "2px",
+            }}
+          >
+            {parts.prefix}
+          </Box>
+        ) : null}
+        <Box component="span">{parts.number}</Box>
+      </Box>
+    );
+  };
 
   const institutionName = userDetails?.institution?.name || "";
   const branchName = userDetails?.branch?.name || "Main Branch";
@@ -71,6 +100,17 @@ export default function LoanScheduleDraft({
 
   const draftRecord = draftValues || {};
 
+  const startDateLabel = React.useMemo(() => {
+    const raw = draftRecord?.loanStartDate || draftRecord?.startDate;
+    return raw ? fmtDate(raw) : "";
+  }, [draftRecord?.loanStartDate, draftRecord?.startDate]);
+
+  const maturityDateLabel = React.useMemo(() => {
+    if (!installments.length) return "";
+    const lastDue = installments[installments.length - 1]?.dueDate;
+    return lastDue ? fmtDate(lastDue) : "";
+  }, [installments]);
+
   const borrowerLabel = React.useMemo(() => {
     if (borrower) {
       return (
@@ -85,38 +125,32 @@ export default function LoanScheduleDraft({
     return draftRecord?.borrower || loanDraft?.borrowerID || "";
   }, [borrower, loanDraft?.borrowerID, draftRecord?.borrower]);
 
-  const rowsFirstPage = 18;
-  const rowsOtherPages = 26;
+  const rowsPerPage = 25;
 
   const pages = React.useMemo(() => {
     if (!installments.length) return [];
-    const first = installments.slice(0, rowsFirstPage);
-    const rest = installments.slice(rowsFirstPage);
-    const restPages = chunk(rest, rowsOtherPages);
-    return [first, ...restPages];
+    return chunk(installments, rowsPerPage);
   }, [installments]);
 
   const totalPages = Math.max(pages.length, 1);
 
   const handleExportPdf = async () => {
+    if (exportingPdf) return;
     if (!printAreaRef.current) return;
 
-    const element = printAreaRef.current;
-    const originalOverflow = element.style.overflow;
+    const container = printAreaRef.current;
 
+    setExportingPdf(true);
     try {
-      // Ensure full content is capturable (no clipping due to scroll containers)
-      element.style.overflow = "visible";
-      await new Promise((r) => setTimeout(r, 50));
+      // Allow React to paint the overlay and stabilize DOM before snapshotting.
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+      await new Promise((resolve) => requestAnimationFrame(resolve));
 
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: "#ffffff",
-        logging: false,
-        windowWidth: element.scrollWidth || undefined,
-        windowHeight: element.scrollHeight || undefined,
-      });
+      const getPageElements = () =>
+        Array.from(container.querySelectorAll(".page") || []);
+
+      const pageElements = getPageElements();
+      if (!pageElements.length) return;
 
       // A4 portrait in mm
       const pdf = new jsPDF({
@@ -127,55 +161,44 @@ export default function LoanScheduleDraft({
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
 
-      // Margins
-      const marginX = 10;
-      const marginY = 10;
-      const availableWidth = pageWidth - marginX * 2;
-      const availableHeight = pageHeight - marginY * 2;
+      // Process each page sequentially using html2canvas
+      for (let i = 0; i < pageElements.length; i++) {
+        const freshPages = getPageElements();
+        const pageElement = freshPages[i];
+        if (!pageElement) continue;
 
-      // Scale canvas width to fit page width; compute px per mm
-      const pxPerMm = canvas.width / availableWidth;
-      const pageSliceHeightPx = Math.floor(availableHeight * pxPerMm);
+        // Capture the page as a canvas image
+        const canvas = await html2canvas(pageElement, {
+          scale: 2, // Higher resolution for better quality
+          useCORS: true,
+          logging: false,
+          backgroundColor: "#ffffff",
+          onclone: (clonedDoc) => {
+            // Ensure backdrops/overlays don't get captured in the snapshot.
+            const backdrops = clonedDoc.querySelectorAll(".MuiBackdrop-root");
+            backdrops.forEach((node) => node.remove());
+          },
+        });
 
-      let offsetPx = 0;
-      let pageIndex = 0;
-      while (offsetPx < canvas.height) {
-        if (pageIndex > 0) pdf.addPage();
+        const imgData = canvas.toDataURL("image/png");
 
-        const sliceHeightPx = Math.min(
-          pageSliceHeightPx,
-          canvas.height - offsetPx
-        );
-        const sliceCanvas = document.createElement("canvas");
-        sliceCanvas.width = canvas.width;
-        sliceCanvas.height = sliceHeightPx;
+        // Calculate dimensions to fit A4 while maintaining aspect ratio
+        const imgWidth = pageWidth;
+        const imgHeight = (canvas.height * pageWidth) / canvas.width;
 
-        const ctx = sliceCanvas.getContext("2d");
-        ctx.drawImage(
-          canvas,
-          0,
-          offsetPx,
-          canvas.width,
-          sliceHeightPx,
-          0,
-          0,
-          canvas.width,
-          sliceHeightPx
-        );
+        // Add new page only after the first one
+        if (i > 0) {
+          pdf.addPage();
+        }
 
-        const imgData = sliceCanvas.toDataURL("image/jpeg", 1.0);
-        const sliceHeightMm = sliceHeightPx / pxPerMm;
         pdf.addImage(
           imgData,
-          "JPEG",
-          marginX,
-          marginY,
-          availableWidth,
-          sliceHeightMm
+          "PNG",
+          0,
+          0,
+          imgWidth,
+          Math.min(imgHeight, pageHeight)
         );
-
-        offsetPx += sliceHeightPx;
-        pageIndex += 1;
       }
 
       const filename = `LoanSchedule_${borrowerLabel || "Draft"}.pdf`;
@@ -183,7 +206,7 @@ export default function LoanScheduleDraft({
     } catch (e) {
       console.error("Failed to export PDF:", e);
     } finally {
-      element.style.overflow = originalOverflow;
+      setExportingPdf(false);
     }
   };
 
@@ -204,6 +227,9 @@ export default function LoanScheduleDraft({
         "@media print": {
           boxShadow: "none",
           m: 0,
+          width: "210mm",
+          height: "297mm",
+          breakAfter: "page",
         },
       }}
     >
@@ -215,9 +241,7 @@ export default function LoanScheduleDraft({
             variant="caption"
             sx={{ color: theme.palette.common.black }}
           >
-            {draftRecord?.loanStartDate
-              ? `Start Date: ${fmtDate(draftRecord.loanStartDate)}`
-              : ""}
+            Made with LOAN MANAGEMENT SOFTWARE from www.LoanTabs.com
           </Typography>
           <Typography
             variant="caption"
@@ -233,19 +257,23 @@ export default function LoanScheduleDraft({
   const SummaryBlock = () => (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
       <Typography
-        variant="h6"
-        sx={{ fontWeight: 700, color: theme.palette.common.black }}
-      >
-        LOAN REPAYMENT SCHEDULE
-      </Typography>
-      <Typography
         variant="body2"
         className="muted"
-        sx={{ color: theme.palette.common.black }}
+        sx={{ color: theme.palette.common.black, textAlign: "right" }}
       >
         {institutionName ? institutionName : ""}
         {institutionName ? " — " : ""}
         {branchName}
+      </Typography>
+      <Typography
+        variant="h6"
+        sx={{
+          fontWeight: 700,
+          color: theme.palette.common.black,
+          fontSize: "1.3rem",
+        }}
+      >
+        LOAN REPAYMENT SCHEDULE
       </Typography>
       <Divider sx={{ borderColor: theme.palette.common.black }} />
 
@@ -263,14 +291,12 @@ export default function LoanScheduleDraft({
           >
             <strong>Borrower:</strong> {borrowerLabel}
           </Typography>
-        </Box>
-        <Box>
           <Typography
             variant="body2"
             sx={{ color: theme.palette.common.black }}
           >
             <strong>Principal:</strong>{" "}
-            {money(draftRecord?.principalAmount, currency)}
+            <Money value={draftRecord?.principalAmount} />
           </Typography>
           <Typography
             variant="body2"
@@ -278,6 +304,28 @@ export default function LoanScheduleDraft({
           >
             <strong>Interest:</strong> {draftRecord?.interestRate ?? ""}
             {draftRecord?.interestType === "percentage" ? "%" : ""}
+          </Typography>
+          {totalLoanFee > 0 && (
+            <Typography
+              variant="body2"
+              sx={{ color: theme.palette.common.black }}
+            >
+              <strong>Loan Fee:</strong> <Money value={totalLoanFee} />
+            </Typography>
+          )}
+        </Box>
+        <Box>
+          <Typography
+            variant="body2"
+            sx={{ color: theme.palette.common.black }}
+          >
+            <strong>Start Date:</strong> {startDateLabel}
+          </Typography>
+          <Typography
+            variant="body2"
+            sx={{ color: theme.palette.common.black }}
+          >
+            <strong>Maturity Date:</strong> {maturityDateLabel}
           </Typography>
           <Typography
             variant="body2"
@@ -288,24 +336,12 @@ export default function LoanScheduleDraft({
               draftRecord?.durationPeriod || ""
             }`.trim()}
           </Typography>
-          <Typography
-            variant="body2"
-            sx={{ color: theme.palette.common.black }}
-          >
-            <strong>Repayment:</strong>{" "}
-            {`${draftRecord?.repaymentFrequencyType || ""} ${
-              draftRecord?.repaymentFrequency || ""
-            }`.trim()}
-          </Typography>
         </Box>
       </Box>
 
       <Box sx={{ mt: 0.5 }}>
         <Typography variant="body2" sx={{ color: theme.palette.common.black }}>
-          <strong>Totals:</strong> Principal{" "}
-          {money(totals?.totalPrincipal, currency)}
-          {"  "}• Interest {money(totals?.totalInterest, currency)}
-          {"  "}• Payable {money(totals?.totalPayable, currency)}
+          <strong>Payment schedule:</strong>
         </Typography>
       </Box>
     </Box>
@@ -352,6 +388,22 @@ export default function LoanScheduleDraft({
         }}
       >
         <TableHead>
+          {totalLoanFee > 0 ? (
+            <TableRow>
+              <TableCell
+                colSpan={6}
+                sx={{
+                  color: theme.palette.common.black,
+                  fontWeight: 700,
+                  borderBottom: 0,
+                  pb: 0.5,
+                }}
+                align="right"
+              >
+                Loan Fee: <Money value={totalLoanFee} />
+              </TableCell>
+            </TableRow>
+          ) : null}
           <TableRow>
             <TableCell
               sx={{ color: theme.palette.common.black, fontWeight: 700 }}
@@ -402,25 +454,25 @@ export default function LoanScheduleDraft({
                 sx={{ color: theme.palette.common.black }}
                 align="right"
               >
-                {money(inst?.principalDue, currency)}
+                <Money value={inst?.principalDue} />
               </TableCell>
               <TableCell
                 sx={{ color: theme.palette.common.black }}
                 align="right"
               >
-                {money(inst?.interestDue, currency)}
+                <Money value={inst?.interestDue} />
               </TableCell>
               <TableCell
                 sx={{ color: theme.palette.common.black }}
                 align="right"
               >
-                {money(inst?.totalDue, currency)}
+                <Money value={inst?.totalDue} />
               </TableCell>
               <TableCell
                 sx={{ color: theme.palette.common.black }}
                 align="right"
               >
-                {money(inst?.balanceAfter, currency)}
+                <Money value={inst?.balanceAfter} />
               </TableCell>
             </TableRow>
           ))}
@@ -482,6 +534,7 @@ export default function LoanScheduleDraft({
           variant="outlined"
           startIcon={null}
           onClick={handleExportPdf}
+          disabled={exportingPdf}
         />
         <PlusButtonMain
           buttonText="SEND FOR APPROVAL"
@@ -499,51 +552,31 @@ export default function LoanScheduleDraft({
         />
       </Box>
 
+      <WorkingOverlay open={exportingPdf} message="Exporting PDF..." />
+
       <Box
         ref={printAreaRef}
         sx={{
           display: "flex",
           flexDirection: "column",
           gap: 2,
-          alignItems: "center",
+          backgroundColor: theme.palette.grey[100],
+          alignItems: { xs: "flex-start", md: "center" },
           maxWidth: "100%",
           overflowX: "auto",
           WebkitOverflowScrolling: "touch",
           "@media print": {
             gap: 0,
             overflowX: "visible",
+            backgroundColor: "transparent",
           },
         }}
       >
         {pages.map((rows, pageIdx) => {
-          const startIndex =
-            pageIdx === 0 ? 0 : rowsFirstPage + (pageIdx - 1) * rowsOtherPages;
+          const startIndex = pageIdx * rowsPerPage;
           return (
             <A4Page key={`page-${pageIdx}`} pageNumber={pageIdx + 1}>
-              {pageIdx === 0 ? (
-                <SummaryBlock />
-              ) : (
-                <Box
-                  sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}
-                >
-                  <Typography
-                    variant="h6"
-                    sx={{ fontWeight: 700, color: theme.palette.common.black }}
-                  >
-                    Loan Draft Repayment Schedule
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    className="muted"
-                    sx={{ color: theme.palette.common.black }}
-                  >
-                    {institutionName ? institutionName : ""}
-                    {institutionName ? " — " : ""}
-                    {branchName}
-                  </Typography>
-                  <Divider sx={{ borderColor: theme.palette.common.black }} />
-                </Box>
-              )}
+              {pageIdx === 0 ? <SummaryBlock /> : null}
               <ScheduleTable rows={rows} startIndex={startIndex} />
             </A4Page>
           );

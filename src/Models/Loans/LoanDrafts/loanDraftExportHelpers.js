@@ -1,4 +1,5 @@
 import jsPDF from "jspdf";
+import { formatMoney } from "../../../Resources/formatting";
 
 const parseAwsJson = (value) => {
   if (!value) return null;
@@ -11,13 +12,12 @@ const parseAwsJson = (value) => {
   }
 };
 
-const money = (n, currency = "") => {
-  const num = Number(n);
-  if (!Number.isFinite(num)) return "";
-  return `${currency}${num.toFixed(2)}`;
-};
-
-export const exportLoanDraftScheduleA4 = ({ loanDraft, borrower, currency = "$" }) => {
+export const exportLoanDraftScheduleA4 = ({
+  loanDraft,
+  borrower,
+  currency = "$",
+  currencyCode,
+}) => {
   const schedule = parseAwsJson(loanDraft?.schedulePreview);
   const installments = schedule?.installments || [];
   const totals = schedule?.totals || {};
@@ -55,10 +55,15 @@ export const exportLoanDraftScheduleA4 = ({ loanDraft, borrower, currency = "$" 
 
   doc.setFontSize(11);
   doc.text(
-    `Totals: Principal ${money(totals.totalPrincipal, currency)} | Interest ${money(
+    `Totals: Principal ${formatMoney(
+      totals.totalPrincipal,
+      currency,
+      currencyCode
+    )} | Interest ${formatMoney(
       totals.totalInterest,
-      currency
-    )} | Payable ${money(totals.totalPayable, currency)}`,
+      currency,
+      currencyCode
+    )} | Payable ${formatMoney(totals.totalPayable, currency, currencyCode)}`,
     marginX,
     y
   );
@@ -96,17 +101,22 @@ export const exportLoanDraftScheduleA4 = ({ loanDraft, borrower, currency = "$" 
     }
 
     doc.text(String(inst.dueDate || ""), col.date, y);
-    doc.text(money(inst.principalDue, currency), col.principal, y);
-    doc.text(money(inst.interestDue, currency), col.interest, y);
-    doc.text(money(inst.totalDue, currency), col.total, y);
-    doc.text(money(inst.balanceAfter, currency), col.balance, y);
+    doc.text(formatMoney(inst.principalDue, currency, currencyCode), col.principal, y);
+    doc.text(formatMoney(inst.interestDue, currency, currencyCode), col.interest, y);
+    doc.text(formatMoney(inst.totalDue, currency, currencyCode), col.total, y);
+    doc.text(formatMoney(inst.balanceAfter, currency, currencyCode), col.balance, y);
     y += 14;
   }
 
   doc.save(`LoanDraftSchedule_${loanDraft?.draftNumber || loanDraft?.id}.pdf`);
 };
 
-export const exportLoanDraftSummaryA4 = ({ loanDraft, borrower, currency = "$" }) => {
+export const exportLoanDraftSummaryA4 = ({
+  loanDraft,
+  borrower,
+  currency = "$",
+  currencyCode,
+}) => {
   const draftRecord = parseAwsJson(loanDraft?.draftRecord) || {};
   const schedule = parseAwsJson(loanDraft?.schedulePreview);
   const totals = schedule?.totals || {};
@@ -134,7 +144,7 @@ export const exportLoanDraftSummaryA4 = ({ loanDraft, borrower, currency = "$" }
   y += 16;
 
   const lines = [
-    [`Principal`, money(draftRecord?.principalAmount, currency)],
+    [`Principal`, formatMoney(draftRecord?.principalAmount, currency, currencyCode)],
     [`Interest`, `${draftRecord?.interestRate ?? ""} ${draftRecord?.interestType === "percentage" ? "%" : ""}`.trim()],
     [`Start Date`, draftRecord?.loanStartDate || draftRecord?.startDate || ""],
     [`Duration`, `${draftRecord?.loanDuration || draftRecord?.termDuration || ""} ${draftRecord?.durationPeriod || ""}`.trim()],
@@ -152,10 +162,15 @@ export const exportLoanDraftSummaryA4 = ({ loanDraft, borrower, currency = "$" }
   y += 12;
   doc.setFontSize(11);
   doc.text(
-    `Schedule Totals: Principal ${money(totals.totalPrincipal, currency)} | Interest ${money(
+    `Schedule Totals: Principal ${formatMoney(
+      totals.totalPrincipal,
+      currency,
+      currencyCode
+    )} | Interest ${formatMoney(
       totals.totalInterest,
-      currency
-    )} | Payable ${money(totals.totalPayable, currency)}`,
+      currency,
+      currencyCode
+    )} | Payable ${formatMoney(totals.totalPayable, currency, currencyCode)}`,
     marginX,
     y
   );

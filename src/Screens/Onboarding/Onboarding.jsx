@@ -20,7 +20,6 @@ import {
   LocationOn,
   Schedule,
   AttachMoney,
-  DateRange,
   GroupAdd,
   Logout,
 } from "@mui/icons-material";
@@ -48,7 +47,6 @@ import { CREATE_NOTIFICATION_MUTATION } from "../Notifications/notificationQueri
 const client = generateClient();
 
 const currencies = Object.keys(currenciesObj);
-const dateFormats = ["dd-mmm-yyyy", "mmm-dd-yyyy", "yyyy-mm-dd"];
 
 const businessNameSchema = Yup.string()
   .required("Business name is required")
@@ -88,7 +86,6 @@ const AccountSettingsForm = () => {
     country: "Kenya",
     timezone: "Africa/Nairobi",
     currency: "KES",
-    dateFormat: "dd-mmm-yyyy",
   });
   const [decimalPoints, setDecimalPoints] = React.useState(0);
   const [companyOption, setCompanyOption] = React.useState(
@@ -159,7 +156,8 @@ const AccountSettingsForm = () => {
       const institutionInput = {
         name: formData.businessName,
         currencyCode: formData.currency,
-        defaultDateFormat: formData.dateFormat,
+        // Standardize date display across the app (DD-MMM-YYYY)
+        defaultDateFormat: "dd-mmm-yyyy",
         regulatoryRegion: formData.country,
         subscriptionTier: "Free",
         trialEndDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
@@ -465,23 +463,6 @@ const AccountSettingsForm = () => {
                 }
               >
                 {currencies.map((item, idx) => (
-                  <MenuItem key={idx} value={item}>
-                    {item}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <FormControl fullWidth>
-              <InputLabel>Date Format</InputLabel>
-              <Select
-                value={formData.dateFormat}
-                label="Date Format"
-                onChange={handleChange("dateFormat")}
-                startAdornment={
-                  <DateRange sx={{ mr: 1, color: "action.active" }} />
-                }
-              >
-                {dateFormats.map((item, idx) => (
                   <MenuItem key={idx} value={item}>
                     {item}
                   </MenuItem>

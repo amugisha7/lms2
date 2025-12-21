@@ -3,6 +3,25 @@ import { createLoan as createLoanMutation, createLoanInstallment as createLoanIn
 import { calculateSchedule } from "../../Payments/servicingEngine";
 import dayjs from 'dayjs';
 
+const runWithConcurrency = async (items, limit, worker) => {
+  const list = Array.isArray(items) ? items : [];
+  const concurrency = Math.max(1, Math.min(limit || 1, list.length || 1));
+  const results = new Array(list.length);
+  let nextIndex = 0;
+
+  const runners = Array.from({ length: concurrency }, async () => {
+    while (true) {
+      const current = nextIndex;
+      nextIndex += 1;
+      if (current >= list.length) return;
+      results[current] = await worker(list[current], current);
+    }
+  });
+
+  await Promise.all(runners);
+  return results;
+};
+
 const LIST_ACCOUNTS_MINIMAL_QUERY = `
   query ListAccounts($institutionId: ID!, $nextToken: String) {
     listAccounts(
@@ -388,8 +407,11 @@ export const createLoanWithSchedule = async (values, userDetails) => {
   const loan = result.data.createLoan;
   
   // 4. Create Installments
-  for (const inst of schedule) {
-    await client.graphql({
+  const installments = Array.isArray(schedule) ? schedule : [];
+  const INSTALLMENT_CONCURRENCY = 6;
+
+  await runWithConcurrency(installments, INSTALLMENT_CONCURRENCY, (inst) =>
+    client.graphql({
       query: createLoanInstallmentMutation,
       variables: {
         input: {
@@ -405,11 +427,11 @@ export const createLoanWithSchedule = async (values, userDetails) => {
           feesPaid: 0,
           penaltyPaid: 0,
           totalPaid: 0,
-          status: 'PENDING'
-        }
-      }
-    });
-  }
+          status: "PENDING",
+        },
+      },
+    })
+  );
   
   return loan;
 };

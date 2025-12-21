@@ -34,6 +34,8 @@ import TextAndRadio from "../../../Resources/FormComponents/TextAndRadio";
 import TextAndDropdown from "../../../Resources/FormComponents/TextAndDropdown";
 import MultipleDropDown from "../../../Resources/FormComponents/MultipleDropDown";
 
+import WorkingOverlay from "../../../ModelAssets/WorkingOverlay";
+
 const FormGrid = styled(Grid)(({ theme }) => ({
   display: "flex",
   flexDirection: "column",
@@ -427,12 +429,9 @@ const CreateLoan = forwardRef(
         values.borrower = propBorrower.id;
       }
 
-      console.log("CreateLoan Form Values:", values);
-
       try {
         if (onCreateLoanAPI) {
           // Use parent-provided API function
-          console.log("API Call: onCreateLoanAPI", { values });
           const result = await onCreateLoanAPI(values);
           setSubmitSuccess("Loan created!");
           resetForm();
@@ -442,7 +441,6 @@ const CreateLoan = forwardRef(
         } else {
           // Fallback to direct creation
           // const input = buildLoanInput(values, userDetails); // Deprecated
-          console.log("API Call: createLoan", { values });
           const result = await createLoan(values, userDetails);
 
           if (result?.id) {
@@ -497,6 +495,10 @@ const CreateLoan = forwardRef(
         >
           {(formik) => (
             <Form>
+              <WorkingOverlay
+                open={formik.isSubmitting}
+                message="Creating loan..."
+              />
               <Box
                 sx={{
                   display: "flex",

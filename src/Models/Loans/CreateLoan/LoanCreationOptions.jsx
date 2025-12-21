@@ -1,5 +1,6 @@
 import React, { useState, useContext, useEffect, useRef } from "react";
 import { Box, Tabs, Tab, Typography, useTheme, Grid } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 import CreateLoan from "./CreateLoan";
 import UseLoanProduct from "./UseLoanProduct";
 import { UserContext } from "../../../App";
@@ -8,6 +9,7 @@ import DropDownSearchable from "../../../Resources/FormComponents/DropDownSearch
 
 export default function LoanCreationOptions(props) {
   const theme = useTheme();
+  const navigate = useNavigate();
   const [tabValue, setTabValue] = useState(0);
   const { userDetails } = useContext(UserContext);
   const [borrowers, setBorrowers] = useState([]);
@@ -81,6 +83,13 @@ export default function LoanCreationOptions(props) {
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
+  };
+
+  const handleCreateSuccess = (createdLoan) => {
+    if (props.onCreateSuccess) {
+      props.onCreateSuccess(createdLoan);
+    }
+    navigate("/admin/loans");
   };
 
   return (
@@ -197,6 +206,7 @@ export default function LoanCreationOptions(props) {
           {tabValue === 0 && (
             <CreateLoan
               {...props}
+              onCreateSuccess={handleCreateSuccess}
               borrowers={borrowers}
               borrowersLoading={borrowersLoading}
               borrower={selectedBorrower}
@@ -205,6 +215,7 @@ export default function LoanCreationOptions(props) {
           {tabValue === 1 && (
             <UseLoanProduct
               {...props}
+              onCreateSuccess={handleCreateSuccess}
               borrowers={borrowers}
               borrowersLoading={borrowersLoading}
               borrower={selectedBorrower}

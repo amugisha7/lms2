@@ -14,6 +14,7 @@ import LoanDetail from "./LoanDetail";
 import ListBorrowers from "./CreateLoan/ListBorrowers";
 import CreateLoan from "./CreateLoan/CreateLoan";
 import LoanCreationOptions from "./CreateLoan/LoanCreationOptions";
+import NotificationBar from "../../ModelAssets/NotificationBar";
 
 const LIST_LOAN_LOAN_FEES_QUERY = `
   query ListLoanLoanFees($filter: ModelLoanLoanFeesFilterInput) {
@@ -70,6 +71,7 @@ export default function Loans() {
   const [loanDetailOpen, setLoanDetailOpen] = React.useState(false);
   const [detailLoanRow, setDetailLoanRow] = React.useState(null);
   const [detailInitialTab, setDetailInitialTab] = React.useState(0);
+  const [notification, setNotification] = React.useState(null);
 
   const fetchLoans = async () => {
     if (!userDetails?.branchUsersId) return;
@@ -264,9 +266,35 @@ export default function Loans() {
   };
 
   const handleCreateSuccess = (newLoan) => {
+    // Show a success notification (persist to sessionStorage so it shows after page reload/navigation)
+    const msg = `Loan ${
+      newLoan?.loanNumber || newLoan?.id
+    } created successfully.`;
+    const note = { message: msg, color: "green" };
+    setNotification(note);
+    try {
+      sessionStorage.setItem("loanCreatedNotification", JSON.stringify(note));
+    } catch (e) {
+      // ignore storage errors
+    }
+
     fetchLoans();
     handleCreateDialogClose();
   };
+
+  // On mount, check for a persisted create-notification and show it once
+  React.useEffect(() => {
+    try {
+      const stored = sessionStorage.getItem("loanCreatedNotification");
+      if (stored) {
+        const obj = JSON.parse(stored);
+        if (obj && obj.message) setNotification(obj);
+        sessionStorage.removeItem("loanCreatedNotification");
+      }
+    } catch (e) {
+      // ignore parse/storage errors
+    }
+  }, []);
 
   const openLoanDetail = (row, tab = 0) => {
     setDetailLoanRow(row);

@@ -31,6 +31,8 @@ import TextAndDropdown from "../../../Resources/FormComponents/TextAndDropdown";
 import MultipleDropDown from "../../../Resources/FormComponents/MultipleDropDown";
 import { Settings } from "@mui/icons-material";
 
+import WorkingOverlay from "../../../ModelAssets/WorkingOverlay";
+
 const FormGrid = styled(Grid)(({ theme }) => ({
   display: "flex",
   flexDirection: "column",
@@ -185,6 +187,12 @@ const renderFormField = (field, formikValues) => {
             {...fieldProps}
             label={displayLabel}
             helperText={computedHelperText}
+            value={field.formik?.values?.[field.name] || ""}
+            onChange={
+              fieldProps.onChange
+                ? fieldProps.onChange
+                : (e) => field.formik?.setFieldValue(field.name, e.target.value)
+            }
           />
         );
       }
@@ -272,6 +280,11 @@ const coerceNumber = (value) => {
   return Number.isFinite(n) ? n : value;
 };
 
+const hasNonEmptyString = (value) => {
+  if (value === null || value === undefined) return false;
+  return String(value).trim().length > 0;
+};
+
 const applyLoanProductTemplateToFormik = (loanProduct, formik) => {
   if (!loanProduct || !formik) return;
 
@@ -350,13 +363,17 @@ const applyLoanProductTemplateToFormik = (loanProduct, formik) => {
     loanProduct.interestCalculationMethod !== null &&
     loanProduct.interestCalculationMethod !== undefined
   ) {
-    nextValues.interestMethod = loanProduct.interestCalculationMethod;
+    if (hasNonEmptyString(loanProduct.interestCalculationMethod)) {
+      nextValues.interestMethod = loanProduct.interestCalculationMethod;
+    }
   }
   if (
     loanProduct.interestType !== null &&
     loanProduct.interestType !== undefined
   ) {
-    nextValues.interestType = normalizeInterestType(loanProduct.interestType);
+    if (hasNonEmptyString(loanProduct.interestType)) {
+      nextValues.interestType = normalizeInterestType(loanProduct.interestType);
+    }
   }
   if (
     loanProduct.interestRateDefault !== null &&
@@ -368,9 +385,11 @@ const applyLoanProductTemplateToFormik = (loanProduct, formik) => {
     loanProduct.interestPeriod !== null &&
     loanProduct.interestPeriod !== undefined
   ) {
-    nextValues.interestPeriod = normalizeInterestPeriod(
-      loanProduct.interestPeriod
-    );
+    if (hasNonEmptyString(loanProduct.interestPeriod)) {
+      nextValues.interestPeriod = normalizeInterestPeriod(
+        loanProduct.interestPeriod
+      );
+    }
   }
   if (
     loanProduct.termDurationDefault !== null &&
@@ -382,21 +401,25 @@ const applyLoanProductTemplateToFormik = (loanProduct, formik) => {
     loanProduct.durationPeriod !== null &&
     loanProduct.durationPeriod !== undefined
   ) {
-    nextValues.durationPeriod = normalizeDurationPeriod(
-      loanProduct.durationPeriod
-    );
+    if (hasNonEmptyString(loanProduct.durationPeriod)) {
+      nextValues.durationPeriod = normalizeDurationPeriod(
+        loanProduct.durationPeriod
+      );
+    }
   }
   if (
     loanProduct.repaymentFrequency !== null &&
     loanProduct.repaymentFrequency !== undefined
   ) {
-    nextValues.repaymentFrequencyType = "interval";
-    nextValues.repaymentFrequency = normalizeRepaymentFrequency(
-      loanProduct.repaymentFrequency
-    );
-    // Clear any custom schedule selections when using interval templates
-    nextValues.customPaymentDays = [];
-    nextValues.customPaymentDates = [];
+    if (hasNonEmptyString(loanProduct.repaymentFrequency)) {
+      nextValues.repaymentFrequencyType = "interval";
+      nextValues.repaymentFrequency = normalizeRepaymentFrequency(
+        loanProduct.repaymentFrequency
+      );
+      // Clear any custom schedule selections when using interval templates
+      nextValues.customPaymentDays = [];
+      nextValues.customPaymentDates = [];
+    }
   }
 
   if (
@@ -411,15 +434,19 @@ const applyLoanProductTemplateToFormik = (loanProduct, formik) => {
     loanProduct.interestTypeMaturity !== null &&
     loanProduct.interestTypeMaturity !== undefined
   ) {
-    nextValues.interestTypeMaturity = normalizeInterestType(
-      loanProduct.interestTypeMaturity
-    );
+    if (hasNonEmptyString(loanProduct.interestTypeMaturity)) {
+      nextValues.interestTypeMaturity = normalizeInterestType(
+        loanProduct.interestTypeMaturity
+      );
+    }
   }
   if (
     loanProduct.calculateInterestOn !== null &&
     loanProduct.calculateInterestOn !== undefined
   ) {
-    nextValues.calculateInterestOn = loanProduct.calculateInterestOn;
+    if (hasNonEmptyString(loanProduct.calculateInterestOn)) {
+      nextValues.calculateInterestOn = loanProduct.calculateInterestOn;
+    }
   }
   if (
     loanProduct.loanInterestRateAfterMaturity !== null &&
@@ -433,8 +460,10 @@ const applyLoanProductTemplateToFormik = (loanProduct, formik) => {
     loanProduct.recurringPeriodAfterMaturityUnit !== null &&
     loanProduct.recurringPeriodAfterMaturityUnit !== undefined
   ) {
-    nextValues.recurringPeriodAfterMaturityUnit =
-      loanProduct.recurringPeriodAfterMaturityUnit;
+    if (hasNonEmptyString(loanProduct.recurringPeriodAfterMaturityUnit)) {
+      nextValues.recurringPeriodAfterMaturityUnit =
+        loanProduct.recurringPeriodAfterMaturityUnit;
+    }
   }
 
   // Loan Fees Config template
@@ -821,6 +850,10 @@ const UseLoanProduct = forwardRef(
 
                 return (
                   <Form>
+                    <WorkingOverlay
+                      open={formik.isSubmitting}
+                      message="Creating loan..."
+                    />
                     <Box
                       sx={{
                         display: "flex",
@@ -852,23 +885,24 @@ const UseLoanProduct = forwardRef(
                             }
                           }
 
+                          const fieldRenderProps = {
+                            ...field,
+                            helperText,
+                            formik,
+                            editing: true,
+                            ...(field.onChange
+                              ? {
+                                  onChange: (e) => field.onChange(e, formik),
+                                }
+                              : {}),
+                          };
+
                           return (
                             <FormGrid
                               size={{ xs: 12, md: field.span }}
                               key={`${field.name}-${index}`}
                             >
-                              {renderFormField(
-                                {
-                                  ...field,
-                                  helperText,
-                                  formik,
-                                  editing: true,
-                                  onChange: field.onChange
-                                    ? (e) => field.onChange(e, formik)
-                                    : undefined,
-                                },
-                                formik.values
-                              )}
+                              {renderFormField(fieldRenderProps, formik.values)}
                             </FormGrid>
                           );
                         })}

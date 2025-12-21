@@ -169,7 +169,7 @@ export default function LoanScheduleDraft({
 
         // Capture the page as a canvas image
         const canvas = await html2canvas(pageElement, {
-          scale: 2, // Higher resolution for better quality
+          scale: 1.5, // Reduced scale to optimize file size
           useCORS: true,
           logging: false,
           backgroundColor: "#ffffff",
@@ -180,7 +180,8 @@ export default function LoanScheduleDraft({
           },
         });
 
-        const imgData = canvas.toDataURL("image/png");
+        // Use JPEG with compression to reduce file size
+        const imgData = canvas.toDataURL("image/jpeg", 0.75);
 
         // Calculate dimensions to fit A4 while maintaining aspect ratio
         const imgWidth = pageWidth;
@@ -193,7 +194,7 @@ export default function LoanScheduleDraft({
 
         pdf.addImage(
           imgData,
-          "PNG",
+          "JPEG",
           0,
           0,
           imgWidth,
@@ -560,6 +561,7 @@ export default function LoanScheduleDraft({
           display: "flex",
           flexDirection: "column",
           gap: 2,
+          py: 2,
           backgroundColor: theme.palette.grey[100],
           alignItems: { xs: "flex-start", md: "center" },
           maxWidth: "100%",

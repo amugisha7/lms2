@@ -1,5 +1,8 @@
 - Create loans form. Also create from loan product.
-  - create loan schedule layout.
-  * implement testing for when there is no data.
-  * revise the borders and layout of the forms.
+  - remove approval button from loan schedule.
+  - Add logo, address and company header image to loan schedule. Use a documentheader component that can be edited.
+  - Test out creating draft from useLoanProduct.
+  - review how draft creation and copying to new loan works.
+  - Create loan from loan schedule. Ensure loan calculations are accurate.
+  -
 -

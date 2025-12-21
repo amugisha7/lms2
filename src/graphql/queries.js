@@ -1759,6 +1759,132 @@ export const listCollaterals = /* GraphQL */ `
     }
   }
 `;
+export const getLoanDraft = /* GraphQL */ `
+  query GetLoanDraft($id: ID!) {
+    getLoanDraft(id: $id) {
+      id
+      status
+      source
+      draftNumber
+      institutionID
+      branchID
+      borrowerID
+      loanProductID
+      createdByEmployeeID
+      assignedToEmployeeID
+      submittedAt
+      approvedAt
+      rejectedAt
+      rejectionReason
+      convertedAt
+      draftRecord
+      termsSnapshot
+      schedulePreview
+      scheduleHash
+      editVersion
+      lastEditedByEmployeeID
+      lastEditedAt
+      principal
+      interestRate
+      interestCalculationMethod
+      startDate
+      maturityDate
+      loanCurrency
+      createdAt
+      updatedAt
+      loans {
+        nextToken
+        __typename
+      }
+      __typename
+    }
+  }
+`;
+export const listLoanDrafts = /* GraphQL */ `
+  query ListLoanDrafts(
+    $filter: ModelLoanDraftFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listLoanDrafts(filter: $filter, limit: $limit, nextToken: $nextToken) {
+      items {
+        id
+        status
+        source
+        draftNumber
+        institutionID
+        branchID
+        borrowerID
+        loanProductID
+        createdByEmployeeID
+        assignedToEmployeeID
+        submittedAt
+        approvedAt
+        rejectedAt
+        rejectionReason
+        convertedAt
+        draftRecord
+        termsSnapshot
+        schedulePreview
+        scheduleHash
+        editVersion
+        lastEditedByEmployeeID
+        lastEditedAt
+        principal
+        interestRate
+        interestCalculationMethod
+        startDate
+        maturityDate
+        loanCurrency
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const getLoanDraftEvent = /* GraphQL */ `
+  query GetLoanDraftEvent($id: ID!) {
+    getLoanDraftEvent(id: $id) {
+      id
+      loanDraftID
+      eventAt
+      eventType
+      actorEmployeeID
+      summary
+      payload
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const listLoanDraftEvents = /* GraphQL */ `
+  query ListLoanDraftEvents(
+    $filter: ModelLoanDraftEventFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listLoanDraftEvents(filter: $filter, limit: $limit, nextToken: $nextToken) {
+      items {
+        id
+        loanDraftID
+        eventAt
+        eventType
+        actorEmployeeID
+        summary
+        payload
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
 export const getLoan = /* GraphQL */ `
   query GetLoan($id: ID!) {
     getLoan(id: $id) {
@@ -1983,6 +2109,40 @@ export const getLoan = /* GraphQL */ `
         branchEmployeesId
         __typename
       }
+      loanDraftID
+      loanDraft {
+        id
+        status
+        source
+        draftNumber
+        institutionID
+        branchID
+        borrowerID
+        loanProductID
+        createdByEmployeeID
+        assignedToEmployeeID
+        submittedAt
+        approvedAt
+        rejectedAt
+        rejectionReason
+        convertedAt
+        draftRecord
+        termsSnapshot
+        schedulePreview
+        scheduleHash
+        editVersion
+        lastEditedByEmployeeID
+        lastEditedAt
+        principal
+        interestRate
+        interestCalculationMethod
+        startDate
+        maturityDate
+        loanCurrency
+        createdAt
+        updatedAt
+        __typename
+      }
       createdAt
       updatedAt
       borrowerLoansId
@@ -2029,6 +2189,7 @@ export const listLoans = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -2076,6 +2237,7 @@ export const getLoanInstallment = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -2185,6 +2347,7 @@ export const getLoanDisbursement = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -2326,6 +2489,7 @@ export const getLoanEvent = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -2463,6 +2627,7 @@ export const getLoanBalanceSnapshot = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -2630,6 +2795,7 @@ export const getLoanFees = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -2756,6 +2922,7 @@ export const getPenalty = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -3148,6 +3315,7 @@ export const getMoneyTransaction = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -3369,6 +3537,7 @@ export const getPayment = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -4565,6 +4734,7 @@ export const getLoanApprovedByEmployee = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -5383,6 +5553,7 @@ export const getLoanGuarantor = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -5792,6 +5963,7 @@ export const getLoanDocument = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -6374,6 +6546,7 @@ export const getLoanContract = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -6613,6 +6786,7 @@ export const getLoanApplication = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -6706,6 +6880,7 @@ export const getLoanCollateral = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -6775,6 +6950,7 @@ export const getLoanAccount = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -6867,6 +7043,7 @@ export const getLoanExpense = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -7533,6 +7710,370 @@ export const applicationsByCreatedByEmployeeID = /* GraphQL */ `
     }
   }
 `;
+export const loanDraftsByInstitutionIDAndUpdatedAt = /* GraphQL */ `
+  query LoanDraftsByInstitutionIDAndUpdatedAt(
+    $institutionID: ID!
+    $updatedAt: ModelStringKeyConditionInput
+    $sortDirection: ModelSortDirection
+    $filter: ModelLoanDraftFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    loanDraftsByInstitutionIDAndUpdatedAt(
+      institutionID: $institutionID
+      updatedAt: $updatedAt
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        status
+        source
+        draftNumber
+        institutionID
+        branchID
+        borrowerID
+        loanProductID
+        createdByEmployeeID
+        assignedToEmployeeID
+        submittedAt
+        approvedAt
+        rejectedAt
+        rejectionReason
+        convertedAt
+        draftRecord
+        termsSnapshot
+        schedulePreview
+        scheduleHash
+        editVersion
+        lastEditedByEmployeeID
+        lastEditedAt
+        principal
+        interestRate
+        interestCalculationMethod
+        startDate
+        maturityDate
+        loanCurrency
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const loanDraftsByBranchIDAndUpdatedAt = /* GraphQL */ `
+  query LoanDraftsByBranchIDAndUpdatedAt(
+    $branchID: ID!
+    $updatedAt: ModelStringKeyConditionInput
+    $sortDirection: ModelSortDirection
+    $filter: ModelLoanDraftFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    loanDraftsByBranchIDAndUpdatedAt(
+      branchID: $branchID
+      updatedAt: $updatedAt
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        status
+        source
+        draftNumber
+        institutionID
+        branchID
+        borrowerID
+        loanProductID
+        createdByEmployeeID
+        assignedToEmployeeID
+        submittedAt
+        approvedAt
+        rejectedAt
+        rejectionReason
+        convertedAt
+        draftRecord
+        termsSnapshot
+        schedulePreview
+        scheduleHash
+        editVersion
+        lastEditedByEmployeeID
+        lastEditedAt
+        principal
+        interestRate
+        interestCalculationMethod
+        startDate
+        maturityDate
+        loanCurrency
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const loanDraftsByBorrowerIDAndUpdatedAt = /* GraphQL */ `
+  query LoanDraftsByBorrowerIDAndUpdatedAt(
+    $borrowerID: ID!
+    $updatedAt: ModelStringKeyConditionInput
+    $sortDirection: ModelSortDirection
+    $filter: ModelLoanDraftFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    loanDraftsByBorrowerIDAndUpdatedAt(
+      borrowerID: $borrowerID
+      updatedAt: $updatedAt
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        status
+        source
+        draftNumber
+        institutionID
+        branchID
+        borrowerID
+        loanProductID
+        createdByEmployeeID
+        assignedToEmployeeID
+        submittedAt
+        approvedAt
+        rejectedAt
+        rejectionReason
+        convertedAt
+        draftRecord
+        termsSnapshot
+        schedulePreview
+        scheduleHash
+        editVersion
+        lastEditedByEmployeeID
+        lastEditedAt
+        principal
+        interestRate
+        interestCalculationMethod
+        startDate
+        maturityDate
+        loanCurrency
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const loanDraftsByLoanProductIDAndUpdatedAt = /* GraphQL */ `
+  query LoanDraftsByLoanProductIDAndUpdatedAt(
+    $loanProductID: ID!
+    $updatedAt: ModelStringKeyConditionInput
+    $sortDirection: ModelSortDirection
+    $filter: ModelLoanDraftFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    loanDraftsByLoanProductIDAndUpdatedAt(
+      loanProductID: $loanProductID
+      updatedAt: $updatedAt
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        status
+        source
+        draftNumber
+        institutionID
+        branchID
+        borrowerID
+        loanProductID
+        createdByEmployeeID
+        assignedToEmployeeID
+        submittedAt
+        approvedAt
+        rejectedAt
+        rejectionReason
+        convertedAt
+        draftRecord
+        termsSnapshot
+        schedulePreview
+        scheduleHash
+        editVersion
+        lastEditedByEmployeeID
+        lastEditedAt
+        principal
+        interestRate
+        interestCalculationMethod
+        startDate
+        maturityDate
+        loanCurrency
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const loanDraftsByCreatedByEmployeeIDAndUpdatedAt = /* GraphQL */ `
+  query LoanDraftsByCreatedByEmployeeIDAndUpdatedAt(
+    $createdByEmployeeID: ID!
+    $updatedAt: ModelStringKeyConditionInput
+    $sortDirection: ModelSortDirection
+    $filter: ModelLoanDraftFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    loanDraftsByCreatedByEmployeeIDAndUpdatedAt(
+      createdByEmployeeID: $createdByEmployeeID
+      updatedAt: $updatedAt
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        status
+        source
+        draftNumber
+        institutionID
+        branchID
+        borrowerID
+        loanProductID
+        createdByEmployeeID
+        assignedToEmployeeID
+        submittedAt
+        approvedAt
+        rejectedAt
+        rejectionReason
+        convertedAt
+        draftRecord
+        termsSnapshot
+        schedulePreview
+        scheduleHash
+        editVersion
+        lastEditedByEmployeeID
+        lastEditedAt
+        principal
+        interestRate
+        interestCalculationMethod
+        startDate
+        maturityDate
+        loanCurrency
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const loanDraftsByAssignedToEmployeeIDAndUpdatedAt = /* GraphQL */ `
+  query LoanDraftsByAssignedToEmployeeIDAndUpdatedAt(
+    $assignedToEmployeeID: ID!
+    $updatedAt: ModelStringKeyConditionInput
+    $sortDirection: ModelSortDirection
+    $filter: ModelLoanDraftFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    loanDraftsByAssignedToEmployeeIDAndUpdatedAt(
+      assignedToEmployeeID: $assignedToEmployeeID
+      updatedAt: $updatedAt
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        status
+        source
+        draftNumber
+        institutionID
+        branchID
+        borrowerID
+        loanProductID
+        createdByEmployeeID
+        assignedToEmployeeID
+        submittedAt
+        approvedAt
+        rejectedAt
+        rejectionReason
+        convertedAt
+        draftRecord
+        termsSnapshot
+        schedulePreview
+        scheduleHash
+        editVersion
+        lastEditedByEmployeeID
+        lastEditedAt
+        principal
+        interestRate
+        interestCalculationMethod
+        startDate
+        maturityDate
+        loanCurrency
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const loanDraftEventsByLoanDraftIDAndEventAt = /* GraphQL */ `
+  query LoanDraftEventsByLoanDraftIDAndEventAt(
+    $loanDraftID: ID!
+    $eventAt: ModelStringKeyConditionInput
+    $sortDirection: ModelSortDirection
+    $filter: ModelLoanDraftEventFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    loanDraftEventsByLoanDraftIDAndEventAt(
+      loanDraftID: $loanDraftID
+      eventAt: $eventAt
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        loanDraftID
+        eventAt
+        eventType
+        actorEmployeeID
+        summary
+        payload
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
 export const loansByLoanNumber = /* GraphQL */ `
   query LoansByLoanNumber(
     $loanNumber: String!
@@ -7580,6 +8121,7 @@ export const loansByLoanNumber = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -7639,6 +8181,7 @@ export const loansByBorrowerIDAndStartDate = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -7698,6 +8241,7 @@ export const loansByBranchIDAndStartDate = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -7755,6 +8299,7 @@ export const loansByLoanProductID = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -7812,6 +8357,65 @@ export const loansByCreatedByEmployeeID = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
+        createdAt
+        updatedAt
+        borrowerLoansId
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const loansByLoanDraftID = /* GraphQL */ `
+  query LoansByLoanDraftID(
+    $loanDraftID: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelLoanFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    loansByLoanDraftID(
+      loanDraftID: $loanDraftID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        loanNumber
+        approvalStatus
+        approvalStatusEnum
+        approvedDate
+        principal
+        fees
+        interestRate
+        startDate
+        maturityDate
+        stopDate
+        extensionPeriod
+        duration
+        durationInterval
+        loanType
+        rateInterval
+        loanStatus
+        loanStatusEnum
+        loanCurrency
+        loanPurpose
+        loanComputationRecord
+        loanAttribute1
+        loanAttribute2
+        numberOfPayments
+        paymentFrequency
+        customFieldsData
+        status
+        borrowerID
+        branchID
+        loanProductID
+        createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId

@@ -89,7 +89,12 @@ export default function LoanCreationOptions(props) {
     if (props.onCreateSuccess) {
       props.onCreateSuccess(createdLoan);
     }
-    navigate("/admin/loans");
+    // Create Loan flow now creates/updates a LoanDraft.
+    if (createdLoan?.id) {
+      navigate(`/admin/loan-drafts/id/${createdLoan.id}/view`);
+      return;
+    }
+    navigate("/admin/loan-drafts");
   };
 
   return (

@@ -226,6 +226,7 @@ export const themeSettings = (mode) => {
         disabled: isDark ? colors.grey[600] : colors.grey[400],
         disabledBackground: isDark ? colors.grey[700] : colors.grey[200],
       },
+      blueAccent: colors.blueAccent,
       divider: isDark ? colors.grey[700] : colors.grey[300],
       blueText: {
         main: colors.blueText.main,

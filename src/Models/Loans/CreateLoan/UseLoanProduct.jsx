@@ -7,8 +7,10 @@ import React, {
 } from "react";
 import { Formik, Form } from "formik";
 import * as Yup from "yup";
-import { Box, Grid, Typography, CircularProgress } from "@mui/material";
+import { Box, Grid, Typography, CircularProgress, Button } from "@mui/material";
 import { styled } from "@mui/material/styles";
+import { useTheme } from "@mui/material/styles";
+import { useNavigate } from "react-router-dom";
 
 import createLoanForm from "./createLoanForm";
 import TextInput from "../../../Resources/FormComponents/TextInput";
@@ -16,12 +18,20 @@ import Dropdown from "../../../Resources/FormComponents/Dropdown";
 import DropDownSearchable from "../../../Resources/FormComponents/DropDownSearchable";
 import OrderedList from "../../../Resources/FormComponents/OrderedList";
 import CreateFormButtons from "../../../ModelAssets/CreateFormButtons";
+import PlusButtonMain from "../../../ModelAssets/PlusButtonMain";
 import { UserContext } from "../../../App";
+import { fetchAccounts, fetchLoanFeesConfig } from "./createLoanHelpers";
 import {
-  createLoan,
-  fetchAccounts,
-  fetchLoanFeesConfig,
-} from "./createLoanHelpers";
+  createLoanDraft,
+  updateLoanDraft,
+  transitionLoanDraftStatus,
+  convertDraftToLoan,
+  getLoanDraftById,
+} from "../LoanDrafts/loanDraftHelpers";
+import {
+  exportLoanDraftScheduleA4,
+  exportLoanDraftSummaryA4,
+} from "../LoanDrafts/loanDraftExportHelpers";
 import FormLabel from "../../../Resources/FormComponents/FormLabel";
 import FormLinkText from "../../../Resources/FormComponents/FormLinkText";
 import RadioGroup from "../../../Resources/FormComponents/RadioGroup";
@@ -512,12 +522,19 @@ const UseLoanProduct = forwardRef(
       borrowersLoading,
       loanProducts,
       loanProductsLoading,
+      readOnly = false,
+      draftId,
+      onDraftUpdated,
     },
     ref
   ) => {
     const { userDetails } = useContext(UserContext);
+    const navigate = useNavigate();
+    const theme = useTheme();
     const [submitError, setSubmitError] = useState("");
     const [submitSuccess, setSubmitSuccess] = useState("");
+    const [loanDraft, setLoanDraft] = useState(null);
+    const [termsSnapshot, setTermsSnapshot] = useState(null);
     const [accounts, setAccounts] = useState([]);
     const [accountsLoading, setAccountsLoading] = useState(false);
     const accountsFetchedRef = useRef(false);
@@ -530,6 +547,33 @@ const UseLoanProduct = forwardRef(
     useEffect(() => {
       window.scrollTo({ top: 0, behavior: "smooth" });
     }, []);
+
+    useEffect(() => {
+      let cancelled = false;
+      const loadDraft = async () => {
+        if (!draftId) return;
+        try {
+          const draft = await getLoanDraftById(draftId);
+          if (cancelled) return;
+          setLoanDraft(draft);
+          const ts = draft?.termsSnapshot;
+          if (ts) {
+            try {
+              setTermsSnapshot(JSON.parse(ts));
+            } catch {
+              setTermsSnapshot(null);
+            }
+          }
+        } catch (err) {
+          console.error("Failed to load draft:", err);
+        }
+      };
+
+      loadDraft();
+      return () => {
+        cancelled = true;
+      };
+    }, [draftId]);
 
     useEffect(() => {
       const currentInstitutionId = userDetails?.institutionUsersId;
@@ -619,37 +663,106 @@ const UseLoanProduct = forwardRef(
       }
 
       try {
-        if (onCreateLoanAPI) {
-          const result = await onCreateLoanAPI(values);
-          setSubmitSuccess("Loan created!");
-          resetForm();
-          if (onCreateSuccess) {
-            onCreateSuccess(result);
-          }
+        if (loanDraft?.id) {
+          const updated = await updateLoanDraft({
+            id: loanDraft.id,
+            expectedEditVersion: loanDraft.editVersion,
+            userDetails,
+            patch: {
+              borrowerID: values.borrower,
+              loanProductID: values.loanProduct || null,
+              draftRecord: JSON.stringify(values),
+              ...(termsSnapshot
+                ? { termsSnapshot: JSON.stringify(termsSnapshot) }
+                : {}),
+            },
+          });
+          setLoanDraft(updated);
+          if (onDraftUpdated) onDraftUpdated(updated);
+          setSubmitSuccess("Draft saved successfully!");
         } else {
-          const result = await createLoan(values, userDetails);
-
-          if (result?.id) {
-            setSubmitSuccess("Loan created successfully!");
-            resetForm();
-            if (onCreateSuccess) {
-              onCreateSuccess(result);
-            }
-          } else {
-            setSubmitSuccess("Loan created successfully!");
-            resetForm();
-            if (onCreateSuccess) {
-              onCreateSuccess(result);
-            }
-          }
+          const created = await createLoanDraft({
+            userDetails,
+            draftRecord: values,
+            source: "TEMPLATE",
+            termsSnapshot,
+          });
+          setLoanDraft(created);
+          if (onDraftUpdated) onDraftUpdated(created);
+          setSubmitSuccess("Draft created successfully!");
+          if (onCreateSuccess) onCreateSuccess(created);
         }
       } catch (err) {
-        console.error("Error creating loan:", err);
+        console.error("Error saving draft:", err);
         setSubmitError(
-          err.message || "Failed to create loan. Please try again."
+          err.message || "Failed to save draft. Please try again."
         );
       } finally {
         setSubmitting(false);
+      }
+    };
+
+    const handleSendForApproval = async () => {
+      setSubmitError("");
+      setSubmitSuccess("");
+      try {
+        if (!loanDraft?.id) throw new Error("Save Draft first.");
+        const updated = await transitionLoanDraftStatus({
+          loanDraft,
+          userDetails,
+          nextStatus: "SENT_FOR_APPROVAL",
+        });
+        setLoanDraft(updated);
+        if (onDraftUpdated) onDraftUpdated(updated);
+        setSubmitSuccess("Draft sent for approval.");
+      } catch (err) {
+        console.error(err);
+        setSubmitError(err?.message || "Failed to send for approval.");
+      }
+    };
+
+    const handleConvertToLoan = async () => {
+      setSubmitError("");
+      setSubmitSuccess("");
+      try {
+        if (!loanDraft?.id) throw new Error("Save Draft first.");
+        const loan = await convertDraftToLoan({ loanDraft, userDetails });
+        setSubmitSuccess("Draft converted to loan.");
+        navigate("/admin/loans");
+        return loan;
+      } catch (err) {
+        console.error(err);
+        setSubmitError(err?.message || "Failed to convert to loan.");
+      }
+    };
+
+    const handleExportSchedule = async () => {
+      setSubmitError("");
+      try {
+        if (!loanDraft?.id) throw new Error("Save Draft first.");
+        const full = await getLoanDraftById(loanDraft.id);
+        exportLoanDraftScheduleA4({
+          loanDraft: full,
+          borrower: propBorrower || null,
+        });
+      } catch (err) {
+        console.error(err);
+        setSubmitError(err?.message || "Failed to export schedule.");
+      }
+    };
+
+    const handleExportSummary = async () => {
+      setSubmitError("");
+      try {
+        if (!loanDraft?.id) throw new Error("Save Draft first.");
+        const full = await getLoanDraftById(loanDraft.id);
+        exportLoanDraftSummaryA4({
+          loanDraft: full,
+          borrower: propBorrower || null,
+        });
+      } catch (err) {
+        console.error(err);
+        setSubmitError(err?.message || "Failed to export summary.");
       }
     };
 
@@ -766,6 +879,8 @@ const UseLoanProduct = forwardRef(
                         return;
                       }
 
+                      setTermsSnapshot(selectedProduct);
+
                       applyLoanProductTemplateToFormik(selectedProduct, formik);
                     },
                   });
@@ -852,7 +967,7 @@ const UseLoanProduct = forwardRef(
                   <Form>
                     <WorkingOverlay
                       open={formik.isSubmitting}
-                      message="Creating loan..."
+                      message="Saving draft..."
                     />
                     <Box
                       sx={{
@@ -889,7 +1004,8 @@ const UseLoanProduct = forwardRef(
                             ...field,
                             helperText,
                             formik,
-                            editing: true,
+                            editing: !readOnly,
+                            readOnly,
                             ...(field.onChange
                               ? {
                                   onChange: (e) => field.onChange(e, formik),
@@ -906,24 +1022,71 @@ const UseLoanProduct = forwardRef(
                             </FormGrid>
                           );
                         })}
-                        {formik.values.loanProduct && (
-                          <Box
-                            sx={{
-                              display: "flex",
-                              pr: 2,
-                              justifyContent: { xs: "center", md: "flex-end" },
-                              width: "100%",
-                            }}
-                          >
-                            <CreateFormButtons
-                              formik={formik}
-                              setEditMode={() => {}}
-                              setSubmitError={setSubmitError}
-                              setSubmitSuccess={setSubmitSuccess}
-                              onClose={onClose}
-                              hideCancel={hideCancel}
-                            />
-                          </Box>
+                        {!readOnly && formik.values.loanProduct && (
+                          <>
+                            <Box
+                              sx={{
+                                display: "flex",
+                                pr: 2,
+                                justifyContent: {
+                                  xs: "center",
+                                  md: "flex-end",
+                                },
+                                width: "100%",
+                                gap: 1,
+                                flexWrap: "wrap",
+                                mb: 8,
+                              }}
+                            >
+                              {!hideCancel && (
+                                <PlusButtonMain
+                                  buttonText="CANCEL"
+                                  variant="outlined"
+                                  startIcon={null}
+                                  color={theme.palette.error.main}
+                                  onClick={() => {
+                                    formik.resetForm();
+                                    setSubmitError("");
+                                    setSubmitSuccess("");
+                                    if (onClose) onClose();
+                                  }}
+                                  disabled={formik.isSubmitting}
+                                />
+                              )}
+                              <PlusButtonMain
+                                buttonText="VIEW LOAN SCHEDULE"
+                                variant="outlined"
+                                startIcon={null}
+                                onClick={handleExportSchedule}
+                                disabled={formik.isSubmitting}
+                              />
+                              <PlusButtonMain
+                                buttonText={
+                                  formik.isSubmitting
+                                    ? "Saving..."
+                                    : "SAVE AS DRAFT"
+                                }
+                                variant="outlined"
+                                startIcon={null}
+                                type="submit"
+                                disabled={formik.isSubmitting}
+                              />
+                              <PlusButtonMain
+                                buttonText="SEND FOR APPROVAL"
+                                variant="outlined"
+                                startIcon={null}
+                                onClick={handleSendForApproval}
+                                disabled={formik.isSubmitting}
+                              />
+                              <PlusButtonMain
+                                buttonText="CREATE LOAN"
+                                variant="outlined"
+                                startIcon={null}
+                                onClick={handleConvertToLoan}
+                                disabled={formik.isSubmitting}
+                              />
+                            </Box>
+                          </>
                         )}
                         {formik.values.loanProduct && submitError && (
                           <Typography color="error" sx={{ mt: 2 }}>

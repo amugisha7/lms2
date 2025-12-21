@@ -5,7 +5,7 @@
  **************************************************************************/
 
 import * as React from "react";
-import { GridProps, TextAreaFieldProps, TextFieldProps } from "@aws-amplify/ui-react";
+import { GridProps, SelectFieldProps, TextAreaFieldProps, TextFieldProps } from "@aws-amplify/ui-react";
 export declare type EscapeHatchProps = {
     [elementHierarchy: string]: Record<string, unknown>;
 } | null;
@@ -22,7 +22,9 @@ export declare type ValidationResponse = {
 };
 export declare type ValidationFunction<T> = (value: T, validationResponse: ValidationResponse) => ValidationResponse | Promise<ValidationResponse>;
 export declare type LoanCreateFormInputValues = {
+    loanNumber?: string;
     approvalStatus?: string;
+    approvalStatusEnum?: string;
     approvedDate?: string;
     principal?: number;
     fees?: number;
@@ -36,6 +38,7 @@ export declare type LoanCreateFormInputValues = {
     loanType?: string;
     rateInterval?: string;
     loanStatus?: string;
+    loanStatusEnum?: string;
     loanCurrency?: string;
     loanPurpose?: string;
     loanComputationRecord?: string;
@@ -47,7 +50,9 @@ export declare type LoanCreateFormInputValues = {
     status?: string;
 };
 export declare type LoanCreateFormValidationValues = {
+    loanNumber?: ValidationFunction<string>;
     approvalStatus?: ValidationFunction<string>;
+    approvalStatusEnum?: ValidationFunction<string>;
     approvedDate?: ValidationFunction<string>;
     principal?: ValidationFunction<number>;
     fees?: ValidationFunction<number>;
@@ -61,6 +66,7 @@ export declare type LoanCreateFormValidationValues = {
     loanType?: ValidationFunction<string>;
     rateInterval?: ValidationFunction<string>;
     loanStatus?: ValidationFunction<string>;
+    loanStatusEnum?: ValidationFunction<string>;
     loanCurrency?: ValidationFunction<string>;
     loanPurpose?: ValidationFunction<string>;
     loanComputationRecord?: ValidationFunction<string>;
@@ -74,7 +80,9 @@ export declare type LoanCreateFormValidationValues = {
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type LoanCreateFormOverridesProps = {
     LoanCreateFormGrid?: PrimitiveOverrideProps<GridProps>;
+    loanNumber?: PrimitiveOverrideProps<TextFieldProps>;
     approvalStatus?: PrimitiveOverrideProps<TextFieldProps>;
+    approvalStatusEnum?: PrimitiveOverrideProps<SelectFieldProps>;
     approvedDate?: PrimitiveOverrideProps<TextFieldProps>;
     principal?: PrimitiveOverrideProps<TextFieldProps>;
     fees?: PrimitiveOverrideProps<TextFieldProps>;
@@ -88,6 +96,7 @@ export declare type LoanCreateFormOverridesProps = {
     loanType?: PrimitiveOverrideProps<TextFieldProps>;
     rateInterval?: PrimitiveOverrideProps<TextFieldProps>;
     loanStatus?: PrimitiveOverrideProps<TextFieldProps>;
+    loanStatusEnum?: PrimitiveOverrideProps<SelectFieldProps>;
     loanCurrency?: PrimitiveOverrideProps<TextFieldProps>;
     loanPurpose?: PrimitiveOverrideProps<TextFieldProps>;
     loanComputationRecord?: PrimitiveOverrideProps<TextAreaFieldProps>;

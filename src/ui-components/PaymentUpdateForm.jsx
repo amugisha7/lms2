@@ -6,7 +6,13 @@
 
 /* eslint-disable */
 import * as React from "react";
-import { Button, Flex, Grid, TextField } from "@aws-amplify/ui-react";
+import {
+  Button,
+  Flex,
+  Grid,
+  SelectField,
+  TextField,
+} from "@aws-amplify/ui-react";
 import { fetchByPath, getOverrideProps, validateField } from "./utils";
 import { generateClient } from "aws-amplify/api";
 import { getPayment } from "../graphql/queries";
@@ -32,6 +38,7 @@ export default function PaymentUpdateForm(props) {
     referenceNumber: "",
     paymentMethod: "",
     status: "",
+    paymentStatusEnum: "",
     notes: "",
   };
   const [paymentDate, setPaymentDate] = React.useState(
@@ -51,6 +58,9 @@ export default function PaymentUpdateForm(props) {
     initialValues.paymentMethod
   );
   const [status, setStatus] = React.useState(initialValues.status);
+  const [paymentStatusEnum, setPaymentStatusEnum] = React.useState(
+    initialValues.paymentStatusEnum
+  );
   const [notes, setNotes] = React.useState(initialValues.notes);
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
@@ -64,6 +74,7 @@ export default function PaymentUpdateForm(props) {
     setReferenceNumber(cleanValues.referenceNumber);
     setPaymentMethod(cleanValues.paymentMethod);
     setStatus(cleanValues.status);
+    setPaymentStatusEnum(cleanValues.paymentStatusEnum);
     setNotes(cleanValues.notes);
     setErrors({});
   };
@@ -91,6 +102,7 @@ export default function PaymentUpdateForm(props) {
     referenceNumber: [],
     paymentMethod: [],
     status: [],
+    paymentStatusEnum: [],
     notes: [],
   };
   const runValidationTasks = async (
@@ -126,6 +138,7 @@ export default function PaymentUpdateForm(props) {
           referenceNumber: referenceNumber ?? null,
           paymentMethod: paymentMethod ?? null,
           status: status ?? null,
+          paymentStatusEnum: paymentStatusEnum ?? null,
           notes: notes ?? null,
         };
         const validationResponses = await Promise.all(
@@ -195,6 +208,7 @@ export default function PaymentUpdateForm(props) {
               referenceNumber,
               paymentMethod,
               status,
+              paymentStatusEnum,
               notes,
             };
             const result = onChange(modelFields);
@@ -226,6 +240,7 @@ export default function PaymentUpdateForm(props) {
               referenceNumber,
               paymentMethod,
               status,
+              paymentStatusEnum,
               notes,
             };
             const result = onChange(modelFields);
@@ -261,6 +276,7 @@ export default function PaymentUpdateForm(props) {
               referenceNumber,
               paymentMethod,
               status,
+              paymentStatusEnum,
               notes,
             };
             const result = onChange(modelFields);
@@ -292,6 +308,7 @@ export default function PaymentUpdateForm(props) {
               referenceNumber,
               paymentMethod,
               status,
+              paymentStatusEnum,
               notes,
             };
             const result = onChange(modelFields);
@@ -323,6 +340,7 @@ export default function PaymentUpdateForm(props) {
               referenceNumber: value,
               paymentMethod,
               status,
+              paymentStatusEnum,
               notes,
             };
             const result = onChange(modelFields);
@@ -354,6 +372,7 @@ export default function PaymentUpdateForm(props) {
               referenceNumber,
               paymentMethod: value,
               status,
+              paymentStatusEnum,
               notes,
             };
             const result = onChange(modelFields);
@@ -385,6 +404,7 @@ export default function PaymentUpdateForm(props) {
               referenceNumber,
               paymentMethod,
               status: value,
+              paymentStatusEnum,
               notes,
             };
             const result = onChange(modelFields);
@@ -400,6 +420,61 @@ export default function PaymentUpdateForm(props) {
         hasError={errors.status?.hasError}
         {...getOverrideProps(overrides, "status")}
       ></TextField>
+      <SelectField
+        label="Payment status enum"
+        placeholder="Please select an option"
+        isDisabled={false}
+        value={paymentStatusEnum}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              paymentDate,
+              paymentType,
+              amount,
+              description,
+              referenceNumber,
+              paymentMethod,
+              status,
+              paymentStatusEnum: value,
+              notes,
+            };
+            const result = onChange(modelFields);
+            value = result?.paymentStatusEnum ?? value;
+          }
+          if (errors.paymentStatusEnum?.hasError) {
+            runValidationTasks("paymentStatusEnum", value);
+          }
+          setPaymentStatusEnum(value);
+        }}
+        onBlur={() =>
+          runValidationTasks("paymentStatusEnum", paymentStatusEnum)
+        }
+        errorMessage={errors.paymentStatusEnum?.errorMessage}
+        hasError={errors.paymentStatusEnum?.hasError}
+        {...getOverrideProps(overrides, "paymentStatusEnum")}
+      >
+        <option
+          children="Pending"
+          value="PENDING"
+          {...getOverrideProps(overrides, "paymentStatusEnumoption0")}
+        ></option>
+        <option
+          children="Completed"
+          value="COMPLETED"
+          {...getOverrideProps(overrides, "paymentStatusEnumoption1")}
+        ></option>
+        <option
+          children="Reversed"
+          value="REVERSED"
+          {...getOverrideProps(overrides, "paymentStatusEnumoption2")}
+        ></option>
+        <option
+          children="Failed"
+          value="FAILED"
+          {...getOverrideProps(overrides, "paymentStatusEnumoption3")}
+        ></option>
+      </SelectField>
       <TextField
         label="Notes"
         isRequired={false}
@@ -416,6 +491,7 @@ export default function PaymentUpdateForm(props) {
               referenceNumber,
               paymentMethod,
               status,
+              paymentStatusEnum,
               notes: value,
             };
             const result = onChange(modelFields);

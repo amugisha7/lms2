@@ -3964,6 +3964,195 @@ export const deleteCollateral = /* GraphQL */ `
     }
   }
 `;
+export const createLoanDraft = /* GraphQL */ `
+  mutation CreateLoanDraft(
+    $input: CreateLoanDraftInput!
+    $condition: ModelLoanDraftConditionInput
+  ) {
+    createLoanDraft(input: $input, condition: $condition) {
+      id
+      status
+      source
+      draftNumber
+      institutionID
+      branchID
+      borrowerID
+      loanProductID
+      createdByEmployeeID
+      assignedToEmployeeID
+      submittedAt
+      approvedAt
+      rejectedAt
+      rejectionReason
+      convertedAt
+      draftRecord
+      termsSnapshot
+      schedulePreview
+      scheduleHash
+      editVersion
+      lastEditedByEmployeeID
+      lastEditedAt
+      principal
+      interestRate
+      interestCalculationMethod
+      startDate
+      maturityDate
+      loanCurrency
+      createdAt
+      updatedAt
+      loans {
+        nextToken
+        __typename
+      }
+      __typename
+    }
+  }
+`;
+export const updateLoanDraft = /* GraphQL */ `
+  mutation UpdateLoanDraft(
+    $input: UpdateLoanDraftInput!
+    $condition: ModelLoanDraftConditionInput
+  ) {
+    updateLoanDraft(input: $input, condition: $condition) {
+      id
+      status
+      source
+      draftNumber
+      institutionID
+      branchID
+      borrowerID
+      loanProductID
+      createdByEmployeeID
+      assignedToEmployeeID
+      submittedAt
+      approvedAt
+      rejectedAt
+      rejectionReason
+      convertedAt
+      draftRecord
+      termsSnapshot
+      schedulePreview
+      scheduleHash
+      editVersion
+      lastEditedByEmployeeID
+      lastEditedAt
+      principal
+      interestRate
+      interestCalculationMethod
+      startDate
+      maturityDate
+      loanCurrency
+      createdAt
+      updatedAt
+      loans {
+        nextToken
+        __typename
+      }
+      __typename
+    }
+  }
+`;
+export const deleteLoanDraft = /* GraphQL */ `
+  mutation DeleteLoanDraft(
+    $input: DeleteLoanDraftInput!
+    $condition: ModelLoanDraftConditionInput
+  ) {
+    deleteLoanDraft(input: $input, condition: $condition) {
+      id
+      status
+      source
+      draftNumber
+      institutionID
+      branchID
+      borrowerID
+      loanProductID
+      createdByEmployeeID
+      assignedToEmployeeID
+      submittedAt
+      approvedAt
+      rejectedAt
+      rejectionReason
+      convertedAt
+      draftRecord
+      termsSnapshot
+      schedulePreview
+      scheduleHash
+      editVersion
+      lastEditedByEmployeeID
+      lastEditedAt
+      principal
+      interestRate
+      interestCalculationMethod
+      startDate
+      maturityDate
+      loanCurrency
+      createdAt
+      updatedAt
+      loans {
+        nextToken
+        __typename
+      }
+      __typename
+    }
+  }
+`;
+export const createLoanDraftEvent = /* GraphQL */ `
+  mutation CreateLoanDraftEvent(
+    $input: CreateLoanDraftEventInput!
+    $condition: ModelLoanDraftEventConditionInput
+  ) {
+    createLoanDraftEvent(input: $input, condition: $condition) {
+      id
+      loanDraftID
+      eventAt
+      eventType
+      actorEmployeeID
+      summary
+      payload
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const updateLoanDraftEvent = /* GraphQL */ `
+  mutation UpdateLoanDraftEvent(
+    $input: UpdateLoanDraftEventInput!
+    $condition: ModelLoanDraftEventConditionInput
+  ) {
+    updateLoanDraftEvent(input: $input, condition: $condition) {
+      id
+      loanDraftID
+      eventAt
+      eventType
+      actorEmployeeID
+      summary
+      payload
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const deleteLoanDraftEvent = /* GraphQL */ `
+  mutation DeleteLoanDraftEvent(
+    $input: DeleteLoanDraftEventInput!
+    $condition: ModelLoanDraftEventConditionInput
+  ) {
+    deleteLoanDraftEvent(input: $input, condition: $condition) {
+      id
+      loanDraftID
+      eventAt
+      eventType
+      actorEmployeeID
+      summary
+      payload
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
 export const createLoan = /* GraphQL */ `
   mutation CreateLoan(
     $input: CreateLoanInput!
@@ -4189,6 +4378,40 @@ export const createLoan = /* GraphQL */ `
         createdAt
         updatedAt
         branchEmployeesId
+        __typename
+      }
+      loanDraftID
+      loanDraft {
+        id
+        status
+        source
+        draftNumber
+        institutionID
+        branchID
+        borrowerID
+        loanProductID
+        createdByEmployeeID
+        assignedToEmployeeID
+        submittedAt
+        approvedAt
+        rejectedAt
+        rejectionReason
+        convertedAt
+        draftRecord
+        termsSnapshot
+        schedulePreview
+        scheduleHash
+        editVersion
+        lastEditedByEmployeeID
+        lastEditedAt
+        principal
+        interestRate
+        interestCalculationMethod
+        startDate
+        maturityDate
+        loanCurrency
+        createdAt
+        updatedAt
         __typename
       }
       createdAt
@@ -4425,6 +4648,40 @@ export const updateLoan = /* GraphQL */ `
         branchEmployeesId
         __typename
       }
+      loanDraftID
+      loanDraft {
+        id
+        status
+        source
+        draftNumber
+        institutionID
+        branchID
+        borrowerID
+        loanProductID
+        createdByEmployeeID
+        assignedToEmployeeID
+        submittedAt
+        approvedAt
+        rejectedAt
+        rejectionReason
+        convertedAt
+        draftRecord
+        termsSnapshot
+        schedulePreview
+        scheduleHash
+        editVersion
+        lastEditedByEmployeeID
+        lastEditedAt
+        principal
+        interestRate
+        interestCalculationMethod
+        startDate
+        maturityDate
+        loanCurrency
+        createdAt
+        updatedAt
+        __typename
+      }
       createdAt
       updatedAt
       borrowerLoansId
@@ -4659,6 +4916,40 @@ export const deleteLoan = /* GraphQL */ `
         branchEmployeesId
         __typename
       }
+      loanDraftID
+      loanDraft {
+        id
+        status
+        source
+        draftNumber
+        institutionID
+        branchID
+        borrowerID
+        loanProductID
+        createdByEmployeeID
+        assignedToEmployeeID
+        submittedAt
+        approvedAt
+        rejectedAt
+        rejectionReason
+        convertedAt
+        draftRecord
+        termsSnapshot
+        schedulePreview
+        scheduleHash
+        editVersion
+        lastEditedByEmployeeID
+        lastEditedAt
+        principal
+        interestRate
+        interestCalculationMethod
+        startDate
+        maturityDate
+        loanCurrency
+        createdAt
+        updatedAt
+        __typename
+      }
       createdAt
       updatedAt
       borrowerLoansId
@@ -4706,6 +4997,7 @@ export const createLoanInstallment = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -4782,6 +5074,7 @@ export const updateLoanInstallment = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -4858,6 +5151,7 @@ export const deleteLoanInstallment = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -4934,6 +5228,7 @@ export const createLoanDisbursement = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -5048,6 +5343,7 @@ export const updateLoanDisbursement = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -5162,6 +5458,7 @@ export const deleteLoanDisbursement = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -5276,6 +5573,7 @@ export const createLoanEvent = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -5389,6 +5687,7 @@ export const updateLoanEvent = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -5502,6 +5801,7 @@ export const deleteLoanEvent = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -5615,6 +5915,7 @@ export const createLoanBalanceSnapshot = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -5674,6 +5975,7 @@ export const updateLoanBalanceSnapshot = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -5733,6 +6035,7 @@ export const deleteLoanBalanceSnapshot = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -5909,6 +6212,7 @@ export const createLoanFees = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -6005,6 +6309,7 @@ export const updateLoanFees = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -6101,6 +6406,7 @@ export const deleteLoanFees = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -6197,6 +6503,7 @@ export const createPenalty = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -6289,6 +6596,7 @@ export const updatePenalty = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -6381,6 +6689,7 @@ export const deletePenalty = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -7058,6 +7367,7 @@ export const createMoneyTransaction = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -7268,6 +7578,7 @@ export const updateMoneyTransaction = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -7478,6 +7789,7 @@ export const deleteMoneyTransaction = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -7661,6 +7973,7 @@ export const createPayment = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -7857,6 +8170,7 @@ export const updatePayment = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -8053,6 +8367,7 @@ export const deletePayment = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -10320,6 +10635,7 @@ export const createLoanApprovedByEmployee = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -10420,6 +10736,7 @@ export const updateLoanApprovedByEmployee = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -10520,6 +10837,7 @@ export const deleteLoanApprovedByEmployee = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -12347,6 +12665,7 @@ export const createLoanGuarantor = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -12413,6 +12732,7 @@ export const updateLoanGuarantor = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -12479,6 +12799,7 @@ export const deleteLoanGuarantor = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -13265,6 +13586,7 @@ export const createLoanDocument = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -13334,6 +13656,7 @@ export const updateLoanDocument = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -13403,6 +13726,7 @@ export const deleteLoanDocument = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -14527,6 +14851,7 @@ export const createLoanContract = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -14592,6 +14917,7 @@ export const updateLoanContract = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -14657,6 +14983,7 @@ export const deleteLoanContract = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -15055,6 +15382,7 @@ export const createLoanApplication = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -15126,6 +15454,7 @@ export const updateLoanApplication = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -15197,6 +15526,7 @@ export const deleteLoanApplication = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -15269,6 +15599,7 @@ export const createLoanCollateral = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -15341,6 +15672,7 @@ export const updateLoanCollateral = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -15413,6 +15745,7 @@ export const deleteLoanCollateral = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -15465,6 +15798,7 @@ export const createLoanAccount = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -15540,6 +15874,7 @@ export const updateLoanAccount = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -15615,6 +15950,7 @@ export const deleteLoanAccount = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -15690,6 +16026,7 @@ export const createLoanExpense = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -15763,6 +16100,7 @@ export const updateLoanExpense = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId
@@ -15836,6 +16174,7 @@ export const deleteLoanExpense = /* GraphQL */ `
         branchID
         loanProductID
         createdByEmployeeID
+        loanDraftID
         createdAt
         updatedAt
         borrowerLoansId

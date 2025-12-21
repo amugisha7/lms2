@@ -9,6 +9,7 @@ const CreateFormButtons = ({
   setSubmitSuccess,
   onClose, // add onClose prop
   hideCancel, // new prop
+  submitLabel = "Save",
 }) => {
   const theme = useTheme();
 
@@ -79,7 +80,7 @@ const CreateFormButtons = ({
             },
           }}
         >
-          {formik.isSubmitting ? "Saving..." : "Save"}
+          {formik.isSubmitting ? "Saving..." : submitLabel}
         </Button>
       </div>
     </>

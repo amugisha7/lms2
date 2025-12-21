@@ -28,10 +28,7 @@ import {
   convertDraftToLoan,
   getLoanDraftById,
 } from "../LoanDrafts/loanDraftHelpers";
-import {
-  exportLoanDraftScheduleA4,
-  exportLoanDraftSummaryA4,
-} from "../LoanDrafts/loanDraftExportHelpers";
+import { exportLoanDraftSummaryA4 } from "../LoanDrafts/loanDraftExportHelpers";
 import FormLabel from "../../../Resources/FormComponents/FormLabel";
 import FormLinkText from "../../../Resources/FormComponents/FormLinkText";
 import RadioGroup from "../../../Resources/FormComponents/RadioGroup";
@@ -42,6 +39,8 @@ import MultipleDropDown from "../../../Resources/FormComponents/MultipleDropDown
 import { Settings } from "@mui/icons-material";
 
 import WorkingOverlay from "../../../ModelAssets/WorkingOverlay";
+import CustomPopUp from "../../../ModelAssets/CustomPopUp";
+import LoanScheduleDraft from "../LoanDrafts/LoanScheduleDraft";
 
 const FormGrid = styled(Grid)(({ theme }) => ({
   display: "flex",
@@ -535,6 +534,8 @@ const UseLoanProduct = forwardRef(
     const [submitSuccess, setSubmitSuccess] = useState("");
     const [loanDraft, setLoanDraft] = useState(null);
     const [termsSnapshot, setTermsSnapshot] = useState(null);
+
+    const [scheduleOpen, setScheduleOpen] = useState(false);
     const [accounts, setAccounts] = useState([]);
     const [accountsLoading, setAccountsLoading] = useState(false);
     const accountsFetchedRef = useRef(false);
@@ -738,17 +739,7 @@ const UseLoanProduct = forwardRef(
 
     const handleExportSchedule = async () => {
       setSubmitError("");
-      try {
-        if (!loanDraft?.id) throw new Error("Save Draft first.");
-        const full = await getLoanDraftById(loanDraft.id);
-        exportLoanDraftScheduleA4({
-          loanDraft: full,
-          borrower: propBorrower || null,
-        });
-      } catch (err) {
-        console.error(err);
-        setSubmitError(err?.message || "Failed to export schedule.");
-      }
+      setScheduleOpen(true);
     };
 
     const handleExportSummary = async () => {
@@ -969,6 +960,29 @@ const UseLoanProduct = forwardRef(
                       open={formik.isSubmitting}
                       message="Saving draft..."
                     />
+
+                    <CustomPopUp
+                      open={scheduleOpen}
+                      onClose={() => setScheduleOpen(false)}
+                      title="Loan Schedule"
+                      showEdit={false}
+                      showDelete={false}
+                      maxWidth="lg"
+                    >
+                      <LoanScheduleDraft
+                        loanDraft={loanDraft}
+                        draftValues={formik.values}
+                        borrower={propBorrower || null}
+                        userDetails={userDetails}
+                        currency={userDetails?.institution?.currencyCode || "$"}
+                        readOnly={readOnly}
+                        onEdit={() => setScheduleOpen(false)}
+                        onSaveDraft={() => formik.submitForm()}
+                        onSendForApproval={handleSendForApproval}
+                        onConfirmCreateLoan={handleConvertToLoan}
+                      />
+                    </CustomPopUp>
+
                     <Box
                       sx={{
                         display: "flex",

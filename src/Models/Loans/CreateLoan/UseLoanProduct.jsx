@@ -1003,6 +1003,7 @@ const UseLoanProduct = forwardRef(
                         readOnly={readOnly}
                         onEdit={() => setScheduleOpen(false)}
                         onSaveDraft={() => formik.submitForm()}
+                        setDraftField={formik.setFieldValue}
                         onSendForApproval={handleSendForApproval}
                         onConfirmCreateLoan={handleConvertToLoan}
                         totalLoanFee={totalLoanFee}

@@ -591,7 +591,7 @@ const CreateLoan = forwardRef(
               if (values.loanFeesType === "custom") {
                 return parseFloat(values.customLoanFeeAmount) || 0;
               }
-              if (values.loanFeesType === "standard" && values.loanFees) {
+              if (values.loanFeesType === "pre-defined" && values.loanFees) {
                 const config = loanFeesConfigs.find(
                   (c) => c.id === values.loanFees
                 );
@@ -607,6 +607,39 @@ const CreateLoan = forwardRef(
                 }
               }
               return 0;
+            })();
+
+            const loanFeeSummary = (() => {
+              const values = formik.values;
+              if (!values?.loanFeesType || values.loanFeesType === "none") {
+                return null;
+              }
+
+              if (values.loanFeesType === "custom") {
+                return {
+                  label: null,
+                  amount: totalLoanFee || 0,
+                };
+              }
+
+              if (values.loanFeesType === "pre-defined" && values.loanFees) {
+                const config = loanFeesConfigs.find(
+                  (c) => c.id === values.loanFees
+                );
+                return {
+                  label: config?.name || "Pre-defined Loan Fee",
+                  amount: totalLoanFee || 0,
+                };
+              }
+
+              if (values.loanFeesType === "pre-defined") {
+                return {
+                  label: "Pre-defined Loan Fee",
+                  amount: totalLoanFee || 0,
+                };
+              }
+
+              return null;
             })();
 
             return (
@@ -633,9 +666,11 @@ const CreateLoan = forwardRef(
                     readOnly={readOnly}
                     onEdit={() => setScheduleOpen(false)}
                     onSaveDraft={() => formik.submitForm()}
+                    setDraftField={formik.setFieldValue}
                     onSendForApproval={handleSendForApproval}
                     onConfirmCreateLoan={handleConvertToLoan}
                     totalLoanFee={totalLoanFee}
+                    loanFeeSummary={loanFeeSummary}
                   />
                 </CustomPopUp>
 
@@ -651,9 +686,10 @@ const CreateLoan = forwardRef(
                     {updatedCreateLoanForm.map((field, index) => {
                       if (field.dependsOn && field.dependsOnValue) {
                         const dependencyValue = formik.values[field.dependsOn];
-                        if (dependencyValue !== field.dependsOnValue) {
-                          return null;
-                        }
+                        const allowed = Array.isArray(field.dependsOnValue)
+                          ? field.dependsOnValue
+                          : [field.dependsOnValue];
+                        if (!allowed.includes(dependencyValue)) return null;
                       }
 
                       let helperText = field.helperText;
@@ -696,6 +732,7 @@ const CreateLoan = forwardRef(
                             gap: 1,
                             flexWrap: "wrap",
                             mb: 8,
+                            mt: 2,
                           }}
                         >
                           {!hideCancel && (

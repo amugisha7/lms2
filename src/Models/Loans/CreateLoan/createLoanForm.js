@@ -362,22 +362,23 @@ const createLoanForm = [
     name: "loanFeesType",
     type: "radio",
     span: 12,
-    defaultValue: "standard",
+    defaultValue: "none",
     options: [
-      { value: "standard", label: "Use Standard Loan Fees" },
+      { value: "none", label: "No Loan Fees" },
+      { value: "pre-defined", label: "Use Pre-defined Loan Fees" },
       { value: "custom", label: "Enter Custom Amount" },
     ],
     helperText: "Choose whether to use a predefined loan fees model or enter a custom fee amount.",
   },
   {
-    label: "Standard Loan Fees",
+    label: "Pre-defined Loan Fees",
     name: "loanFees",
     type: "select",
     span: 6,
     options: [], // Will be populated dynamically
     dynamicoptions: "true",
     dependsOn: "loanFeesType",
-    dependsOnValue: "standard",
+    dependsOnValue: "pre-defined",
     helperText: "Select a predefined loan fee.",
   },
   {
@@ -399,14 +400,18 @@ const createLoanForm = [
     options: [], // Will be populated dynamically
     dynamicoptions: "true",
     helperText: "Select the account to receive the loan fees.",
+    dependsOn: "loanFeesType",
+    dependsOnValue: ["pre-defined", "custom"],
   },
-    {
+  {
     label: "Loan Fees",
     type: "formLink",
     span: 12,
     linkText: "Configure Loan Fees",
     linkUrl: "/admin/loan-fees",
     icon: Settings,
+    dependsOn: "loanFeesType",
+    dependsOnValue: ["pre-defined"],
   },
 
 ];

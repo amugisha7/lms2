@@ -2,7 +2,9 @@ import React from "react";
 import dayjs from "dayjs";
 import {
   Box,
+  Checkbox,
   Divider,
+  FormControlLabel,
   Table,
   TableBody,
   TableCell,
@@ -47,10 +49,12 @@ export default function LoanScheduleDraft({
   onSendForApproval,
   onConfirmCreateLoan,
   totalLoanFee = 0,
+  loanFeeSummary,
 }) {
   const theme = useTheme();
   const printAreaRef = React.useRef(null);
   const [exportingPdf, setExportingPdf] = React.useState(false);
+  const [showLoanFees, setShowLoanFees] = React.useState(true);
 
   const currencyCode = userDetails?.institution?.currencyCode;
 
@@ -255,7 +259,7 @@ export default function LoanScheduleDraft({
     </Box>
   );
 
-  const SummaryBlock = () => (
+  const renderSummaryBlock = () => (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
       <Typography
         variant="body2"
@@ -306,14 +310,16 @@ export default function LoanScheduleDraft({
             <strong>Interest:</strong> {draftRecord?.interestRate ?? ""}
             {draftRecord?.interestType === "percentage" ? "%" : ""}
           </Typography>
-          {totalLoanFee > 0 && (
+          {loanFeeSummary && showLoanFees ? (
             <Typography
               variant="body2"
               sx={{ color: theme.palette.common.black }}
             >
-              <strong>Loan Fee:</strong> <Money value={totalLoanFee} />
+              <strong>Loan Fee:</strong>{" "}
+              {loanFeeSummary?.label ? `${loanFeeSummary.label} — ` : ""}
+              <Money value={totalLoanFee} />
             </Typography>
-          )}
+          ) : null}
         </Box>
         <Box>
           <Typography
@@ -389,22 +395,6 @@ export default function LoanScheduleDraft({
         }}
       >
         <TableHead>
-          {totalLoanFee > 0 ? (
-            <TableRow>
-              <TableCell
-                colSpan={6}
-                sx={{
-                  color: theme.palette.common.black,
-                  fontWeight: 700,
-                  borderBottom: 0,
-                  pb: 0.5,
-                }}
-                align="right"
-              >
-                Loan Fee: <Money value={totalLoanFee} />
-              </TableCell>
-            </TableRow>
-          ) : null}
           <TableRow>
             <TableCell
               sx={{ color: theme.palette.common.black, fontWeight: 700 }}
@@ -432,7 +422,7 @@ export default function LoanScheduleDraft({
               sx={{ color: theme.palette.common.black, fontWeight: 700 }}
               align="right"
             >
-              Total
+              Total Due
             </TableCell>
             <TableCell
               sx={{ color: theme.palette.common.black, fontWeight: 700 }}
@@ -514,36 +504,74 @@ export default function LoanScheduleDraft({
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
       <Box
         className="no-print"
-        sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}
+        sx={{
+          display: "flex",
+          flexDirection: { xs: "column", md: "row" },
+          alignItems: { xs: "stretch", md: "center" },
+          gap: 1,
+        }}
       >
-        <PlusButtonMain
-          buttonText="EDIT"
-          variant="outlined"
-          startIcon={null}
-          onClick={onEdit}
-          disabled={!onEdit}
-        />
-        <PlusButtonMain
-          buttonText="SAVE DRAFT"
-          variant="outlined"
-          startIcon={null}
-          onClick={onSaveDraft}
-          disabled={readOnly || !onSaveDraft}
-        />
-        <PlusButtonMain
-          buttonText="EXPORT PDF"
-          variant="outlined"
-          startIcon={null}
-          onClick={handleExportPdf}
-          disabled={exportingPdf}
-        />
-        <PlusButtonMain
-          buttonText="CREATE LOAN"
-          variant="outlined"
-          startIcon={null}
-          onClick={onConfirmCreateLoan}
-          disabled={readOnly || !onConfirmCreateLoan}
-        />
+        {loanFeeSummary ? (
+          <Box sx={{ width: { xs: "100%", md: "auto" } }}>
+            <FormControlLabel
+              sx={{
+                m: 0,
+                "& .MuiFormControlLabel-label": {
+                  fontSize: theme.typography.caption.fontSize,
+                },
+              }}
+              control={
+                <Checkbox
+                  size="small"
+                  checked={showLoanFees}
+                  onChange={(e) => setShowLoanFees(e.target.checked)}
+                  disabled={readOnly}
+                />
+              }
+              label="Show Loan Fees"
+            />
+          </Box>
+        ) : null}
+
+        <Box
+          sx={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 1,
+            justifyContent: { xs: "flex-start", md: "flex-end" },
+            width: "100%",
+            flex: 1,
+          }}
+        >
+          <PlusButtonMain
+            buttonText="EDIT"
+            variant="outlined"
+            startIcon={null}
+            onClick={onEdit}
+            disabled={!onEdit}
+          />
+          <PlusButtonMain
+            buttonText="SAVE DRAFT"
+            variant="outlined"
+            startIcon={null}
+            onClick={onSaveDraft}
+            disabled={readOnly || !onSaveDraft}
+          />
+          <PlusButtonMain
+            buttonText="EXPORT PDF"
+            variant="outlined"
+            startIcon={null}
+            onClick={handleExportPdf}
+            disabled={exportingPdf}
+          />
+          <PlusButtonMain
+            buttonText="CREATE LOAN"
+            variant="outlined"
+            startIcon={null}
+            onClick={onConfirmCreateLoan}
+            disabled={readOnly || !onConfirmCreateLoan}
+          />
+        </Box>
       </Box>
 
       <WorkingOverlay open={exportingPdf} message="Exporting PDF..." />
@@ -571,7 +599,7 @@ export default function LoanScheduleDraft({
           const startIndex = pageIdx * rowsPerPage;
           return (
             <A4Page key={`page-${pageIdx}`} pageNumber={pageIdx + 1}>
-              {pageIdx === 0 ? <SummaryBlock /> : null}
+              {pageIdx === 0 ? renderSummaryBlock() : null}
               <ScheduleTable rows={rows} startIndex={startIndex} />
             </A4Page>
           );

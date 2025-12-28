@@ -720,32 +720,6 @@ const CreateLoan = forwardRef(
                             onClick={handleExportSchedule}
                             disabled={formik.isSubmitting}
                           />
-
-                          <PlusButtonMain
-                            buttonText={
-                              formik.isSubmitting
-                                ? "Saving..."
-                                : "SAVE AS DRAFT"
-                            }
-                            variant="outlined"
-                            startIcon={null}
-                            type="submit"
-                            disabled={formik.isSubmitting}
-                          />
-                          <PlusButtonMain
-                            buttonText="SEND FOR APPROVAL"
-                            variant="outlined"
-                            startIcon={null}
-                            onClick={handleSendForApproval}
-                            disabled={formik.isSubmitting}
-                          />
-                          <PlusButtonMain
-                            buttonText="CREATE LOAN"
-                            variant="outlined"
-                            startIcon={null}
-                            onClick={handleConvertToLoan}
-                            disabled={formik.isSubmitting}
-                          />
                         </Box>
                       </>
                     )}

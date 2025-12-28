@@ -538,14 +538,7 @@ export default function LoanScheduleDraft({
           disabled={exportingPdf}
         />
         <PlusButtonMain
-          buttonText="SEND FOR APPROVAL"
-          variant="outlined"
-          startIcon={null}
-          onClick={onSendForApproval}
-          disabled={readOnly || !onSendForApproval}
-        />
-        <PlusButtonMain
-          buttonText="CONFIRM AND CREATE LOAN"
+          buttonText="CREATE LOAN"
           variant="outlined"
           startIcon={null}
           onClick={onConfirmCreateLoan}

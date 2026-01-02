@@ -6,7 +6,13 @@
 
 /* eslint-disable */
 import * as React from "react";
-import { Button, Flex, Grid, TextField } from "@aws-amplify/ui-react";
+import {
+  Button,
+  Flex,
+  Grid,
+  TextAreaField,
+  TextField,
+} from "@aws-amplify/ui-react";
 import { fetchByPath, getOverrideProps, validateField } from "./utils";
 import { generateClient } from "aws-amplify/api";
 import { getPenalty } from "../graphql/queries";
@@ -38,6 +44,7 @@ export default function PenaltyUpdateForm(props) {
     penaltyAttribute1: "",
     penaltyAttribute2: "",
     status: "",
+    customPenaltyDetails: "",
   };
   const [amount, setAmount] = React.useState(initialValues.amount);
   const [penaltyName, setPenaltyName] = React.useState(
@@ -71,6 +78,9 @@ export default function PenaltyUpdateForm(props) {
     initialValues.penaltyAttribute2
   );
   const [status, setStatus] = React.useState(initialValues.status);
+  const [customPenaltyDetails, setCustomPenaltyDetails] = React.useState(
+    initialValues.customPenaltyDetails
+  );
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     const cleanValues = penaltyRecord
@@ -89,6 +99,12 @@ export default function PenaltyUpdateForm(props) {
     setPenaltyAttribute1(cleanValues.penaltyAttribute1);
     setPenaltyAttribute2(cleanValues.penaltyAttribute2);
     setStatus(cleanValues.status);
+    setCustomPenaltyDetails(
+      typeof cleanValues.customPenaltyDetails === "string" ||
+        cleanValues.customPenaltyDetails === null
+        ? cleanValues.customPenaltyDetails
+        : JSON.stringify(cleanValues.customPenaltyDetails)
+    );
     setErrors({});
   };
   const [penaltyRecord, setPenaltyRecord] = React.useState(penaltyModelProp);
@@ -121,6 +137,7 @@ export default function PenaltyUpdateForm(props) {
     penaltyAttribute1: [],
     penaltyAttribute2: [],
     status: [],
+    customPenaltyDetails: [{ type: "JSON" }],
   };
   const runValidationTasks = async (
     fieldName,
@@ -161,6 +178,7 @@ export default function PenaltyUpdateForm(props) {
           penaltyAttribute1: penaltyAttribute1 ?? null,
           penaltyAttribute2: penaltyAttribute2 ?? null,
           status: status ?? null,
+          customPenaltyDetails: customPenaltyDetails ?? null,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -238,6 +256,7 @@ export default function PenaltyUpdateForm(props) {
               penaltyAttribute1,
               penaltyAttribute2,
               status,
+              customPenaltyDetails,
             };
             const result = onChange(modelFields);
             value = result?.amount ?? value;
@@ -274,6 +293,7 @@ export default function PenaltyUpdateForm(props) {
               penaltyAttribute1,
               penaltyAttribute2,
               status,
+              customPenaltyDetails,
             };
             const result = onChange(modelFields);
             value = result?.penaltyName ?? value;
@@ -310,6 +330,7 @@ export default function PenaltyUpdateForm(props) {
               penaltyAttribute1,
               penaltyAttribute2,
               status,
+              customPenaltyDetails,
             };
             const result = onChange(modelFields);
             value = result?.penaltyCategory ?? value;
@@ -346,6 +367,7 @@ export default function PenaltyUpdateForm(props) {
               penaltyAttribute1,
               penaltyAttribute2,
               status,
+              customPenaltyDetails,
             };
             const result = onChange(modelFields);
             value = result?.penaltyCalculationMethod ?? value;
@@ -391,6 +413,7 @@ export default function PenaltyUpdateForm(props) {
               penaltyAttribute1,
               penaltyAttribute2,
               status,
+              customPenaltyDetails,
             };
             const result = onChange(modelFields);
             value = result?.penaltyRate ?? value;
@@ -428,6 +451,7 @@ export default function PenaltyUpdateForm(props) {
               penaltyAttribute1,
               penaltyAttribute2,
               status,
+              customPenaltyDetails,
             };
             const result = onChange(modelFields);
             value = result?.penaltyDate ?? value;
@@ -464,6 +488,7 @@ export default function PenaltyUpdateForm(props) {
               penaltyAttribute1,
               penaltyAttribute2,
               status,
+              customPenaltyDetails,
             };
             const result = onChange(modelFields);
             value = result?.penaltyStatus ?? value;
@@ -500,6 +525,7 @@ export default function PenaltyUpdateForm(props) {
               penaltyAttribute1,
               penaltyAttribute2,
               status,
+              customPenaltyDetails,
             };
             const result = onChange(modelFields);
             value = result?.notes ?? value;
@@ -536,6 +562,7 @@ export default function PenaltyUpdateForm(props) {
               penaltyAttribute1,
               penaltyAttribute2,
               status,
+              customPenaltyDetails,
             };
             const result = onChange(modelFields);
             value = result?.penaltyType ?? value;
@@ -572,6 +599,7 @@ export default function PenaltyUpdateForm(props) {
               penaltyAttribute1,
               penaltyAttribute2,
               status,
+              customPenaltyDetails,
             };
             const result = onChange(modelFields);
             value = result?.penaltyDescription ?? value;
@@ -610,6 +638,7 @@ export default function PenaltyUpdateForm(props) {
               penaltyAttribute1: value,
               penaltyAttribute2,
               status,
+              customPenaltyDetails,
             };
             const result = onChange(modelFields);
             value = result?.penaltyAttribute1 ?? value;
@@ -648,6 +677,7 @@ export default function PenaltyUpdateForm(props) {
               penaltyAttribute1,
               penaltyAttribute2: value,
               status,
+              customPenaltyDetails,
             };
             const result = onChange(modelFields);
             value = result?.penaltyAttribute2 ?? value;
@@ -686,6 +716,7 @@ export default function PenaltyUpdateForm(props) {
               penaltyAttribute1,
               penaltyAttribute2,
               status: value,
+              customPenaltyDetails,
             };
             const result = onChange(modelFields);
             value = result?.status ?? value;
@@ -700,6 +731,45 @@ export default function PenaltyUpdateForm(props) {
         hasError={errors.status?.hasError}
         {...getOverrideProps(overrides, "status")}
       ></TextField>
+      <TextAreaField
+        label="Custom penalty details"
+        isRequired={false}
+        isReadOnly={false}
+        value={customPenaltyDetails}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              amount,
+              penaltyName,
+              penaltyCategory,
+              penaltyCalculationMethod,
+              penaltyRate,
+              penaltyDate,
+              penaltyStatus,
+              notes,
+              penaltyType,
+              penaltyDescription,
+              penaltyAttribute1,
+              penaltyAttribute2,
+              status,
+              customPenaltyDetails: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.customPenaltyDetails ?? value;
+          }
+          if (errors.customPenaltyDetails?.hasError) {
+            runValidationTasks("customPenaltyDetails", value);
+          }
+          setCustomPenaltyDetails(value);
+        }}
+        onBlur={() =>
+          runValidationTasks("customPenaltyDetails", customPenaltyDetails)
+        }
+        errorMessage={errors.customPenaltyDetails?.errorMessage}
+        hasError={errors.customPenaltyDetails?.hasError}
+        {...getOverrideProps(overrides, "customPenaltyDetails")}
+      ></TextAreaField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}

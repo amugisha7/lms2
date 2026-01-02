@@ -6,7 +6,13 @@
 
 /* eslint-disable */
 import * as React from "react";
-import { Button, Flex, Grid, TextField } from "@aws-amplify/ui-react";
+import {
+  Button,
+  Flex,
+  Grid,
+  TextAreaField,
+  TextField,
+} from "@aws-amplify/ui-react";
 import { fetchByPath, getOverrideProps, validateField } from "./utils";
 import { generateClient } from "aws-amplify/api";
 import { getCreditScore } from "../graphql/queries";
@@ -32,6 +38,7 @@ export default function CreditScoreUpdateForm(props) {
     scoreSource: "",
     scoreStatus: "",
     status: "",
+    customCreditScoreDetails: "",
   };
   const [name, setName] = React.useState(initialValues.name);
   const [description, setDescription] = React.useState(
@@ -46,6 +53,8 @@ export default function CreditScoreUpdateForm(props) {
     initialValues.scoreStatus
   );
   const [status, setStatus] = React.useState(initialValues.status);
+  const [customCreditScoreDetails, setCustomCreditScoreDetails] =
+    React.useState(initialValues.customCreditScoreDetails);
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     const cleanValues = creditScoreRecord
@@ -58,6 +67,12 @@ export default function CreditScoreUpdateForm(props) {
     setScoreSource(cleanValues.scoreSource);
     setScoreStatus(cleanValues.scoreStatus);
     setStatus(cleanValues.status);
+    setCustomCreditScoreDetails(
+      typeof cleanValues.customCreditScoreDetails === "string" ||
+        cleanValues.customCreditScoreDetails === null
+        ? cleanValues.customCreditScoreDetails
+        : JSON.stringify(cleanValues.customCreditScoreDetails)
+    );
     setErrors({});
   };
   const [creditScoreRecord, setCreditScoreRecord] =
@@ -85,6 +100,7 @@ export default function CreditScoreUpdateForm(props) {
     scoreSource: [],
     scoreStatus: [],
     status: [],
+    customCreditScoreDetails: [{ type: "JSON" }],
   };
   const runValidationTasks = async (
     fieldName,
@@ -119,6 +135,7 @@ export default function CreditScoreUpdateForm(props) {
           scoreSource: scoreSource ?? null,
           scoreStatus: scoreStatus ?? null,
           status: status ?? null,
+          customCreditScoreDetails: customCreditScoreDetails ?? null,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -186,6 +203,7 @@ export default function CreditScoreUpdateForm(props) {
               scoreSource,
               scoreStatus,
               status,
+              customCreditScoreDetails,
             };
             const result = onChange(modelFields);
             value = result?.name ?? value;
@@ -216,6 +234,7 @@ export default function CreditScoreUpdateForm(props) {
               scoreSource,
               scoreStatus,
               status,
+              customCreditScoreDetails,
             };
             const result = onChange(modelFields);
             value = result?.description ?? value;
@@ -250,6 +269,7 @@ export default function CreditScoreUpdateForm(props) {
               scoreSource,
               scoreStatus,
               status,
+              customCreditScoreDetails,
             };
             const result = onChange(modelFields);
             value = result?.score ?? value;
@@ -281,6 +301,7 @@ export default function CreditScoreUpdateForm(props) {
               scoreSource,
               scoreStatus,
               status,
+              customCreditScoreDetails,
             };
             const result = onChange(modelFields);
             value = result?.scoreDate ?? value;
@@ -311,6 +332,7 @@ export default function CreditScoreUpdateForm(props) {
               scoreSource: value,
               scoreStatus,
               status,
+              customCreditScoreDetails,
             };
             const result = onChange(modelFields);
             value = result?.scoreSource ?? value;
@@ -341,6 +363,7 @@ export default function CreditScoreUpdateForm(props) {
               scoreSource,
               scoreStatus: value,
               status,
+              customCreditScoreDetails,
             };
             const result = onChange(modelFields);
             value = result?.scoreStatus ?? value;
@@ -371,6 +394,7 @@ export default function CreditScoreUpdateForm(props) {
               scoreSource,
               scoreStatus,
               status: value,
+              customCreditScoreDetails,
             };
             const result = onChange(modelFields);
             value = result?.status ?? value;
@@ -385,6 +409,42 @@ export default function CreditScoreUpdateForm(props) {
         hasError={errors.status?.hasError}
         {...getOverrideProps(overrides, "status")}
       ></TextField>
+      <TextAreaField
+        label="Custom credit score details"
+        isRequired={false}
+        isReadOnly={false}
+        value={customCreditScoreDetails}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              name,
+              description,
+              score,
+              scoreDate,
+              scoreSource,
+              scoreStatus,
+              status,
+              customCreditScoreDetails: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.customCreditScoreDetails ?? value;
+          }
+          if (errors.customCreditScoreDetails?.hasError) {
+            runValidationTasks("customCreditScoreDetails", value);
+          }
+          setCustomCreditScoreDetails(value);
+        }}
+        onBlur={() =>
+          runValidationTasks(
+            "customCreditScoreDetails",
+            customCreditScoreDetails
+          )
+        }
+        errorMessage={errors.customCreditScoreDetails?.errorMessage}
+        hasError={errors.customCreditScoreDetails?.hasError}
+        {...getOverrideProps(overrides, "customCreditScoreDetails")}
+      ></TextAreaField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}

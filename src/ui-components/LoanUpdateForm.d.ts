@@ -48,6 +48,7 @@ export declare type LoanUpdateFormInputValues = {
     paymentFrequency?: string;
     customFieldsData?: string;
     status?: string;
+    customLoanDetails?: string;
 };
 export declare type LoanUpdateFormValidationValues = {
     loanNumber?: ValidationFunction<string>;
@@ -76,6 +77,7 @@ export declare type LoanUpdateFormValidationValues = {
     paymentFrequency?: ValidationFunction<string>;
     customFieldsData?: ValidationFunction<string>;
     status?: ValidationFunction<string>;
+    customLoanDetails?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type LoanUpdateFormOverridesProps = {
@@ -106,6 +108,7 @@ export declare type LoanUpdateFormOverridesProps = {
     paymentFrequency?: PrimitiveOverrideProps<TextFieldProps>;
     customFieldsData?: PrimitiveOverrideProps<TextAreaFieldProps>;
     status?: PrimitiveOverrideProps<TextFieldProps>;
+    customLoanDetails?: PrimitiveOverrideProps<TextAreaFieldProps>;
 } & EscapeHatchProps;
 export declare type LoanUpdateFormProps = React.PropsWithChildren<{
     overrides?: LoanUpdateFormOverridesProps | undefined | null;

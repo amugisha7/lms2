@@ -6,7 +6,13 @@
 
 /* eslint-disable */
 import * as React from "react";
-import { Button, Flex, Grid, TextField } from "@aws-amplify/ui-react";
+import {
+  Button,
+  Flex,
+  Grid,
+  TextAreaField,
+  TextField,
+} from "@aws-amplify/ui-react";
 import { fetchByPath, getOverrideProps, validateField } from "./utils";
 import { generateClient } from "aws-amplify/api";
 import { getOtherIncome } from "../graphql/queries";
@@ -31,6 +37,7 @@ export default function OtherIncomeUpdateForm(props) {
     incomeDate: "",
     incomeType: "",
     status: "",
+    customOtherIncomeDetails: "",
   };
   const [name, setName] = React.useState(initialValues.name);
   const [description, setDescription] = React.useState(
@@ -40,6 +47,8 @@ export default function OtherIncomeUpdateForm(props) {
   const [incomeDate, setIncomeDate] = React.useState(initialValues.incomeDate);
   const [incomeType, setIncomeType] = React.useState(initialValues.incomeType);
   const [status, setStatus] = React.useState(initialValues.status);
+  const [customOtherIncomeDetails, setCustomOtherIncomeDetails] =
+    React.useState(initialValues.customOtherIncomeDetails);
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     const cleanValues = otherIncomeRecord
@@ -51,6 +60,12 @@ export default function OtherIncomeUpdateForm(props) {
     setIncomeDate(cleanValues.incomeDate);
     setIncomeType(cleanValues.incomeType);
     setStatus(cleanValues.status);
+    setCustomOtherIncomeDetails(
+      typeof cleanValues.customOtherIncomeDetails === "string" ||
+        cleanValues.customOtherIncomeDetails === null
+        ? cleanValues.customOtherIncomeDetails
+        : JSON.stringify(cleanValues.customOtherIncomeDetails)
+    );
     setErrors({});
   };
   const [otherIncomeRecord, setOtherIncomeRecord] =
@@ -77,6 +92,7 @@ export default function OtherIncomeUpdateForm(props) {
     incomeDate: [],
     incomeType: [],
     status: [],
+    customOtherIncomeDetails: [{ type: "JSON" }],
   };
   const runValidationTasks = async (
     fieldName,
@@ -110,6 +126,7 @@ export default function OtherIncomeUpdateForm(props) {
           incomeDate: incomeDate ?? null,
           incomeType: incomeType ?? null,
           status: status ?? null,
+          customOtherIncomeDetails: customOtherIncomeDetails ?? null,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -176,6 +193,7 @@ export default function OtherIncomeUpdateForm(props) {
               incomeDate,
               incomeType,
               status,
+              customOtherIncomeDetails,
             };
             const result = onChange(modelFields);
             value = result?.name ?? value;
@@ -205,6 +223,7 @@ export default function OtherIncomeUpdateForm(props) {
               incomeDate,
               incomeType,
               status,
+              customOtherIncomeDetails,
             };
             const result = onChange(modelFields);
             value = result?.description ?? value;
@@ -238,6 +257,7 @@ export default function OtherIncomeUpdateForm(props) {
               incomeDate,
               incomeType,
               status,
+              customOtherIncomeDetails,
             };
             const result = onChange(modelFields);
             value = result?.amount ?? value;
@@ -268,6 +288,7 @@ export default function OtherIncomeUpdateForm(props) {
               incomeDate: value,
               incomeType,
               status,
+              customOtherIncomeDetails,
             };
             const result = onChange(modelFields);
             value = result?.incomeDate ?? value;
@@ -297,6 +318,7 @@ export default function OtherIncomeUpdateForm(props) {
               incomeDate,
               incomeType: value,
               status,
+              customOtherIncomeDetails,
             };
             const result = onChange(modelFields);
             value = result?.incomeType ?? value;
@@ -326,6 +348,7 @@ export default function OtherIncomeUpdateForm(props) {
               incomeDate,
               incomeType,
               status: value,
+              customOtherIncomeDetails,
             };
             const result = onChange(modelFields);
             value = result?.status ?? value;
@@ -340,6 +363,41 @@ export default function OtherIncomeUpdateForm(props) {
         hasError={errors.status?.hasError}
         {...getOverrideProps(overrides, "status")}
       ></TextField>
+      <TextAreaField
+        label="Custom other income details"
+        isRequired={false}
+        isReadOnly={false}
+        value={customOtherIncomeDetails}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              name,
+              description,
+              amount,
+              incomeDate,
+              incomeType,
+              status,
+              customOtherIncomeDetails: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.customOtherIncomeDetails ?? value;
+          }
+          if (errors.customOtherIncomeDetails?.hasError) {
+            runValidationTasks("customOtherIncomeDetails", value);
+          }
+          setCustomOtherIncomeDetails(value);
+        }}
+        onBlur={() =>
+          runValidationTasks(
+            "customOtherIncomeDetails",
+            customOtherIncomeDetails
+          )
+        }
+        errorMessage={errors.customOtherIncomeDetails?.errorMessage}
+        hasError={errors.customOtherIncomeDetails?.hasError}
+        {...getOverrideProps(overrides, "customOtherIncomeDetails")}
+      ></TextAreaField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}

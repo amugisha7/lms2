@@ -5,7 +5,7 @@
  **************************************************************************/
 
 import * as React from "react";
-import { GridProps, TextFieldProps } from "@aws-amplify/ui-react";
+import { GridProps, TextAreaFieldProps, TextFieldProps } from "@aws-amplify/ui-react";
 export declare type EscapeHatchProps = {
     [elementHierarchy: string]: Record<string, unknown>;
 } | null;
@@ -28,6 +28,7 @@ export declare type UserNotificationUpdateFormInputValues = {
     reference?: string;
     message?: string;
     status?: string;
+    customUserNotificationDetails?: string;
 };
 export declare type UserNotificationUpdateFormValidationValues = {
     eventType?: ValidationFunction<string>;
@@ -36,6 +37,7 @@ export declare type UserNotificationUpdateFormValidationValues = {
     reference?: ValidationFunction<string>;
     message?: ValidationFunction<string>;
     status?: ValidationFunction<string>;
+    customUserNotificationDetails?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type UserNotificationUpdateFormOverridesProps = {
@@ -46,6 +48,7 @@ export declare type UserNotificationUpdateFormOverridesProps = {
     reference?: PrimitiveOverrideProps<TextFieldProps>;
     message?: PrimitiveOverrideProps<TextFieldProps>;
     status?: PrimitiveOverrideProps<TextFieldProps>;
+    customUserNotificationDetails?: PrimitiveOverrideProps<TextAreaFieldProps>;
 } & EscapeHatchProps;
 export declare type UserNotificationUpdateFormProps = React.PropsWithChildren<{
     overrides?: UserNotificationUpdateFormOverridesProps | undefined | null;

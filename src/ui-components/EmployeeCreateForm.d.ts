@@ -62,6 +62,7 @@ export declare type EmployeeCreateFormInputValues = {
     customFieldsData?: string;
     relatedUserID?: string;
     relatedBorrowerID?: string;
+    customEmployeeDetails?: string;
 };
 export declare type EmployeeCreateFormValidationValues = {
     firstName?: ValidationFunction<string>;
@@ -104,6 +105,7 @@ export declare type EmployeeCreateFormValidationValues = {
     customFieldsData?: ValidationFunction<string>;
     relatedUserID?: ValidationFunction<string>;
     relatedBorrowerID?: ValidationFunction<string>;
+    customEmployeeDetails?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type EmployeeCreateFormOverridesProps = {
@@ -148,6 +150,7 @@ export declare type EmployeeCreateFormOverridesProps = {
     customFieldsData?: PrimitiveOverrideProps<TextAreaFieldProps>;
     relatedUserID?: PrimitiveOverrideProps<TextFieldProps>;
     relatedBorrowerID?: PrimitiveOverrideProps<TextFieldProps>;
+    customEmployeeDetails?: PrimitiveOverrideProps<TextAreaFieldProps>;
 } & EscapeHatchProps;
 export declare type EmployeeCreateFormProps = React.PropsWithChildren<{
     overrides?: EmployeeCreateFormOverridesProps | undefined | null;

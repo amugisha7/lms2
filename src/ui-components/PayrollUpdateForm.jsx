@@ -6,7 +6,13 @@
 
 /* eslint-disable */
 import * as React from "react";
-import { Button, Flex, Grid, TextField } from "@aws-amplify/ui-react";
+import {
+  Button,
+  Flex,
+  Grid,
+  TextAreaField,
+  TextField,
+} from "@aws-amplify/ui-react";
 import { fetchByPath, getOverrideProps, validateField } from "./utils";
 import { generateClient } from "aws-amplify/api";
 import { getPayroll } from "../graphql/queries";
@@ -36,6 +42,7 @@ export default function PayrollUpdateForm(props) {
     totalShareDeductions: "",
     totalNetPay: "",
     details: "",
+    customPayrollDetails: "",
   };
   const [periodStartDate, setPeriodStartDate] = React.useState(
     initialValues.periodStartDate
@@ -64,6 +71,9 @@ export default function PayrollUpdateForm(props) {
     initialValues.totalNetPay
   );
   const [details, setDetails] = React.useState(initialValues.details);
+  const [customPayrollDetails, setCustomPayrollDetails] = React.useState(
+    initialValues.customPayrollDetails
+  );
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     const cleanValues = payrollRecord
@@ -80,6 +90,12 @@ export default function PayrollUpdateForm(props) {
     setTotalShareDeductions(cleanValues.totalShareDeductions);
     setTotalNetPay(cleanValues.totalNetPay);
     setDetails(cleanValues.details);
+    setCustomPayrollDetails(
+      typeof cleanValues.customPayrollDetails === "string" ||
+        cleanValues.customPayrollDetails === null
+        ? cleanValues.customPayrollDetails
+        : JSON.stringify(cleanValues.customPayrollDetails)
+    );
     setErrors({});
   };
   const [payrollRecord, setPayrollRecord] = React.useState(payrollModelProp);
@@ -110,6 +126,7 @@ export default function PayrollUpdateForm(props) {
     totalShareDeductions: [],
     totalNetPay: [],
     details: [],
+    customPayrollDetails: [{ type: "JSON" }],
   };
   const runValidationTasks = async (
     fieldName,
@@ -148,6 +165,7 @@ export default function PayrollUpdateForm(props) {
           totalShareDeductions: totalShareDeductions ?? null,
           totalNetPay: totalNetPay ?? null,
           details: details ?? null,
+          customPayrollDetails: customPayrollDetails ?? null,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -220,6 +238,7 @@ export default function PayrollUpdateForm(props) {
               totalShareDeductions,
               totalNetPay,
               details,
+              customPayrollDetails,
             };
             const result = onChange(modelFields);
             value = result?.periodStartDate ?? value;
@@ -255,6 +274,7 @@ export default function PayrollUpdateForm(props) {
               totalShareDeductions,
               totalNetPay,
               details,
+              customPayrollDetails,
             };
             const result = onChange(modelFields);
             value = result?.periodEndDate ?? value;
@@ -290,6 +310,7 @@ export default function PayrollUpdateForm(props) {
               totalShareDeductions,
               totalNetPay,
               details,
+              customPayrollDetails,
             };
             const result = onChange(modelFields);
             value = result?.payDate ?? value;
@@ -324,6 +345,7 @@ export default function PayrollUpdateForm(props) {
               totalShareDeductions,
               totalNetPay,
               details,
+              customPayrollDetails,
             };
             const result = onChange(modelFields);
             value = result?.status ?? value;
@@ -358,6 +380,7 @@ export default function PayrollUpdateForm(props) {
               totalShareDeductions,
               totalNetPay,
               details,
+              customPayrollDetails,
             };
             const result = onChange(modelFields);
             value = result?.processedByUserID ?? value;
@@ -398,6 +421,7 @@ export default function PayrollUpdateForm(props) {
               totalShareDeductions,
               totalNetPay,
               details,
+              customPayrollDetails,
             };
             const result = onChange(modelFields);
             value = result?.totalGrossPay ?? value;
@@ -436,6 +460,7 @@ export default function PayrollUpdateForm(props) {
               totalShareDeductions,
               totalNetPay,
               details,
+              customPayrollDetails,
             };
             const result = onChange(modelFields);
             value = result?.totalLoanDeductions ?? value;
@@ -476,6 +501,7 @@ export default function PayrollUpdateForm(props) {
               totalShareDeductions,
               totalNetPay,
               details,
+              customPayrollDetails,
             };
             const result = onChange(modelFields);
             value = result?.totalSavingsDeductions ?? value;
@@ -516,6 +542,7 @@ export default function PayrollUpdateForm(props) {
               totalShareDeductions: value,
               totalNetPay,
               details,
+              customPayrollDetails,
             };
             const result = onChange(modelFields);
             value = result?.totalShareDeductions ?? value;
@@ -556,6 +583,7 @@ export default function PayrollUpdateForm(props) {
               totalShareDeductions,
               totalNetPay: value,
               details,
+              customPayrollDetails,
             };
             const result = onChange(modelFields);
             value = result?.totalNetPay ?? value;
@@ -590,6 +618,7 @@ export default function PayrollUpdateForm(props) {
               totalShareDeductions,
               totalNetPay,
               details: value,
+              customPayrollDetails,
             };
             const result = onChange(modelFields);
             value = result?.details ?? value;
@@ -604,6 +633,43 @@ export default function PayrollUpdateForm(props) {
         hasError={errors.details?.hasError}
         {...getOverrideProps(overrides, "details")}
       ></TextField>
+      <TextAreaField
+        label="Custom payroll details"
+        isRequired={false}
+        isReadOnly={false}
+        value={customPayrollDetails}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              periodStartDate,
+              periodEndDate,
+              payDate,
+              status,
+              processedByUserID,
+              totalGrossPay,
+              totalLoanDeductions,
+              totalSavingsDeductions,
+              totalShareDeductions,
+              totalNetPay,
+              details,
+              customPayrollDetails: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.customPayrollDetails ?? value;
+          }
+          if (errors.customPayrollDetails?.hasError) {
+            runValidationTasks("customPayrollDetails", value);
+          }
+          setCustomPayrollDetails(value);
+        }}
+        onBlur={() =>
+          runValidationTasks("customPayrollDetails", customPayrollDetails)
+        }
+        errorMessage={errors.customPayrollDetails?.errorMessage}
+        hasError={errors.customPayrollDetails?.hasError}
+        {...getOverrideProps(overrides, "customPayrollDetails")}
+      ></TextAreaField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}

@@ -6,7 +6,13 @@
 
 /* eslint-disable */
 import * as React from "react";
-import { Button, Flex, Grid, TextField } from "@aws-amplify/ui-react";
+import {
+  Button,
+  Flex,
+  Grid,
+  TextAreaField,
+  TextField,
+} from "@aws-amplify/ui-react";
 import { fetchByPath, getOverrideProps, validateField } from "./utils";
 import { generateClient } from "aws-amplify/api";
 import { createUserNotification } from "../graphql/mutations";
@@ -29,6 +35,7 @@ export default function UserNotificationCreateForm(props) {
     reference: "",
     message: "",
     status: "",
+    customUserNotificationDetails: "",
   };
   const [eventType, setEventType] = React.useState(initialValues.eventType);
   const [name, setName] = React.useState(initialValues.name);
@@ -38,6 +45,8 @@ export default function UserNotificationCreateForm(props) {
   const [reference, setReference] = React.useState(initialValues.reference);
   const [message, setMessage] = React.useState(initialValues.message);
   const [status, setStatus] = React.useState(initialValues.status);
+  const [customUserNotificationDetails, setCustomUserNotificationDetails] =
+    React.useState(initialValues.customUserNotificationDetails);
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     setEventType(initialValues.eventType);
@@ -46,6 +55,9 @@ export default function UserNotificationCreateForm(props) {
     setReference(initialValues.reference);
     setMessage(initialValues.message);
     setStatus(initialValues.status);
+    setCustomUserNotificationDetails(
+      initialValues.customUserNotificationDetails
+    );
     setErrors({});
   };
   const validations = {
@@ -55,6 +67,7 @@ export default function UserNotificationCreateForm(props) {
     reference: [],
     message: [],
     status: [],
+    customUserNotificationDetails: [{ type: "JSON" }],
   };
   const runValidationTasks = async (
     fieldName,
@@ -88,6 +101,7 @@ export default function UserNotificationCreateForm(props) {
           reference,
           message,
           status,
+          customUserNotificationDetails,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -156,6 +170,7 @@ export default function UserNotificationCreateForm(props) {
               reference,
               message,
               status,
+              customUserNotificationDetails,
             };
             const result = onChange(modelFields);
             value = result?.eventType ?? value;
@@ -185,6 +200,7 @@ export default function UserNotificationCreateForm(props) {
               reference,
               message,
               status,
+              customUserNotificationDetails,
             };
             const result = onChange(modelFields);
             value = result?.name ?? value;
@@ -214,6 +230,7 @@ export default function UserNotificationCreateForm(props) {
               reference,
               message,
               status,
+              customUserNotificationDetails,
             };
             const result = onChange(modelFields);
             value = result?.description ?? value;
@@ -243,6 +260,7 @@ export default function UserNotificationCreateForm(props) {
               reference: value,
               message,
               status,
+              customUserNotificationDetails,
             };
             const result = onChange(modelFields);
             value = result?.reference ?? value;
@@ -272,6 +290,7 @@ export default function UserNotificationCreateForm(props) {
               reference,
               message: value,
               status,
+              customUserNotificationDetails,
             };
             const result = onChange(modelFields);
             value = result?.message ?? value;
@@ -301,6 +320,7 @@ export default function UserNotificationCreateForm(props) {
               reference,
               message,
               status: value,
+              customUserNotificationDetails,
             };
             const result = onChange(modelFields);
             value = result?.status ?? value;
@@ -315,6 +335,40 @@ export default function UserNotificationCreateForm(props) {
         hasError={errors.status?.hasError}
         {...getOverrideProps(overrides, "status")}
       ></TextField>
+      <TextAreaField
+        label="Custom user notification details"
+        isRequired={false}
+        isReadOnly={false}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              eventType,
+              name,
+              description,
+              reference,
+              message,
+              status,
+              customUserNotificationDetails: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.customUserNotificationDetails ?? value;
+          }
+          if (errors.customUserNotificationDetails?.hasError) {
+            runValidationTasks("customUserNotificationDetails", value);
+          }
+          setCustomUserNotificationDetails(value);
+        }}
+        onBlur={() =>
+          runValidationTasks(
+            "customUserNotificationDetails",
+            customUserNotificationDetails
+          )
+        }
+        errorMessage={errors.customUserNotificationDetails?.errorMessage}
+        hasError={errors.customUserNotificationDetails?.hasError}
+        {...getOverrideProps(overrides, "customUserNotificationDetails")}
+      ></TextAreaField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}

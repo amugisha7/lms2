@@ -55,6 +55,7 @@ export default function LoanProductUpdateForm(props) {
     loanInterestRateAfterMaturity: "",
     recurringPeriodAfterMaturityUnit: "",
     status: "",
+    customLoanProductDetails: "",
   };
   const [name, setName] = React.useState(initialValues.name);
   const [description, setDescription] = React.useState(
@@ -120,6 +121,8 @@ export default function LoanProductUpdateForm(props) {
     setRecurringPeriodAfterMaturityUnit,
   ] = React.useState(initialValues.recurringPeriodAfterMaturityUnit);
   const [status, setStatus] = React.useState(initialValues.status);
+  const [customLoanProductDetails, setCustomLoanProductDetails] =
+    React.useState(initialValues.customLoanProductDetails);
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     const cleanValues = loanProductRecord
@@ -155,6 +158,12 @@ export default function LoanProductUpdateForm(props) {
       cleanValues.recurringPeriodAfterMaturityUnit
     );
     setStatus(cleanValues.status);
+    setCustomLoanProductDetails(
+      typeof cleanValues.customLoanProductDetails === "string" ||
+        cleanValues.customLoanProductDetails === null
+        ? cleanValues.customLoanProductDetails
+        : JSON.stringify(cleanValues.customLoanProductDetails)
+    );
     setErrors({});
   };
   const [loanProductRecord, setLoanProductRecord] =
@@ -198,6 +207,7 @@ export default function LoanProductUpdateForm(props) {
     loanInterestRateAfterMaturity: [],
     recurringPeriodAfterMaturityUnit: [],
     status: [],
+    customLoanProductDetails: [{ type: "JSON" }],
   };
   const runValidationTasks = async (
     fieldName,
@@ -249,6 +259,7 @@ export default function LoanProductUpdateForm(props) {
           recurringPeriodAfterMaturityUnit:
             recurringPeriodAfterMaturityUnit ?? null,
           status: status ?? null,
+          customLoanProductDetails: customLoanProductDetails ?? null,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -332,6 +343,7 @@ export default function LoanProductUpdateForm(props) {
               loanInterestRateAfterMaturity,
               recurringPeriodAfterMaturityUnit,
               status,
+              customLoanProductDetails,
             };
             const result = onChange(modelFields);
             value = result?.name ?? value;
@@ -378,6 +390,7 @@ export default function LoanProductUpdateForm(props) {
               loanInterestRateAfterMaturity,
               recurringPeriodAfterMaturityUnit,
               status,
+              customLoanProductDetails,
             };
             const result = onChange(modelFields);
             value = result?.description ?? value;
@@ -428,6 +441,7 @@ export default function LoanProductUpdateForm(props) {
               loanInterestRateAfterMaturity,
               recurringPeriodAfterMaturityUnit,
               status,
+              customLoanProductDetails,
             };
             const result = onChange(modelFields);
             value = result?.principalAmountMin ?? value;
@@ -480,6 +494,7 @@ export default function LoanProductUpdateForm(props) {
               loanInterestRateAfterMaturity,
               recurringPeriodAfterMaturityUnit,
               status,
+              customLoanProductDetails,
             };
             const result = onChange(modelFields);
             value = result?.principalAmountMax ?? value;
@@ -532,6 +547,7 @@ export default function LoanProductUpdateForm(props) {
               loanInterestRateAfterMaturity,
               recurringPeriodAfterMaturityUnit,
               status,
+              customLoanProductDetails,
             };
             const result = onChange(modelFields);
             value = result?.principalAmountDefault ?? value;
@@ -584,6 +600,7 @@ export default function LoanProductUpdateForm(props) {
               loanInterestRateAfterMaturity,
               recurringPeriodAfterMaturityUnit,
               status,
+              customLoanProductDetails,
             };
             const result = onChange(modelFields);
             value = result?.interestRateMin ?? value;
@@ -634,6 +651,7 @@ export default function LoanProductUpdateForm(props) {
               loanInterestRateAfterMaturity,
               recurringPeriodAfterMaturityUnit,
               status,
+              customLoanProductDetails,
             };
             const result = onChange(modelFields);
             value = result?.interestRateMax ?? value;
@@ -684,6 +702,7 @@ export default function LoanProductUpdateForm(props) {
               loanInterestRateAfterMaturity,
               recurringPeriodAfterMaturityUnit,
               status,
+              customLoanProductDetails,
             };
             const result = onChange(modelFields);
             value = result?.interestRateDefault ?? value;
@@ -732,6 +751,7 @@ export default function LoanProductUpdateForm(props) {
               loanInterestRateAfterMaturity,
               recurringPeriodAfterMaturityUnit,
               status,
+              customLoanProductDetails,
             };
             const result = onChange(modelFields);
             value = result?.interestCalculationMethod ?? value;
@@ -783,6 +803,7 @@ export default function LoanProductUpdateForm(props) {
               loanInterestRateAfterMaturity,
               recurringPeriodAfterMaturityUnit,
               status,
+              customLoanProductDetails,
             };
             const result = onChange(modelFields);
             value = result?.interestType ?? value;
@@ -829,6 +850,7 @@ export default function LoanProductUpdateForm(props) {
               loanInterestRateAfterMaturity,
               recurringPeriodAfterMaturityUnit,
               status,
+              customLoanProductDetails,
             };
             const result = onChange(modelFields);
             value = result?.interestPeriod ?? value;
@@ -879,6 +901,7 @@ export default function LoanProductUpdateForm(props) {
               loanInterestRateAfterMaturity,
               recurringPeriodAfterMaturityUnit,
               status,
+              customLoanProductDetails,
             };
             const result = onChange(modelFields);
             value = result?.termDurationMin ?? value;
@@ -929,6 +952,7 @@ export default function LoanProductUpdateForm(props) {
               loanInterestRateAfterMaturity,
               recurringPeriodAfterMaturityUnit,
               status,
+              customLoanProductDetails,
             };
             const result = onChange(modelFields);
             value = result?.termDurationMax ?? value;
@@ -979,6 +1003,7 @@ export default function LoanProductUpdateForm(props) {
               loanInterestRateAfterMaturity,
               recurringPeriodAfterMaturityUnit,
               status,
+              customLoanProductDetails,
             };
             const result = onChange(modelFields);
             value = result?.termDurationDefault ?? value;
@@ -1027,6 +1052,7 @@ export default function LoanProductUpdateForm(props) {
               loanInterestRateAfterMaturity,
               recurringPeriodAfterMaturityUnit,
               status,
+              customLoanProductDetails,
             };
             const result = onChange(modelFields);
             value = result?.durationPeriod ?? value;
@@ -1073,6 +1099,7 @@ export default function LoanProductUpdateForm(props) {
               loanInterestRateAfterMaturity,
               recurringPeriodAfterMaturityUnit,
               status,
+              customLoanProductDetails,
             };
             const result = onChange(modelFields);
             value = result?.repaymentFrequency ?? value;
@@ -1121,6 +1148,7 @@ export default function LoanProductUpdateForm(props) {
               loanInterestRateAfterMaturity,
               recurringPeriodAfterMaturityUnit,
               status,
+              customLoanProductDetails,
             };
             const result = onChange(modelFields);
             value = result?.repaymentOrder ?? value;
@@ -1167,6 +1195,7 @@ export default function LoanProductUpdateForm(props) {
               loanInterestRateAfterMaturity,
               recurringPeriodAfterMaturityUnit,
               status,
+              customLoanProductDetails,
             };
             const result = onChange(modelFields);
             value = result?.extendLoanAfterMaturity ?? value;
@@ -1215,6 +1244,7 @@ export default function LoanProductUpdateForm(props) {
               loanInterestRateAfterMaturity,
               recurringPeriodAfterMaturityUnit,
               status,
+              customLoanProductDetails,
             };
             const result = onChange(modelFields);
             value = result?.interestTypeMaturity ?? value;
@@ -1263,6 +1293,7 @@ export default function LoanProductUpdateForm(props) {
               loanInterestRateAfterMaturity,
               recurringPeriodAfterMaturityUnit,
               status,
+              customLoanProductDetails,
             };
             const result = onChange(modelFields);
             value = result?.calculateInterestOn ?? value;
@@ -1315,6 +1346,7 @@ export default function LoanProductUpdateForm(props) {
               loanInterestRateAfterMaturity: value,
               recurringPeriodAfterMaturityUnit,
               status,
+              customLoanProductDetails,
             };
             const result = onChange(modelFields);
             value = result?.loanInterestRateAfterMaturity ?? value;
@@ -1366,6 +1398,7 @@ export default function LoanProductUpdateForm(props) {
               loanInterestRateAfterMaturity,
               recurringPeriodAfterMaturityUnit: value,
               status,
+              customLoanProductDetails,
             };
             const result = onChange(modelFields);
             value = result?.recurringPeriodAfterMaturityUnit ?? value;
@@ -1417,6 +1450,7 @@ export default function LoanProductUpdateForm(props) {
               loanInterestRateAfterMaturity,
               recurringPeriodAfterMaturityUnit,
               status: value,
+              customLoanProductDetails,
             };
             const result = onChange(modelFields);
             value = result?.status ?? value;
@@ -1431,6 +1465,58 @@ export default function LoanProductUpdateForm(props) {
         hasError={errors.status?.hasError}
         {...getOverrideProps(overrides, "status")}
       ></TextField>
+      <TextAreaField
+        label="Custom loan product details"
+        isRequired={false}
+        isReadOnly={false}
+        value={customLoanProductDetails}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              name,
+              description,
+              principalAmountMin,
+              principalAmountMax,
+              principalAmountDefault,
+              interestRateMin,
+              interestRateMax,
+              interestRateDefault,
+              interestCalculationMethod,
+              interestType,
+              interestPeriod,
+              termDurationMin,
+              termDurationMax,
+              termDurationDefault,
+              durationPeriod,
+              repaymentFrequency,
+              repaymentOrder,
+              extendLoanAfterMaturity,
+              interestTypeMaturity,
+              calculateInterestOn,
+              loanInterestRateAfterMaturity,
+              recurringPeriodAfterMaturityUnit,
+              status,
+              customLoanProductDetails: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.customLoanProductDetails ?? value;
+          }
+          if (errors.customLoanProductDetails?.hasError) {
+            runValidationTasks("customLoanProductDetails", value);
+          }
+          setCustomLoanProductDetails(value);
+        }}
+        onBlur={() =>
+          runValidationTasks(
+            "customLoanProductDetails",
+            customLoanProductDetails
+          )
+        }
+        errorMessage={errors.customLoanProductDetails?.errorMessage}
+        hasError={errors.customLoanProductDetails?.hasError}
+        {...getOverrideProps(overrides, "customLoanProductDetails")}
+      ></TextAreaField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}

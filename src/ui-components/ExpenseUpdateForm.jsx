@@ -6,7 +6,13 @@
 
 /* eslint-disable */
 import * as React from "react";
-import { Button, Flex, Grid, TextField } from "@aws-amplify/ui-react";
+import {
+  Button,
+  Flex,
+  Grid,
+  TextAreaField,
+  TextField,
+} from "@aws-amplify/ui-react";
 import { fetchByPath, getOverrideProps, validateField } from "./utils";
 import { generateClient } from "aws-amplify/api";
 import { getExpense } from "../graphql/queries";
@@ -38,6 +44,7 @@ export default function ExpenseUpdateForm(props) {
     approvedDate: "",
     type: "",
     category: "",
+    customExpenseDetails: "",
   };
   const [transactionDate, setTransactionDate] = React.useState(
     initialValues.transactionDate
@@ -66,6 +73,9 @@ export default function ExpenseUpdateForm(props) {
   );
   const [type, setType] = React.useState(initialValues.type);
   const [category, setCategory] = React.useState(initialValues.category);
+  const [customExpenseDetails, setCustomExpenseDetails] = React.useState(
+    initialValues.customExpenseDetails
+  );
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     const cleanValues = expenseRecord
@@ -84,6 +94,12 @@ export default function ExpenseUpdateForm(props) {
     setApprovedDate(cleanValues.approvedDate);
     setType(cleanValues.type);
     setCategory(cleanValues.category);
+    setCustomExpenseDetails(
+      typeof cleanValues.customExpenseDetails === "string" ||
+        cleanValues.customExpenseDetails === null
+        ? cleanValues.customExpenseDetails
+        : JSON.stringify(cleanValues.customExpenseDetails)
+    );
     setErrors({});
   };
   const [expenseRecord, setExpenseRecord] = React.useState(expenseModelProp);
@@ -116,6 +132,7 @@ export default function ExpenseUpdateForm(props) {
     approvedDate: [],
     type: [],
     category: [],
+    customExpenseDetails: [{ type: "JSON" }],
   };
   const runValidationTasks = async (
     fieldName,
@@ -156,6 +173,7 @@ export default function ExpenseUpdateForm(props) {
           approvedDate: approvedDate ?? null,
           type: type ?? null,
           category: category ?? null,
+          customExpenseDetails: customExpenseDetails ?? null,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -230,6 +248,7 @@ export default function ExpenseUpdateForm(props) {
               approvedDate,
               type,
               category,
+              customExpenseDetails,
             };
             const result = onChange(modelFields);
             value = result?.transactionDate ?? value;
@@ -270,6 +289,7 @@ export default function ExpenseUpdateForm(props) {
               approvedDate,
               type,
               category,
+              customExpenseDetails,
             };
             const result = onChange(modelFields);
             value = result?.amount ?? value;
@@ -306,6 +326,7 @@ export default function ExpenseUpdateForm(props) {
               approvedDate,
               type,
               category,
+              customExpenseDetails,
             };
             const result = onChange(modelFields);
             value = result?.description ?? value;
@@ -342,6 +363,7 @@ export default function ExpenseUpdateForm(props) {
               approvedDate,
               type,
               category,
+              customExpenseDetails,
             };
             const result = onChange(modelFields);
             value = result?.referenceNumber ?? value;
@@ -378,6 +400,7 @@ export default function ExpenseUpdateForm(props) {
               approvedDate,
               type,
               category,
+              customExpenseDetails,
             };
             const result = onChange(modelFields);
             value = result?.receiptDocumentS3Key ?? value;
@@ -416,6 +439,7 @@ export default function ExpenseUpdateForm(props) {
               approvedDate,
               type,
               category,
+              customExpenseDetails,
             };
             const result = onChange(modelFields);
             value = result?.status ?? value;
@@ -452,6 +476,7 @@ export default function ExpenseUpdateForm(props) {
               approvedDate,
               type,
               category,
+              customExpenseDetails,
             };
             const result = onChange(modelFields);
             value = result?.notes ?? value;
@@ -488,6 +513,7 @@ export default function ExpenseUpdateForm(props) {
               approvedDate,
               type,
               category,
+              customExpenseDetails,
             };
             const result = onChange(modelFields);
             value = result?.payee ?? value;
@@ -524,6 +550,7 @@ export default function ExpenseUpdateForm(props) {
               approvedDate,
               type,
               category,
+              customExpenseDetails,
             };
             const result = onChange(modelFields);
             value = result?.paymentMethod ?? value;
@@ -560,6 +587,7 @@ export default function ExpenseUpdateForm(props) {
               approvedDate,
               type,
               category,
+              customExpenseDetails,
             };
             const result = onChange(modelFields);
             value = result?.checkNumber ?? value;
@@ -597,6 +625,7 @@ export default function ExpenseUpdateForm(props) {
               approvedDate: value,
               type,
               category,
+              customExpenseDetails,
             };
             const result = onChange(modelFields);
             value = result?.approvedDate ?? value;
@@ -633,6 +662,7 @@ export default function ExpenseUpdateForm(props) {
               approvedDate,
               type: value,
               category,
+              customExpenseDetails,
             };
             const result = onChange(modelFields);
             value = result?.type ?? value;
@@ -669,6 +699,7 @@ export default function ExpenseUpdateForm(props) {
               approvedDate,
               type,
               category: value,
+              customExpenseDetails,
             };
             const result = onChange(modelFields);
             value = result?.category ?? value;
@@ -683,6 +714,45 @@ export default function ExpenseUpdateForm(props) {
         hasError={errors.category?.hasError}
         {...getOverrideProps(overrides, "category")}
       ></TextField>
+      <TextAreaField
+        label="Custom expense details"
+        isRequired={false}
+        isReadOnly={false}
+        value={customExpenseDetails}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              transactionDate,
+              amount,
+              description,
+              referenceNumber,
+              receiptDocumentS3Key,
+              status,
+              notes,
+              payee,
+              paymentMethod,
+              checkNumber,
+              approvedDate,
+              type,
+              category,
+              customExpenseDetails: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.customExpenseDetails ?? value;
+          }
+          if (errors.customExpenseDetails?.hasError) {
+            runValidationTasks("customExpenseDetails", value);
+          }
+          setCustomExpenseDetails(value);
+        }}
+        onBlur={() =>
+          runValidationTasks("customExpenseDetails", customExpenseDetails)
+        }
+        errorMessage={errors.customExpenseDetails?.errorMessage}
+        hasError={errors.customExpenseDetails?.hasError}
+        {...getOverrideProps(overrides, "customExpenseDetails")}
+      ></TextAreaField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}

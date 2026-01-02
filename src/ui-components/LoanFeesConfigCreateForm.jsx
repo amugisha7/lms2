@@ -6,7 +6,13 @@
 
 /* eslint-disable */
 import * as React from "react";
-import { Button, Flex, Grid, TextField } from "@aws-amplify/ui-react";
+import {
+  Button,
+  Flex,
+  Grid,
+  TextAreaField,
+  TextField,
+} from "@aws-amplify/ui-react";
 import { fetchByPath, getOverrideProps, validateField } from "./utils";
 import { generateClient } from "aws-amplify/api";
 import { createLoanFeesConfig } from "../graphql/mutations";
@@ -30,6 +36,7 @@ export default function LoanFeesConfigCreateForm(props) {
     percentageBase: "",
     rate: "",
     status: "",
+    customLoanFeesConfigDetails: "",
   };
   const [name, setName] = React.useState(initialValues.name);
   const [category, setCategory] = React.useState(initialValues.category);
@@ -44,6 +51,8 @@ export default function LoanFeesConfigCreateForm(props) {
   );
   const [rate, setRate] = React.useState(initialValues.rate);
   const [status, setStatus] = React.useState(initialValues.status);
+  const [customLoanFeesConfigDetails, setCustomLoanFeesConfigDetails] =
+    React.useState(initialValues.customLoanFeesConfigDetails);
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     setName(initialValues.name);
@@ -53,6 +62,7 @@ export default function LoanFeesConfigCreateForm(props) {
     setPercentageBase(initialValues.percentageBase);
     setRate(initialValues.rate);
     setStatus(initialValues.status);
+    setCustomLoanFeesConfigDetails(initialValues.customLoanFeesConfigDetails);
     setErrors({});
   };
   const validations = {
@@ -63,6 +73,7 @@ export default function LoanFeesConfigCreateForm(props) {
     percentageBase: [],
     rate: [],
     status: [],
+    customLoanFeesConfigDetails: [{ type: "JSON" }],
   };
   const runValidationTasks = async (
     fieldName,
@@ -97,6 +108,7 @@ export default function LoanFeesConfigCreateForm(props) {
           percentageBase,
           rate,
           status,
+          customLoanFeesConfigDetails,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -166,6 +178,7 @@ export default function LoanFeesConfigCreateForm(props) {
               percentageBase,
               rate,
               status,
+              customLoanFeesConfigDetails,
             };
             const result = onChange(modelFields);
             value = result?.name ?? value;
@@ -196,6 +209,7 @@ export default function LoanFeesConfigCreateForm(props) {
               percentageBase,
               rate,
               status,
+              customLoanFeesConfigDetails,
             };
             const result = onChange(modelFields);
             value = result?.category ?? value;
@@ -226,6 +240,7 @@ export default function LoanFeesConfigCreateForm(props) {
               percentageBase,
               rate,
               status,
+              customLoanFeesConfigDetails,
             };
             const result = onChange(modelFields);
             value = result?.calculationMethod ?? value;
@@ -258,6 +273,7 @@ export default function LoanFeesConfigCreateForm(props) {
               percentageBase,
               rate,
               status,
+              customLoanFeesConfigDetails,
             };
             const result = onChange(modelFields);
             value = result?.description ?? value;
@@ -288,6 +304,7 @@ export default function LoanFeesConfigCreateForm(props) {
               percentageBase: value,
               rate,
               status,
+              customLoanFeesConfigDetails,
             };
             const result = onChange(modelFields);
             value = result?.percentageBase ?? value;
@@ -322,6 +339,7 @@ export default function LoanFeesConfigCreateForm(props) {
               percentageBase,
               rate: value,
               status,
+              customLoanFeesConfigDetails,
             };
             const result = onChange(modelFields);
             value = result?.rate ?? value;
@@ -352,6 +370,7 @@ export default function LoanFeesConfigCreateForm(props) {
               percentageBase,
               rate,
               status: value,
+              customLoanFeesConfigDetails,
             };
             const result = onChange(modelFields);
             value = result?.status ?? value;
@@ -366,6 +385,41 @@ export default function LoanFeesConfigCreateForm(props) {
         hasError={errors.status?.hasError}
         {...getOverrideProps(overrides, "status")}
       ></TextField>
+      <TextAreaField
+        label="Custom loan fees config details"
+        isRequired={false}
+        isReadOnly={false}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              name,
+              category,
+              calculationMethod,
+              description,
+              percentageBase,
+              rate,
+              status,
+              customLoanFeesConfigDetails: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.customLoanFeesConfigDetails ?? value;
+          }
+          if (errors.customLoanFeesConfigDetails?.hasError) {
+            runValidationTasks("customLoanFeesConfigDetails", value);
+          }
+          setCustomLoanFeesConfigDetails(value);
+        }}
+        onBlur={() =>
+          runValidationTasks(
+            "customLoanFeesConfigDetails",
+            customLoanFeesConfigDetails
+          )
+        }
+        errorMessage={errors.customLoanFeesConfigDetails?.errorMessage}
+        hasError={errors.customLoanFeesConfigDetails?.hasError}
+        {...getOverrideProps(overrides, "customLoanFeesConfigDetails")}
+      ></TextAreaField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}

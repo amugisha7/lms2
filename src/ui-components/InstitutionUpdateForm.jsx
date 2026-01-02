@@ -55,6 +55,8 @@ export default function InstitutionUpdateForm(props) {
     advancedReportingEnabled: false,
     apiIntegrationSettings: "",
     status: "",
+    customDocumentHeader: "",
+    customInstitutionDetails: "",
   };
   const [name, setName] = React.useState(initialValues.name);
   const [currencyCode, setCurrencyCode] = React.useState(
@@ -117,6 +119,11 @@ export default function InstitutionUpdateForm(props) {
     initialValues.apiIntegrationSettings
   );
   const [status, setStatus] = React.useState(initialValues.status);
+  const [customDocumentHeader, setCustomDocumentHeader] = React.useState(
+    initialValues.customDocumentHeader
+  );
+  const [customInstitutionDetails, setCustomInstitutionDetails] =
+    React.useState(initialValues.customInstitutionDetails);
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     const cleanValues = institutionRecord
@@ -150,6 +157,18 @@ export default function InstitutionUpdateForm(props) {
         : JSON.stringify(cleanValues.apiIntegrationSettings)
     );
     setStatus(cleanValues.status);
+    setCustomDocumentHeader(
+      typeof cleanValues.customDocumentHeader === "string" ||
+        cleanValues.customDocumentHeader === null
+        ? cleanValues.customDocumentHeader
+        : JSON.stringify(cleanValues.customDocumentHeader)
+    );
+    setCustomInstitutionDetails(
+      typeof cleanValues.customInstitutionDetails === "string" ||
+        cleanValues.customInstitutionDetails === null
+        ? cleanValues.customInstitutionDetails
+        : JSON.stringify(cleanValues.customInstitutionDetails)
+    );
     setErrors({});
   };
   const [institutionRecord, setInstitutionRecord] =
@@ -193,6 +212,8 @@ export default function InstitutionUpdateForm(props) {
     advancedReportingEnabled: [{ type: "Required" }],
     apiIntegrationSettings: [{ type: "JSON" }],
     status: [],
+    customDocumentHeader: [{ type: "JSON" }],
+    customInstitutionDetails: [{ type: "JSON" }],
   };
   const runValidationTasks = async (
     fieldName,
@@ -243,6 +264,8 @@ export default function InstitutionUpdateForm(props) {
           advancedReportingEnabled,
           apiIntegrationSettings: apiIntegrationSettings ?? null,
           status: status ?? null,
+          customDocumentHeader: customDocumentHeader ?? null,
+          customInstitutionDetails: customInstitutionDetails ?? null,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -326,6 +349,8 @@ export default function InstitutionUpdateForm(props) {
               advancedReportingEnabled,
               apiIntegrationSettings,
               status,
+              customDocumentHeader,
+              customInstitutionDetails,
             };
             const result = onChange(modelFields);
             value = result?.name ?? value;
@@ -372,6 +397,8 @@ export default function InstitutionUpdateForm(props) {
               advancedReportingEnabled,
               apiIntegrationSettings,
               status,
+              customDocumentHeader,
+              customInstitutionDetails,
             };
             const result = onChange(modelFields);
             value = result?.currencyCode ?? value;
@@ -418,6 +445,8 @@ export default function InstitutionUpdateForm(props) {
               advancedReportingEnabled,
               apiIntegrationSettings,
               status,
+              customDocumentHeader,
+              customInstitutionDetails,
             };
             const result = onChange(modelFields);
             value = result?.subscriptionTier ?? value;
@@ -464,6 +493,8 @@ export default function InstitutionUpdateForm(props) {
               advancedReportingEnabled,
               apiIntegrationSettings,
               status,
+              customDocumentHeader,
+              customInstitutionDetails,
             };
             const result = onChange(modelFields);
             value = result?.subscriptionStatus ?? value;
@@ -513,6 +544,8 @@ export default function InstitutionUpdateForm(props) {
               advancedReportingEnabled,
               apiIntegrationSettings,
               status,
+              customDocumentHeader,
+              customInstitutionDetails,
             };
             const result = onChange(modelFields);
             value = result?.trialEndDate ?? value;
@@ -560,6 +593,8 @@ export default function InstitutionUpdateForm(props) {
               advancedReportingEnabled,
               apiIntegrationSettings,
               status,
+              customDocumentHeader,
+              customInstitutionDetails,
             };
             const result = onChange(modelFields);
             value = result?.nextBillingDate ?? value;
@@ -606,6 +641,8 @@ export default function InstitutionUpdateForm(props) {
               advancedReportingEnabled,
               apiIntegrationSettings,
               status,
+              customDocumentHeader,
+              customInstitutionDetails,
             };
             const result = onChange(modelFields);
             value = result?.stripeCustomerID ?? value;
@@ -652,6 +689,8 @@ export default function InstitutionUpdateForm(props) {
               advancedReportingEnabled,
               apiIntegrationSettings,
               status,
+              customDocumentHeader,
+              customInstitutionDetails,
             };
             const result = onChange(modelFields);
             value = result?.stripeSubscriptionID ?? value;
@@ -700,6 +739,8 @@ export default function InstitutionUpdateForm(props) {
               advancedReportingEnabled,
               apiIntegrationSettings,
               status,
+              customDocumentHeader,
+              customInstitutionDetails,
             };
             const result = onChange(modelFields);
             value = result?.defaultDateFormat ?? value;
@@ -748,6 +789,8 @@ export default function InstitutionUpdateForm(props) {
               advancedReportingEnabled,
               apiIntegrationSettings,
               status,
+              customDocumentHeader,
+              customInstitutionDetails,
             };
             const result = onChange(modelFields);
             value = result?.defaultCurrencyFormat ?? value;
@@ -796,6 +839,8 @@ export default function InstitutionUpdateForm(props) {
               advancedReportingEnabled,
               apiIntegrationSettings,
               status,
+              customDocumentHeader,
+              customInstitutionDetails,
             };
             const result = onChange(modelFields);
             value = result?.defaultLanguage ?? value;
@@ -842,6 +887,8 @@ export default function InstitutionUpdateForm(props) {
               advancedReportingEnabled,
               apiIntegrationSettings,
               status,
+              customDocumentHeader,
+              customInstitutionDetails,
             };
             const result = onChange(modelFields);
             value = result?.regulatoryRegion ?? value;
@@ -892,6 +939,8 @@ export default function InstitutionUpdateForm(props) {
               advancedReportingEnabled,
               apiIntegrationSettings,
               status,
+              customDocumentHeader,
+              customInstitutionDetails,
             };
             const result = onChange(modelFields);
             value = result?.maxUsers ?? value;
@@ -942,6 +991,8 @@ export default function InstitutionUpdateForm(props) {
               advancedReportingEnabled,
               apiIntegrationSettings,
               status,
+              customDocumentHeader,
+              customInstitutionDetails,
             };
             const result = onChange(modelFields);
             value = result?.maxBranches ?? value;
@@ -992,6 +1043,8 @@ export default function InstitutionUpdateForm(props) {
               advancedReportingEnabled,
               apiIntegrationSettings,
               status,
+              customDocumentHeader,
+              customInstitutionDetails,
             };
             const result = onChange(modelFields);
             value = result?.maxStaffPerBranch ?? value;
@@ -1040,6 +1093,8 @@ export default function InstitutionUpdateForm(props) {
               advancedReportingEnabled,
               apiIntegrationSettings,
               status,
+              customDocumentHeader,
+              customInstitutionDetails,
             };
             const result = onChange(modelFields);
             value = result?.saccoFeaturesEnabled ?? value;
@@ -1088,6 +1143,8 @@ export default function InstitutionUpdateForm(props) {
               advancedReportingEnabled,
               apiIntegrationSettings,
               status,
+              customDocumentHeader,
+              customInstitutionDetails,
             };
             const result = onChange(modelFields);
             value = result?.staffManagementEnabled ?? value;
@@ -1136,6 +1193,8 @@ export default function InstitutionUpdateForm(props) {
               advancedReportingEnabled,
               apiIntegrationSettings,
               status,
+              customDocumentHeader,
+              customInstitutionDetails,
             };
             const result = onChange(modelFields);
             value = result?.payrollEnabled ?? value;
@@ -1182,6 +1241,8 @@ export default function InstitutionUpdateForm(props) {
               advancedReportingEnabled,
               apiIntegrationSettings,
               status,
+              customDocumentHeader,
+              customInstitutionDetails,
             };
             const result = onChange(modelFields);
             value = result?.collectionsModuleEnabled ?? value;
@@ -1233,6 +1294,8 @@ export default function InstitutionUpdateForm(props) {
               advancedReportingEnabled,
               apiIntegrationSettings,
               status,
+              customDocumentHeader,
+              customInstitutionDetails,
             };
             const result = onChange(modelFields);
             value = result?.customWorkflowsEnabled ?? value;
@@ -1281,6 +1344,8 @@ export default function InstitutionUpdateForm(props) {
               advancedReportingEnabled: value,
               apiIntegrationSettings,
               status,
+              customDocumentHeader,
+              customInstitutionDetails,
             };
             const result = onChange(modelFields);
             value = result?.advancedReportingEnabled ?? value;
@@ -1332,6 +1397,8 @@ export default function InstitutionUpdateForm(props) {
               advancedReportingEnabled,
               apiIntegrationSettings: value,
               status,
+              customDocumentHeader,
+              customInstitutionDetails,
             };
             const result = onChange(modelFields);
             value = result?.apiIntegrationSettings ?? value;
@@ -1380,6 +1447,8 @@ export default function InstitutionUpdateForm(props) {
               advancedReportingEnabled,
               apiIntegrationSettings,
               status: value,
+              customDocumentHeader,
+              customInstitutionDetails,
             };
             const result = onChange(modelFields);
             value = result?.status ?? value;
@@ -1394,6 +1463,109 @@ export default function InstitutionUpdateForm(props) {
         hasError={errors.status?.hasError}
         {...getOverrideProps(overrides, "status")}
       ></TextField>
+      <TextAreaField
+        label="Custom document header"
+        isRequired={false}
+        isReadOnly={false}
+        value={customDocumentHeader}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              name,
+              currencyCode,
+              subscriptionTier,
+              subscriptionStatus,
+              trialEndDate,
+              nextBillingDate,
+              stripeCustomerID,
+              stripeSubscriptionID,
+              defaultDateFormat,
+              defaultCurrencyFormat,
+              defaultLanguage,
+              regulatoryRegion,
+              maxUsers,
+              maxBranches,
+              maxStaffPerBranch,
+              saccoFeaturesEnabled,
+              staffManagementEnabled,
+              payrollEnabled,
+              collectionsModuleEnabled,
+              customWorkflowsEnabled,
+              advancedReportingEnabled,
+              apiIntegrationSettings,
+              status,
+              customDocumentHeader: value,
+              customInstitutionDetails,
+            };
+            const result = onChange(modelFields);
+            value = result?.customDocumentHeader ?? value;
+          }
+          if (errors.customDocumentHeader?.hasError) {
+            runValidationTasks("customDocumentHeader", value);
+          }
+          setCustomDocumentHeader(value);
+        }}
+        onBlur={() =>
+          runValidationTasks("customDocumentHeader", customDocumentHeader)
+        }
+        errorMessage={errors.customDocumentHeader?.errorMessage}
+        hasError={errors.customDocumentHeader?.hasError}
+        {...getOverrideProps(overrides, "customDocumentHeader")}
+      ></TextAreaField>
+      <TextAreaField
+        label="Custom institution details"
+        isRequired={false}
+        isReadOnly={false}
+        value={customInstitutionDetails}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              name,
+              currencyCode,
+              subscriptionTier,
+              subscriptionStatus,
+              trialEndDate,
+              nextBillingDate,
+              stripeCustomerID,
+              stripeSubscriptionID,
+              defaultDateFormat,
+              defaultCurrencyFormat,
+              defaultLanguage,
+              regulatoryRegion,
+              maxUsers,
+              maxBranches,
+              maxStaffPerBranch,
+              saccoFeaturesEnabled,
+              staffManagementEnabled,
+              payrollEnabled,
+              collectionsModuleEnabled,
+              customWorkflowsEnabled,
+              advancedReportingEnabled,
+              apiIntegrationSettings,
+              status,
+              customDocumentHeader,
+              customInstitutionDetails: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.customInstitutionDetails ?? value;
+          }
+          if (errors.customInstitutionDetails?.hasError) {
+            runValidationTasks("customInstitutionDetails", value);
+          }
+          setCustomInstitutionDetails(value);
+        }}
+        onBlur={() =>
+          runValidationTasks(
+            "customInstitutionDetails",
+            customInstitutionDetails
+          )
+        }
+        errorMessage={errors.customInstitutionDetails?.errorMessage}
+        hasError={errors.customInstitutionDetails?.hasError}
+        {...getOverrideProps(overrides, "customInstitutionDetails")}
+      ></TextAreaField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}

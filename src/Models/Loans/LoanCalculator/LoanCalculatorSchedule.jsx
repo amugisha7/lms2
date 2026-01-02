@@ -318,6 +318,9 @@ export default function LoanCalculatorSchedule({
           "& thead th:nth-of-type(6), & tbody td:nth-of-type(6)": {
             width: "calc((100% - 106px) * 0.2)",
           },
+          "& thead th:nth-of-type(7), & tbody td:nth-of-type(7)": {
+            width: "calc((100% - 106px) * 0.2)",
+          },
         }}
       >
         <TableHead>
@@ -330,13 +333,13 @@ export default function LoanCalculatorSchedule({
             <TableCell
               sx={{ color: theme.palette.common.black, fontWeight: 700 }}
             >
-              Due Date
+              Date
             </TableCell>
             <TableCell
               sx={{ color: theme.palette.common.black, fontWeight: 700 }}
               align="right"
             >
-              Principal
+              Opening Balance
             </TableCell>
             <TableCell
               sx={{ color: theme.palette.common.black, fontWeight: 700 }}
@@ -348,13 +351,19 @@ export default function LoanCalculatorSchedule({
               sx={{ color: theme.palette.common.black, fontWeight: 700 }}
               align="right"
             >
-              Total Due
+              Principal Repaid
             </TableCell>
             <TableCell
               sx={{ color: theme.palette.common.black, fontWeight: 700 }}
               align="right"
             >
-              Balance
+              Total Payment
+            </TableCell>
+            <TableCell
+              sx={{ color: theme.palette.common.black, fontWeight: 700 }}
+              align="right"
+            >
+              Closing Balance
             </TableCell>
           </TableRow>
         </TableHead>
@@ -371,13 +380,19 @@ export default function LoanCalculatorSchedule({
                 sx={{ color: theme.palette.common.black }}
                 align="right"
               >
-                <Money value={inst?.principalDue} />
+                <Money value={inst?.openingBalance} />
               </TableCell>
               <TableCell
                 sx={{ color: theme.palette.common.black }}
                 align="right"
               >
                 <Money value={inst?.interestDue} />
+              </TableCell>
+              <TableCell
+                sx={{ color: theme.palette.common.black }}
+                align="right"
+              >
+                <Money value={inst?.principalDue} />
               </TableCell>
               <TableCell
                 sx={{ color: theme.palette.common.black }}

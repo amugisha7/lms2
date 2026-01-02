@@ -1,4 +1,9 @@
 import dayjs from "dayjs";
+import { generateLumpSumSchedule } from "../Computations/lumpSum";
+import { generatePerLoanSchedule } from "../Computations/perLoan";
+import { generateFixedAmountSchedule } from "../Computations/fixedAmount";
+import { generateFlatRateSchedule } from "../Computations/flatRate";
+import { generateReducingBalanceSchedule } from "../Computations/reducingBalance";
 
 const round2 = (num) => {
   const n = Number(num);
@@ -194,9 +199,11 @@ export const generateSchedulePreviewFromDraftValues = (draftValues) => {
   const startDate =
     values?.disbursementDate ?? values?.loanStartDate ?? values?.startDate;
 
-  const repaymentFrequency = mapRepaymentFrequency(
-    values?.repaymentFrequency ?? values?.paymentFrequency
-  );
+  const repaymentFrequencyType = values?.repaymentFrequencyType;
+  const repaymentFrequency =
+    repaymentFrequencyType === "lumpSum"
+      ? "LUMP_SUM"
+      : mapRepaymentFrequency(values?.repaymentFrequency ?? values?.paymentFrequency);
 
   const interestCalculationMethod = mapInterestCalculationMethod(
     values?.interestMethod ?? values?.interestCalculationMethod
@@ -249,10 +256,36 @@ export const generateSchedulePreviewFromDraftValues = (draftValues) => {
     startDate,
     maturityDate,
     repaymentFrequency,
-    repaymentFrequencyType: values?.repaymentFrequencyType,
+    repaymentFrequencyType,
     customPaymentDays: values?.customPaymentDays,
     customPaymentDates: values?.customPaymentDates,
   });
+
+  if (repaymentFrequency === "LUMP_SUM") {
+    const lumpSumResult = generateLumpSumSchedule({
+      principal,
+      startDate,
+      maturityDate,
+      duration,
+      durationInterval,
+      interestRate: rawInterestRate,
+      interestPeriod,
+      interestType,
+      interestMethod: interestCalculationMethod,
+    });
+
+    if (lumpSumResult.supported) {
+      return {
+        supported: true,
+        reason: null,
+        schedulePreview: {
+          generatedAt: new Date().toISOString(),
+          installments: lumpSumResult.schedulePreview.installments,
+          totals: lumpSumResult.schedulePreview.totals,
+        },
+      };
+    }
+  }
 
   if (!installmentDates.length) {
     return {
@@ -263,146 +296,55 @@ export const generateSchedulePreviewFromDraftValues = (draftValues) => {
     };
   }
 
-  const n = installmentDates.length;
-  const installments = [];
-  let outstanding = principal;
+  let result;
 
-  if (interestCalculationMethod === "FLAT") {
-    const annualRate =
-      getAnnualRateFromInterestPeriod({
-        interestType,
-        interestRate: rawInterestRate,
-        interestPeriod,
-      }) ?? 0;
-
-    let totalInterest = 0;
-    if (interestType === "fixed") {
-      if (interestPeriod === "per_loan") {
-        totalInterest = rawInterestRate;
-      } else {
-        const durationInYears =
-          dayjs(maturityDate).diff(dayjs(startDate), "day") / 365;
-        totalInterest =
-          rawInterestRate * (interestPeriod === "per_year" ? durationInYears : 1);
-        if (interestPeriod === "per_month")
-          totalInterest = rawInterestRate * durationInYears * 12;
-        if (interestPeriod === "per_week")
-          totalInterest = rawInterestRate * durationInYears * 52;
-        if (interestPeriod === "per_day")
-          totalInterest = rawInterestRate * durationInYears * 365;
-      }
-    } else {
-      const durationInYears =
-        dayjs(maturityDate).diff(dayjs(startDate), "day") / 365;
-      totalInterest = principal * annualRate * durationInYears;
-    }
-
-    const interestPer = totalInterest / n;
-    const principalPer = principal / n;
-
-    for (let i = 0; i < n; i += 1) {
-      const principalDue = round2(principalPer);
-      const interestDue = round2(interestPer);
-      const balanceAfter = round2(outstanding - principalDue);
-      installments.push({
-        dueDate: installmentDates[i],
-        principalDue,
-        interestDue,
-        feesDue: 0,
-        totalDue: round2(principalDue + interestDue),
-        balanceAfter: balanceAfter < 0 ? 0 : balanceAfter,
-      });
-      outstanding = Math.max(0, outstanding - principalDue);
-    }
-
-    const principalSum = round2(
-      installments.reduce((s, x) => s + x.principalDue, 0)
-    );
-    const interestSum = round2(
-      installments.reduce((s, x) => s + x.interestDue, 0)
-    );
-
-    const principalDiff = round2(principal - principalSum);
-    const interestDiff = round2(totalInterest - interestSum);
-
-    const last = installments[installments.length - 1];
-    last.principalDue = round2(last.principalDue + principalDiff);
-    last.interestDue = round2(last.interestDue + interestDiff);
-    last.totalDue = round2(last.principalDue + last.interestDue);
-    last.balanceAfter = 0;
-  } else {
-    const annualRate = getAnnualRateFromInterestPeriod({
-      interestType,
+  if (interestType === "fixed") {
+    result = generateFixedAmountSchedule({
+      principal,
       interestRate: rawInterestRate,
+      installmentDates,
       interestPeriod,
+      startDate,
+      maturityDate,
     });
-
-    if (interestType !== "percentage" || annualRate === null) {
-      return {
-        supported: false,
-        reason:
-          "Only percentage-based SIMPLE/COMPOUND schedules are supported for this configuration",
-        schedulePreview: null,
-      };
-    }
-
-    const { unit, count } =
-      repaymentFrequency === "LUMP_SUM"
-        ? { unit: "year", count: 1 }
-        : frequencyToInterval(repaymentFrequency);
-
-    const start = dayjs(startDate);
-    const next = start.add(count, unit);
-    const periodYears = Math.max(1 / 365, next.diff(start, "day") / 365);
-
-    const r = annualRate * periodYears;
-    const safeR = Number.isFinite(r) ? r : 0;
-
-    let pmt = 0;
-    if (safeR <= 0) {
-      pmt = principal / n;
-    } else {
-      pmt =
-        (principal * safeR * Math.pow(1 + safeR, n)) /
-        (Math.pow(1 + safeR, n) - 1);
-    }
-
-    outstanding = principal;
-
-    for (let i = 0; i < n; i += 1) {
-      const interestDue = round2(outstanding * safeR);
-      let principalDue = round2(pmt - interestDue);
-      if (principalDue < 0) principalDue = 0;
-      let balanceAfter = round2(outstanding - principalDue);
-      if (i === n - 1) {
-        principalDue = round2(outstanding);
-        balanceAfter = 0;
-      }
-      installments.push({
-        dueDate: installmentDates[i],
-        principalDue,
-        interestDue,
-        feesDue: 0,
-        totalDue: round2(principalDue + interestDue),
-        balanceAfter,
-      });
-      outstanding = Math.max(0, outstanding - principalDue);
-    }
+  } else if (interestPeriod === "per_loan") {
+    result = generatePerLoanSchedule({
+      principal,
+      interestRate: rawInterestRate,
+      installmentDates,
+    });
+  } else if (interestCalculationMethod === "FLAT") {
+    result = generateFlatRateSchedule({
+      principal,
+      interestRate: rawInterestRate,
+      installmentDates,
+      interestPeriod,
+      startDate,
+      maturityDate,
+    });
+  } else {
+    result = generateReducingBalanceSchedule({
+      principal,
+      interestRate: rawInterestRate,
+      installmentDates,
+      interestPeriod,
+      interestMethod: interestCalculationMethod,
+      repaymentFrequency,
+      repaymentFrequencyType,
+      startDate,
+      maturityDate,
+      rawInterestMethod: values?.interestMethod ?? values?.interestCalculationMethod,
+    });
   }
-
-  const totals = {
-    totalPrincipal: round2(installments.reduce((s, x) => s + x.principalDue, 0)),
-    totalInterest: round2(installments.reduce((s, x) => s + x.interestDue, 0)),
-    totalPayable: round2(installments.reduce((s, x) => s + x.totalDue, 0)),
-  };
 
   return {
     supported: true,
     reason: null,
     schedulePreview: {
       generatedAt: new Date().toISOString(),
-      installments,
-      totals,
+      installments: result.installments,
+      totals: result.totals,
     },
   };
 };
+    

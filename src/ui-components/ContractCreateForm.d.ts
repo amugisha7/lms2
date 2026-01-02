@@ -28,6 +28,7 @@ export declare type ContractCreateFormInputValues = {
     contractStatus?: string;
     contractRecord?: string;
     status?: string;
+    customContractDetails?: string;
 };
 export declare type ContractCreateFormValidationValues = {
     contractNumber?: ValidationFunction<string>;
@@ -36,6 +37,7 @@ export declare type ContractCreateFormValidationValues = {
     contractStatus?: ValidationFunction<string>;
     contractRecord?: ValidationFunction<string>;
     status?: ValidationFunction<string>;
+    customContractDetails?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type ContractCreateFormOverridesProps = {
@@ -46,6 +48,7 @@ export declare type ContractCreateFormOverridesProps = {
     contractStatus?: PrimitiveOverrideProps<TextFieldProps>;
     contractRecord?: PrimitiveOverrideProps<TextAreaFieldProps>;
     status?: PrimitiveOverrideProps<TextFieldProps>;
+    customContractDetails?: PrimitiveOverrideProps<TextAreaFieldProps>;
 } & EscapeHatchProps;
 export declare type ContractCreateFormProps = React.PropsWithChildren<{
     overrides?: ContractCreateFormOverridesProps | undefined | null;

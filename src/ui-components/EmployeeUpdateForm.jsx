@@ -71,6 +71,7 @@ export default function EmployeeUpdateForm(props) {
     customFieldsData: "",
     relatedUserID: "",
     relatedBorrowerID: "",
+    customEmployeeDetails: "",
   };
   const [firstName, setFirstName] = React.useState(initialValues.firstName);
   const [lastName, setLastName] = React.useState(initialValues.lastName);
@@ -172,6 +173,9 @@ export default function EmployeeUpdateForm(props) {
   const [relatedBorrowerID, setRelatedBorrowerID] = React.useState(
     initialValues.relatedBorrowerID
   );
+  const [customEmployeeDetails, setCustomEmployeeDetails] = React.useState(
+    initialValues.customEmployeeDetails
+  );
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     const cleanValues = employeeRecord
@@ -222,6 +226,12 @@ export default function EmployeeUpdateForm(props) {
     );
     setRelatedUserID(cleanValues.relatedUserID);
     setRelatedBorrowerID(cleanValues.relatedBorrowerID);
+    setCustomEmployeeDetails(
+      typeof cleanValues.customEmployeeDetails === "string" ||
+        cleanValues.customEmployeeDetails === null
+        ? cleanValues.customEmployeeDetails
+        : JSON.stringify(cleanValues.customEmployeeDetails)
+    );
     setErrors({});
   };
   const [employeeRecord, setEmployeeRecord] = React.useState(employeeModelProp);
@@ -281,6 +291,7 @@ export default function EmployeeUpdateForm(props) {
     customFieldsData: [{ type: "JSON" }],
     relatedUserID: [],
     relatedBorrowerID: [],
+    customEmployeeDetails: [{ type: "JSON" }],
   };
   const runValidationTasks = async (
     fieldName,
@@ -348,6 +359,7 @@ export default function EmployeeUpdateForm(props) {
           customFieldsData: customFieldsData ?? null,
           relatedUserID: relatedUserID ?? null,
           relatedBorrowerID: relatedBorrowerID ?? null,
+          customEmployeeDetails: customEmployeeDetails ?? null,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -448,6 +460,7 @@ export default function EmployeeUpdateForm(props) {
               customFieldsData,
               relatedUserID,
               relatedBorrowerID,
+              customEmployeeDetails,
             };
             const result = onChange(modelFields);
             value = result?.firstName ?? value;
@@ -511,6 +524,7 @@ export default function EmployeeUpdateForm(props) {
               customFieldsData,
               relatedUserID,
               relatedBorrowerID,
+              customEmployeeDetails,
             };
             const result = onChange(modelFields);
             value = result?.lastName ?? value;
@@ -574,6 +588,7 @@ export default function EmployeeUpdateForm(props) {
               customFieldsData,
               relatedUserID,
               relatedBorrowerID,
+              customEmployeeDetails,
             };
             const result = onChange(modelFields);
             value = result?.middleName ?? value;
@@ -637,6 +652,7 @@ export default function EmployeeUpdateForm(props) {
               customFieldsData,
               relatedUserID,
               relatedBorrowerID,
+              customEmployeeDetails,
             };
             const result = onChange(modelFields);
             value = result?.dateOfBirth ?? value;
@@ -700,6 +716,7 @@ export default function EmployeeUpdateForm(props) {
               customFieldsData,
               relatedUserID,
               relatedBorrowerID,
+              customEmployeeDetails,
             };
             const result = onChange(modelFields);
             value = result?.phoneNumber1 ?? value;
@@ -763,6 +780,7 @@ export default function EmployeeUpdateForm(props) {
               customFieldsData,
               relatedUserID,
               relatedBorrowerID,
+              customEmployeeDetails,
             };
             const result = onChange(modelFields);
             value = result?.phoneNumber2 ?? value;
@@ -826,6 +844,7 @@ export default function EmployeeUpdateForm(props) {
               customFieldsData,
               relatedUserID,
               relatedBorrowerID,
+              customEmployeeDetails,
             };
             const result = onChange(modelFields);
             value = result?.email ?? value;
@@ -889,6 +908,7 @@ export default function EmployeeUpdateForm(props) {
               customFieldsData,
               relatedUserID,
               relatedBorrowerID,
+              customEmployeeDetails,
             };
             const result = onChange(modelFields);
             value = result?.title ?? value;
@@ -952,6 +972,7 @@ export default function EmployeeUpdateForm(props) {
               customFieldsData,
               relatedUserID,
               relatedBorrowerID,
+              customEmployeeDetails,
             };
             const result = onChange(modelFields);
             value = result?.addressLine1 ?? value;
@@ -1015,6 +1036,7 @@ export default function EmployeeUpdateForm(props) {
               customFieldsData,
               relatedUserID,
               relatedBorrowerID,
+              customEmployeeDetails,
             };
             const result = onChange(modelFields);
             value = result?.addressLine2 ?? value;
@@ -1078,6 +1100,7 @@ export default function EmployeeUpdateForm(props) {
               customFieldsData,
               relatedUserID,
               relatedBorrowerID,
+              customEmployeeDetails,
             };
             const result = onChange(modelFields);
             value = result?.city ?? value;
@@ -1141,6 +1164,7 @@ export default function EmployeeUpdateForm(props) {
               customFieldsData,
               relatedUserID,
               relatedBorrowerID,
+              customEmployeeDetails,
             };
             const result = onChange(modelFields);
             value = result?.stateProvince ?? value;
@@ -1204,6 +1228,7 @@ export default function EmployeeUpdateForm(props) {
               customFieldsData,
               relatedUserID,
               relatedBorrowerID,
+              customEmployeeDetails,
             };
             const result = onChange(modelFields);
             value = result?.postalCode ?? value;
@@ -1267,6 +1292,7 @@ export default function EmployeeUpdateForm(props) {
               customFieldsData,
               relatedUserID,
               relatedBorrowerID,
+              customEmployeeDetails,
             };
             const result = onChange(modelFields);
             value = result?.nextOfKinName ?? value;
@@ -1330,6 +1356,7 @@ export default function EmployeeUpdateForm(props) {
               customFieldsData,
               relatedUserID,
               relatedBorrowerID,
+              customEmployeeDetails,
             };
             const result = onChange(modelFields);
             value = result?.nextOfKinPhoneNumber ?? value;
@@ -1395,6 +1422,7 @@ export default function EmployeeUpdateForm(props) {
               customFieldsData,
               relatedUserID,
               relatedBorrowerID,
+              customEmployeeDetails,
             };
             const result = onChange(modelFields);
             value = result?.nextOfKinEmail ?? value;
@@ -1458,6 +1486,7 @@ export default function EmployeeUpdateForm(props) {
               customFieldsData,
               relatedUserID,
               relatedBorrowerID,
+              customEmployeeDetails,
             };
             const result = onChange(modelFields);
             value = result?.nextOfKinRelationship ?? value;
@@ -1523,6 +1552,7 @@ export default function EmployeeUpdateForm(props) {
               customFieldsData,
               relatedUserID,
               relatedBorrowerID,
+              customEmployeeDetails,
             };
             const result = onChange(modelFields);
             value = result?.nextOfKinAddress ?? value;
@@ -1586,6 +1616,7 @@ export default function EmployeeUpdateForm(props) {
               customFieldsData,
               relatedUserID,
               relatedBorrowerID,
+              customEmployeeDetails,
             };
             const result = onChange(modelFields);
             value = result?.nationalID ?? value;
@@ -1649,6 +1680,7 @@ export default function EmployeeUpdateForm(props) {
               customFieldsData,
               relatedUserID,
               relatedBorrowerID,
+              customEmployeeDetails,
             };
             const result = onChange(modelFields);
             value = result?.passportNumber ?? value;
@@ -1712,6 +1744,7 @@ export default function EmployeeUpdateForm(props) {
               customFieldsData,
               relatedUserID,
               relatedBorrowerID,
+              customEmployeeDetails,
             };
             const result = onChange(modelFields);
             value = result?.nationality ?? value;
@@ -1775,6 +1808,7 @@ export default function EmployeeUpdateForm(props) {
               customFieldsData,
               relatedUserID,
               relatedBorrowerID,
+              customEmployeeDetails,
             };
             const result = onChange(modelFields);
             value = result?.status ?? value;
@@ -1838,6 +1872,7 @@ export default function EmployeeUpdateForm(props) {
               customFieldsData,
               relatedUserID,
               relatedBorrowerID,
+              customEmployeeDetails,
             };
             const result = onChange(modelFields);
             value = result?.employmentType ?? value;
@@ -1901,6 +1936,7 @@ export default function EmployeeUpdateForm(props) {
               customFieldsData,
               relatedUserID,
               relatedBorrowerID,
+              customEmployeeDetails,
             };
             const result = onChange(modelFields);
             value = result?.employmentStatus ?? value;
@@ -1965,6 +2001,7 @@ export default function EmployeeUpdateForm(props) {
               customFieldsData,
               relatedUserID,
               relatedBorrowerID,
+              customEmployeeDetails,
             };
             const result = onChange(modelFields);
             value = result?.employmentStartDate ?? value;
@@ -2031,6 +2068,7 @@ export default function EmployeeUpdateForm(props) {
               customFieldsData,
               relatedUserID,
               relatedBorrowerID,
+              customEmployeeDetails,
             };
             const result = onChange(modelFields);
             value = result?.employmentEndDate ?? value;
@@ -2096,6 +2134,7 @@ export default function EmployeeUpdateForm(props) {
               customFieldsData,
               relatedUserID,
               relatedBorrowerID,
+              customEmployeeDetails,
             };
             const result = onChange(modelFields);
             value = result?.employmentPosition ?? value;
@@ -2161,6 +2200,7 @@ export default function EmployeeUpdateForm(props) {
               customFieldsData,
               relatedUserID,
               relatedBorrowerID,
+              customEmployeeDetails,
             };
             const result = onChange(modelFields);
             value = result?.employmentDepartment ?? value;
@@ -2226,6 +2266,7 @@ export default function EmployeeUpdateForm(props) {
               customFieldsData,
               relatedUserID,
               relatedBorrowerID,
+              customEmployeeDetails,
             };
             const result = onChange(modelFields);
             value = result?.employmentGrade ?? value;
@@ -2289,6 +2330,7 @@ export default function EmployeeUpdateForm(props) {
               customFieldsData,
               relatedUserID,
               relatedBorrowerID,
+              customEmployeeDetails,
             };
             const result = onChange(modelFields);
             value = result?.employmentLocation ?? value;
@@ -2358,6 +2400,7 @@ export default function EmployeeUpdateForm(props) {
               customFieldsData,
               relatedUserID,
               relatedBorrowerID,
+              customEmployeeDetails,
             };
             const result = onChange(modelFields);
             value = result?.grossSalary ?? value;
@@ -2421,6 +2464,7 @@ export default function EmployeeUpdateForm(props) {
               customFieldsData,
               relatedUserID,
               relatedBorrowerID,
+              customEmployeeDetails,
             };
             const result = onChange(modelFields);
             value = result?.bankAccountNumber ?? value;
@@ -2486,6 +2530,7 @@ export default function EmployeeUpdateForm(props) {
               customFieldsData,
               relatedUserID,
               relatedBorrowerID,
+              customEmployeeDetails,
             };
             const result = onChange(modelFields);
             value = result?.bankName ?? value;
@@ -2549,6 +2594,7 @@ export default function EmployeeUpdateForm(props) {
               customFieldsData,
               relatedUserID,
               relatedBorrowerID,
+              customEmployeeDetails,
             };
             const result = onChange(modelFields);
             value = result?.bankBranchCode ?? value;
@@ -2612,6 +2658,7 @@ export default function EmployeeUpdateForm(props) {
               customFieldsData,
               relatedUserID,
               relatedBorrowerID,
+              customEmployeeDetails,
             };
             const result = onChange(modelFields);
             value = result?.socialSecurityNumber ?? value;
@@ -2677,6 +2724,7 @@ export default function EmployeeUpdateForm(props) {
               customFieldsData,
               relatedUserID,
               relatedBorrowerID,
+              customEmployeeDetails,
             };
             const result = onChange(modelFields);
             value = result?.taxIdentificationNumber ?? value;
@@ -2742,6 +2790,7 @@ export default function EmployeeUpdateForm(props) {
               customFieldsData,
               relatedUserID,
               relatedBorrowerID,
+              customEmployeeDetails,
             };
             const result = onChange(modelFields);
             value = result?.taxExemptStatus ?? value;
@@ -2805,6 +2854,7 @@ export default function EmployeeUpdateForm(props) {
               customFieldsData: value,
               relatedUserID,
               relatedBorrowerID,
+              customEmployeeDetails,
             };
             const result = onChange(modelFields);
             value = result?.customFieldsData ?? value;
@@ -2868,6 +2918,7 @@ export default function EmployeeUpdateForm(props) {
               customFieldsData,
               relatedUserID: value,
               relatedBorrowerID,
+              customEmployeeDetails,
             };
             const result = onChange(modelFields);
             value = result?.relatedUserID ?? value;
@@ -2931,6 +2982,7 @@ export default function EmployeeUpdateForm(props) {
               customFieldsData,
               relatedUserID,
               relatedBorrowerID: value,
+              customEmployeeDetails,
             };
             const result = onChange(modelFields);
             value = result?.relatedBorrowerID ?? value;
@@ -2947,6 +2999,72 @@ export default function EmployeeUpdateForm(props) {
         hasError={errors.relatedBorrowerID?.hasError}
         {...getOverrideProps(overrides, "relatedBorrowerID")}
       ></TextField>
+      <TextAreaField
+        label="Custom employee details"
+        isRequired={false}
+        isReadOnly={false}
+        value={customEmployeeDetails}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              firstName,
+              lastName,
+              middleName,
+              dateOfBirth,
+              phoneNumber1,
+              phoneNumber2,
+              email,
+              title,
+              addressLine1,
+              addressLine2,
+              city,
+              stateProvince,
+              postalCode,
+              nextOfKinName,
+              nextOfKinPhoneNumber,
+              nextOfKinEmail,
+              nextOfKinRelationship,
+              nextOfKinAddress,
+              nationalID,
+              passportNumber,
+              nationality,
+              status,
+              employmentType,
+              employmentStatus,
+              employmentStartDate,
+              employmentEndDate,
+              employmentPosition,
+              employmentDepartment,
+              employmentGrade,
+              employmentLocation,
+              grossSalary,
+              bankAccountNumber,
+              bankName,
+              bankBranchCode,
+              socialSecurityNumber,
+              taxIdentificationNumber,
+              taxExemptStatus,
+              customFieldsData,
+              relatedUserID,
+              relatedBorrowerID,
+              customEmployeeDetails: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.customEmployeeDetails ?? value;
+          }
+          if (errors.customEmployeeDetails?.hasError) {
+            runValidationTasks("customEmployeeDetails", value);
+          }
+          setCustomEmployeeDetails(value);
+        }}
+        onBlur={() =>
+          runValidationTasks("customEmployeeDetails", customEmployeeDetails)
+        }
+        errorMessage={errors.customEmployeeDetails?.errorMessage}
+        hasError={errors.customEmployeeDetails?.hasError}
+        {...getOverrideProps(overrides, "customEmployeeDetails")}
+      ></TextAreaField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}

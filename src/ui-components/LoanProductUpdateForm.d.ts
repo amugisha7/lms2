@@ -45,6 +45,7 @@ export declare type LoanProductUpdateFormInputValues = {
     loanInterestRateAfterMaturity?: number;
     recurringPeriodAfterMaturityUnit?: string;
     status?: string;
+    customLoanProductDetails?: string;
 };
 export declare type LoanProductUpdateFormValidationValues = {
     name?: ValidationFunction<string>;
@@ -70,6 +71,7 @@ export declare type LoanProductUpdateFormValidationValues = {
     loanInterestRateAfterMaturity?: ValidationFunction<number>;
     recurringPeriodAfterMaturityUnit?: ValidationFunction<string>;
     status?: ValidationFunction<string>;
+    customLoanProductDetails?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type LoanProductUpdateFormOverridesProps = {
@@ -97,6 +99,7 @@ export declare type LoanProductUpdateFormOverridesProps = {
     loanInterestRateAfterMaturity?: PrimitiveOverrideProps<TextFieldProps>;
     recurringPeriodAfterMaturityUnit?: PrimitiveOverrideProps<TextFieldProps>;
     status?: PrimitiveOverrideProps<TextFieldProps>;
+    customLoanProductDetails?: PrimitiveOverrideProps<TextAreaFieldProps>;
 } & EscapeHatchProps;
 export declare type LoanProductUpdateFormProps = React.PropsWithChildren<{
     overrides?: LoanProductUpdateFormOverridesProps | undefined | null;

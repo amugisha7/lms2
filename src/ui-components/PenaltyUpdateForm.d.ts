@@ -5,7 +5,7 @@
  **************************************************************************/
 
 import * as React from "react";
-import { GridProps, TextFieldProps } from "@aws-amplify/ui-react";
+import { GridProps, TextAreaFieldProps, TextFieldProps } from "@aws-amplify/ui-react";
 export declare type EscapeHatchProps = {
     [elementHierarchy: string]: Record<string, unknown>;
 } | null;
@@ -35,6 +35,7 @@ export declare type PenaltyUpdateFormInputValues = {
     penaltyAttribute1?: string;
     penaltyAttribute2?: string;
     status?: string;
+    customPenaltyDetails?: string;
 };
 export declare type PenaltyUpdateFormValidationValues = {
     amount?: ValidationFunction<number>;
@@ -50,6 +51,7 @@ export declare type PenaltyUpdateFormValidationValues = {
     penaltyAttribute1?: ValidationFunction<string>;
     penaltyAttribute2?: ValidationFunction<string>;
     status?: ValidationFunction<string>;
+    customPenaltyDetails?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type PenaltyUpdateFormOverridesProps = {
@@ -67,6 +69,7 @@ export declare type PenaltyUpdateFormOverridesProps = {
     penaltyAttribute1?: PrimitiveOverrideProps<TextFieldProps>;
     penaltyAttribute2?: PrimitiveOverrideProps<TextFieldProps>;
     status?: PrimitiveOverrideProps<TextFieldProps>;
+    customPenaltyDetails?: PrimitiveOverrideProps<TextAreaFieldProps>;
 } & EscapeHatchProps;
 export declare type PenaltyUpdateFormProps = React.PropsWithChildren<{
     overrides?: PenaltyUpdateFormOverridesProps | undefined | null;

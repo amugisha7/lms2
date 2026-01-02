@@ -107,7 +107,7 @@ const buildValidationSchema = () => {
       .oneOf(["days", "weeks", "months", "years"])
       .required("Duration Period is required"),
     repaymentFrequencyType: Yup.string()
-      .oneOf(["interval", "setDays", "setDates"])
+      .oneOf(["interval", "setDays", "setDates", "lumpSum"])
       .required("Repayment Frequency is required"),
     repaymentFrequency: Yup.string().when("repaymentFrequencyType", {
       is: "interval",
@@ -124,7 +124,6 @@ const buildValidationSchema = () => {
             "semi_annual",
             "every_9_months",
             "yearly",
-            "lump_sum",
           ])
           .required("Repayment Interval is required"),
       otherwise: (schema) => schema.notRequired(),
@@ -421,10 +420,16 @@ const applyLoanProductTemplateToFormik = (loanProduct, formik) => {
     loanProduct.repaymentFrequency !== undefined
   ) {
     if (hasNonEmptyString(loanProduct.repaymentFrequency)) {
-      nextValues.repaymentFrequencyType = "interval";
-      nextValues.repaymentFrequency = normalizeRepaymentFrequency(
+      const normalized = normalizeRepaymentFrequency(
         loanProduct.repaymentFrequency
       );
+      if (normalized === "lump_sum") {
+        nextValues.repaymentFrequencyType = "lumpSum";
+        nextValues.repaymentFrequency = "";
+      } else {
+        nextValues.repaymentFrequencyType = "interval";
+        nextValues.repaymentFrequency = normalized;
+      }
       // Clear any custom schedule selections when using interval templates
       nextValues.customPaymentDays = [];
       nextValues.customPaymentDates = [];
@@ -494,7 +499,7 @@ const applyLoanProductTemplateToFormik = (loanProduct, formik) => {
     firstActiveFeeConfigAssoc?.loanFeesConfig?.id;
 
   if (loanFeesConfigIdFromProduct) {
-    nextValues.loanFeesType = "standard";
+    nextValues.loanFeesType = "pre-defined";
     nextValues.loanFees = loanFeesConfigIdFromProduct;
     nextValues.customLoanFeeAmount = "";
   }
@@ -989,7 +994,7 @@ const UseLoanProduct = forwardRef(
                     <CustomPopUp
                       open={scheduleOpen}
                       onClose={() => setScheduleOpen(false)}
-                      title="Loan Schedule"
+                      title="Loan Draft"
                       showEdit={false}
                       showDelete={false}
                       maxWidth="lg"
@@ -1077,6 +1082,7 @@ const UseLoanProduct = forwardRef(
                                 gap: 1,
                                 flexWrap: "wrap",
                                 mb: 8,
+                                mt: 2,
                               }}
                             >
                               {!hideCancel && (
@@ -1099,31 +1105,6 @@ const UseLoanProduct = forwardRef(
                                 variant="outlined"
                                 startIcon={null}
                                 onClick={handleExportSchedule}
-                                disabled={formik.isSubmitting}
-                              />
-                              <PlusButtonMain
-                                buttonText={
-                                  formik.isSubmitting
-                                    ? "Saving..."
-                                    : "SAVE AS DRAFT"
-                                }
-                                variant="outlined"
-                                startIcon={null}
-                                type="submit"
-                                disabled={formik.isSubmitting}
-                              />
-                              <PlusButtonMain
-                                buttonText="SEND FOR APPROVAL"
-                                variant="outlined"
-                                startIcon={null}
-                                onClick={handleSendForApproval}
-                                disabled={formik.isSubmitting}
-                              />
-                              <PlusButtonMain
-                                buttonText="CREATE LOAN"
-                                variant="outlined"
-                                startIcon={null}
-                                onClick={handleConvertToLoan}
                                 disabled={formik.isSubmitting}
                               />
                             </Box>

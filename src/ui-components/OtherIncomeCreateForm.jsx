@@ -6,7 +6,13 @@
 
 /* eslint-disable */
 import * as React from "react";
-import { Button, Flex, Grid, TextField } from "@aws-amplify/ui-react";
+import {
+  Button,
+  Flex,
+  Grid,
+  TextAreaField,
+  TextField,
+} from "@aws-amplify/ui-react";
 import { fetchByPath, getOverrideProps, validateField } from "./utils";
 import { generateClient } from "aws-amplify/api";
 import { createOtherIncome } from "../graphql/mutations";
@@ -29,6 +35,7 @@ export default function OtherIncomeCreateForm(props) {
     incomeDate: "",
     incomeType: "",
     status: "",
+    customOtherIncomeDetails: "",
   };
   const [name, setName] = React.useState(initialValues.name);
   const [description, setDescription] = React.useState(
@@ -38,6 +45,8 @@ export default function OtherIncomeCreateForm(props) {
   const [incomeDate, setIncomeDate] = React.useState(initialValues.incomeDate);
   const [incomeType, setIncomeType] = React.useState(initialValues.incomeType);
   const [status, setStatus] = React.useState(initialValues.status);
+  const [customOtherIncomeDetails, setCustomOtherIncomeDetails] =
+    React.useState(initialValues.customOtherIncomeDetails);
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     setName(initialValues.name);
@@ -46,6 +55,7 @@ export default function OtherIncomeCreateForm(props) {
     setIncomeDate(initialValues.incomeDate);
     setIncomeType(initialValues.incomeType);
     setStatus(initialValues.status);
+    setCustomOtherIncomeDetails(initialValues.customOtherIncomeDetails);
     setErrors({});
   };
   const validations = {
@@ -55,6 +65,7 @@ export default function OtherIncomeCreateForm(props) {
     incomeDate: [],
     incomeType: [],
     status: [],
+    customOtherIncomeDetails: [{ type: "JSON" }],
   };
   const runValidationTasks = async (
     fieldName,
@@ -88,6 +99,7 @@ export default function OtherIncomeCreateForm(props) {
           incomeDate,
           incomeType,
           status,
+          customOtherIncomeDetails,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -156,6 +168,7 @@ export default function OtherIncomeCreateForm(props) {
               incomeDate,
               incomeType,
               status,
+              customOtherIncomeDetails,
             };
             const result = onChange(modelFields);
             value = result?.name ?? value;
@@ -185,6 +198,7 @@ export default function OtherIncomeCreateForm(props) {
               incomeDate,
               incomeType,
               status,
+              customOtherIncomeDetails,
             };
             const result = onChange(modelFields);
             value = result?.description ?? value;
@@ -218,6 +232,7 @@ export default function OtherIncomeCreateForm(props) {
               incomeDate,
               incomeType,
               status,
+              customOtherIncomeDetails,
             };
             const result = onChange(modelFields);
             value = result?.amount ?? value;
@@ -248,6 +263,7 @@ export default function OtherIncomeCreateForm(props) {
               incomeDate: value,
               incomeType,
               status,
+              customOtherIncomeDetails,
             };
             const result = onChange(modelFields);
             value = result?.incomeDate ?? value;
@@ -277,6 +293,7 @@ export default function OtherIncomeCreateForm(props) {
               incomeDate,
               incomeType: value,
               status,
+              customOtherIncomeDetails,
             };
             const result = onChange(modelFields);
             value = result?.incomeType ?? value;
@@ -306,6 +323,7 @@ export default function OtherIncomeCreateForm(props) {
               incomeDate,
               incomeType,
               status: value,
+              customOtherIncomeDetails,
             };
             const result = onChange(modelFields);
             value = result?.status ?? value;
@@ -320,6 +338,40 @@ export default function OtherIncomeCreateForm(props) {
         hasError={errors.status?.hasError}
         {...getOverrideProps(overrides, "status")}
       ></TextField>
+      <TextAreaField
+        label="Custom other income details"
+        isRequired={false}
+        isReadOnly={false}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              name,
+              description,
+              amount,
+              incomeDate,
+              incomeType,
+              status,
+              customOtherIncomeDetails: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.customOtherIncomeDetails ?? value;
+          }
+          if (errors.customOtherIncomeDetails?.hasError) {
+            runValidationTasks("customOtherIncomeDetails", value);
+          }
+          setCustomOtherIncomeDetails(value);
+        }}
+        onBlur={() =>
+          runValidationTasks(
+            "customOtherIncomeDetails",
+            customOtherIncomeDetails
+          )
+        }
+        errorMessage={errors.customOtherIncomeDetails?.errorMessage}
+        hasError={errors.customOtherIncomeDetails?.hasError}
+        {...getOverrideProps(overrides, "customOtherIncomeDetails")}
+      ></TextAreaField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}

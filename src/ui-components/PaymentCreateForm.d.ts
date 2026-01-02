@@ -5,7 +5,7 @@
  **************************************************************************/
 
 import * as React from "react";
-import { GridProps, SelectFieldProps, TextFieldProps } from "@aws-amplify/ui-react";
+import { GridProps, SelectFieldProps, TextAreaFieldProps, TextFieldProps } from "@aws-amplify/ui-react";
 export declare type EscapeHatchProps = {
     [elementHierarchy: string]: Record<string, unknown>;
 } | null;
@@ -31,6 +31,11 @@ export declare type PaymentCreateFormInputValues = {
     status?: string;
     paymentStatusEnum?: string;
     notes?: string;
+    amountAllocatedToPrincipal?: number;
+    amountAllocatedToInterest?: number;
+    amountAllocatedToFees?: number;
+    amountAllocatedToPenalty?: number;
+    customPaymentDetails?: string;
 };
 export declare type PaymentCreateFormValidationValues = {
     paymentDate?: ValidationFunction<string>;
@@ -42,6 +47,11 @@ export declare type PaymentCreateFormValidationValues = {
     status?: ValidationFunction<string>;
     paymentStatusEnum?: ValidationFunction<string>;
     notes?: ValidationFunction<string>;
+    amountAllocatedToPrincipal?: ValidationFunction<number>;
+    amountAllocatedToInterest?: ValidationFunction<number>;
+    amountAllocatedToFees?: ValidationFunction<number>;
+    amountAllocatedToPenalty?: ValidationFunction<number>;
+    customPaymentDetails?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type PaymentCreateFormOverridesProps = {
@@ -55,6 +65,11 @@ export declare type PaymentCreateFormOverridesProps = {
     status?: PrimitiveOverrideProps<TextFieldProps>;
     paymentStatusEnum?: PrimitiveOverrideProps<SelectFieldProps>;
     notes?: PrimitiveOverrideProps<TextFieldProps>;
+    amountAllocatedToPrincipal?: PrimitiveOverrideProps<TextFieldProps>;
+    amountAllocatedToInterest?: PrimitiveOverrideProps<TextFieldProps>;
+    amountAllocatedToFees?: PrimitiveOverrideProps<TextFieldProps>;
+    amountAllocatedToPenalty?: PrimitiveOverrideProps<TextFieldProps>;
+    customPaymentDetails?: PrimitiveOverrideProps<TextAreaFieldProps>;
 } & EscapeHatchProps;
 export declare type PaymentCreateFormProps = React.PropsWithChildren<{
     overrides?: PaymentCreateFormOverridesProps | undefined | null;

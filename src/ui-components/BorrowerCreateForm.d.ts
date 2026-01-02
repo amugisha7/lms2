@@ -52,6 +52,8 @@ export declare type BorrowerCreateFormInputValues = {
     borrowerDocuments?: string;
     customFieldsData?: string;
     status?: string;
+    memberType?: string;
+    customBorrowerDetails?: string;
 };
 export declare type BorrowerCreateFormValidationValues = {
     firstname?: ValidationFunction<string>;
@@ -84,6 +86,8 @@ export declare type BorrowerCreateFormValidationValues = {
     borrowerDocuments?: ValidationFunction<string>;
     customFieldsData?: ValidationFunction<string>;
     status?: ValidationFunction<string>;
+    memberType?: ValidationFunction<string>;
+    customBorrowerDetails?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type BorrowerCreateFormOverridesProps = {
@@ -118,6 +122,8 @@ export declare type BorrowerCreateFormOverridesProps = {
     borrowerDocuments?: PrimitiveOverrideProps<TextAreaFieldProps>;
     customFieldsData?: PrimitiveOverrideProps<TextAreaFieldProps>;
     status?: PrimitiveOverrideProps<TextFieldProps>;
+    memberType?: PrimitiveOverrideProps<TextFieldProps>;
+    customBorrowerDetails?: PrimitiveOverrideProps<TextAreaFieldProps>;
 } & EscapeHatchProps;
 export declare type BorrowerCreateFormProps = React.PropsWithChildren<{
     overrides?: BorrowerCreateFormOverridesProps | undefined | null;

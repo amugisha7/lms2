@@ -5,7 +5,7 @@
  **************************************************************************/
 
 import * as React from "react";
-import { GridProps, TextFieldProps } from "@aws-amplify/ui-react";
+import { GridProps, TextAreaFieldProps, TextFieldProps } from "@aws-amplify/ui-react";
 export declare type EscapeHatchProps = {
     [elementHierarchy: string]: Record<string, unknown>;
 } | null;
@@ -29,6 +29,7 @@ export declare type CreditScoreUpdateFormInputValues = {
     scoreSource?: string;
     scoreStatus?: string;
     status?: string;
+    customCreditScoreDetails?: string;
 };
 export declare type CreditScoreUpdateFormValidationValues = {
     name?: ValidationFunction<string>;
@@ -38,6 +39,7 @@ export declare type CreditScoreUpdateFormValidationValues = {
     scoreSource?: ValidationFunction<string>;
     scoreStatus?: ValidationFunction<string>;
     status?: ValidationFunction<string>;
+    customCreditScoreDetails?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type CreditScoreUpdateFormOverridesProps = {
@@ -49,6 +51,7 @@ export declare type CreditScoreUpdateFormOverridesProps = {
     scoreSource?: PrimitiveOverrideProps<TextFieldProps>;
     scoreStatus?: PrimitiveOverrideProps<TextFieldProps>;
     status?: PrimitiveOverrideProps<TextFieldProps>;
+    customCreditScoreDetails?: PrimitiveOverrideProps<TextAreaFieldProps>;
 } & EscapeHatchProps;
 export declare type CreditScoreUpdateFormProps = React.PropsWithChildren<{
     overrides?: CreditScoreUpdateFormOverridesProps | undefined | null;

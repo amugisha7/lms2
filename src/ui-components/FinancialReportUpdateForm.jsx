@@ -38,6 +38,7 @@ export default function FinancialReportUpdateForm(props) {
     endDate: "",
     reportData: "",
     status: "",
+    customFinancialReportDetails: "",
   };
   const [reportName, setReportName] = React.useState(initialValues.reportName);
   const [reportType, setReportType] = React.useState(initialValues.reportType);
@@ -46,6 +47,8 @@ export default function FinancialReportUpdateForm(props) {
   const [endDate, setEndDate] = React.useState(initialValues.endDate);
   const [reportData, setReportData] = React.useState(initialValues.reportData);
   const [status, setStatus] = React.useState(initialValues.status);
+  const [customFinancialReportDetails, setCustomFinancialReportDetails] =
+    React.useState(initialValues.customFinancialReportDetails);
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     const cleanValues = financialReportRecord
@@ -63,6 +66,12 @@ export default function FinancialReportUpdateForm(props) {
         : JSON.stringify(cleanValues.reportData)
     );
     setStatus(cleanValues.status);
+    setCustomFinancialReportDetails(
+      typeof cleanValues.customFinancialReportDetails === "string" ||
+        cleanValues.customFinancialReportDetails === null
+        ? cleanValues.customFinancialReportDetails
+        : JSON.stringify(cleanValues.customFinancialReportDetails)
+    );
     setErrors({});
   };
   const [financialReportRecord, setFinancialReportRecord] = React.useState(
@@ -91,6 +100,7 @@ export default function FinancialReportUpdateForm(props) {
     endDate: [],
     reportData: [{ type: "JSON" }],
     status: [],
+    customFinancialReportDetails: [{ type: "JSON" }],
   };
   const runValidationTasks = async (
     fieldName,
@@ -125,6 +135,7 @@ export default function FinancialReportUpdateForm(props) {
           endDate: endDate ?? null,
           reportData: reportData ?? null,
           status: status ?? null,
+          customFinancialReportDetails: customFinancialReportDetails ?? null,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -192,6 +203,7 @@ export default function FinancialReportUpdateForm(props) {
               endDate,
               reportData,
               status,
+              customFinancialReportDetails,
             };
             const result = onChange(modelFields);
             value = result?.reportName ?? value;
@@ -222,6 +234,7 @@ export default function FinancialReportUpdateForm(props) {
               endDate,
               reportData,
               status,
+              customFinancialReportDetails,
             };
             const result = onChange(modelFields);
             value = result?.reportType ?? value;
@@ -253,6 +266,7 @@ export default function FinancialReportUpdateForm(props) {
               endDate,
               reportData,
               status,
+              customFinancialReportDetails,
             };
             const result = onChange(modelFields);
             value = result?.reportDate ?? value;
@@ -284,6 +298,7 @@ export default function FinancialReportUpdateForm(props) {
               endDate,
               reportData,
               status,
+              customFinancialReportDetails,
             };
             const result = onChange(modelFields);
             value = result?.startDate ?? value;
@@ -315,6 +330,7 @@ export default function FinancialReportUpdateForm(props) {
               endDate: value,
               reportData,
               status,
+              customFinancialReportDetails,
             };
             const result = onChange(modelFields);
             value = result?.endDate ?? value;
@@ -345,6 +361,7 @@ export default function FinancialReportUpdateForm(props) {
               endDate,
               reportData: value,
               status,
+              customFinancialReportDetails,
             };
             const result = onChange(modelFields);
             value = result?.reportData ?? value;
@@ -375,6 +392,7 @@ export default function FinancialReportUpdateForm(props) {
               endDate,
               reportData,
               status: value,
+              customFinancialReportDetails,
             };
             const result = onChange(modelFields);
             value = result?.status ?? value;
@@ -389,6 +407,42 @@ export default function FinancialReportUpdateForm(props) {
         hasError={errors.status?.hasError}
         {...getOverrideProps(overrides, "status")}
       ></TextField>
+      <TextAreaField
+        label="Custom financial report details"
+        isRequired={false}
+        isReadOnly={false}
+        value={customFinancialReportDetails}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              reportName,
+              reportType,
+              reportDate,
+              startDate,
+              endDate,
+              reportData,
+              status,
+              customFinancialReportDetails: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.customFinancialReportDetails ?? value;
+          }
+          if (errors.customFinancialReportDetails?.hasError) {
+            runValidationTasks("customFinancialReportDetails", value);
+          }
+          setCustomFinancialReportDetails(value);
+        }}
+        onBlur={() =>
+          runValidationTasks(
+            "customFinancialReportDetails",
+            customFinancialReportDetails
+          )
+        }
+        errorMessage={errors.customFinancialReportDetails?.errorMessage}
+        hasError={errors.customFinancialReportDetails?.hasError}
+        {...getOverrideProps(overrides, "customFinancialReportDetails")}
+      ></TextAreaField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}

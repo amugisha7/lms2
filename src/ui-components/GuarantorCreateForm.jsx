@@ -10,6 +10,7 @@ import {
   Button,
   Flex,
   Grid,
+  SwitchField,
   TextAreaField,
   TextField,
 } from "@aws-amplify/ui-react";
@@ -36,6 +37,10 @@ export default function GuarantorCreateForm(props) {
     address: "",
     customFieldsData: "",
     status: "",
+    isExistingMember: false,
+    memberID: "",
+    lockedSavingsAmount: "",
+    customGuarantorDetails: "",
   };
   const [name, setName] = React.useState(initialValues.name);
   const [relationship, setRelationship] = React.useState(
@@ -50,6 +55,16 @@ export default function GuarantorCreateForm(props) {
     initialValues.customFieldsData
   );
   const [status, setStatus] = React.useState(initialValues.status);
+  const [isExistingMember, setIsExistingMember] = React.useState(
+    initialValues.isExistingMember
+  );
+  const [memberID, setMemberID] = React.useState(initialValues.memberID);
+  const [lockedSavingsAmount, setLockedSavingsAmount] = React.useState(
+    initialValues.lockedSavingsAmount
+  );
+  const [customGuarantorDetails, setCustomGuarantorDetails] = React.useState(
+    initialValues.customGuarantorDetails
+  );
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     setName(initialValues.name);
@@ -59,6 +74,10 @@ export default function GuarantorCreateForm(props) {
     setAddress(initialValues.address);
     setCustomFieldsData(initialValues.customFieldsData);
     setStatus(initialValues.status);
+    setIsExistingMember(initialValues.isExistingMember);
+    setMemberID(initialValues.memberID);
+    setLockedSavingsAmount(initialValues.lockedSavingsAmount);
+    setCustomGuarantorDetails(initialValues.customGuarantorDetails);
     setErrors({});
   };
   const validations = {
@@ -69,6 +88,10 @@ export default function GuarantorCreateForm(props) {
     address: [],
     customFieldsData: [{ type: "JSON" }],
     status: [],
+    isExistingMember: [],
+    memberID: [],
+    lockedSavingsAmount: [],
+    customGuarantorDetails: [{ type: "JSON" }],
   };
   const runValidationTasks = async (
     fieldName,
@@ -103,6 +126,10 @@ export default function GuarantorCreateForm(props) {
           address,
           customFieldsData,
           status,
+          isExistingMember,
+          memberID,
+          lockedSavingsAmount,
+          customGuarantorDetails,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -172,6 +199,10 @@ export default function GuarantorCreateForm(props) {
               address,
               customFieldsData,
               status,
+              isExistingMember,
+              memberID,
+              lockedSavingsAmount,
+              customGuarantorDetails,
             };
             const result = onChange(modelFields);
             value = result?.name ?? value;
@@ -202,6 +233,10 @@ export default function GuarantorCreateForm(props) {
               address,
               customFieldsData,
               status,
+              isExistingMember,
+              memberID,
+              lockedSavingsAmount,
+              customGuarantorDetails,
             };
             const result = onChange(modelFields);
             value = result?.relationship ?? value;
@@ -232,6 +267,10 @@ export default function GuarantorCreateForm(props) {
               address,
               customFieldsData,
               status,
+              isExistingMember,
+              memberID,
+              lockedSavingsAmount,
+              customGuarantorDetails,
             };
             const result = onChange(modelFields);
             value = result?.phoneNumber ?? value;
@@ -262,6 +301,10 @@ export default function GuarantorCreateForm(props) {
               address,
               customFieldsData,
               status,
+              isExistingMember,
+              memberID,
+              lockedSavingsAmount,
+              customGuarantorDetails,
             };
             const result = onChange(modelFields);
             value = result?.email ?? value;
@@ -292,6 +335,10 @@ export default function GuarantorCreateForm(props) {
               address: value,
               customFieldsData,
               status,
+              isExistingMember,
+              memberID,
+              lockedSavingsAmount,
+              customGuarantorDetails,
             };
             const result = onChange(modelFields);
             value = result?.address ?? value;
@@ -321,6 +368,10 @@ export default function GuarantorCreateForm(props) {
               address,
               customFieldsData: value,
               status,
+              isExistingMember,
+              memberID,
+              lockedSavingsAmount,
+              customGuarantorDetails,
             };
             const result = onChange(modelFields);
             value = result?.customFieldsData ?? value;
@@ -351,6 +402,10 @@ export default function GuarantorCreateForm(props) {
               address,
               customFieldsData,
               status: value,
+              isExistingMember,
+              memberID,
+              lockedSavingsAmount,
+              customGuarantorDetails,
             };
             const result = onChange(modelFields);
             value = result?.status ?? value;
@@ -365,6 +420,149 @@ export default function GuarantorCreateForm(props) {
         hasError={errors.status?.hasError}
         {...getOverrideProps(overrides, "status")}
       ></TextField>
+      <SwitchField
+        label="Is existing member"
+        defaultChecked={false}
+        isDisabled={false}
+        isChecked={isExistingMember}
+        onChange={(e) => {
+          let value = e.target.checked;
+          if (onChange) {
+            const modelFields = {
+              name,
+              relationship,
+              phoneNumber,
+              email,
+              address,
+              customFieldsData,
+              status,
+              isExistingMember: value,
+              memberID,
+              lockedSavingsAmount,
+              customGuarantorDetails,
+            };
+            const result = onChange(modelFields);
+            value = result?.isExistingMember ?? value;
+          }
+          if (errors.isExistingMember?.hasError) {
+            runValidationTasks("isExistingMember", value);
+          }
+          setIsExistingMember(value);
+        }}
+        onBlur={() => runValidationTasks("isExistingMember", isExistingMember)}
+        errorMessage={errors.isExistingMember?.errorMessage}
+        hasError={errors.isExistingMember?.hasError}
+        {...getOverrideProps(overrides, "isExistingMember")}
+      ></SwitchField>
+      <TextField
+        label="Member id"
+        isRequired={false}
+        isReadOnly={false}
+        value={memberID}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              name,
+              relationship,
+              phoneNumber,
+              email,
+              address,
+              customFieldsData,
+              status,
+              isExistingMember,
+              memberID: value,
+              lockedSavingsAmount,
+              customGuarantorDetails,
+            };
+            const result = onChange(modelFields);
+            value = result?.memberID ?? value;
+          }
+          if (errors.memberID?.hasError) {
+            runValidationTasks("memberID", value);
+          }
+          setMemberID(value);
+        }}
+        onBlur={() => runValidationTasks("memberID", memberID)}
+        errorMessage={errors.memberID?.errorMessage}
+        hasError={errors.memberID?.hasError}
+        {...getOverrideProps(overrides, "memberID")}
+      ></TextField>
+      <TextField
+        label="Locked savings amount"
+        isRequired={false}
+        isReadOnly={false}
+        type="number"
+        step="any"
+        value={lockedSavingsAmount}
+        onChange={(e) => {
+          let value = isNaN(parseFloat(e.target.value))
+            ? e.target.value
+            : parseFloat(e.target.value);
+          if (onChange) {
+            const modelFields = {
+              name,
+              relationship,
+              phoneNumber,
+              email,
+              address,
+              customFieldsData,
+              status,
+              isExistingMember,
+              memberID,
+              lockedSavingsAmount: value,
+              customGuarantorDetails,
+            };
+            const result = onChange(modelFields);
+            value = result?.lockedSavingsAmount ?? value;
+          }
+          if (errors.lockedSavingsAmount?.hasError) {
+            runValidationTasks("lockedSavingsAmount", value);
+          }
+          setLockedSavingsAmount(value);
+        }}
+        onBlur={() =>
+          runValidationTasks("lockedSavingsAmount", lockedSavingsAmount)
+        }
+        errorMessage={errors.lockedSavingsAmount?.errorMessage}
+        hasError={errors.lockedSavingsAmount?.hasError}
+        {...getOverrideProps(overrides, "lockedSavingsAmount")}
+      ></TextField>
+      <TextAreaField
+        label="Custom guarantor details"
+        isRequired={false}
+        isReadOnly={false}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              name,
+              relationship,
+              phoneNumber,
+              email,
+              address,
+              customFieldsData,
+              status,
+              isExistingMember,
+              memberID,
+              lockedSavingsAmount,
+              customGuarantorDetails: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.customGuarantorDetails ?? value;
+          }
+          if (errors.customGuarantorDetails?.hasError) {
+            runValidationTasks("customGuarantorDetails", value);
+          }
+          setCustomGuarantorDetails(value);
+        }}
+        onBlur={() =>
+          runValidationTasks("customGuarantorDetails", customGuarantorDetails)
+        }
+        errorMessage={errors.customGuarantorDetails?.errorMessage}
+        hasError={errors.customGuarantorDetails?.hasError}
+        {...getOverrideProps(overrides, "customGuarantorDetails")}
+      ></TextAreaField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}

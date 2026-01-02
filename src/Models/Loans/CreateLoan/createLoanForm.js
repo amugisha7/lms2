@@ -54,7 +54,6 @@ const createLoanForm = [
     options: [
       { value: "compound_interest_accrued", label: "Compound Interest - Accrued" },
       { value: "compound_interest_equal_installments", label: "Compound Interest - Equal Installments" },
-      { value: "declining_balance", label: "Declining Balance" },
       { value: "flat", label: "Flat" },
       { value: "interest_only", label: "Interest-Only" },
       { value: "reducing_balance_equal_installments", label: "Reducing Balance - Equal Installments" },
@@ -63,7 +62,6 @@ const createLoanForm = [
     dynamicHelperText: {
       compound_interest_accrued: "Any unpaid interest is added to the loan balance. Future interest is then calculated on this new, higher balance (interest on interest).",
       compound_interest_equal_installments: "Interest compounds (accumulates on the balance), but the borrower makes fixed payments to pay it down over time.",
-      declining_balance: "Interest is calculated only on the remaining loan balance. As the borrower pays off the principal, interest costs go down.",
       flat: "Interest is based on the original loan amount (principal) and stays the same throughout the loan. Interest does not change even as the borrower pays it off.",
       interest_only: "The borrower only pays the interest charges for a set period. The borrowed amount (principal) is not paid back until later.",
       reducing_balance_equal_installments: "The borrower's payment amount is the same each time (Amortized). Early payments cover mostly interest, while later payments pay off the principal.",
@@ -172,6 +170,7 @@ const createLoanForm = [
     defaultValue: "interval",
     options: [
       { value: "interval", label: "Interval Based" },
+      { value: "lumpSum", label: "Lump Sum" },
       { value: "setDays", label: "Set Days of the Week" },
       { value: "setDates", label: "Set Dates of the Month" },
     ],
@@ -186,13 +185,13 @@ const createLoanForm = [
     options: [
       { value: "daily", label: "Daily" },
       { value: "weekly", label: "Weekly" },
+      { value: "biweekly", label: "Every 2 weeks" },
       { value: "monthly", label: "Monthly" },
       { value: "quarterly", label: "Quarterly" },
       { value: "every_4_months", label: "Every 4 months" },
       { value: "semi_annual", label: "Semi-annual" },
       { value: "every_9_months", label: "Every 9 months" },
       { value: "yearly", label: "Yearly" },
-      { value: "lump_sum", label: "Lump Sum" },
     ],
     helperText: "Select the interval for repayment.",
     dependsOn: "repaymentFrequencyType",

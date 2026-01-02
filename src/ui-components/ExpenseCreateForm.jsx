@@ -6,7 +6,13 @@
 
 /* eslint-disable */
 import * as React from "react";
-import { Button, Flex, Grid, TextField } from "@aws-amplify/ui-react";
+import {
+  Button,
+  Flex,
+  Grid,
+  TextAreaField,
+  TextField,
+} from "@aws-amplify/ui-react";
 import { fetchByPath, getOverrideProps, validateField } from "./utils";
 import { generateClient } from "aws-amplify/api";
 import { createExpense } from "../graphql/mutations";
@@ -36,6 +42,7 @@ export default function ExpenseCreateForm(props) {
     approvedDate: "",
     type: "",
     category: "",
+    customExpenseDetails: "",
   };
   const [transactionDate, setTransactionDate] = React.useState(
     initialValues.transactionDate
@@ -64,6 +71,9 @@ export default function ExpenseCreateForm(props) {
   );
   const [type, setType] = React.useState(initialValues.type);
   const [category, setCategory] = React.useState(initialValues.category);
+  const [customExpenseDetails, setCustomExpenseDetails] = React.useState(
+    initialValues.customExpenseDetails
+  );
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     setTransactionDate(initialValues.transactionDate);
@@ -79,6 +89,7 @@ export default function ExpenseCreateForm(props) {
     setApprovedDate(initialValues.approvedDate);
     setType(initialValues.type);
     setCategory(initialValues.category);
+    setCustomExpenseDetails(initialValues.customExpenseDetails);
     setErrors({});
   };
   const validations = {
@@ -95,6 +106,7 @@ export default function ExpenseCreateForm(props) {
     approvedDate: [],
     type: [],
     category: [],
+    customExpenseDetails: [{ type: "JSON" }],
   };
   const runValidationTasks = async (
     fieldName,
@@ -135,6 +147,7 @@ export default function ExpenseCreateForm(props) {
           approvedDate,
           type,
           category,
+          customExpenseDetails,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -211,6 +224,7 @@ export default function ExpenseCreateForm(props) {
               approvedDate,
               type,
               category,
+              customExpenseDetails,
             };
             const result = onChange(modelFields);
             value = result?.transactionDate ?? value;
@@ -251,6 +265,7 @@ export default function ExpenseCreateForm(props) {
               approvedDate,
               type,
               category,
+              customExpenseDetails,
             };
             const result = onChange(modelFields);
             value = result?.amount ?? value;
@@ -287,6 +302,7 @@ export default function ExpenseCreateForm(props) {
               approvedDate,
               type,
               category,
+              customExpenseDetails,
             };
             const result = onChange(modelFields);
             value = result?.description ?? value;
@@ -323,6 +339,7 @@ export default function ExpenseCreateForm(props) {
               approvedDate,
               type,
               category,
+              customExpenseDetails,
             };
             const result = onChange(modelFields);
             value = result?.referenceNumber ?? value;
@@ -359,6 +376,7 @@ export default function ExpenseCreateForm(props) {
               approvedDate,
               type,
               category,
+              customExpenseDetails,
             };
             const result = onChange(modelFields);
             value = result?.receiptDocumentS3Key ?? value;
@@ -397,6 +415,7 @@ export default function ExpenseCreateForm(props) {
               approvedDate,
               type,
               category,
+              customExpenseDetails,
             };
             const result = onChange(modelFields);
             value = result?.status ?? value;
@@ -433,6 +452,7 @@ export default function ExpenseCreateForm(props) {
               approvedDate,
               type,
               category,
+              customExpenseDetails,
             };
             const result = onChange(modelFields);
             value = result?.notes ?? value;
@@ -469,6 +489,7 @@ export default function ExpenseCreateForm(props) {
               approvedDate,
               type,
               category,
+              customExpenseDetails,
             };
             const result = onChange(modelFields);
             value = result?.payee ?? value;
@@ -505,6 +526,7 @@ export default function ExpenseCreateForm(props) {
               approvedDate,
               type,
               category,
+              customExpenseDetails,
             };
             const result = onChange(modelFields);
             value = result?.paymentMethod ?? value;
@@ -541,6 +563,7 @@ export default function ExpenseCreateForm(props) {
               approvedDate,
               type,
               category,
+              customExpenseDetails,
             };
             const result = onChange(modelFields);
             value = result?.checkNumber ?? value;
@@ -578,6 +601,7 @@ export default function ExpenseCreateForm(props) {
               approvedDate: value,
               type,
               category,
+              customExpenseDetails,
             };
             const result = onChange(modelFields);
             value = result?.approvedDate ?? value;
@@ -614,6 +638,7 @@ export default function ExpenseCreateForm(props) {
               approvedDate,
               type: value,
               category,
+              customExpenseDetails,
             };
             const result = onChange(modelFields);
             value = result?.type ?? value;
@@ -650,6 +675,7 @@ export default function ExpenseCreateForm(props) {
               approvedDate,
               type,
               category: value,
+              customExpenseDetails,
             };
             const result = onChange(modelFields);
             value = result?.category ?? value;
@@ -664,6 +690,44 @@ export default function ExpenseCreateForm(props) {
         hasError={errors.category?.hasError}
         {...getOverrideProps(overrides, "category")}
       ></TextField>
+      <TextAreaField
+        label="Custom expense details"
+        isRequired={false}
+        isReadOnly={false}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              transactionDate,
+              amount,
+              description,
+              referenceNumber,
+              receiptDocumentS3Key,
+              status,
+              notes,
+              payee,
+              paymentMethod,
+              checkNumber,
+              approvedDate,
+              type,
+              category,
+              customExpenseDetails: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.customExpenseDetails ?? value;
+          }
+          if (errors.customExpenseDetails?.hasError) {
+            runValidationTasks("customExpenseDetails", value);
+          }
+          setCustomExpenseDetails(value);
+        }}
+        onBlur={() =>
+          runValidationTasks("customExpenseDetails", customExpenseDetails)
+        }
+        errorMessage={errors.customExpenseDetails?.errorMessage}
+        hasError={errors.customExpenseDetails?.hasError}
+        {...getOverrideProps(overrides, "customExpenseDetails")}
+      ></TextAreaField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}

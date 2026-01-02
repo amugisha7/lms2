@@ -5,7 +5,7 @@
  **************************************************************************/
 
 import * as React from "react";
-import { GridProps, TextFieldProps } from "@aws-amplify/ui-react";
+import { GridProps, TextAreaFieldProps, TextFieldProps } from "@aws-amplify/ui-react";
 export declare type EscapeHatchProps = {
     [elementHierarchy: string]: Record<string, unknown>;
 } | null;
@@ -35,6 +35,7 @@ export declare type MoneyTransactionCreateFormInputValues = {
     paymentMethod?: string;
     deviceInfo?: string;
     status?: string;
+    customMoneyTransactionDetails?: string;
 };
 export declare type MoneyTransactionCreateFormValidationValues = {
     transactionType?: ValidationFunction<string>;
@@ -50,6 +51,7 @@ export declare type MoneyTransactionCreateFormValidationValues = {
     paymentMethod?: ValidationFunction<string>;
     deviceInfo?: ValidationFunction<string>;
     status?: ValidationFunction<string>;
+    customMoneyTransactionDetails?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type MoneyTransactionCreateFormOverridesProps = {
@@ -67,6 +69,7 @@ export declare type MoneyTransactionCreateFormOverridesProps = {
     paymentMethod?: PrimitiveOverrideProps<TextFieldProps>;
     deviceInfo?: PrimitiveOverrideProps<TextFieldProps>;
     status?: PrimitiveOverrideProps<TextFieldProps>;
+    customMoneyTransactionDetails?: PrimitiveOverrideProps<TextAreaFieldProps>;
 } & EscapeHatchProps;
 export declare type MoneyTransactionCreateFormProps = React.PropsWithChildren<{
     overrides?: MoneyTransactionCreateFormOverridesProps | undefined | null;

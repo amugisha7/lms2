@@ -761,16 +761,19 @@ export function formatDate(date, dateFormat) {
   const month = splitDate[1];
   const day = splitDate[2];
   const truncatedMonth = month.replace(/^0+/, "");
-  const ddMmmYyyy = `${day}-${monthToShortMon[truncatedMonth]}-${year}`;
   switch (dateFormat) {
     case "locale":
       return validDate.toLocaleDateString();
-    // Standardized date display across the app
-    case "dd-mmm-yyyy":
-    case "DD-MMM-YYYY":
-      return ddMmmYyyy;
+    case "YYYY.MM.DD":
+      return `${year}.${month}.${day}`;
+    case "DD.MM.YYYY":
+      return `${day}.${month}.${year}`;
+    case "MM/DD/YYYY":
+      return `${month}/${day}/${year}`;
+    case "Mmm DD, YYYY":
+      return `${monthToShortMon[truncatedMonth]} ${day}, ${year}`;
     default:
-      return ddMmmYyyy;
+      return date;
   }
 }
 export function formatTime(time, timeFormat) {

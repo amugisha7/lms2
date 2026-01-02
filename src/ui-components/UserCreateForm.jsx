@@ -50,6 +50,7 @@ export default function UserCreateForm(props) {
     description: "",
     customFieldsData: "",
     userDocuments: "",
+    customUserDetails: "",
   };
   const [firstName, setFirstName] = React.useState(initialValues.firstName);
   const [lastName, setLastName] = React.useState(initialValues.lastName);
@@ -96,6 +97,9 @@ export default function UserCreateForm(props) {
   const [userDocuments, setUserDocuments] = React.useState(
     initialValues.userDocuments
   );
+  const [customUserDetails, setCustomUserDetails] = React.useState(
+    initialValues.customUserDetails
+  );
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     setFirstName(initialValues.firstName);
@@ -119,6 +123,7 @@ export default function UserCreateForm(props) {
     setDescription(initialValues.description);
     setCustomFieldsData(initialValues.customFieldsData);
     setUserDocuments(initialValues.userDocuments);
+    setCustomUserDetails(initialValues.customUserDetails);
     setErrors({});
   };
   const validations = {
@@ -143,6 +148,7 @@ export default function UserCreateForm(props) {
     description: [],
     customFieldsData: [{ type: "JSON" }],
     userDocuments: [{ type: "JSON" }],
+    customUserDetails: [{ type: "JSON" }],
   };
   const runValidationTasks = async (
     fieldName,
@@ -191,6 +197,7 @@ export default function UserCreateForm(props) {
           description,
           customFieldsData,
           userDocuments,
+          customUserDetails,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -274,6 +281,7 @@ export default function UserCreateForm(props) {
               description,
               customFieldsData,
               userDocuments,
+              customUserDetails,
             };
             const result = onChange(modelFields);
             value = result?.firstName ?? value;
@@ -318,6 +326,7 @@ export default function UserCreateForm(props) {
               description,
               customFieldsData,
               userDocuments,
+              customUserDetails,
             };
             const result = onChange(modelFields);
             value = result?.lastName ?? value;
@@ -362,6 +371,7 @@ export default function UserCreateForm(props) {
               description,
               customFieldsData,
               userDocuments,
+              customUserDetails,
             };
             const result = onChange(modelFields);
             value = result?.middleName ?? value;
@@ -406,6 +416,7 @@ export default function UserCreateForm(props) {
               description,
               customFieldsData,
               userDocuments,
+              customUserDetails,
             };
             const result = onChange(modelFields);
             value = result?.dateOfBirth ?? value;
@@ -450,6 +461,7 @@ export default function UserCreateForm(props) {
               description,
               customFieldsData,
               userDocuments,
+              customUserDetails,
             };
             const result = onChange(modelFields);
             value = result?.phoneNumber1 ?? value;
@@ -494,6 +506,7 @@ export default function UserCreateForm(props) {
               description,
               customFieldsData,
               userDocuments,
+              customUserDetails,
             };
             const result = onChange(modelFields);
             value = result?.phoneNumber2 ?? value;
@@ -538,6 +551,7 @@ export default function UserCreateForm(props) {
               description,
               customFieldsData,
               userDocuments,
+              customUserDetails,
             };
             const result = onChange(modelFields);
             value = result?.email ?? value;
@@ -582,6 +596,7 @@ export default function UserCreateForm(props) {
               description,
               customFieldsData,
               userDocuments,
+              customUserDetails,
             };
             const result = onChange(modelFields);
             value = result?.addressLine1 ?? value;
@@ -626,6 +641,7 @@ export default function UserCreateForm(props) {
               description,
               customFieldsData,
               userDocuments,
+              customUserDetails,
             };
             const result = onChange(modelFields);
             value = result?.addressLine2 ?? value;
@@ -670,6 +686,7 @@ export default function UserCreateForm(props) {
               description,
               customFieldsData,
               userDocuments,
+              customUserDetails,
             };
             const result = onChange(modelFields);
             value = result?.city ?? value;
@@ -714,6 +731,7 @@ export default function UserCreateForm(props) {
               description,
               customFieldsData,
               userDocuments,
+              customUserDetails,
             };
             const result = onChange(modelFields);
             value = result?.stateProvince ?? value;
@@ -758,6 +776,7 @@ export default function UserCreateForm(props) {
               description,
               customFieldsData,
               userDocuments,
+              customUserDetails,
             };
             const result = onChange(modelFields);
             value = result?.postalCode ?? value;
@@ -802,6 +821,7 @@ export default function UserCreateForm(props) {
               description,
               customFieldsData,
               userDocuments,
+              customUserDetails,
             };
             const result = onChange(modelFields);
             value = result?.nationalID ?? value;
@@ -846,6 +866,7 @@ export default function UserCreateForm(props) {
               description,
               customFieldsData,
               userDocuments,
+              customUserDetails,
             };
             const result = onChange(modelFields);
             value = result?.passportNumber ?? value;
@@ -890,6 +911,7 @@ export default function UserCreateForm(props) {
               description,
               customFieldsData,
               userDocuments,
+              customUserDetails,
             };
             const result = onChange(modelFields);
             value = result?.nationality ?? value;
@@ -934,6 +956,7 @@ export default function UserCreateForm(props) {
               description,
               customFieldsData,
               userDocuments,
+              customUserDetails,
             };
             const result = onChange(modelFields);
             value = result?.status ?? value;
@@ -978,6 +1001,7 @@ export default function UserCreateForm(props) {
               description,
               customFieldsData,
               userDocuments,
+              customUserDetails,
             };
             const result = onChange(modelFields);
             value = result?.userType ?? value;
@@ -1021,6 +1045,7 @@ export default function UserCreateForm(props) {
               description,
               customFieldsData,
               userDocuments,
+              customUserDetails,
             };
             const result = onChange(modelFields);
             value = result?.userPermissions ?? value;
@@ -1065,6 +1090,7 @@ export default function UserCreateForm(props) {
               description: value,
               customFieldsData,
               userDocuments,
+              customUserDetails,
             };
             const result = onChange(modelFields);
             value = result?.description ?? value;
@@ -1108,6 +1134,7 @@ export default function UserCreateForm(props) {
               description,
               customFieldsData: value,
               userDocuments,
+              customUserDetails,
             };
             const result = onChange(modelFields);
             value = result?.customFieldsData ?? value;
@@ -1151,6 +1178,7 @@ export default function UserCreateForm(props) {
               description,
               customFieldsData,
               userDocuments: value,
+              customUserDetails,
             };
             const result = onChange(modelFields);
             value = result?.userDocuments ?? value;
@@ -1164,6 +1192,52 @@ export default function UserCreateForm(props) {
         errorMessage={errors.userDocuments?.errorMessage}
         hasError={errors.userDocuments?.hasError}
         {...getOverrideProps(overrides, "userDocuments")}
+      ></TextAreaField>
+      <TextAreaField
+        label="Custom user details"
+        isRequired={false}
+        isReadOnly={false}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              firstName,
+              lastName,
+              middleName,
+              dateOfBirth,
+              phoneNumber1,
+              phoneNumber2,
+              email,
+              addressLine1,
+              addressLine2,
+              city,
+              stateProvince,
+              postalCode,
+              nationalID,
+              passportNumber,
+              nationality,
+              status,
+              userType,
+              userPermissions,
+              description,
+              customFieldsData,
+              userDocuments,
+              customUserDetails: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.customUserDetails ?? value;
+          }
+          if (errors.customUserDetails?.hasError) {
+            runValidationTasks("customUserDetails", value);
+          }
+          setCustomUserDetails(value);
+        }}
+        onBlur={() =>
+          runValidationTasks("customUserDetails", customUserDetails)
+        }
+        errorMessage={errors.customUserDetails?.errorMessage}
+        hasError={errors.customUserDetails?.hasError}
+        {...getOverrideProps(overrides, "customUserDetails")}
       ></TextAreaField>
       <Flex
         justifyContent="space-between"

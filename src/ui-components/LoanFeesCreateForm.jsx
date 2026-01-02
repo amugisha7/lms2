@@ -6,7 +6,13 @@
 
 /* eslint-disable */
 import * as React from "react";
-import { Button, Flex, Grid, TextField } from "@aws-amplify/ui-react";
+import {
+  Button,
+  Flex,
+  Grid,
+  TextAreaField,
+  TextField,
+} from "@aws-amplify/ui-react";
 import { fetchByPath, getOverrideProps, validateField } from "./utils";
 import { generateClient } from "aws-amplify/api";
 import { createLoanFees } from "../graphql/mutations";
@@ -36,6 +42,7 @@ export default function LoanFeesCreateForm(props) {
     loanFeesAttribute1: "",
     loanFeesAttribute2: "",
     status: "",
+    customLoanFeesDetails: "",
   };
   const [amount, setAmount] = React.useState(initialValues.amount);
   const [loanFeesName, setLoanFeesName] = React.useState(
@@ -69,6 +76,9 @@ export default function LoanFeesCreateForm(props) {
     initialValues.loanFeesAttribute2
   );
   const [status, setStatus] = React.useState(initialValues.status);
+  const [customLoanFeesDetails, setCustomLoanFeesDetails] = React.useState(
+    initialValues.customLoanFeesDetails
+  );
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     setAmount(initialValues.amount);
@@ -84,6 +94,7 @@ export default function LoanFeesCreateForm(props) {
     setLoanFeesAttribute1(initialValues.loanFeesAttribute1);
     setLoanFeesAttribute2(initialValues.loanFeesAttribute2);
     setStatus(initialValues.status);
+    setCustomLoanFeesDetails(initialValues.customLoanFeesDetails);
     setErrors({});
   };
   const validations = {
@@ -100,6 +111,7 @@ export default function LoanFeesCreateForm(props) {
     loanFeesAttribute1: [],
     loanFeesAttribute2: [],
     status: [],
+    customLoanFeesDetails: [{ type: "JSON" }],
   };
   const runValidationTasks = async (
     fieldName,
@@ -140,6 +152,7 @@ export default function LoanFeesCreateForm(props) {
           loanFeesAttribute1,
           loanFeesAttribute2,
           status,
+          customLoanFeesDetails,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -219,6 +232,7 @@ export default function LoanFeesCreateForm(props) {
               loanFeesAttribute1,
               loanFeesAttribute2,
               status,
+              customLoanFeesDetails,
             };
             const result = onChange(modelFields);
             value = result?.amount ?? value;
@@ -255,6 +269,7 @@ export default function LoanFeesCreateForm(props) {
               loanFeesAttribute1,
               loanFeesAttribute2,
               status,
+              customLoanFeesDetails,
             };
             const result = onChange(modelFields);
             value = result?.loanFeesName ?? value;
@@ -291,6 +306,7 @@ export default function LoanFeesCreateForm(props) {
               loanFeesAttribute1,
               loanFeesAttribute2,
               status,
+              customLoanFeesDetails,
             };
             const result = onChange(modelFields);
             value = result?.loanFeesCategory ?? value;
@@ -327,6 +343,7 @@ export default function LoanFeesCreateForm(props) {
               loanFeesAttribute1,
               loanFeesAttribute2,
               status,
+              customLoanFeesDetails,
             };
             const result = onChange(modelFields);
             value = result?.loanFeesCalculationMethod ?? value;
@@ -372,6 +389,7 @@ export default function LoanFeesCreateForm(props) {
               loanFeesAttribute1,
               loanFeesAttribute2,
               status,
+              customLoanFeesDetails,
             };
             const result = onChange(modelFields);
             value = result?.loanFeesRate ?? value;
@@ -409,6 +427,7 @@ export default function LoanFeesCreateForm(props) {
               loanFeesAttribute1,
               loanFeesAttribute2,
               status,
+              customLoanFeesDetails,
             };
             const result = onChange(modelFields);
             value = result?.loanFeesDate ?? value;
@@ -445,6 +464,7 @@ export default function LoanFeesCreateForm(props) {
               loanFeesAttribute1,
               loanFeesAttribute2,
               status,
+              customLoanFeesDetails,
             };
             const result = onChange(modelFields);
             value = result?.loanFeesStatus ?? value;
@@ -481,6 +501,7 @@ export default function LoanFeesCreateForm(props) {
               loanFeesAttribute1,
               loanFeesAttribute2,
               status,
+              customLoanFeesDetails,
             };
             const result = onChange(modelFields);
             value = result?.notes ?? value;
@@ -517,6 +538,7 @@ export default function LoanFeesCreateForm(props) {
               loanFeesAttribute1,
               loanFeesAttribute2,
               status,
+              customLoanFeesDetails,
             };
             const result = onChange(modelFields);
             value = result?.loanFeesType ?? value;
@@ -553,6 +575,7 @@ export default function LoanFeesCreateForm(props) {
               loanFeesAttribute1,
               loanFeesAttribute2,
               status,
+              customLoanFeesDetails,
             };
             const result = onChange(modelFields);
             value = result?.loanFeesDescription ?? value;
@@ -591,6 +614,7 @@ export default function LoanFeesCreateForm(props) {
               loanFeesAttribute1: value,
               loanFeesAttribute2,
               status,
+              customLoanFeesDetails,
             };
             const result = onChange(modelFields);
             value = result?.loanFeesAttribute1 ?? value;
@@ -629,6 +653,7 @@ export default function LoanFeesCreateForm(props) {
               loanFeesAttribute1,
               loanFeesAttribute2: value,
               status,
+              customLoanFeesDetails,
             };
             const result = onChange(modelFields);
             value = result?.loanFeesAttribute2 ?? value;
@@ -667,6 +692,7 @@ export default function LoanFeesCreateForm(props) {
               loanFeesAttribute1,
               loanFeesAttribute2,
               status: value,
+              customLoanFeesDetails,
             };
             const result = onChange(modelFields);
             value = result?.status ?? value;
@@ -681,6 +707,44 @@ export default function LoanFeesCreateForm(props) {
         hasError={errors.status?.hasError}
         {...getOverrideProps(overrides, "status")}
       ></TextField>
+      <TextAreaField
+        label="Custom loan fees details"
+        isRequired={false}
+        isReadOnly={false}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              amount,
+              loanFeesName,
+              loanFeesCategory,
+              loanFeesCalculationMethod,
+              loanFeesRate,
+              loanFeesDate,
+              loanFeesStatus,
+              notes,
+              loanFeesType,
+              loanFeesDescription,
+              loanFeesAttribute1,
+              loanFeesAttribute2,
+              status,
+              customLoanFeesDetails: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.customLoanFeesDetails ?? value;
+          }
+          if (errors.customLoanFeesDetails?.hasError) {
+            runValidationTasks("customLoanFeesDetails", value);
+          }
+          setCustomLoanFeesDetails(value);
+        }}
+        onBlur={() =>
+          runValidationTasks("customLoanFeesDetails", customLoanFeesDetails)
+        }
+        errorMessage={errors.customLoanFeesDetails?.errorMessage}
+        hasError={errors.customLoanFeesDetails?.hasError}
+        {...getOverrideProps(overrides, "customLoanFeesDetails")}
+      ></TextAreaField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}

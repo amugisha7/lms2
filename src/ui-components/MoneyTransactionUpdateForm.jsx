@@ -6,7 +6,13 @@
 
 /* eslint-disable */
 import * as React from "react";
-import { Button, Flex, Grid, TextField } from "@aws-amplify/ui-react";
+import {
+  Button,
+  Flex,
+  Grid,
+  TextAreaField,
+  TextField,
+} from "@aws-amplify/ui-react";
 import { fetchByPath, getOverrideProps, validateField } from "./utils";
 import { generateClient } from "aws-amplify/api";
 import { getMoneyTransaction } from "../graphql/queries";
@@ -38,6 +44,7 @@ export default function MoneyTransactionUpdateForm(props) {
     paymentMethod: "",
     deviceInfo: "",
     status: "",
+    customMoneyTransactionDetails: "",
   };
   const [transactionType, setTransactionType] = React.useState(
     initialValues.transactionType
@@ -68,6 +75,8 @@ export default function MoneyTransactionUpdateForm(props) {
   );
   const [deviceInfo, setDeviceInfo] = React.useState(initialValues.deviceInfo);
   const [status, setStatus] = React.useState(initialValues.status);
+  const [customMoneyTransactionDetails, setCustomMoneyTransactionDetails] =
+    React.useState(initialValues.customMoneyTransactionDetails);
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     const cleanValues = moneyTransactionRecord
@@ -86,6 +95,12 @@ export default function MoneyTransactionUpdateForm(props) {
     setPaymentMethod(cleanValues.paymentMethod);
     setDeviceInfo(cleanValues.deviceInfo);
     setStatus(cleanValues.status);
+    setCustomMoneyTransactionDetails(
+      typeof cleanValues.customMoneyTransactionDetails === "string" ||
+        cleanValues.customMoneyTransactionDetails === null
+        ? cleanValues.customMoneyTransactionDetails
+        : JSON.stringify(cleanValues.customMoneyTransactionDetails)
+    );
     setErrors({});
   };
   const [moneyTransactionRecord, setMoneyTransactionRecord] = React.useState(
@@ -120,6 +135,7 @@ export default function MoneyTransactionUpdateForm(props) {
     paymentMethod: [],
     deviceInfo: [],
     status: [],
+    customMoneyTransactionDetails: [{ type: "JSON" }],
   };
   const runValidationTasks = async (
     fieldName,
@@ -160,6 +176,7 @@ export default function MoneyTransactionUpdateForm(props) {
           paymentMethod: paymentMethod ?? null,
           deviceInfo: deviceInfo ?? null,
           status: status ?? null,
+          customMoneyTransactionDetails: customMoneyTransactionDetails ?? null,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -233,6 +250,7 @@ export default function MoneyTransactionUpdateForm(props) {
               paymentMethod,
               deviceInfo,
               status,
+              customMoneyTransactionDetails,
             };
             const result = onChange(modelFields);
             value = result?.transactionType ?? value;
@@ -270,6 +288,7 @@ export default function MoneyTransactionUpdateForm(props) {
               paymentMethod,
               deviceInfo,
               status,
+              customMoneyTransactionDetails,
             };
             const result = onChange(modelFields);
             value = result?.transactionDate ?? value;
@@ -310,6 +329,7 @@ export default function MoneyTransactionUpdateForm(props) {
               paymentMethod,
               deviceInfo,
               status,
+              customMoneyTransactionDetails,
             };
             const result = onChange(modelFields);
             value = result?.amount ?? value;
@@ -346,6 +366,7 @@ export default function MoneyTransactionUpdateForm(props) {
               paymentMethod,
               deviceInfo,
               status,
+              customMoneyTransactionDetails,
             };
             const result = onChange(modelFields);
             value = result?.description ?? value;
@@ -382,6 +403,7 @@ export default function MoneyTransactionUpdateForm(props) {
               paymentMethod,
               deviceInfo,
               status,
+              customMoneyTransactionDetails,
             };
             const result = onChange(modelFields);
             value = result?.referenceNumber ?? value;
@@ -418,6 +440,7 @@ export default function MoneyTransactionUpdateForm(props) {
               paymentMethod,
               deviceInfo,
               status,
+              customMoneyTransactionDetails,
             };
             const result = onChange(modelFields);
             value = result?.relatedEntityType ?? value;
@@ -456,6 +479,7 @@ export default function MoneyTransactionUpdateForm(props) {
               paymentMethod,
               deviceInfo,
               status,
+              customMoneyTransactionDetails,
             };
             const result = onChange(modelFields);
             value = result?.approvalStatus ?? value;
@@ -493,6 +517,7 @@ export default function MoneyTransactionUpdateForm(props) {
               paymentMethod,
               deviceInfo,
               status,
+              customMoneyTransactionDetails,
             };
             const result = onChange(modelFields);
             value = result?.approvedDate ?? value;
@@ -529,6 +554,7 @@ export default function MoneyTransactionUpdateForm(props) {
               paymentMethod,
               deviceInfo,
               status,
+              customMoneyTransactionDetails,
             };
             const result = onChange(modelFields);
             value = result?.category ?? value;
@@ -565,6 +591,7 @@ export default function MoneyTransactionUpdateForm(props) {
               paymentMethod,
               deviceInfo,
               status,
+              customMoneyTransactionDetails,
             };
             const result = onChange(modelFields);
             value = result?.notes ?? value;
@@ -601,6 +628,7 @@ export default function MoneyTransactionUpdateForm(props) {
               paymentMethod: value,
               deviceInfo,
               status,
+              customMoneyTransactionDetails,
             };
             const result = onChange(modelFields);
             value = result?.paymentMethod ?? value;
@@ -637,6 +665,7 @@ export default function MoneyTransactionUpdateForm(props) {
               paymentMethod,
               deviceInfo: value,
               status,
+              customMoneyTransactionDetails,
             };
             const result = onChange(modelFields);
             value = result?.deviceInfo ?? value;
@@ -673,6 +702,7 @@ export default function MoneyTransactionUpdateForm(props) {
               paymentMethod,
               deviceInfo,
               status: value,
+              customMoneyTransactionDetails,
             };
             const result = onChange(modelFields);
             value = result?.status ?? value;
@@ -687,6 +717,48 @@ export default function MoneyTransactionUpdateForm(props) {
         hasError={errors.status?.hasError}
         {...getOverrideProps(overrides, "status")}
       ></TextField>
+      <TextAreaField
+        label="Custom money transaction details"
+        isRequired={false}
+        isReadOnly={false}
+        value={customMoneyTransactionDetails}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              transactionType,
+              transactionDate,
+              amount,
+              description,
+              referenceNumber,
+              relatedEntityType,
+              approvalStatus,
+              approvedDate,
+              category,
+              notes,
+              paymentMethod,
+              deviceInfo,
+              status,
+              customMoneyTransactionDetails: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.customMoneyTransactionDetails ?? value;
+          }
+          if (errors.customMoneyTransactionDetails?.hasError) {
+            runValidationTasks("customMoneyTransactionDetails", value);
+          }
+          setCustomMoneyTransactionDetails(value);
+        }}
+        onBlur={() =>
+          runValidationTasks(
+            "customMoneyTransactionDetails",
+            customMoneyTransactionDetails
+          )
+        }
+        errorMessage={errors.customMoneyTransactionDetails?.errorMessage}
+        hasError={errors.customMoneyTransactionDetails?.hasError}
+        {...getOverrideProps(overrides, "customMoneyTransactionDetails")}
+      ></TextAreaField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}

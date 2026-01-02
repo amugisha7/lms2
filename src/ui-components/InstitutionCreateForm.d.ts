@@ -45,6 +45,8 @@ export declare type InstitutionCreateFormInputValues = {
     advancedReportingEnabled?: boolean;
     apiIntegrationSettings?: string;
     status?: string;
+    customDocumentHeader?: string;
+    customInstitutionDetails?: string;
 };
 export declare type InstitutionCreateFormValidationValues = {
     name?: ValidationFunction<string>;
@@ -70,6 +72,8 @@ export declare type InstitutionCreateFormValidationValues = {
     advancedReportingEnabled?: ValidationFunction<boolean>;
     apiIntegrationSettings?: ValidationFunction<string>;
     status?: ValidationFunction<string>;
+    customDocumentHeader?: ValidationFunction<string>;
+    customInstitutionDetails?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type InstitutionCreateFormOverridesProps = {
@@ -97,6 +101,8 @@ export declare type InstitutionCreateFormOverridesProps = {
     advancedReportingEnabled?: PrimitiveOverrideProps<SwitchFieldProps>;
     apiIntegrationSettings?: PrimitiveOverrideProps<TextAreaFieldProps>;
     status?: PrimitiveOverrideProps<TextFieldProps>;
+    customDocumentHeader?: PrimitiveOverrideProps<TextAreaFieldProps>;
+    customInstitutionDetails?: PrimitiveOverrideProps<TextAreaFieldProps>;
 } & EscapeHatchProps;
 export declare type InstitutionCreateFormProps = React.PropsWithChildren<{
     overrides?: InstitutionCreateFormOverridesProps | undefined | null;

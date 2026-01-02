@@ -5,7 +5,7 @@
  **************************************************************************/
 
 import * as React from "react";
-import { GridProps, TextAreaFieldProps, TextFieldProps } from "@aws-amplify/ui-react";
+import { GridProps, SwitchFieldProps, TextAreaFieldProps, TextFieldProps } from "@aws-amplify/ui-react";
 export declare type EscapeHatchProps = {
     [elementHierarchy: string]: Record<string, unknown>;
 } | null;
@@ -29,6 +29,10 @@ export declare type GuarantorUpdateFormInputValues = {
     address?: string;
     customFieldsData?: string;
     status?: string;
+    isExistingMember?: boolean;
+    memberID?: string;
+    lockedSavingsAmount?: number;
+    customGuarantorDetails?: string;
 };
 export declare type GuarantorUpdateFormValidationValues = {
     name?: ValidationFunction<string>;
@@ -38,6 +42,10 @@ export declare type GuarantorUpdateFormValidationValues = {
     address?: ValidationFunction<string>;
     customFieldsData?: ValidationFunction<string>;
     status?: ValidationFunction<string>;
+    isExistingMember?: ValidationFunction<boolean>;
+    memberID?: ValidationFunction<string>;
+    lockedSavingsAmount?: ValidationFunction<number>;
+    customGuarantorDetails?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type GuarantorUpdateFormOverridesProps = {
@@ -49,6 +57,10 @@ export declare type GuarantorUpdateFormOverridesProps = {
     address?: PrimitiveOverrideProps<TextFieldProps>;
     customFieldsData?: PrimitiveOverrideProps<TextAreaFieldProps>;
     status?: PrimitiveOverrideProps<TextFieldProps>;
+    isExistingMember?: PrimitiveOverrideProps<SwitchFieldProps>;
+    memberID?: PrimitiveOverrideProps<TextFieldProps>;
+    lockedSavingsAmount?: PrimitiveOverrideProps<TextFieldProps>;
+    customGuarantorDetails?: PrimitiveOverrideProps<TextAreaFieldProps>;
 } & EscapeHatchProps;
 export declare type GuarantorUpdateFormProps = React.PropsWithChildren<{
     overrides?: GuarantorUpdateFormOverridesProps | undefined | null;

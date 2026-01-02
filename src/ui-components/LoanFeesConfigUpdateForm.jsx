@@ -6,7 +6,13 @@
 
 /* eslint-disable */
 import * as React from "react";
-import { Button, Flex, Grid, TextField } from "@aws-amplify/ui-react";
+import {
+  Button,
+  Flex,
+  Grid,
+  TextAreaField,
+  TextField,
+} from "@aws-amplify/ui-react";
 import { fetchByPath, getOverrideProps, validateField } from "./utils";
 import { generateClient } from "aws-amplify/api";
 import { getLoanFeesConfig } from "../graphql/queries";
@@ -32,6 +38,7 @@ export default function LoanFeesConfigUpdateForm(props) {
     percentageBase: "",
     rate: "",
     status: "",
+    customLoanFeesConfigDetails: "",
   };
   const [name, setName] = React.useState(initialValues.name);
   const [category, setCategory] = React.useState(initialValues.category);
@@ -46,6 +53,8 @@ export default function LoanFeesConfigUpdateForm(props) {
   );
   const [rate, setRate] = React.useState(initialValues.rate);
   const [status, setStatus] = React.useState(initialValues.status);
+  const [customLoanFeesConfigDetails, setCustomLoanFeesConfigDetails] =
+    React.useState(initialValues.customLoanFeesConfigDetails);
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     const cleanValues = loanFeesConfigRecord
@@ -58,6 +67,12 @@ export default function LoanFeesConfigUpdateForm(props) {
     setPercentageBase(cleanValues.percentageBase);
     setRate(cleanValues.rate);
     setStatus(cleanValues.status);
+    setCustomLoanFeesConfigDetails(
+      typeof cleanValues.customLoanFeesConfigDetails === "string" ||
+        cleanValues.customLoanFeesConfigDetails === null
+        ? cleanValues.customLoanFeesConfigDetails
+        : JSON.stringify(cleanValues.customLoanFeesConfigDetails)
+    );
     setErrors({});
   };
   const [loanFeesConfigRecord, setLoanFeesConfigRecord] = React.useState(
@@ -86,6 +101,7 @@ export default function LoanFeesConfigUpdateForm(props) {
     percentageBase: [],
     rate: [],
     status: [],
+    customLoanFeesConfigDetails: [{ type: "JSON" }],
   };
   const runValidationTasks = async (
     fieldName,
@@ -120,6 +136,7 @@ export default function LoanFeesConfigUpdateForm(props) {
           percentageBase: percentageBase ?? null,
           rate: rate ?? null,
           status: status ?? null,
+          customLoanFeesConfigDetails: customLoanFeesConfigDetails ?? null,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -187,6 +204,7 @@ export default function LoanFeesConfigUpdateForm(props) {
               percentageBase,
               rate,
               status,
+              customLoanFeesConfigDetails,
             };
             const result = onChange(modelFields);
             value = result?.name ?? value;
@@ -217,6 +235,7 @@ export default function LoanFeesConfigUpdateForm(props) {
               percentageBase,
               rate,
               status,
+              customLoanFeesConfigDetails,
             };
             const result = onChange(modelFields);
             value = result?.category ?? value;
@@ -247,6 +266,7 @@ export default function LoanFeesConfigUpdateForm(props) {
               percentageBase,
               rate,
               status,
+              customLoanFeesConfigDetails,
             };
             const result = onChange(modelFields);
             value = result?.calculationMethod ?? value;
@@ -279,6 +299,7 @@ export default function LoanFeesConfigUpdateForm(props) {
               percentageBase,
               rate,
               status,
+              customLoanFeesConfigDetails,
             };
             const result = onChange(modelFields);
             value = result?.description ?? value;
@@ -309,6 +330,7 @@ export default function LoanFeesConfigUpdateForm(props) {
               percentageBase: value,
               rate,
               status,
+              customLoanFeesConfigDetails,
             };
             const result = onChange(modelFields);
             value = result?.percentageBase ?? value;
@@ -343,6 +365,7 @@ export default function LoanFeesConfigUpdateForm(props) {
               percentageBase,
               rate: value,
               status,
+              customLoanFeesConfigDetails,
             };
             const result = onChange(modelFields);
             value = result?.rate ?? value;
@@ -373,6 +396,7 @@ export default function LoanFeesConfigUpdateForm(props) {
               percentageBase,
               rate,
               status: value,
+              customLoanFeesConfigDetails,
             };
             const result = onChange(modelFields);
             value = result?.status ?? value;
@@ -387,6 +411,42 @@ export default function LoanFeesConfigUpdateForm(props) {
         hasError={errors.status?.hasError}
         {...getOverrideProps(overrides, "status")}
       ></TextField>
+      <TextAreaField
+        label="Custom loan fees config details"
+        isRequired={false}
+        isReadOnly={false}
+        value={customLoanFeesConfigDetails}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              name,
+              category,
+              calculationMethod,
+              description,
+              percentageBase,
+              rate,
+              status,
+              customLoanFeesConfigDetails: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.customLoanFeesConfigDetails ?? value;
+          }
+          if (errors.customLoanFeesConfigDetails?.hasError) {
+            runValidationTasks("customLoanFeesConfigDetails", value);
+          }
+          setCustomLoanFeesConfigDetails(value);
+        }}
+        onBlur={() =>
+          runValidationTasks(
+            "customLoanFeesConfigDetails",
+            customLoanFeesConfigDetails
+          )
+        }
+        errorMessage={errors.customLoanFeesConfigDetails?.errorMessage}
+        hasError={errors.customLoanFeesConfigDetails?.hasError}
+        {...getOverrideProps(overrides, "customLoanFeesConfigDetails")}
+      ></TextAreaField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}

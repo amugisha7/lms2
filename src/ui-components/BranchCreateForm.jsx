@@ -6,7 +6,13 @@
 
 /* eslint-disable */
 import * as React from "react";
-import { Button, Flex, Grid, TextField } from "@aws-amplify/ui-react";
+import {
+  Button,
+  Flex,
+  Grid,
+  TextAreaField,
+  TextField,
+} from "@aws-amplify/ui-react";
 import { fetchByPath, getOverrideProps, validateField } from "./utils";
 import { generateClient } from "aws-amplify/api";
 import { createBranch } from "../graphql/mutations";
@@ -27,17 +33,22 @@ export default function BranchCreateForm(props) {
     branchCode: "",
     address: "",
     status: "",
+    customBranchDetails: "",
   };
   const [name, setName] = React.useState(initialValues.name);
   const [branchCode, setBranchCode] = React.useState(initialValues.branchCode);
   const [address, setAddress] = React.useState(initialValues.address);
   const [status, setStatus] = React.useState(initialValues.status);
+  const [customBranchDetails, setCustomBranchDetails] = React.useState(
+    initialValues.customBranchDetails
+  );
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     setName(initialValues.name);
     setBranchCode(initialValues.branchCode);
     setAddress(initialValues.address);
     setStatus(initialValues.status);
+    setCustomBranchDetails(initialValues.customBranchDetails);
     setErrors({});
   };
   const validations = {
@@ -45,6 +56,7 @@ export default function BranchCreateForm(props) {
     branchCode: [],
     address: [],
     status: [],
+    customBranchDetails: [{ type: "JSON" }],
   };
   const runValidationTasks = async (
     fieldName,
@@ -76,6 +88,7 @@ export default function BranchCreateForm(props) {
           branchCode,
           address,
           status,
+          customBranchDetails,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -142,6 +155,7 @@ export default function BranchCreateForm(props) {
               branchCode,
               address,
               status,
+              customBranchDetails,
             };
             const result = onChange(modelFields);
             value = result?.name ?? value;
@@ -169,6 +183,7 @@ export default function BranchCreateForm(props) {
               branchCode: value,
               address,
               status,
+              customBranchDetails,
             };
             const result = onChange(modelFields);
             value = result?.branchCode ?? value;
@@ -196,6 +211,7 @@ export default function BranchCreateForm(props) {
               branchCode,
               address: value,
               status,
+              customBranchDetails,
             };
             const result = onChange(modelFields);
             value = result?.address ?? value;
@@ -223,6 +239,7 @@ export default function BranchCreateForm(props) {
               branchCode,
               address,
               status: value,
+              customBranchDetails,
             };
             const result = onChange(modelFields);
             value = result?.status ?? value;
@@ -237,6 +254,35 @@ export default function BranchCreateForm(props) {
         hasError={errors.status?.hasError}
         {...getOverrideProps(overrides, "status")}
       ></TextField>
+      <TextAreaField
+        label="Custom branch details"
+        isRequired={false}
+        isReadOnly={false}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              name,
+              branchCode,
+              address,
+              status,
+              customBranchDetails: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.customBranchDetails ?? value;
+          }
+          if (errors.customBranchDetails?.hasError) {
+            runValidationTasks("customBranchDetails", value);
+          }
+          setCustomBranchDetails(value);
+        }}
+        onBlur={() =>
+          runValidationTasks("customBranchDetails", customBranchDetails)
+        }
+        errorMessage={errors.customBranchDetails?.errorMessage}
+        hasError={errors.customBranchDetails?.hasError}
+        {...getOverrideProps(overrides, "customBranchDetails")}
+      ></TextAreaField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}

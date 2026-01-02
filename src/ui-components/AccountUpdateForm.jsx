@@ -6,7 +6,13 @@
 
 /* eslint-disable */
 import * as React from "react";
-import { Button, Flex, Grid, TextField } from "@aws-amplify/ui-react";
+import {
+  Button,
+  Flex,
+  Grid,
+  TextAreaField,
+  TextField,
+} from "@aws-amplify/ui-react";
 import { fetchByPath, getOverrideProps, validateField } from "./utils";
 import { generateClient } from "aws-amplify/api";
 import { getAccount } from "../graphql/queries";
@@ -40,6 +46,7 @@ export default function AccountUpdateForm(props) {
     interestAccruedDate: "",
     accountStatus: "",
     status: "",
+    customAccountDetails: "",
   };
   const [name, setName] = React.useState(initialValues.name);
   const [accountType, setAccountType] = React.useState(
@@ -78,6 +85,9 @@ export default function AccountUpdateForm(props) {
     initialValues.accountStatus
   );
   const [status, setStatus] = React.useState(initialValues.status);
+  const [customAccountDetails, setCustomAccountDetails] = React.useState(
+    initialValues.customAccountDetails
+  );
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     const cleanValues = accountRecord
@@ -98,6 +108,12 @@ export default function AccountUpdateForm(props) {
     setInterestAccruedDate(cleanValues.interestAccruedDate);
     setAccountStatus(cleanValues.accountStatus);
     setStatus(cleanValues.status);
+    setCustomAccountDetails(
+      typeof cleanValues.customAccountDetails === "string" ||
+        cleanValues.customAccountDetails === null
+        ? cleanValues.customAccountDetails
+        : JSON.stringify(cleanValues.customAccountDetails)
+    );
     setErrors({});
   };
   const [accountRecord, setAccountRecord] = React.useState(accountModelProp);
@@ -132,6 +148,7 @@ export default function AccountUpdateForm(props) {
     interestAccruedDate: [],
     accountStatus: [],
     status: [],
+    customAccountDetails: [{ type: "JSON" }],
   };
   const runValidationTasks = async (
     fieldName,
@@ -174,6 +191,7 @@ export default function AccountUpdateForm(props) {
           interestAccruedDate: interestAccruedDate ?? null,
           accountStatus: accountStatus ?? null,
           status: status ?? null,
+          customAccountDetails: customAccountDetails ?? null,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -249,6 +267,7 @@ export default function AccountUpdateForm(props) {
               interestAccruedDate,
               accountStatus,
               status,
+              customAccountDetails,
             };
             const result = onChange(modelFields);
             value = result?.name ?? value;
@@ -287,6 +306,7 @@ export default function AccountUpdateForm(props) {
               interestAccruedDate,
               accountStatus,
               status,
+              customAccountDetails,
             };
             const result = onChange(modelFields);
             value = result?.accountType ?? value;
@@ -325,6 +345,7 @@ export default function AccountUpdateForm(props) {
               interestAccruedDate,
               accountStatus,
               status,
+              customAccountDetails,
             };
             const result = onChange(modelFields);
             value = result?.accountNumber ?? value;
@@ -363,6 +384,7 @@ export default function AccountUpdateForm(props) {
               interestAccruedDate,
               accountStatus,
               status,
+              customAccountDetails,
             };
             const result = onChange(modelFields);
             value = result?.description ?? value;
@@ -401,6 +423,7 @@ export default function AccountUpdateForm(props) {
               interestAccruedDate,
               accountStatus,
               status,
+              customAccountDetails,
             };
             const result = onChange(modelFields);
             value = result?.currency ?? value;
@@ -443,6 +466,7 @@ export default function AccountUpdateForm(props) {
               interestAccruedDate,
               accountStatus,
               status,
+              customAccountDetails,
             };
             const result = onChange(modelFields);
             value = result?.currentBalance ?? value;
@@ -485,6 +509,7 @@ export default function AccountUpdateForm(props) {
               interestAccruedDate,
               accountStatus,
               status,
+              customAccountDetails,
             };
             const result = onChange(modelFields);
             value = result?.openingBalance ?? value;
@@ -527,6 +552,7 @@ export default function AccountUpdateForm(props) {
               interestAccruedDate,
               accountStatus,
               status,
+              customAccountDetails,
             };
             const result = onChange(modelFields);
             value = result?.interestRate ?? value;
@@ -565,6 +591,7 @@ export default function AccountUpdateForm(props) {
               interestAccruedDate,
               accountStatus,
               status,
+              customAccountDetails,
             };
             const result = onChange(modelFields);
             value = result?.interestCalculationMethod ?? value;
@@ -608,6 +635,7 @@ export default function AccountUpdateForm(props) {
               interestAccruedDate,
               accountStatus,
               status,
+              customAccountDetails,
             };
             const result = onChange(modelFields);
             value = result?.interestPostingFrequency ?? value;
@@ -651,6 +679,7 @@ export default function AccountUpdateForm(props) {
               interestAccruedDate,
               accountStatus,
               status,
+              customAccountDetails,
             };
             const result = onChange(modelFields);
             value = result?.interestPostingDate ?? value;
@@ -695,6 +724,7 @@ export default function AccountUpdateForm(props) {
               interestAccruedDate,
               accountStatus,
               status,
+              customAccountDetails,
             };
             const result = onChange(modelFields);
             value = result?.interestAccrued ?? value;
@@ -734,6 +764,7 @@ export default function AccountUpdateForm(props) {
               interestAccruedDate: value,
               accountStatus,
               status,
+              customAccountDetails,
             };
             const result = onChange(modelFields);
             value = result?.interestAccruedDate ?? value;
@@ -774,6 +805,7 @@ export default function AccountUpdateForm(props) {
               interestAccruedDate,
               accountStatus: value,
               status,
+              customAccountDetails,
             };
             const result = onChange(modelFields);
             value = result?.accountStatus ?? value;
@@ -812,6 +844,7 @@ export default function AccountUpdateForm(props) {
               interestAccruedDate,
               accountStatus,
               status: value,
+              customAccountDetails,
             };
             const result = onChange(modelFields);
             value = result?.status ?? value;
@@ -826,6 +859,47 @@ export default function AccountUpdateForm(props) {
         hasError={errors.status?.hasError}
         {...getOverrideProps(overrides, "status")}
       ></TextField>
+      <TextAreaField
+        label="Custom account details"
+        isRequired={false}
+        isReadOnly={false}
+        value={customAccountDetails}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              name,
+              accountType,
+              accountNumber,
+              description,
+              currency,
+              currentBalance,
+              openingBalance,
+              interestRate,
+              interestCalculationMethod,
+              interestPostingFrequency,
+              interestPostingDate,
+              interestAccrued,
+              interestAccruedDate,
+              accountStatus,
+              status,
+              customAccountDetails: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.customAccountDetails ?? value;
+          }
+          if (errors.customAccountDetails?.hasError) {
+            runValidationTasks("customAccountDetails", value);
+          }
+          setCustomAccountDetails(value);
+        }}
+        onBlur={() =>
+          runValidationTasks("customAccountDetails", customAccountDetails)
+        }
+        errorMessage={errors.customAccountDetails?.errorMessage}
+        hasError={errors.customAccountDetails?.hasError}
+        {...getOverrideProps(overrides, "customAccountDetails")}
+      ></TextAreaField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}

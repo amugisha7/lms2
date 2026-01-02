@@ -37,6 +37,7 @@ export default function ContractUpdateForm(props) {
     contractStatus: "",
     contractRecord: "",
     status: "",
+    customContractDetails: "",
   };
   const [contractNumber, setContractNumber] = React.useState(
     initialValues.contractNumber
@@ -54,6 +55,9 @@ export default function ContractUpdateForm(props) {
     initialValues.contractRecord
   );
   const [status, setStatus] = React.useState(initialValues.status);
+  const [customContractDetails, setCustomContractDetails] = React.useState(
+    initialValues.customContractDetails
+  );
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     const cleanValues = contractRecord
@@ -70,6 +74,12 @@ export default function ContractUpdateForm(props) {
         : JSON.stringify(cleanValues.contractRecord)
     );
     setStatus(cleanValues.status);
+    setCustomContractDetails(
+      typeof cleanValues.customContractDetails === "string" ||
+        cleanValues.customContractDetails === null
+        ? cleanValues.customContractDetails
+        : JSON.stringify(cleanValues.customContractDetails)
+    );
     setErrors({});
   };
   const [contractRecord, setContractRecord] = React.useState(contractModelProp);
@@ -95,6 +105,7 @@ export default function ContractUpdateForm(props) {
     contractStatus: [],
     contractRecord: [{ type: "JSON" }],
     status: [],
+    customContractDetails: [{ type: "JSON" }],
   };
   const runValidationTasks = async (
     fieldName,
@@ -128,6 +139,7 @@ export default function ContractUpdateForm(props) {
           contractStatus: contractStatus ?? null,
           contractRecord: contractRecord ?? null,
           status: status ?? null,
+          customContractDetails: customContractDetails ?? null,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -194,6 +206,7 @@ export default function ContractUpdateForm(props) {
               contractStatus,
               contractRecord,
               status,
+              customContractDetails,
             };
             const result = onChange(modelFields);
             value = result?.contractNumber ?? value;
@@ -223,6 +236,7 @@ export default function ContractUpdateForm(props) {
               contractStatus,
               contractRecord,
               status,
+              customContractDetails,
             };
             const result = onChange(modelFields);
             value = result?.contractType ?? value;
@@ -253,6 +267,7 @@ export default function ContractUpdateForm(props) {
               contractStatus,
               contractRecord,
               status,
+              customContractDetails,
             };
             const result = onChange(modelFields);
             value = result?.contractDate ?? value;
@@ -282,6 +297,7 @@ export default function ContractUpdateForm(props) {
               contractStatus: value,
               contractRecord,
               status,
+              customContractDetails,
             };
             const result = onChange(modelFields);
             value = result?.contractStatus ?? value;
@@ -311,6 +327,7 @@ export default function ContractUpdateForm(props) {
               contractStatus,
               contractRecord: value,
               status,
+              customContractDetails,
             };
             const result = onChange(modelFields);
             value = result?.contractRecord ?? value;
@@ -340,6 +357,7 @@ export default function ContractUpdateForm(props) {
               contractStatus,
               contractRecord,
               status: value,
+              customContractDetails,
             };
             const result = onChange(modelFields);
             value = result?.status ?? value;
@@ -354,6 +372,38 @@ export default function ContractUpdateForm(props) {
         hasError={errors.status?.hasError}
         {...getOverrideProps(overrides, "status")}
       ></TextField>
+      <TextAreaField
+        label="Custom contract details"
+        isRequired={false}
+        isReadOnly={false}
+        value={customContractDetails}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              contractNumber,
+              contractType,
+              contractDate,
+              contractStatus,
+              contractRecord,
+              status,
+              customContractDetails: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.customContractDetails ?? value;
+          }
+          if (errors.customContractDetails?.hasError) {
+            runValidationTasks("customContractDetails", value);
+          }
+          setCustomContractDetails(value);
+        }}
+        onBlur={() =>
+          runValidationTasks("customContractDetails", customContractDetails)
+        }
+        errorMessage={errors.customContractDetails?.errorMessage}
+        hasError={errors.customContractDetails?.hasError}
+        {...getOverrideProps(overrides, "customContractDetails")}
+      ></TextAreaField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}

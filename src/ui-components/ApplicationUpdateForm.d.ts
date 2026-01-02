@@ -32,6 +32,7 @@ export declare type ApplicationUpdateFormInputValues = {
     status?: string;
     applicationRecord?: string;
     customFieldsData?: string;
+    customApplicationDetails?: string;
 };
 export declare type ApplicationUpdateFormValidationValues = {
     name?: ValidationFunction<string>;
@@ -44,6 +45,7 @@ export declare type ApplicationUpdateFormValidationValues = {
     status?: ValidationFunction<string>;
     applicationRecord?: ValidationFunction<string>;
     customFieldsData?: ValidationFunction<string>;
+    customApplicationDetails?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type ApplicationUpdateFormOverridesProps = {
@@ -58,6 +60,7 @@ export declare type ApplicationUpdateFormOverridesProps = {
     status?: PrimitiveOverrideProps<TextFieldProps>;
     applicationRecord?: PrimitiveOverrideProps<TextAreaFieldProps>;
     customFieldsData?: PrimitiveOverrideProps<TextAreaFieldProps>;
+    customApplicationDetails?: PrimitiveOverrideProps<TextAreaFieldProps>;
 } & EscapeHatchProps;
 export declare type ApplicationUpdateFormProps = React.PropsWithChildren<{
     overrides?: ApplicationUpdateFormOverridesProps | undefined | null;

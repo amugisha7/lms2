@@ -5,7 +5,7 @@
  **************************************************************************/
 
 import * as React from "react";
-import { GridProps, TextFieldProps } from "@aws-amplify/ui-react";
+import { GridProps, TextAreaFieldProps, TextFieldProps } from "@aws-amplify/ui-react";
 export declare type EscapeHatchProps = {
     [elementHierarchy: string]: Record<string, unknown>;
 } | null;
@@ -29,6 +29,7 @@ export declare type LoanFeesConfigCreateFormInputValues = {
     percentageBase?: string;
     rate?: number;
     status?: string;
+    customLoanFeesConfigDetails?: string;
 };
 export declare type LoanFeesConfigCreateFormValidationValues = {
     name?: ValidationFunction<string>;
@@ -38,6 +39,7 @@ export declare type LoanFeesConfigCreateFormValidationValues = {
     percentageBase?: ValidationFunction<string>;
     rate?: ValidationFunction<number>;
     status?: ValidationFunction<string>;
+    customLoanFeesConfigDetails?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type LoanFeesConfigCreateFormOverridesProps = {
@@ -49,6 +51,7 @@ export declare type LoanFeesConfigCreateFormOverridesProps = {
     percentageBase?: PrimitiveOverrideProps<TextFieldProps>;
     rate?: PrimitiveOverrideProps<TextFieldProps>;
     status?: PrimitiveOverrideProps<TextFieldProps>;
+    customLoanFeesConfigDetails?: PrimitiveOverrideProps<TextAreaFieldProps>;
 } & EscapeHatchProps;
 export declare type LoanFeesConfigCreateFormProps = React.PropsWithChildren<{
     overrides?: LoanFeesConfigCreateFormOverridesProps | undefined | null;

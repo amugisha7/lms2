@@ -6,7 +6,13 @@
 
 /* eslint-disable */
 import * as React from "react";
-import { Button, Flex, Grid, TextField } from "@aws-amplify/ui-react";
+import {
+  Button,
+  Flex,
+  Grid,
+  TextAreaField,
+  TextField,
+} from "@aws-amplify/ui-react";
 import { fetchByPath, getOverrideProps, validateField } from "./utils";
 import { generateClient } from "aws-amplify/api";
 import { getDocument } from "../graphql/queries";
@@ -34,6 +40,7 @@ export default function DocumentUpdateForm(props) {
     fileName: "",
     contentType: "",
     status: "",
+    customDocumentDetails: "",
   };
   const [documentType, setDocumentType] = React.useState(
     initialValues.documentType
@@ -56,6 +63,9 @@ export default function DocumentUpdateForm(props) {
     initialValues.contentType
   );
   const [status, setStatus] = React.useState(initialValues.status);
+  const [customDocumentDetails, setCustomDocumentDetails] = React.useState(
+    initialValues.customDocumentDetails
+  );
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     const cleanValues = documentRecord
@@ -70,6 +80,12 @@ export default function DocumentUpdateForm(props) {
     setFileName(cleanValues.fileName);
     setContentType(cleanValues.contentType);
     setStatus(cleanValues.status);
+    setCustomDocumentDetails(
+      typeof cleanValues.customDocumentDetails === "string" ||
+        cleanValues.customDocumentDetails === null
+        ? cleanValues.customDocumentDetails
+        : JSON.stringify(cleanValues.customDocumentDetails)
+    );
     setErrors({});
   };
   const [documentRecord, setDocumentRecord] = React.useState(documentModelProp);
@@ -98,6 +114,7 @@ export default function DocumentUpdateForm(props) {
     fileName: [],
     contentType: [],
     status: [],
+    customDocumentDetails: [{ type: "JSON" }],
   };
   const runValidationTasks = async (
     fieldName,
@@ -134,6 +151,7 @@ export default function DocumentUpdateForm(props) {
           fileName: fileName ?? null,
           contentType: contentType ?? null,
           status: status ?? null,
+          customDocumentDetails: customDocumentDetails ?? null,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -203,6 +221,7 @@ export default function DocumentUpdateForm(props) {
               fileName,
               contentType,
               status,
+              customDocumentDetails,
             };
             const result = onChange(modelFields);
             value = result?.documentType ?? value;
@@ -235,6 +254,7 @@ export default function DocumentUpdateForm(props) {
               fileName,
               contentType,
               status,
+              customDocumentDetails,
             };
             const result = onChange(modelFields);
             value = result?.documentName ?? value;
@@ -267,6 +287,7 @@ export default function DocumentUpdateForm(props) {
               fileName,
               contentType,
               status,
+              customDocumentDetails,
             };
             const result = onChange(modelFields);
             value = result?.documentDescription ?? value;
@@ -301,6 +322,7 @@ export default function DocumentUpdateForm(props) {
               fileName,
               contentType,
               status,
+              customDocumentDetails,
             };
             const result = onChange(modelFields);
             value = result?.serialNumber ?? value;
@@ -334,6 +356,7 @@ export default function DocumentUpdateForm(props) {
               fileName,
               contentType,
               status,
+              customDocumentDetails,
             };
             const result = onChange(modelFields);
             value = result?.documentDate ?? value;
@@ -366,6 +389,7 @@ export default function DocumentUpdateForm(props) {
               fileName,
               contentType,
               status,
+              customDocumentDetails,
             };
             const result = onChange(modelFields);
             value = result?.s3Key ?? value;
@@ -398,6 +422,7 @@ export default function DocumentUpdateForm(props) {
               fileName: value,
               contentType,
               status,
+              customDocumentDetails,
             };
             const result = onChange(modelFields);
             value = result?.fileName ?? value;
@@ -430,6 +455,7 @@ export default function DocumentUpdateForm(props) {
               fileName,
               contentType: value,
               status,
+              customDocumentDetails,
             };
             const result = onChange(modelFields);
             value = result?.contentType ?? value;
@@ -462,6 +488,7 @@ export default function DocumentUpdateForm(props) {
               fileName,
               contentType,
               status: value,
+              customDocumentDetails,
             };
             const result = onChange(modelFields);
             value = result?.status ?? value;
@@ -476,6 +503,41 @@ export default function DocumentUpdateForm(props) {
         hasError={errors.status?.hasError}
         {...getOverrideProps(overrides, "status")}
       ></TextField>
+      <TextAreaField
+        label="Custom document details"
+        isRequired={false}
+        isReadOnly={false}
+        value={customDocumentDetails}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              documentType,
+              documentName,
+              documentDescription,
+              serialNumber,
+              documentDate,
+              s3Key,
+              fileName,
+              contentType,
+              status,
+              customDocumentDetails: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.customDocumentDetails ?? value;
+          }
+          if (errors.customDocumentDetails?.hasError) {
+            runValidationTasks("customDocumentDetails", value);
+          }
+          setCustomDocumentDetails(value);
+        }}
+        onBlur={() =>
+          runValidationTasks("customDocumentDetails", customDocumentDetails)
+        }
+        errorMessage={errors.customDocumentDetails?.errorMessage}
+        hasError={errors.customDocumentDetails?.hasError}
+        {...getOverrideProps(overrides, "customDocumentDetails")}
+      ></TextAreaField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}

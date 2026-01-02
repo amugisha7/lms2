@@ -5,7 +5,7 @@
  **************************************************************************/
 
 import * as React from "react";
-import { GridProps, TextFieldProps } from "@aws-amplify/ui-react";
+import { GridProps, TextAreaFieldProps, TextFieldProps } from "@aws-amplify/ui-react";
 export declare type EscapeHatchProps = {
     [elementHierarchy: string]: Record<string, unknown>;
 } | null;
@@ -40,6 +40,7 @@ export declare type InvestmentCreateFormInputValues = {
     numberOfPayments?: number;
     paymentFrequency?: number;
     status?: string;
+    customInvestmentDetails?: string;
 };
 export declare type InvestmentCreateFormValidationValues = {
     principal?: ValidationFunction<number>;
@@ -60,6 +61,7 @@ export declare type InvestmentCreateFormValidationValues = {
     numberOfPayments?: ValidationFunction<number>;
     paymentFrequency?: ValidationFunction<number>;
     status?: ValidationFunction<string>;
+    customInvestmentDetails?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type InvestmentCreateFormOverridesProps = {
@@ -82,6 +84,7 @@ export declare type InvestmentCreateFormOverridesProps = {
     numberOfPayments?: PrimitiveOverrideProps<TextFieldProps>;
     paymentFrequency?: PrimitiveOverrideProps<TextFieldProps>;
     status?: PrimitiveOverrideProps<TextFieldProps>;
+    customInvestmentDetails?: PrimitiveOverrideProps<TextAreaFieldProps>;
 } & EscapeHatchProps;
 export declare type InvestmentCreateFormProps = React.PropsWithChildren<{
     overrides?: InvestmentCreateFormOverridesProps | undefined | null;

@@ -38,6 +38,7 @@ export default function CustomFormFieldCreateForm(props) {
     order: "",
     createdBy: "",
     status: "",
+    customCustomFormFieldDetails: "",
   };
   const [formKey, setFormKey] = React.useState(initialValues.formKey);
   const [label, setLabel] = React.useState(initialValues.label);
@@ -47,6 +48,8 @@ export default function CustomFormFieldCreateForm(props) {
   const [order, setOrder] = React.useState(initialValues.order);
   const [createdBy, setCreatedBy] = React.useState(initialValues.createdBy);
   const [status, setStatus] = React.useState(initialValues.status);
+  const [customCustomFormFieldDetails, setCustomCustomFormFieldDetails] =
+    React.useState(initialValues.customCustomFormFieldDetails);
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     setFormKey(initialValues.formKey);
@@ -57,6 +60,7 @@ export default function CustomFormFieldCreateForm(props) {
     setOrder(initialValues.order);
     setCreatedBy(initialValues.createdBy);
     setStatus(initialValues.status);
+    setCustomCustomFormFieldDetails(initialValues.customCustomFormFieldDetails);
     setErrors({});
   };
   const validations = {
@@ -68,6 +72,7 @@ export default function CustomFormFieldCreateForm(props) {
     order: [],
     createdBy: [],
     status: [],
+    customCustomFormFieldDetails: [{ type: "JSON" }],
   };
   const runValidationTasks = async (
     fieldName,
@@ -103,6 +108,7 @@ export default function CustomFormFieldCreateForm(props) {
           order,
           createdBy,
           status,
+          customCustomFormFieldDetails,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -173,6 +179,7 @@ export default function CustomFormFieldCreateForm(props) {
               order,
               createdBy,
               status,
+              customCustomFormFieldDetails,
             };
             const result = onChange(modelFields);
             value = result?.formKey ?? value;
@@ -204,6 +211,7 @@ export default function CustomFormFieldCreateForm(props) {
               order,
               createdBy,
               status,
+              customCustomFormFieldDetails,
             };
             const result = onChange(modelFields);
             value = result?.label ?? value;
@@ -235,6 +243,7 @@ export default function CustomFormFieldCreateForm(props) {
               order,
               createdBy,
               status,
+              customCustomFormFieldDetails,
             };
             const result = onChange(modelFields);
             value = result?.fieldType ?? value;
@@ -265,6 +274,7 @@ export default function CustomFormFieldCreateForm(props) {
               order,
               createdBy,
               status,
+              customCustomFormFieldDetails,
             };
             const result = onChange(modelFields);
             value = result?.options ?? value;
@@ -296,6 +306,7 @@ export default function CustomFormFieldCreateForm(props) {
               order,
               createdBy,
               status,
+              customCustomFormFieldDetails,
             };
             const result = onChange(modelFields);
             value = result?.required ?? value;
@@ -331,6 +342,7 @@ export default function CustomFormFieldCreateForm(props) {
               order: value,
               createdBy,
               status,
+              customCustomFormFieldDetails,
             };
             const result = onChange(modelFields);
             value = result?.order ?? value;
@@ -362,6 +374,7 @@ export default function CustomFormFieldCreateForm(props) {
               order,
               createdBy: value,
               status,
+              customCustomFormFieldDetails,
             };
             const result = onChange(modelFields);
             value = result?.createdBy ?? value;
@@ -393,6 +406,7 @@ export default function CustomFormFieldCreateForm(props) {
               order,
               createdBy,
               status: value,
+              customCustomFormFieldDetails,
             };
             const result = onChange(modelFields);
             value = result?.status ?? value;
@@ -407,6 +421,42 @@ export default function CustomFormFieldCreateForm(props) {
         hasError={errors.status?.hasError}
         {...getOverrideProps(overrides, "status")}
       ></TextField>
+      <TextAreaField
+        label="Custom custom form field details"
+        isRequired={false}
+        isReadOnly={false}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              formKey,
+              label,
+              fieldType,
+              options,
+              required,
+              order,
+              createdBy,
+              status,
+              customCustomFormFieldDetails: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.customCustomFormFieldDetails ?? value;
+          }
+          if (errors.customCustomFormFieldDetails?.hasError) {
+            runValidationTasks("customCustomFormFieldDetails", value);
+          }
+          setCustomCustomFormFieldDetails(value);
+        }}
+        onBlur={() =>
+          runValidationTasks(
+            "customCustomFormFieldDetails",
+            customCustomFormFieldDetails
+          )
+        }
+        errorMessage={errors.customCustomFormFieldDetails?.errorMessage}
+        hasError={errors.customCustomFormFieldDetails?.hasError}
+        {...getOverrideProps(overrides, "customCustomFormFieldDetails")}
+      ></TextAreaField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}

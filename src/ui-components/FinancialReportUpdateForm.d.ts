@@ -29,6 +29,7 @@ export declare type FinancialReportUpdateFormInputValues = {
     endDate?: string;
     reportData?: string;
     status?: string;
+    customFinancialReportDetails?: string;
 };
 export declare type FinancialReportUpdateFormValidationValues = {
     reportName?: ValidationFunction<string>;
@@ -38,6 +39,7 @@ export declare type FinancialReportUpdateFormValidationValues = {
     endDate?: ValidationFunction<string>;
     reportData?: ValidationFunction<string>;
     status?: ValidationFunction<string>;
+    customFinancialReportDetails?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type FinancialReportUpdateFormOverridesProps = {
@@ -49,6 +51,7 @@ export declare type FinancialReportUpdateFormOverridesProps = {
     endDate?: PrimitiveOverrideProps<TextFieldProps>;
     reportData?: PrimitiveOverrideProps<TextAreaFieldProps>;
     status?: PrimitiveOverrideProps<TextFieldProps>;
+    customFinancialReportDetails?: PrimitiveOverrideProps<TextAreaFieldProps>;
 } & EscapeHatchProps;
 export declare type FinancialReportUpdateFormProps = React.PropsWithChildren<{
     overrides?: FinancialReportUpdateFormOverridesProps | undefined | null;

@@ -35,6 +35,23 @@ const chunk = (items, size) => {
   return out;
 };
 
+const formatInterestPeriodLabel = (interestPeriod) => {
+  switch (interestPeriod) {
+    case "per_day":
+      return "day";
+    case "per_week":
+      return "week";
+    case "per_month":
+      return "month";
+    case "per_year":
+      return "year";
+    case "per_loan":
+      return "loan";
+    default:
+      return "";
+  }
+};
+
 export default function LoanScheduleDraft({
   loanDraft,
   draftValues,
@@ -290,7 +307,7 @@ export default function LoanScheduleDraft({
           fontSize: "1.3rem",
         }}
       >
-        LOAN REPAYMENT SCHEDULE
+        LOAN SCHEDULE
       </Typography>
       <Divider sx={{ borderColor: theme.palette.common.black }} />
       <Box
@@ -318,8 +335,21 @@ export default function LoanScheduleDraft({
             variant="body2"
             sx={{ color: theme.palette.common.black }}
           >
-            <strong>Interest:</strong> {draftRecord?.interestRate ?? ""}
-            {draftRecord?.interestType === "percentage" ? "%" : ""}
+            <strong>Interest:</strong>{" "}
+            {draftRecord?.interestType === "percentage" ? (
+              <>{draftRecord?.interestRate ?? ""}%</>
+            ) : (
+              <Money value={draftRecord?.interestRate} />
+            )}
+            {(() => {
+              const periodLabel = formatInterestPeriodLabel(
+                draftRecord?.interestPeriod
+              );
+              if (draftRecord?.interestPeriod === "per_loan") {
+                return <> of Principal</>;
+              }
+              return periodLabel ? <> per {periodLabel}</> : null;
+            })()}
           </Typography>
           {loanFeeSummary && showLoanFees ? (
             <Typography
@@ -403,6 +433,9 @@ export default function LoanScheduleDraft({
           "& thead th:nth-of-type(6), & tbody td:nth-of-type(6)": {
             width: "calc((100% - 106px) * 0.2)",
           },
+          "& thead th:nth-of-type(7), & tbody td:nth-of-type(7)": {
+            width: "calc((100% - 106px) * 0.2)",
+          },
         }}
       >
         <TableHead>
@@ -415,13 +448,13 @@ export default function LoanScheduleDraft({
             <TableCell
               sx={{ color: theme.palette.common.black, fontWeight: 700 }}
             >
-              Due Date
+              Date
             </TableCell>
             <TableCell
               sx={{ color: theme.palette.common.black, fontWeight: 700 }}
               align="right"
             >
-              Principal
+              Opening Balance
             </TableCell>
             <TableCell
               sx={{ color: theme.palette.common.black, fontWeight: 700 }}
@@ -433,13 +466,19 @@ export default function LoanScheduleDraft({
               sx={{ color: theme.palette.common.black, fontWeight: 700 }}
               align="right"
             >
-              Total Due
+              Principal Repaid
             </TableCell>
             <TableCell
               sx={{ color: theme.palette.common.black, fontWeight: 700 }}
               align="right"
             >
-              Balance
+              Total Payment
+            </TableCell>
+            <TableCell
+              sx={{ color: theme.palette.common.black, fontWeight: 700 }}
+              align="right"
+            >
+              Closing Balance
             </TableCell>
           </TableRow>
         </TableHead>
@@ -456,13 +495,19 @@ export default function LoanScheduleDraft({
                 sx={{ color: theme.palette.common.black }}
                 align="right"
               >
-                <Money value={inst?.principalDue} />
+                <Money value={inst?.openingBalance} />
               </TableCell>
               <TableCell
                 sx={{ color: theme.palette.common.black }}
                 align="right"
               >
                 <Money value={inst?.interestDue} />
+              </TableCell>
+              <TableCell
+                sx={{ color: theme.palette.common.black }}
+                align="right"
+              >
+                <Money value={inst?.principalDue} />
               </TableCell>
               <TableCell
                 sx={{ color: theme.palette.common.black }}

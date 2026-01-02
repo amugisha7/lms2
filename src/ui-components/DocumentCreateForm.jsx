@@ -6,7 +6,13 @@
 
 /* eslint-disable */
 import * as React from "react";
-import { Button, Flex, Grid, TextField } from "@aws-amplify/ui-react";
+import {
+  Button,
+  Flex,
+  Grid,
+  TextAreaField,
+  TextField,
+} from "@aws-amplify/ui-react";
 import { fetchByPath, getOverrideProps, validateField } from "./utils";
 import { generateClient } from "aws-amplify/api";
 import { createDocument } from "../graphql/mutations";
@@ -32,6 +38,7 @@ export default function DocumentCreateForm(props) {
     fileName: "",
     contentType: "",
     status: "",
+    customDocumentDetails: "",
   };
   const [documentType, setDocumentType] = React.useState(
     initialValues.documentType
@@ -54,6 +61,9 @@ export default function DocumentCreateForm(props) {
     initialValues.contentType
   );
   const [status, setStatus] = React.useState(initialValues.status);
+  const [customDocumentDetails, setCustomDocumentDetails] = React.useState(
+    initialValues.customDocumentDetails
+  );
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     setDocumentType(initialValues.documentType);
@@ -65,6 +75,7 @@ export default function DocumentCreateForm(props) {
     setFileName(initialValues.fileName);
     setContentType(initialValues.contentType);
     setStatus(initialValues.status);
+    setCustomDocumentDetails(initialValues.customDocumentDetails);
     setErrors({});
   };
   const validations = {
@@ -77,6 +88,7 @@ export default function DocumentCreateForm(props) {
     fileName: [],
     contentType: [],
     status: [],
+    customDocumentDetails: [{ type: "JSON" }],
   };
   const runValidationTasks = async (
     fieldName,
@@ -113,6 +125,7 @@ export default function DocumentCreateForm(props) {
           fileName,
           contentType,
           status,
+          customDocumentDetails,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -184,6 +197,7 @@ export default function DocumentCreateForm(props) {
               fileName,
               contentType,
               status,
+              customDocumentDetails,
             };
             const result = onChange(modelFields);
             value = result?.documentType ?? value;
@@ -216,6 +230,7 @@ export default function DocumentCreateForm(props) {
               fileName,
               contentType,
               status,
+              customDocumentDetails,
             };
             const result = onChange(modelFields);
             value = result?.documentName ?? value;
@@ -248,6 +263,7 @@ export default function DocumentCreateForm(props) {
               fileName,
               contentType,
               status,
+              customDocumentDetails,
             };
             const result = onChange(modelFields);
             value = result?.documentDescription ?? value;
@@ -282,6 +298,7 @@ export default function DocumentCreateForm(props) {
               fileName,
               contentType,
               status,
+              customDocumentDetails,
             };
             const result = onChange(modelFields);
             value = result?.serialNumber ?? value;
@@ -315,6 +332,7 @@ export default function DocumentCreateForm(props) {
               fileName,
               contentType,
               status,
+              customDocumentDetails,
             };
             const result = onChange(modelFields);
             value = result?.documentDate ?? value;
@@ -347,6 +365,7 @@ export default function DocumentCreateForm(props) {
               fileName,
               contentType,
               status,
+              customDocumentDetails,
             };
             const result = onChange(modelFields);
             value = result?.s3Key ?? value;
@@ -379,6 +398,7 @@ export default function DocumentCreateForm(props) {
               fileName: value,
               contentType,
               status,
+              customDocumentDetails,
             };
             const result = onChange(modelFields);
             value = result?.fileName ?? value;
@@ -411,6 +431,7 @@ export default function DocumentCreateForm(props) {
               fileName,
               contentType: value,
               status,
+              customDocumentDetails,
             };
             const result = onChange(modelFields);
             value = result?.contentType ?? value;
@@ -443,6 +464,7 @@ export default function DocumentCreateForm(props) {
               fileName,
               contentType,
               status: value,
+              customDocumentDetails,
             };
             const result = onChange(modelFields);
             value = result?.status ?? value;
@@ -457,6 +479,40 @@ export default function DocumentCreateForm(props) {
         hasError={errors.status?.hasError}
         {...getOverrideProps(overrides, "status")}
       ></TextField>
+      <TextAreaField
+        label="Custom document details"
+        isRequired={false}
+        isReadOnly={false}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              documentType,
+              documentName,
+              documentDescription,
+              serialNumber,
+              documentDate,
+              s3Key,
+              fileName,
+              contentType,
+              status,
+              customDocumentDetails: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.customDocumentDetails ?? value;
+          }
+          if (errors.customDocumentDetails?.hasError) {
+            runValidationTasks("customDocumentDetails", value);
+          }
+          setCustomDocumentDetails(value);
+        }}
+        onBlur={() =>
+          runValidationTasks("customDocumentDetails", customDocumentDetails)
+        }
+        errorMessage={errors.customDocumentDetails?.errorMessage}
+        hasError={errors.customDocumentDetails?.hasError}
+        {...getOverrideProps(overrides, "customDocumentDetails")}
+      ></TextAreaField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}

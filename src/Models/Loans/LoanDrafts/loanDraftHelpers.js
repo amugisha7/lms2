@@ -223,9 +223,11 @@ export const generateSchedulePreviewFromDraftRecord = async (draftRecord) => {
   const durationInterval = values?.durationPeriod ?? values?.durationInterval;
   const startDate = values?.disbursementDate ?? values?.loanStartDate ?? values?.startDate;
 
-  const repaymentFrequency = mapRepaymentFrequency(
-    values?.repaymentFrequency ?? values?.paymentFrequency
-  );
+  const repaymentFrequencyType = values?.repaymentFrequencyType;
+  const repaymentFrequency =
+    repaymentFrequencyType === "lumpSum"
+      ? "LUMP_SUM"
+      : mapRepaymentFrequency(values?.repaymentFrequency ?? values?.paymentFrequency);
 
   const interestCalculationMethod = mapInterestCalculationMethod(
     values?.interestMethod ?? values?.interestCalculationMethod
@@ -262,7 +264,7 @@ export const generateSchedulePreviewFromDraftRecord = async (draftRecord) => {
     startDate,
     maturityDate,
     repaymentFrequency,
-    repaymentFrequencyType: values?.repaymentFrequencyType,
+    repaymentFrequencyType,
     customPaymentDays: values?.customPaymentDays,
     customPaymentDates: values?.customPaymentDates,
   });
@@ -278,7 +280,7 @@ export const generateSchedulePreviewFromDraftRecord = async (draftRecord) => {
     startDate,
     maturityDate,
     repaymentFrequency,
-    repaymentFrequencyType: values?.repaymentFrequencyType,
+    repaymentFrequencyType,
     customPaymentDays: values?.customPaymentDays,
     customPaymentDates: values?.customPaymentDates,
     interestCalculationMethod,
@@ -353,78 +355,140 @@ export const generateSchedulePreviewFromDraftRecord = async (draftRecord) => {
     last.balanceAfter = 0;
 
   } else {
-    // SIMPLE / COMPOUND: amortized equal installments using periodic rate.
-    // We treat the configured rate as an annualized % derived from interestPeriod.
-    const annualRate = getAnnualRateFromInterestPeriod({
-      interestType,
-      interestRate: rawInterestRate,
-      interestPeriod,
-    });
-
-    if (interestType !== "percentage" || annualRate === null) {
-      return {
-        supported: false,
-        reason:
-          "Only percentage-based SIMPLE/COMPOUND schedules are supported for this configuration",
-        schedulePreview: null,
-        scheduleHash,
-      };
-    }
-
-    // Use repayment frequency to get a consistent per-period rate.
-    const { unit, count } =
-      repaymentFrequency === "LUMP_SUM"
-        ? { unit: "year", count: 1 }
-        : frequencyToInterval(repaymentFrequency);
-
-    // Approximate a period in years.
-    // For month/year we use dayjs diff to avoid hard-coding month length.
-    const start = dayjs(startDate);
-    const next = start.add(count, unit);
-    const periodYears = Math.max(1 / 365, next.diff(start, "day") / 365);
-
-    const r = annualRate * periodYears;
-    const safeR = Number.isFinite(r) ? r : 0;
-
-    let pmt = 0;
-    if (safeR <= 0) {
-      pmt = principal / n;
-    } else {
-      pmt = (principal * safeR * Math.pow(1 + safeR, n)) / (Math.pow(1 + safeR, n) - 1);
-    }
-
-    outstanding = principal;
-
-    for (let i = 0; i < n; i += 1) {
-      const interestDue = round2(outstanding * safeR);
-      let principalDue = round2(pmt - interestDue);
-
-      if (i === n - 1) {
-        principalDue = round2(outstanding);
+    // SIMPLE / COMPOUND
+    // Percentage-based: amortized equal installments using periodic rate.
+    // Fixed-amount: distribute total fixed interest across installments so a schedule is always generated.
+    if (interestType === "fixed") {
+      let totalInterest = 0;
+      if (interestPeriod === "per_loan") {
+        totalInterest = rawInterestRate;
+      } else {
+        const durationInYears =
+          dayjs(maturityDate).diff(dayjs(startDate), "day") / 365;
+        if (interestPeriod === "per_year") {
+          totalInterest = rawInterestRate * durationInYears;
+        } else if (interestPeriod === "per_month") {
+          totalInterest = rawInterestRate * durationInYears * 12;
+        } else if (interestPeriod === "per_week") {
+          totalInterest = rawInterestRate * durationInYears * 52;
+        } else if (interestPeriod === "per_day") {
+          totalInterest = rawInterestRate * durationInYears * 365;
+        } else {
+          totalInterest = rawInterestRate;
+        }
       }
 
-      const totalDue = round2(principalDue + interestDue);
-      const balanceAfter = round2(outstanding - principalDue);
+      const interestPer = totalInterest / n;
+      const principalPer = principal / n;
 
-      installments.push({
-        dueDate: installmentDates[i],
-        principalDue,
-        interestDue,
-        feesDue: 0,
-        totalDue,
-        balanceAfter: balanceAfter < 0 ? 0 : balanceAfter,
+      for (let i = 0; i < n; i += 1) {
+        const principalDue = round2(principalPer);
+        const interestDue = round2(interestPer);
+        const balanceAfter = round2(outstanding - principalDue);
+
+        installments.push({
+          dueDate: installmentDates[i],
+          principalDue,
+          interestDue,
+          feesDue: 0,
+          totalDue: round2(principalDue + interestDue),
+          balanceAfter: balanceAfter < 0 ? 0 : balanceAfter,
+        });
+        outstanding = Math.max(0, outstanding - principalDue);
+      }
+
+      const principalSum = round2(
+        installments.reduce((s, x) => s + x.principalDue, 0)
+      );
+      const interestSum = round2(
+        installments.reduce((s, x) => s + x.interestDue, 0)
+      );
+      const principalDiff = round2(principal - principalSum);
+      const interestDiff = round2(totalInterest - interestSum);
+
+      const last = installments[installments.length - 1];
+      last.principalDue = round2(last.principalDue + principalDiff);
+      last.interestDue = round2(last.interestDue + interestDiff);
+      last.totalDue = round2(last.principalDue + last.interestDue);
+      last.balanceAfter = 0;
+    } else {
+      // Percentage-based
+      // We treat the configured rate as an annualized % derived from interestPeriod.
+      const annualRate = getAnnualRateFromInterestPeriod({
+        interestType,
+        interestRate: rawInterestRate,
+        interestPeriod,
       });
 
-      outstanding = Math.max(0, outstanding - principalDue);
-    }
+      if (interestType !== "percentage" || annualRate === null) {
+        return {
+          supported: false,
+          reason:
+            "Only percentage-based SIMPLE/COMPOUND schedules are supported for this configuration",
+          schedulePreview: null,
+          scheduleHash,
+        };
+      }
 
-    // Fix rounding drift on principal
-    const principalSum = round2(installments.reduce((s, x) => s + x.principalDue, 0));
-    const principalDiff = round2(principal - principalSum);
-    const last = installments[installments.length - 1];
-    last.principalDue = round2(last.principalDue + principalDiff);
-    last.totalDue = round2(last.principalDue + last.interestDue);
-    last.balanceAfter = 0;
+      // Use repayment frequency to get a consistent per-period rate.
+      const { unit, count } =
+        repaymentFrequency === "LUMP_SUM"
+          ? { unit: "year", count: 1 }
+          : frequencyToInterval(repaymentFrequency);
+
+      // Approximate a period in years.
+      // For month/year we use dayjs diff to avoid hard-coding month length.
+      const start = dayjs(startDate);
+      const next = start.add(count, unit);
+      const periodYears = Math.max(1 / 365, next.diff(start, "day") / 365);
+
+      const r = annualRate * periodYears;
+      const safeR = Number.isFinite(r) ? r : 0;
+
+      let pmt = 0;
+      if (safeR <= 0) {
+        pmt = principal / n;
+      } else {
+        pmt =
+          (principal * safeR * Math.pow(1 + safeR, n)) /
+          (Math.pow(1 + safeR, n) - 1);
+      }
+
+      outstanding = principal;
+
+      for (let i = 0; i < n; i += 1) {
+        const interestDue = round2(outstanding * safeR);
+        let principalDue = round2(pmt - interestDue);
+
+        if (i === n - 1) {
+          principalDue = round2(outstanding);
+        }
+
+        const totalDue = round2(principalDue + interestDue);
+        const balanceAfter = round2(outstanding - principalDue);
+
+        installments.push({
+          dueDate: installmentDates[i],
+          principalDue,
+          interestDue,
+          feesDue: 0,
+          totalDue,
+          balanceAfter: balanceAfter < 0 ? 0 : balanceAfter,
+        });
+
+        outstanding = Math.max(0, outstanding - principalDue);
+      }
+
+      // Fix rounding drift on principal
+      const principalSum = round2(
+        installments.reduce((s, x) => s + x.principalDue, 0)
+      );
+      const principalDiff = round2(principal - principalSum);
+      const last = installments[installments.length - 1];
+      last.principalDue = round2(last.principalDue + principalDiff);
+      last.totalDue = round2(last.principalDue + last.interestDue);
+      last.balanceAfter = 0;
+    }
   }
 
   const totals = {

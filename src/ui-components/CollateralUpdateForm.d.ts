@@ -35,6 +35,7 @@ export declare type CollateralUpdateFormInputValues = {
     storedAt?: string;
     customFieldsData?: string;
     status?: string;
+    customCollateralDetails?: string;
 };
 export declare type CollateralUpdateFormValidationValues = {
     name?: ValidationFunction<string>;
@@ -50,6 +51,7 @@ export declare type CollateralUpdateFormValidationValues = {
     storedAt?: ValidationFunction<string>;
     customFieldsData?: ValidationFunction<string>;
     status?: ValidationFunction<string>;
+    customCollateralDetails?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type CollateralUpdateFormOverridesProps = {
@@ -67,6 +69,7 @@ export declare type CollateralUpdateFormOverridesProps = {
     storedAt?: PrimitiveOverrideProps<TextFieldProps>;
     customFieldsData?: PrimitiveOverrideProps<TextAreaFieldProps>;
     status?: PrimitiveOverrideProps<TextFieldProps>;
+    customCollateralDetails?: PrimitiveOverrideProps<TextAreaFieldProps>;
 } & EscapeHatchProps;
 export declare type CollateralUpdateFormProps = React.PropsWithChildren<{
     overrides?: CollateralUpdateFormOverridesProps | undefined | null;

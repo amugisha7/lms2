@@ -105,7 +105,7 @@ const buildValidationSchema = () => {
       .oneOf(["days", "weeks", "months", "years"])
       .required("Duration Period is required"),
     repaymentFrequencyType: Yup.string()
-      .oneOf(["interval", "setDays", "setDates"])
+      .oneOf(["interval", "setDays", "setDates", "lumpSum"])
       .required("Repayment Frequency is required"),
     repaymentFrequency: Yup.string().when("repaymentFrequencyType", {
       is: "interval",
@@ -122,7 +122,6 @@ const buildValidationSchema = () => {
             "semi_annual",
             "every_9_months",
             "yearly",
-            "lump_sum",
           ])
           .required("Repayment Interval is required"),
       otherwise: (schema) => schema.notRequired(),
@@ -652,7 +651,7 @@ const CreateLoan = forwardRef(
                 <CustomPopUp
                   open={scheduleOpen}
                   onClose={() => setScheduleOpen(false)}
-                  title="Draft Loan Schedule"
+                  title="Loan Draft"
                   showEdit={false}
                   showDelete={false}
                   maxWidth="lg"

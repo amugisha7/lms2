@@ -62,6 +62,7 @@ export declare type EmployeeUpdateFormInputValues = {
     customFieldsData?: string;
     relatedUserID?: string;
     relatedBorrowerID?: string;
+    customEmployeeDetails?: string;
 };
 export declare type EmployeeUpdateFormValidationValues = {
     firstName?: ValidationFunction<string>;
@@ -104,6 +105,7 @@ export declare type EmployeeUpdateFormValidationValues = {
     customFieldsData?: ValidationFunction<string>;
     relatedUserID?: ValidationFunction<string>;
     relatedBorrowerID?: ValidationFunction<string>;
+    customEmployeeDetails?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type EmployeeUpdateFormOverridesProps = {
@@ -148,6 +150,7 @@ export declare type EmployeeUpdateFormOverridesProps = {
     customFieldsData?: PrimitiveOverrideProps<TextAreaFieldProps>;
     relatedUserID?: PrimitiveOverrideProps<TextFieldProps>;
     relatedBorrowerID?: PrimitiveOverrideProps<TextFieldProps>;
+    customEmployeeDetails?: PrimitiveOverrideProps<TextAreaFieldProps>;
 } & EscapeHatchProps;
 export declare type EmployeeUpdateFormProps = React.PropsWithChildren<{
     overrides?: EmployeeUpdateFormOverridesProps | undefined | null;

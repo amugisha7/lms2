@@ -5,7 +5,7 @@
  **************************************************************************/
 
 import * as React from "react";
-import { GridProps, TextFieldProps } from "@aws-amplify/ui-react";
+import { GridProps, TextAreaFieldProps, TextFieldProps } from "@aws-amplify/ui-react";
 export declare type EscapeHatchProps = {
     [elementHierarchy: string]: Record<string, unknown>;
 } | null;
@@ -28,6 +28,7 @@ export declare type OtherIncomeUpdateFormInputValues = {
     incomeDate?: string;
     incomeType?: string;
     status?: string;
+    customOtherIncomeDetails?: string;
 };
 export declare type OtherIncomeUpdateFormValidationValues = {
     name?: ValidationFunction<string>;
@@ -36,6 +37,7 @@ export declare type OtherIncomeUpdateFormValidationValues = {
     incomeDate?: ValidationFunction<string>;
     incomeType?: ValidationFunction<string>;
     status?: ValidationFunction<string>;
+    customOtherIncomeDetails?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type OtherIncomeUpdateFormOverridesProps = {
@@ -46,6 +48,7 @@ export declare type OtherIncomeUpdateFormOverridesProps = {
     incomeDate?: PrimitiveOverrideProps<TextFieldProps>;
     incomeType?: PrimitiveOverrideProps<TextFieldProps>;
     status?: PrimitiveOverrideProps<TextFieldProps>;
+    customOtherIncomeDetails?: PrimitiveOverrideProps<TextAreaFieldProps>;
 } & EscapeHatchProps;
 export declare type OtherIncomeUpdateFormProps = React.PropsWithChildren<{
     overrides?: OtherIncomeUpdateFormOverridesProps | undefined | null;

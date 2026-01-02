@@ -6,7 +6,13 @@
 
 /* eslint-disable */
 import * as React from "react";
-import { Button, Flex, Grid, TextField } from "@aws-amplify/ui-react";
+import {
+  Button,
+  Flex,
+  Grid,
+  TextAreaField,
+  TextField,
+} from "@aws-amplify/ui-react";
 import { fetchByPath, getOverrideProps, validateField } from "./utils";
 import { generateClient } from "aws-amplify/api";
 import { getInvestment } from "../graphql/queries";
@@ -43,6 +49,7 @@ export default function InvestmentUpdateForm(props) {
     numberOfPayments: "",
     paymentFrequency: "",
     status: "",
+    customInvestmentDetails: "",
   };
   const [principal, setPrincipal] = React.useState(initialValues.principal);
   const [description, setDescription] = React.useState(
@@ -84,6 +91,9 @@ export default function InvestmentUpdateForm(props) {
     initialValues.paymentFrequency
   );
   const [status, setStatus] = React.useState(initialValues.status);
+  const [customInvestmentDetails, setCustomInvestmentDetails] = React.useState(
+    initialValues.customInvestmentDetails
+  );
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     const cleanValues = investmentRecord
@@ -107,6 +117,12 @@ export default function InvestmentUpdateForm(props) {
     setNumberOfPayments(cleanValues.numberOfPayments);
     setPaymentFrequency(cleanValues.paymentFrequency);
     setStatus(cleanValues.status);
+    setCustomInvestmentDetails(
+      typeof cleanValues.customInvestmentDetails === "string" ||
+        cleanValues.customInvestmentDetails === null
+        ? cleanValues.customInvestmentDetails
+        : JSON.stringify(cleanValues.customInvestmentDetails)
+    );
     setErrors({});
   };
   const [investmentRecord, setInvestmentRecord] =
@@ -145,6 +161,7 @@ export default function InvestmentUpdateForm(props) {
     numberOfPayments: [],
     paymentFrequency: [],
     status: [],
+    customInvestmentDetails: [{ type: "JSON" }],
   };
   const runValidationTasks = async (
     fieldName,
@@ -190,6 +207,7 @@ export default function InvestmentUpdateForm(props) {
           numberOfPayments: numberOfPayments ?? null,
           paymentFrequency: paymentFrequency ?? null,
           status: status ?? null,
+          customInvestmentDetails: customInvestmentDetails ?? null,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -272,6 +290,7 @@ export default function InvestmentUpdateForm(props) {
               numberOfPayments,
               paymentFrequency,
               status,
+              customInvestmentDetails,
             };
             const result = onChange(modelFields);
             value = result?.principal ?? value;
@@ -313,6 +332,7 @@ export default function InvestmentUpdateForm(props) {
               numberOfPayments,
               paymentFrequency,
               status,
+              customInvestmentDetails,
             };
             const result = onChange(modelFields);
             value = result?.description ?? value;
@@ -358,6 +378,7 @@ export default function InvestmentUpdateForm(props) {
               numberOfPayments,
               paymentFrequency,
               status,
+              customInvestmentDetails,
             };
             const result = onChange(modelFields);
             value = result?.fees ?? value;
@@ -403,6 +424,7 @@ export default function InvestmentUpdateForm(props) {
               numberOfPayments,
               paymentFrequency,
               status,
+              customInvestmentDetails,
             };
             const result = onChange(modelFields);
             value = result?.interestRate ?? value;
@@ -445,6 +467,7 @@ export default function InvestmentUpdateForm(props) {
               numberOfPayments,
               paymentFrequency,
               status,
+              customInvestmentDetails,
             };
             const result = onChange(modelFields);
             value = result?.startDate ?? value;
@@ -487,6 +510,7 @@ export default function InvestmentUpdateForm(props) {
               numberOfPayments,
               paymentFrequency,
               status,
+              customInvestmentDetails,
             };
             const result = onChange(modelFields);
             value = result?.maturityDate ?? value;
@@ -529,6 +553,7 @@ export default function InvestmentUpdateForm(props) {
               numberOfPayments,
               paymentFrequency,
               status,
+              customInvestmentDetails,
             };
             const result = onChange(modelFields);
             value = result?.stopDate ?? value;
@@ -574,6 +599,7 @@ export default function InvestmentUpdateForm(props) {
               numberOfPayments,
               paymentFrequency,
               status,
+              customInvestmentDetails,
             };
             const result = onChange(modelFields);
             value = result?.extensionPeriod ?? value;
@@ -619,6 +645,7 @@ export default function InvestmentUpdateForm(props) {
               numberOfPayments,
               paymentFrequency,
               status,
+              customInvestmentDetails,
             };
             const result = onChange(modelFields);
             value = result?.duration ?? value;
@@ -660,6 +687,7 @@ export default function InvestmentUpdateForm(props) {
               numberOfPayments,
               paymentFrequency,
               status,
+              customInvestmentDetails,
             };
             const result = onChange(modelFields);
             value = result?.durationInterval ?? value;
@@ -701,6 +729,7 @@ export default function InvestmentUpdateForm(props) {
               numberOfPayments,
               paymentFrequency,
               status,
+              customInvestmentDetails,
             };
             const result = onChange(modelFields);
             value = result?.type ?? value;
@@ -742,6 +771,7 @@ export default function InvestmentUpdateForm(props) {
               numberOfPayments,
               paymentFrequency,
               status,
+              customInvestmentDetails,
             };
             const result = onChange(modelFields);
             value = result?.rateInterval ?? value;
@@ -783,6 +813,7 @@ export default function InvestmentUpdateForm(props) {
               numberOfPayments,
               paymentFrequency,
               status,
+              customInvestmentDetails,
             };
             const result = onChange(modelFields);
             value = result?.investmentStatus ?? value;
@@ -824,6 +855,7 @@ export default function InvestmentUpdateForm(props) {
               numberOfPayments,
               paymentFrequency,
               status,
+              customInvestmentDetails,
             };
             const result = onChange(modelFields);
             value = result?.investmentAttribute1 ?? value;
@@ -867,6 +899,7 @@ export default function InvestmentUpdateForm(props) {
               numberOfPayments,
               paymentFrequency,
               status,
+              customInvestmentDetails,
             };
             const result = onChange(modelFields);
             value = result?.investmentAttribute2 ?? value;
@@ -914,6 +947,7 @@ export default function InvestmentUpdateForm(props) {
               numberOfPayments: value,
               paymentFrequency,
               status,
+              customInvestmentDetails,
             };
             const result = onChange(modelFields);
             value = result?.numberOfPayments ?? value;
@@ -959,6 +993,7 @@ export default function InvestmentUpdateForm(props) {
               numberOfPayments,
               paymentFrequency: value,
               status,
+              customInvestmentDetails,
             };
             const result = onChange(modelFields);
             value = result?.paymentFrequency ?? value;
@@ -1000,6 +1035,7 @@ export default function InvestmentUpdateForm(props) {
               numberOfPayments,
               paymentFrequency,
               status: value,
+              customInvestmentDetails,
             };
             const result = onChange(modelFields);
             value = result?.status ?? value;
@@ -1014,6 +1050,50 @@ export default function InvestmentUpdateForm(props) {
         hasError={errors.status?.hasError}
         {...getOverrideProps(overrides, "status")}
       ></TextField>
+      <TextAreaField
+        label="Custom investment details"
+        isRequired={false}
+        isReadOnly={false}
+        value={customInvestmentDetails}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              principal,
+              description,
+              fees,
+              interestRate,
+              startDate,
+              maturityDate,
+              stopDate,
+              extensionPeriod,
+              duration,
+              durationInterval,
+              type,
+              rateInterval,
+              investmentStatus,
+              investmentAttribute1,
+              investmentAttribute2,
+              numberOfPayments,
+              paymentFrequency,
+              status,
+              customInvestmentDetails: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.customInvestmentDetails ?? value;
+          }
+          if (errors.customInvestmentDetails?.hasError) {
+            runValidationTasks("customInvestmentDetails", value);
+          }
+          setCustomInvestmentDetails(value);
+        }}
+        onBlur={() =>
+          runValidationTasks("customInvestmentDetails", customInvestmentDetails)
+        }
+        errorMessage={errors.customInvestmentDetails?.errorMessage}
+        hasError={errors.customInvestmentDetails?.hasError}
+        {...getOverrideProps(overrides, "customInvestmentDetails")}
+      ></TextAreaField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}

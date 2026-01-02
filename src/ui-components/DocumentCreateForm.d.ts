@@ -5,7 +5,7 @@
  **************************************************************************/
 
 import * as React from "react";
-import { GridProps, TextFieldProps } from "@aws-amplify/ui-react";
+import { GridProps, TextAreaFieldProps, TextFieldProps } from "@aws-amplify/ui-react";
 export declare type EscapeHatchProps = {
     [elementHierarchy: string]: Record<string, unknown>;
 } | null;
@@ -31,6 +31,7 @@ export declare type DocumentCreateFormInputValues = {
     fileName?: string;
     contentType?: string;
     status?: string;
+    customDocumentDetails?: string;
 };
 export declare type DocumentCreateFormValidationValues = {
     documentType?: ValidationFunction<string>;
@@ -42,6 +43,7 @@ export declare type DocumentCreateFormValidationValues = {
     fileName?: ValidationFunction<string>;
     contentType?: ValidationFunction<string>;
     status?: ValidationFunction<string>;
+    customDocumentDetails?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type DocumentCreateFormOverridesProps = {
@@ -55,6 +57,7 @@ export declare type DocumentCreateFormOverridesProps = {
     fileName?: PrimitiveOverrideProps<TextFieldProps>;
     contentType?: PrimitiveOverrideProps<TextFieldProps>;
     status?: PrimitiveOverrideProps<TextFieldProps>;
+    customDocumentDetails?: PrimitiveOverrideProps<TextAreaFieldProps>;
 } & EscapeHatchProps;
 export declare type DocumentCreateFormProps = React.PropsWithChildren<{
     overrides?: DocumentCreateFormOverridesProps | undefined | null;

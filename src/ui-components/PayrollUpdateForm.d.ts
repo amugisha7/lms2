@@ -5,7 +5,7 @@
  **************************************************************************/
 
 import * as React from "react";
-import { GridProps, TextFieldProps } from "@aws-amplify/ui-react";
+import { GridProps, TextAreaFieldProps, TextFieldProps } from "@aws-amplify/ui-react";
 export declare type EscapeHatchProps = {
     [elementHierarchy: string]: Record<string, unknown>;
 } | null;
@@ -33,6 +33,7 @@ export declare type PayrollUpdateFormInputValues = {
     totalShareDeductions?: number;
     totalNetPay?: number;
     details?: string;
+    customPayrollDetails?: string;
 };
 export declare type PayrollUpdateFormValidationValues = {
     periodStartDate?: ValidationFunction<string>;
@@ -46,6 +47,7 @@ export declare type PayrollUpdateFormValidationValues = {
     totalShareDeductions?: ValidationFunction<number>;
     totalNetPay?: ValidationFunction<number>;
     details?: ValidationFunction<string>;
+    customPayrollDetails?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type PayrollUpdateFormOverridesProps = {
@@ -61,6 +63,7 @@ export declare type PayrollUpdateFormOverridesProps = {
     totalShareDeductions?: PrimitiveOverrideProps<TextFieldProps>;
     totalNetPay?: PrimitiveOverrideProps<TextFieldProps>;
     details?: PrimitiveOverrideProps<TextFieldProps>;
+    customPayrollDetails?: PrimitiveOverrideProps<TextAreaFieldProps>;
 } & EscapeHatchProps;
 export declare type PayrollUpdateFormProps = React.PropsWithChildren<{
     overrides?: PayrollUpdateFormOverridesProps | undefined | null;

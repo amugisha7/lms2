@@ -6,7 +6,13 @@
 
 /* eslint-disable */
 import * as React from "react";
-import { Button, Flex, Grid, TextField } from "@aws-amplify/ui-react";
+import {
+  Button,
+  Flex,
+  Grid,
+  TextAreaField,
+  TextField,
+} from "@aws-amplify/ui-react";
 import { fetchByPath, getOverrideProps, validateField } from "./utils";
 import { generateClient } from "aws-amplify/api";
 import { getSecurity } from "../graphql/queries";
@@ -30,6 +36,7 @@ export default function SecurityUpdateForm(props) {
     description: "",
     value: "",
     status: "",
+    customSecurityDetails: "",
   };
   const [name, setName] = React.useState(initialValues.name);
   const [type, setType] = React.useState(initialValues.type);
@@ -38,6 +45,9 @@ export default function SecurityUpdateForm(props) {
   );
   const [value, setValue] = React.useState(initialValues.value);
   const [status, setStatus] = React.useState(initialValues.status);
+  const [customSecurityDetails, setCustomSecurityDetails] = React.useState(
+    initialValues.customSecurityDetails
+  );
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     const cleanValues = securityRecord
@@ -48,6 +58,12 @@ export default function SecurityUpdateForm(props) {
     setDescription(cleanValues.description);
     setValue(cleanValues.value);
     setStatus(cleanValues.status);
+    setCustomSecurityDetails(
+      typeof cleanValues.customSecurityDetails === "string" ||
+        cleanValues.customSecurityDetails === null
+        ? cleanValues.customSecurityDetails
+        : JSON.stringify(cleanValues.customSecurityDetails)
+    );
     setErrors({});
   };
   const [securityRecord, setSecurityRecord] = React.useState(securityModelProp);
@@ -72,6 +88,7 @@ export default function SecurityUpdateForm(props) {
     description: [],
     value: [],
     status: [],
+    customSecurityDetails: [{ type: "JSON" }],
   };
   const runValidationTasks = async (
     fieldName,
@@ -104,6 +121,7 @@ export default function SecurityUpdateForm(props) {
           description: description ?? null,
           value: value ?? null,
           status: status ?? null,
+          customSecurityDetails: customSecurityDetails ?? null,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -169,6 +187,7 @@ export default function SecurityUpdateForm(props) {
               description,
               value,
               status,
+              customSecurityDetails,
             };
             const result = onChange(modelFields);
             value = result?.name ?? value;
@@ -197,6 +216,7 @@ export default function SecurityUpdateForm(props) {
               description,
               value,
               status,
+              customSecurityDetails,
             };
             const result = onChange(modelFields);
             value = result?.type ?? value;
@@ -225,6 +245,7 @@ export default function SecurityUpdateForm(props) {
               description: value,
               value,
               status,
+              customSecurityDetails,
             };
             const result = onChange(modelFields);
             value = result?.description ?? value;
@@ -257,6 +278,7 @@ export default function SecurityUpdateForm(props) {
               description,
               value: value,
               status,
+              customSecurityDetails,
             };
             const result = onChange(modelFields);
             value = result?.value ?? value;
@@ -285,6 +307,7 @@ export default function SecurityUpdateForm(props) {
               description,
               value,
               status: value,
+              customSecurityDetails,
             };
             const result = onChange(modelFields);
             value = result?.status ?? value;
@@ -299,6 +322,37 @@ export default function SecurityUpdateForm(props) {
         hasError={errors.status?.hasError}
         {...getOverrideProps(overrides, "status")}
       ></TextField>
+      <TextAreaField
+        label="Custom security details"
+        isRequired={false}
+        isReadOnly={false}
+        value={customSecurityDetails}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              name,
+              type,
+              description,
+              value,
+              status,
+              customSecurityDetails: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.customSecurityDetails ?? value;
+          }
+          if (errors.customSecurityDetails?.hasError) {
+            runValidationTasks("customSecurityDetails", value);
+          }
+          setCustomSecurityDetails(value);
+        }}
+        onBlur={() =>
+          runValidationTasks("customSecurityDetails", customSecurityDetails)
+        }
+        errorMessage={errors.customSecurityDetails?.errorMessage}
+        hasError={errors.customSecurityDetails?.hasError}
+        {...getOverrideProps(overrides, "customSecurityDetails")}
+      ></TextAreaField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}

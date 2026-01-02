@@ -11,6 +11,7 @@ import {
   Flex,
   Grid,
   SelectField,
+  TextAreaField,
   TextField,
 } from "@aws-amplify/ui-react";
 import { fetchByPath, getOverrideProps, validateField } from "./utils";
@@ -40,6 +41,11 @@ export default function PaymentUpdateForm(props) {
     status: "",
     paymentStatusEnum: "",
     notes: "",
+    amountAllocatedToPrincipal: "",
+    amountAllocatedToInterest: "",
+    amountAllocatedToFees: "",
+    amountAllocatedToPenalty: "",
+    customPaymentDetails: "",
   };
   const [paymentDate, setPaymentDate] = React.useState(
     initialValues.paymentDate
@@ -62,6 +68,18 @@ export default function PaymentUpdateForm(props) {
     initialValues.paymentStatusEnum
   );
   const [notes, setNotes] = React.useState(initialValues.notes);
+  const [amountAllocatedToPrincipal, setAmountAllocatedToPrincipal] =
+    React.useState(initialValues.amountAllocatedToPrincipal);
+  const [amountAllocatedToInterest, setAmountAllocatedToInterest] =
+    React.useState(initialValues.amountAllocatedToInterest);
+  const [amountAllocatedToFees, setAmountAllocatedToFees] = React.useState(
+    initialValues.amountAllocatedToFees
+  );
+  const [amountAllocatedToPenalty, setAmountAllocatedToPenalty] =
+    React.useState(initialValues.amountAllocatedToPenalty);
+  const [customPaymentDetails, setCustomPaymentDetails] = React.useState(
+    initialValues.customPaymentDetails
+  );
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     const cleanValues = paymentRecord
@@ -76,6 +94,16 @@ export default function PaymentUpdateForm(props) {
     setStatus(cleanValues.status);
     setPaymentStatusEnum(cleanValues.paymentStatusEnum);
     setNotes(cleanValues.notes);
+    setAmountAllocatedToPrincipal(cleanValues.amountAllocatedToPrincipal);
+    setAmountAllocatedToInterest(cleanValues.amountAllocatedToInterest);
+    setAmountAllocatedToFees(cleanValues.amountAllocatedToFees);
+    setAmountAllocatedToPenalty(cleanValues.amountAllocatedToPenalty);
+    setCustomPaymentDetails(
+      typeof cleanValues.customPaymentDetails === "string" ||
+        cleanValues.customPaymentDetails === null
+        ? cleanValues.customPaymentDetails
+        : JSON.stringify(cleanValues.customPaymentDetails)
+    );
     setErrors({});
   };
   const [paymentRecord, setPaymentRecord] = React.useState(paymentModelProp);
@@ -104,6 +132,11 @@ export default function PaymentUpdateForm(props) {
     status: [],
     paymentStatusEnum: [],
     notes: [],
+    amountAllocatedToPrincipal: [],
+    amountAllocatedToInterest: [],
+    amountAllocatedToFees: [],
+    amountAllocatedToPenalty: [],
+    customPaymentDetails: [{ type: "JSON" }],
   };
   const runValidationTasks = async (
     fieldName,
@@ -140,6 +173,11 @@ export default function PaymentUpdateForm(props) {
           status: status ?? null,
           paymentStatusEnum: paymentStatusEnum ?? null,
           notes: notes ?? null,
+          amountAllocatedToPrincipal: amountAllocatedToPrincipal ?? null,
+          amountAllocatedToInterest: amountAllocatedToInterest ?? null,
+          amountAllocatedToFees: amountAllocatedToFees ?? null,
+          amountAllocatedToPenalty: amountAllocatedToPenalty ?? null,
+          customPaymentDetails: customPaymentDetails ?? null,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -210,6 +248,11 @@ export default function PaymentUpdateForm(props) {
               status,
               paymentStatusEnum,
               notes,
+              amountAllocatedToPrincipal,
+              amountAllocatedToInterest,
+              amountAllocatedToFees,
+              amountAllocatedToPenalty,
+              customPaymentDetails,
             };
             const result = onChange(modelFields);
             value = result?.paymentDate ?? value;
@@ -242,6 +285,11 @@ export default function PaymentUpdateForm(props) {
               status,
               paymentStatusEnum,
               notes,
+              amountAllocatedToPrincipal,
+              amountAllocatedToInterest,
+              amountAllocatedToFees,
+              amountAllocatedToPenalty,
+              customPaymentDetails,
             };
             const result = onChange(modelFields);
             value = result?.paymentType ?? value;
@@ -278,6 +326,11 @@ export default function PaymentUpdateForm(props) {
               status,
               paymentStatusEnum,
               notes,
+              amountAllocatedToPrincipal,
+              amountAllocatedToInterest,
+              amountAllocatedToFees,
+              amountAllocatedToPenalty,
+              customPaymentDetails,
             };
             const result = onChange(modelFields);
             value = result?.amount ?? value;
@@ -310,6 +363,11 @@ export default function PaymentUpdateForm(props) {
               status,
               paymentStatusEnum,
               notes,
+              amountAllocatedToPrincipal,
+              amountAllocatedToInterest,
+              amountAllocatedToFees,
+              amountAllocatedToPenalty,
+              customPaymentDetails,
             };
             const result = onChange(modelFields);
             value = result?.description ?? value;
@@ -342,6 +400,11 @@ export default function PaymentUpdateForm(props) {
               status,
               paymentStatusEnum,
               notes,
+              amountAllocatedToPrincipal,
+              amountAllocatedToInterest,
+              amountAllocatedToFees,
+              amountAllocatedToPenalty,
+              customPaymentDetails,
             };
             const result = onChange(modelFields);
             value = result?.referenceNumber ?? value;
@@ -374,6 +437,11 @@ export default function PaymentUpdateForm(props) {
               status,
               paymentStatusEnum,
               notes,
+              amountAllocatedToPrincipal,
+              amountAllocatedToInterest,
+              amountAllocatedToFees,
+              amountAllocatedToPenalty,
+              customPaymentDetails,
             };
             const result = onChange(modelFields);
             value = result?.paymentMethod ?? value;
@@ -406,6 +474,11 @@ export default function PaymentUpdateForm(props) {
               status: value,
               paymentStatusEnum,
               notes,
+              amountAllocatedToPrincipal,
+              amountAllocatedToInterest,
+              amountAllocatedToFees,
+              amountAllocatedToPenalty,
+              customPaymentDetails,
             };
             const result = onChange(modelFields);
             value = result?.status ?? value;
@@ -438,6 +511,11 @@ export default function PaymentUpdateForm(props) {
               status,
               paymentStatusEnum: value,
               notes,
+              amountAllocatedToPrincipal,
+              amountAllocatedToInterest,
+              amountAllocatedToFees,
+              amountAllocatedToPenalty,
+              customPaymentDetails,
             };
             const result = onChange(modelFields);
             value = result?.paymentStatusEnum ?? value;
@@ -493,6 +571,11 @@ export default function PaymentUpdateForm(props) {
               status,
               paymentStatusEnum,
               notes: value,
+              amountAllocatedToPrincipal,
+              amountAllocatedToInterest,
+              amountAllocatedToFees,
+              amountAllocatedToPenalty,
+              customPaymentDetails,
             };
             const result = onChange(modelFields);
             value = result?.notes ?? value;
@@ -507,6 +590,226 @@ export default function PaymentUpdateForm(props) {
         hasError={errors.notes?.hasError}
         {...getOverrideProps(overrides, "notes")}
       ></TextField>
+      <TextField
+        label="Amount allocated to principal"
+        isRequired={false}
+        isReadOnly={false}
+        type="number"
+        step="any"
+        value={amountAllocatedToPrincipal}
+        onChange={(e) => {
+          let value = isNaN(parseFloat(e.target.value))
+            ? e.target.value
+            : parseFloat(e.target.value);
+          if (onChange) {
+            const modelFields = {
+              paymentDate,
+              paymentType,
+              amount,
+              description,
+              referenceNumber,
+              paymentMethod,
+              status,
+              paymentStatusEnum,
+              notes,
+              amountAllocatedToPrincipal: value,
+              amountAllocatedToInterest,
+              amountAllocatedToFees,
+              amountAllocatedToPenalty,
+              customPaymentDetails,
+            };
+            const result = onChange(modelFields);
+            value = result?.amountAllocatedToPrincipal ?? value;
+          }
+          if (errors.amountAllocatedToPrincipal?.hasError) {
+            runValidationTasks("amountAllocatedToPrincipal", value);
+          }
+          setAmountAllocatedToPrincipal(value);
+        }}
+        onBlur={() =>
+          runValidationTasks(
+            "amountAllocatedToPrincipal",
+            amountAllocatedToPrincipal
+          )
+        }
+        errorMessage={errors.amountAllocatedToPrincipal?.errorMessage}
+        hasError={errors.amountAllocatedToPrincipal?.hasError}
+        {...getOverrideProps(overrides, "amountAllocatedToPrincipal")}
+      ></TextField>
+      <TextField
+        label="Amount allocated to interest"
+        isRequired={false}
+        isReadOnly={false}
+        type="number"
+        step="any"
+        value={amountAllocatedToInterest}
+        onChange={(e) => {
+          let value = isNaN(parseFloat(e.target.value))
+            ? e.target.value
+            : parseFloat(e.target.value);
+          if (onChange) {
+            const modelFields = {
+              paymentDate,
+              paymentType,
+              amount,
+              description,
+              referenceNumber,
+              paymentMethod,
+              status,
+              paymentStatusEnum,
+              notes,
+              amountAllocatedToPrincipal,
+              amountAllocatedToInterest: value,
+              amountAllocatedToFees,
+              amountAllocatedToPenalty,
+              customPaymentDetails,
+            };
+            const result = onChange(modelFields);
+            value = result?.amountAllocatedToInterest ?? value;
+          }
+          if (errors.amountAllocatedToInterest?.hasError) {
+            runValidationTasks("amountAllocatedToInterest", value);
+          }
+          setAmountAllocatedToInterest(value);
+        }}
+        onBlur={() =>
+          runValidationTasks(
+            "amountAllocatedToInterest",
+            amountAllocatedToInterest
+          )
+        }
+        errorMessage={errors.amountAllocatedToInterest?.errorMessage}
+        hasError={errors.amountAllocatedToInterest?.hasError}
+        {...getOverrideProps(overrides, "amountAllocatedToInterest")}
+      ></TextField>
+      <TextField
+        label="Amount allocated to fees"
+        isRequired={false}
+        isReadOnly={false}
+        type="number"
+        step="any"
+        value={amountAllocatedToFees}
+        onChange={(e) => {
+          let value = isNaN(parseFloat(e.target.value))
+            ? e.target.value
+            : parseFloat(e.target.value);
+          if (onChange) {
+            const modelFields = {
+              paymentDate,
+              paymentType,
+              amount,
+              description,
+              referenceNumber,
+              paymentMethod,
+              status,
+              paymentStatusEnum,
+              notes,
+              amountAllocatedToPrincipal,
+              amountAllocatedToInterest,
+              amountAllocatedToFees: value,
+              amountAllocatedToPenalty,
+              customPaymentDetails,
+            };
+            const result = onChange(modelFields);
+            value = result?.amountAllocatedToFees ?? value;
+          }
+          if (errors.amountAllocatedToFees?.hasError) {
+            runValidationTasks("amountAllocatedToFees", value);
+          }
+          setAmountAllocatedToFees(value);
+        }}
+        onBlur={() =>
+          runValidationTasks("amountAllocatedToFees", amountAllocatedToFees)
+        }
+        errorMessage={errors.amountAllocatedToFees?.errorMessage}
+        hasError={errors.amountAllocatedToFees?.hasError}
+        {...getOverrideProps(overrides, "amountAllocatedToFees")}
+      ></TextField>
+      <TextField
+        label="Amount allocated to penalty"
+        isRequired={false}
+        isReadOnly={false}
+        type="number"
+        step="any"
+        value={amountAllocatedToPenalty}
+        onChange={(e) => {
+          let value = isNaN(parseFloat(e.target.value))
+            ? e.target.value
+            : parseFloat(e.target.value);
+          if (onChange) {
+            const modelFields = {
+              paymentDate,
+              paymentType,
+              amount,
+              description,
+              referenceNumber,
+              paymentMethod,
+              status,
+              paymentStatusEnum,
+              notes,
+              amountAllocatedToPrincipal,
+              amountAllocatedToInterest,
+              amountAllocatedToFees,
+              amountAllocatedToPenalty: value,
+              customPaymentDetails,
+            };
+            const result = onChange(modelFields);
+            value = result?.amountAllocatedToPenalty ?? value;
+          }
+          if (errors.amountAllocatedToPenalty?.hasError) {
+            runValidationTasks("amountAllocatedToPenalty", value);
+          }
+          setAmountAllocatedToPenalty(value);
+        }}
+        onBlur={() =>
+          runValidationTasks(
+            "amountAllocatedToPenalty",
+            amountAllocatedToPenalty
+          )
+        }
+        errorMessage={errors.amountAllocatedToPenalty?.errorMessage}
+        hasError={errors.amountAllocatedToPenalty?.hasError}
+        {...getOverrideProps(overrides, "amountAllocatedToPenalty")}
+      ></TextField>
+      <TextAreaField
+        label="Custom payment details"
+        isRequired={false}
+        isReadOnly={false}
+        value={customPaymentDetails}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              paymentDate,
+              paymentType,
+              amount,
+              description,
+              referenceNumber,
+              paymentMethod,
+              status,
+              paymentStatusEnum,
+              notes,
+              amountAllocatedToPrincipal,
+              amountAllocatedToInterest,
+              amountAllocatedToFees,
+              amountAllocatedToPenalty,
+              customPaymentDetails: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.customPaymentDetails ?? value;
+          }
+          if (errors.customPaymentDetails?.hasError) {
+            runValidationTasks("customPaymentDetails", value);
+          }
+          setCustomPaymentDetails(value);
+        }}
+        onBlur={() =>
+          runValidationTasks("customPaymentDetails", customPaymentDetails)
+        }
+        errorMessage={errors.customPaymentDetails?.errorMessage}
+        hasError={errors.customPaymentDetails?.hasError}
+        {...getOverrideProps(overrides, "customPaymentDetails")}
+      ></TextAreaField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}

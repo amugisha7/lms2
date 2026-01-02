@@ -10,6 +10,7 @@ import {
   TableCell,
   TableHead,
   TableRow,
+  Tooltip,
   Typography,
   CircularProgress,
 } from "@mui/material";
@@ -52,6 +53,25 @@ const formatInterestPeriodLabel = (interestPeriod) => {
   }
 };
 
+const formatInterestMethodLabel = (interestMethod) => {
+  switch (interestMethod) {
+    case "compound_interest_accrued":
+      return "Compound Interest - Accrued";
+    case "compound_interest_equal_installments":
+      return "Compound Interest - Equal Installments";
+    case "flat":
+      return "Flat";
+    case "interest_only":
+      return "Interest-Only";
+    case "reducing_balance_equal_installments":
+      return "Reducing Balance - Equal Installments";
+    case "reducing_balance_equal_principal":
+      return "Reducing Balance - Equal Principal";
+    default:
+      return interestMethod || "";
+  }
+};
+
 export default function LoanScheduleDraft({
   loanDraft,
   draftValues,
@@ -72,6 +92,9 @@ export default function LoanScheduleDraft({
   const printAreaRef = React.useRef(null);
   const [exportingPdf, setExportingPdf] = React.useState(false);
   const [showLoanFees, setShowLoanFees] = React.useState(true);
+  const [showInterestRate, setShowInterestRate] = React.useState(true);
+  const [showInterestMethod, setShowInterestMethod] = React.useState(false);
+  const [showTotals, setShowTotals] = React.useState(false);
 
   const currencyCode = userDetails?.institution?.currencyCode;
 
@@ -331,26 +354,37 @@ export default function LoanScheduleDraft({
             <strong>Principal:</strong>{" "}
             <Money value={draftRecord?.principalAmount} />
           </Typography>
-          <Typography
-            variant="body2"
-            sx={{ color: theme.palette.common.black }}
-          >
-            <strong>Interest:</strong>{" "}
-            {draftRecord?.interestType === "percentage" ? (
-              <>{draftRecord?.interestRate ?? ""}%</>
-            ) : (
-              <Money value={draftRecord?.interestRate} />
-            )}
-            {(() => {
-              const periodLabel = formatInterestPeriodLabel(
-                draftRecord?.interestPeriod
-              );
-              if (draftRecord?.interestPeriod === "per_loan") {
-                return <> of Principal</>;
-              }
-              return periodLabel ? <> per {periodLabel}</> : null;
-            })()}
-          </Typography>
+          {showInterestRate ? (
+            <Typography
+              variant="body2"
+              sx={{ color: theme.palette.common.black }}
+            >
+              <strong>Interest:</strong>{" "}
+              {draftRecord?.interestType === "percentage" ? (
+                <>{draftRecord?.interestRate ?? ""}%</>
+              ) : (
+                <Money value={draftRecord?.interestRate} />
+              )}
+              {(() => {
+                const periodLabel = formatInterestPeriodLabel(
+                  draftRecord?.interestPeriod
+                );
+                if (draftRecord?.interestPeriod === "per_loan") {
+                  return <> of Principal</>;
+                }
+                return periodLabel ? <> per {periodLabel}</> : null;
+              })()}
+            </Typography>
+          ) : null}
+          {showInterestMethod ? (
+            <Typography
+              variant="body2"
+              sx={{ color: theme.palette.common.black }}
+            >
+              <strong>Interest Method:</strong>{" "}
+              {formatInterestMethodLabel(draftRecord?.interestMethod)}
+            </Typography>
+          ) : null}
           {loanFeeSummary && showLoanFees ? (
             <Typography
               variant="body2"
@@ -384,6 +418,19 @@ export default function LoanScheduleDraft({
           </Typography>
         </Box>
       </Box>
+
+      {showTotals ? (
+        <Box sx={{ mt: 0.5 }}>
+          <Typography
+            variant="body2"
+            sx={{ color: theme.palette.common.black }}
+          >
+            <strong>Totals:</strong> Interest{" "}
+            <Money value={totals.totalInterest} /> | Payable{" "}
+            <Money value={totals.totalPayable} />
+          </Typography>
+        </Box>
+      ) : null}
 
       <Box sx={{ mt: 0.5 }}>
         <Typography variant="body2" sx={{ color: theme.palette.common.black }}>
@@ -588,6 +635,66 @@ export default function LoanScheduleDraft({
           </Box>
         ) : null}
 
+        <Box sx={{ width: { xs: "100%", md: "auto" } }}>
+          <FormControlLabel
+            sx={{
+              m: 0,
+              "& .MuiFormControlLabel-label": {
+                fontSize: theme.typography.caption.fontSize,
+              },
+            }}
+            control={
+              <Checkbox
+                size="small"
+                checked={showInterestRate}
+                onChange={(e) => setShowInterestRate(e.target.checked)}
+                disabled={readOnly}
+              />
+            }
+            label="Show Interest Rate"
+          />
+        </Box>
+
+        <Box sx={{ width: { xs: "100%", md: "auto" } }}>
+          <FormControlLabel
+            sx={{
+              m: 0,
+              "& .MuiFormControlLabel-label": {
+                fontSize: theme.typography.caption.fontSize,
+              },
+            }}
+            control={
+              <Checkbox
+                size="small"
+                checked={showInterestMethod}
+                onChange={(e) => setShowInterestMethod(e.target.checked)}
+                disabled={readOnly}
+              />
+            }
+            label="Show Interest Method"
+          />
+        </Box>
+
+        <Box sx={{ width: { xs: "100%", md: "auto" } }}>
+          <FormControlLabel
+            sx={{
+              m: 0,
+              "& .MuiFormControlLabel-label": {
+                fontSize: theme.typography.caption.fontSize,
+              },
+            }}
+            control={
+              <Checkbox
+                size="small"
+                checked={showTotals}
+                onChange={(e) => setShowTotals(e.target.checked)}
+                disabled={readOnly}
+              />
+            }
+            label="Show Totals"
+          />
+        </Box>
+
         <Box
           sx={{
             display: "flex",
@@ -605,13 +712,17 @@ export default function LoanScheduleDraft({
             onClick={onEdit}
             disabled={!onEdit}
           />
-          <PlusButtonMain
-            buttonText="SAVE DRAFT"
-            variant="outlined"
-            startIcon={null}
-            onClick={onSaveDraft}
-            disabled={readOnly || !onSaveDraft}
-          />
+          <Tooltip title="Saving this draft generates a reference number. You can then edit the details later before creating the loan.">
+            <span>
+              <PlusButtonMain
+                buttonText="SAVE DRAFT"
+                variant="outlined"
+                startIcon={null}
+                onClick={onSaveDraft}
+                disabled={readOnly || !onSaveDraft}
+              />
+            </span>
+          </Tooltip>
           <PlusButtonMain
             buttonText="EXPORT PDF"
             variant="outlined"
@@ -627,12 +738,13 @@ export default function LoanScheduleDraft({
             disabled={readOnly || !onConfirmCreateLoan}
           />
         </Box>
-        {!loanDraft?.draftNumber && (
-          <Typography sx={{ width: "100%", fontSize: "0.8rem" }}>
-            Saving this draft generates a reference number. You can edit the
-            details later before creating the loan.
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, width: "100%" }}>
+          <Typography variant="body2">
+            <strong>Totals:</strong> Interest{" "}
+            <Money value={totals.totalInterest} /> | Payable{" "}
+            <Money value={totals.totalPayable} />
           </Typography>
-        )}
+        </Box>
       </Box>
 
       <WorkingOverlay open={exportingPdf} message="Exporting PDF..." />

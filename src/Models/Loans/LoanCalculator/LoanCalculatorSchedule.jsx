@@ -2,7 +2,9 @@ import React from "react";
 import dayjs from "dayjs";
 import {
   Box,
+  Checkbox,
   Divider,
+  FormControlLabel,
   Table,
   TableBody,
   TableCell,
@@ -35,6 +37,23 @@ const chunk = (items, size) => {
   return out;
 };
 
+const formatInterestPeriodLabel = (interestPeriod) => {
+  switch (interestPeriod) {
+    case "per_day":
+      return "day";
+    case "per_week":
+      return "week";
+    case "per_month":
+      return "month";
+    case "per_year":
+      return "year";
+    case "per_loan":
+      return "loan";
+    default:
+      return "";
+  }
+};
+
 export default function LoanCalculatorSchedule({
   draftValues,
   userDetails,
@@ -46,8 +65,12 @@ export default function LoanCalculatorSchedule({
   const theme = useTheme();
   const printAreaRef = React.useRef(null);
   const [exportingPdf, setExportingPdf] = React.useState(false);
+  const [showTotals, setShowTotals] = React.useState(false);
 
   const currencyCode = userDetails?.institution?.currencyCode;
+
+  const institutionName = userDetails?.institution?.name || "";
+  const branchName = userDetails?.branch?.name || "Main Branch";
 
   const Money = ({ value }) => {
     const parts = formatMoneyParts(value, currency, currencyCode);
@@ -214,6 +237,15 @@ export default function LoanCalculatorSchedule({
   const renderSummaryBlock = () => (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
       <Typography
+        variant="body2"
+        className="muted"
+        sx={{ color: theme.palette.common.black, textAlign: "right" }}
+      >
+        {institutionName ? institutionName : ""}
+        {institutionName ? " — " : ""}
+        {branchName}
+      </Typography>
+      <Typography
         variant="h6"
         sx={{
           fontWeight: 700,
@@ -243,8 +275,21 @@ export default function LoanCalculatorSchedule({
             variant="body2"
             sx={{ color: theme.palette.common.black }}
           >
-            <strong>Interest:</strong> {draftValues?.interestRate ?? ""}
-            {draftValues?.interestType === "percentage" ? "%" : ""}
+            <strong>Interest:</strong>{" "}
+            {draftValues?.interestType === "percentage" ? (
+              <>{draftValues?.interestRate ?? ""}%</>
+            ) : (
+              <Money value={draftValues?.interestRate} />
+            )}
+            {(() => {
+              const periodLabel = formatInterestPeriodLabel(
+                draftValues?.interestPeriod
+              );
+              if (draftValues?.interestPeriod === "per_loan") {
+                return <> of Principal</>;
+              }
+              return periodLabel ? <> per {periodLabel}</> : null;
+            })()}
           </Typography>
         </Box>
         <Box>
@@ -271,6 +316,19 @@ export default function LoanCalculatorSchedule({
           </Typography>
         </Box>
       </Box>
+
+      {showTotals ? (
+        <Box sx={{ mt: 0.5 }}>
+          <Typography
+            variant="body2"
+            sx={{ color: theme.palette.common.black }}
+          >
+            <strong>Totals:</strong> Interest{" "}
+            <Money value={totals.totalInterest} /> | Payable{" "}
+            <Money value={totals.totalPayable} />
+          </Typography>
+        </Box>
+      ) : null}
 
       <Box sx={{ mt: 0.5 }}>
         <Typography variant="body2" sx={{ color: theme.palette.common.black }}>
@@ -454,10 +512,25 @@ export default function LoanCalculatorSchedule({
           flexWrap: "wrap",
         }}
       >
-        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+          <FormControlLabel
+            sx={{
+              m: 0,
+              "& .MuiFormControlLabel-label": {
+                fontSize: theme.typography.caption.fontSize,
+              },
+            }}
+            control={
+              <Checkbox
+                size="small"
+                checked={showTotals}
+                onChange={(e) => setShowTotals(e.target.checked)}
+              />
+            }
+            label="Show Totals"
+          />
           <Typography variant="body2">
-            <strong>Totals:</strong> Principal{" "}
-            <Money value={totals.totalPrincipal} /> | Interest{" "}
+            <strong>Totals:</strong> Interest{" "}
             <Money value={totals.totalInterest} /> | Payable{" "}
             <Money value={totals.totalPayable} />
           </Typography>

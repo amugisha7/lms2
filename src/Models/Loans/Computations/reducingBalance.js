@@ -79,6 +79,21 @@ export const generateReducingBalanceSchedule = ({
 		ANNUALLY: 1,
 	};
 
+	const calculatePeriodYears = (start, end, iPeriod) => {
+		const s = dayjs(start);
+		const e = dayjs(end);
+		if (iPeriod === "per_month") {
+			return e.diff(s, "month", true) / 12;
+		}
+		if (iPeriod === "per_week") {
+			return e.diff(s, "week", true) / 52;
+		}
+		if (iPeriod === "per_year") {
+			return e.diff(s, "year", true);
+		}
+		return e.diff(s, "day") / 365;
+	};
+
 	if (interestMethod === "COMPOUND") {
 		const iFreq = interestPeriodToAnnualFreq[interestPeriod];
 		const rFreq = repaymentFreqToAnnualFreq[repaymentFrequency];
@@ -94,11 +109,10 @@ export const generateReducingBalanceSchedule = ({
 			// Fallback for irregular intervals or LUMP_SUM
 			let periodYears;
 			if (repaymentFrequency === "LUMP_SUM") {
-				periodYears = Math.max(1 / 365, dayjs(maturityDate).diff(dayjs(startDate), "day") / 365);
+				periodYears = calculatePeriodYears(startDate, maturityDate, interestPeriod);
 			} else {
 				// For setDays/setDates, use average duration
-				const totalDays = dayjs(maturityDate).diff(dayjs(startDate), "day");
-				periodYears = Math.max(1 / 365, totalDays / 365) / (n || 1);
+				periodYears = calculatePeriodYears(startDate, maturityDate, interestPeriod) / (n || 1);
 			}
 			
 			if (iFreq) {
@@ -117,12 +131,12 @@ export const generateReducingBalanceSchedule = ({
 			periodYears = 1 / rFreq;
 		} else {
 			if (repaymentFrequency === "LUMP_SUM") {
-				periodYears = Math.max(1 / 365, dayjs(maturityDate).diff(dayjs(startDate), "day") / 365);
+				periodYears = calculatePeriodYears(startDate, maturityDate, interestPeriod);
 			} else {
 				const { unit, count } = frequencyToInterval(repaymentFrequency);
 				const start = dayjs(startDate);
 				const next = start.add(count, unit);
-				periodYears = Math.max(1 / 365, next.diff(start, "day") / 365);
+				periodYears = calculatePeriodYears(start, next, interestPeriod);
 			}
 		}
 

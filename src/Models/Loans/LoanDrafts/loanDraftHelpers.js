@@ -311,15 +311,29 @@ export const generateSchedulePreviewFromDraftRecord = async (draftRecord) => {
       if (interestPeriod === "per_loan") {
         totalInterest = rawInterestRate;
       } else {
-        const durationInYears = dayjs(maturityDate).diff(dayjs(startDate), "day") / 365;
-        totalInterest = rawInterestRate * (interestPeriod === "per_year" ? durationInYears : 1);
-        // If fixed per month/week/day, we approximate by scaling to loan length.
-        if (interestPeriod === "per_month") totalInterest = rawInterestRate * durationInYears * 12;
-        if (interestPeriod === "per_week") totalInterest = rawInterestRate * durationInYears * 52;
-        if (interestPeriod === "per_day") totalInterest = rawInterestRate * durationInYears * 365;
+        if (interestPeriod === "per_year") {
+          totalInterest = rawInterestRate * dayjs(maturityDate).diff(dayjs(startDate), "year", true);
+        } else if (interestPeriod === "per_month") {
+          totalInterest = rawInterestRate * dayjs(maturityDate).diff(dayjs(startDate), "month", true);
+        } else if (interestPeriod === "per_week") {
+          totalInterest = rawInterestRate * dayjs(maturityDate).diff(dayjs(startDate), "week", true);
+        } else if (interestPeriod === "per_day") {
+          totalInterest = rawInterestRate * dayjs(maturityDate).diff(dayjs(startDate), "day");
+        } else {
+          totalInterest = rawInterestRate;
+        }
       }
     } else {
-      const durationInYears = dayjs(maturityDate).diff(dayjs(startDate), "day") / 365;
+      let durationInYears;
+      if (interestPeriod === "per_month") {
+        durationInYears = dayjs(maturityDate).diff(dayjs(startDate), "month", true) / 12;
+      } else if (interestPeriod === "per_week") {
+        durationInYears = dayjs(maturityDate).diff(dayjs(startDate), "week", true) / 52;
+      } else if (interestPeriod === "per_year") {
+        durationInYears = dayjs(maturityDate).diff(dayjs(startDate), "year", true);
+      } else {
+        durationInYears = dayjs(maturityDate).diff(dayjs(startDate), "day") / 365;
+      }
       totalInterest = principal * annualRate * durationInYears;
     }
 
@@ -437,10 +451,36 @@ export const generateSchedulePreviewFromDraftRecord = async (draftRecord) => {
           : frequencyToInterval(repaymentFrequency);
 
       // Approximate a period in years.
-      // For month/year we use dayjs diff to avoid hard-coding month length.
       const start = dayjs(startDate);
       const next = start.add(count, unit);
-      const periodYears = Math.max(1 / 365, next.diff(start, "day") / 365);
+      
+      let periodYears;
+      if (repaymentFrequency === "MONTHLY") {
+        periodYears = 1 / 12;
+      } else if (repaymentFrequency === "WEEKLY") {
+        periodYears = 1 / 52;
+      } else if (repaymentFrequency === "BIWEEKLY") {
+        periodYears = 1 / 26;
+      } else if (repaymentFrequency === "QUARTERLY") {
+        periodYears = 1 / 4;
+      } else if (repaymentFrequency === "SEMIANNUALLY") {
+        periodYears = 1 / 2;
+      } else if (repaymentFrequency === "ANNUALLY") {
+        periodYears = 1;
+      } else if (repaymentFrequency === "DAILY") {
+        periodYears = 1 / 365;
+      } else {
+        // Fallback for irregular or LUMP_SUM
+        if (interestPeriod === "per_month") {
+           periodYears = next.diff(start, "month", true) / 12;
+        } else if (interestPeriod === "per_week") {
+           periodYears = next.diff(start, "week", true) / 52;
+        } else if (interestPeriod === "per_year") {
+           periodYears = next.diff(start, "year", true);
+        } else {
+           periodYears = next.diff(start, "day") / 365;
+        }
+      }
 
       const r = annualRate * periodYears;
       const safeR = Number.isFinite(r) ? r : 0;

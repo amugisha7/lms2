@@ -66,6 +66,16 @@ export default function LoanCalculatorSchedule({
   const printAreaRef = React.useRef(null);
   const [exportingPdf, setExportingPdf] = React.useState(false);
   const [showTotals, setShowTotals] = React.useState(false);
+  const [showColumnOptions, setShowColumnOptions] = React.useState(false);
+  const [visibleColumns, setVisibleColumns] = React.useState({
+    number: true,
+    date: true,
+    openingBalance: true,
+    interest: true,
+    principalRepaid: true,
+    totalPayment: true,
+    closingBalance: true,
+  });
 
   const currencyCode = userDetails?.institution?.currencyCode;
 
@@ -253,7 +263,7 @@ export default function LoanCalculatorSchedule({
           fontSize: "1.3rem",
         }}
       >
-        LOAN PROJECTION
+        LOAN CALCULATION
       </Typography>
       <Divider sx={{ borderColor: theme.palette.common.black }} />
       <Box
@@ -383,87 +393,115 @@ export default function LoanCalculatorSchedule({
       >
         <TableHead>
           <TableRow>
-            <TableCell
-              sx={{ color: theme.palette.common.black, fontWeight: 700 }}
-            >
-              #
-            </TableCell>
-            <TableCell
-              sx={{ color: theme.palette.common.black, fontWeight: 700 }}
-            >
-              Date
-            </TableCell>
-            <TableCell
-              sx={{ color: theme.palette.common.black, fontWeight: 700 }}
-              align="right"
-            >
-              Opening Balance
-            </TableCell>
-            <TableCell
-              sx={{ color: theme.palette.common.black, fontWeight: 700 }}
-              align="right"
-            >
-              Interest
-            </TableCell>
-            <TableCell
-              sx={{ color: theme.palette.common.black, fontWeight: 700 }}
-              align="right"
-            >
-              Principal Repaid
-            </TableCell>
-            <TableCell
-              sx={{ color: theme.palette.common.black, fontWeight: 700 }}
-              align="right"
-            >
-              Total Payment
-            </TableCell>
-            <TableCell
-              sx={{ color: theme.palette.common.black, fontWeight: 700 }}
-              align="right"
-            >
-              Closing Balance
-            </TableCell>
+            {visibleColumns.number && (
+              <TableCell
+                sx={{ color: theme.palette.common.black, fontWeight: 700 }}
+              >
+                #
+              </TableCell>
+            )}
+            {visibleColumns.date && (
+              <TableCell
+                sx={{ color: theme.palette.common.black, fontWeight: 700 }}
+              >
+                Date
+              </TableCell>
+            )}
+            {visibleColumns.openingBalance && (
+              <TableCell
+                sx={{ color: theme.palette.common.black, fontWeight: 700 }}
+                align="right"
+              >
+                Opening Balance
+              </TableCell>
+            )}
+            {visibleColumns.interest && (
+              <TableCell
+                sx={{ color: theme.palette.common.black, fontWeight: 700 }}
+                align="right"
+              >
+                Interest
+              </TableCell>
+            )}
+            {visibleColumns.principalRepaid && (
+              <TableCell
+                sx={{ color: theme.palette.common.black, fontWeight: 700 }}
+                align="right"
+              >
+                Principal Repaid
+              </TableCell>
+            )}
+            {visibleColumns.totalPayment && (
+              <TableCell
+                sx={{ color: theme.palette.common.black, fontWeight: 700 }}
+                align="right"
+              >
+                Total Payment
+              </TableCell>
+            )}
+            {visibleColumns.closingBalance && (
+              <TableCell
+                sx={{ color: theme.palette.common.black, fontWeight: 700 }}
+                align="right"
+              >
+                Closing Balance
+              </TableCell>
+            )}
           </TableRow>
         </TableHead>
         <TableBody>
           {rows.map((inst, idx) => (
             <TableRow key={`${inst?.dueDate || "row"}-${startIndex + idx}`}>
-              <TableCell sx={{ color: theme.palette.common.black }}>
-                {startIndex + idx + 1}
-              </TableCell>
-              <TableCell sx={{ color: theme.palette.common.black }}>
-                {fmtDate(inst?.dueDate)}
-              </TableCell>
-              <TableCell
-                sx={{ color: theme.palette.common.black }}
-                align="right"
-              >
-                <Money value={inst?.openingBalance} />
-              </TableCell>
-              <TableCell
-                sx={{ color: theme.palette.common.black }}
-                align="right"
-              >
-                <Money value={inst?.interestDue} />
-              </TableCell>
-              <TableCell
-                sx={{ color: theme.palette.common.black }}
-                align="right"
-              >
-                <Money value={inst?.principalDue} />
-              </TableCell>
-              <TableCell
-                sx={{ color: theme.palette.common.black }}
-                align="right"
-              >
-                <Money value={inst?.totalDue} />
-              </TableCell>
-              <TableCell
-                sx={{ color: theme.palette.common.black }}
-                align="right"
-              >
-                <Money value={inst?.balanceAfter} />
-              </TableCell>
+              {visibleColumns.number && (
+                <TableCell sx={{ color: theme.palette.common.black }}>
+                  {startIndex + idx + 1}
+                </TableCell>
+              )}
+              {visibleColumns.date && (
+                <TableCell sx={{ color: theme.palette.common.black }}>
+                  {fmtDate(inst?.dueDate)}
+                </TableCell>
+              )}
+              {visibleColumns.openingBalance && (
+                <TableCell
+                  sx={{ color: theme.palette.common.black }}
+                  align="right"
+                >
+                  <Money value={inst?.openingBalance} />
+                </TableCell>
+              )}
+              {visibleColumns.interest && (
+                <TableCell
+                  sx={{ color: theme.palette.common.black }}
+                  align="right"
+                >
+                  <Money value={inst?.interestDue} />
+                </TableCell>
+              )}
+              {visibleColumns.principalRepaid && (
+                <TableCell
+                  sx={{ color: theme.palette.common.black }}
+                  align="right"
+                >
+                  <Money value={inst?.principalDue} />
+                </TableCell>
+              )}
+              {visibleColumns.totalPayment && (
+                <TableCell
+                  sx={{ color: theme.palette.common.black }}
+                  align="right"
+                >
+                  <Money value={inst?.totalDue} />
+                </TableCell>
+              )}
+              {visibleColumns.closingBalance && (
+                <TableCell
+                  sx={{ color: theme.palette.common.black }}
+                  align="right"
+                >
+                  <Money value={inst?.balanceAfter} />
+                </TableCell>
+              )}
             </TableRow>
           ))}
         </TableBody>
@@ -505,14 +543,13 @@ export default function LoanCalculatorSchedule({
         className="no-print"
         sx={{
           display: "flex",
-          flexDirection: "row",
+          flexDirection: { xs: "column", md: "row" },
           alignItems: { xs: "stretch", md: "center" },
-          justifyContent: "space-between",
           gap: 1,
           flexWrap: "wrap",
         }}
       >
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+        <Box sx={{ width: { xs: "100%", md: "auto" } }}>
           <FormControlLabel
             sx={{
               m: 0,
@@ -529,11 +566,24 @@ export default function LoanCalculatorSchedule({
             }
             label="Show Totals"
           />
-          <Typography variant="body2">
-            <strong>Totals:</strong> Interest{" "}
-            <Money value={totals.totalInterest} /> | Payable{" "}
-            <Money value={totals.totalPayable} />
-          </Typography>
+        </Box>
+        <Box sx={{ width: { xs: "100%", md: "auto" } }}>
+          <FormControlLabel
+            sx={{
+              m: 0,
+              "& .MuiFormControlLabel-label": {
+                fontSize: theme.typography.caption.fontSize,
+              },
+            }}
+            control={
+              <Checkbox
+                size="small"
+                checked={showColumnOptions}
+                onChange={(e) => setShowColumnOptions(e.target.checked)}
+              />
+            }
+            label="Manage Columns"
+          />
         </Box>
         <Box
           sx={{
@@ -541,6 +591,8 @@ export default function LoanCalculatorSchedule({
             flexWrap: "wrap",
             gap: 1,
             justifyContent: { xs: "flex-start", md: "flex-end" },
+            width: "100%",
+            flex: 1,
           }}
         >
           <PlusButtonMain
@@ -558,6 +610,109 @@ export default function LoanCalculatorSchedule({
             disabled={exportingPdf}
           />
         </Box>
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, width: "100%" }}>
+          <Typography variant="body2">
+            <strong>Totals:</strong> Interest{" "}
+            <Money value={totals.totalInterest} /> | Payable{" "}
+            <Money value={totals.totalPayable} />
+          </Typography>
+        </Box>
+
+        {showColumnOptions && (
+          <Box
+            sx={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 2,
+              width: "100%",
+            }}
+          >
+            <FormControlLabel
+              sx={{
+                m: 0,
+                "& .MuiFormControlLabel-label": {
+                  fontSize: theme.typography.caption.fontSize,
+                },
+              }}
+              control={
+                <Checkbox
+                  size="small"
+                  checked={visibleColumns.openingBalance}
+                  onChange={(e) =>
+                    setVisibleColumns({
+                      ...visibleColumns,
+                      openingBalance: e.target.checked,
+                    })
+                  }
+                />
+              }
+              label="Opening Balance"
+            />
+            <FormControlLabel
+              sx={{
+                m: 0,
+                "& .MuiFormControlLabel-label": {
+                  fontSize: theme.typography.caption.fontSize,
+                },
+              }}
+              control={
+                <Checkbox
+                  size="small"
+                  checked={visibleColumns.interest}
+                  onChange={(e) =>
+                    setVisibleColumns({
+                      ...visibleColumns,
+                      interest: e.target.checked,
+                    })
+                  }
+                />
+              }
+              label="Interest"
+            />
+            <FormControlLabel
+              sx={{
+                m: 0,
+                "& .MuiFormControlLabel-label": {
+                  fontSize: theme.typography.caption.fontSize,
+                },
+              }}
+              control={
+                <Checkbox
+                  size="small"
+                  checked={visibleColumns.principalRepaid}
+                  onChange={(e) =>
+                    setVisibleColumns({
+                      ...visibleColumns,
+                      principalRepaid: e.target.checked,
+                    })
+                  }
+                />
+              }
+              label="Principal Repaid"
+            />
+            <FormControlLabel
+              sx={{
+                m: 0,
+                "& .MuiFormControlLabel-label": {
+                  fontSize: theme.typography.caption.fontSize,
+                },
+              }}
+              control={
+                <Checkbox
+                  size="small"
+                  checked={visibleColumns.closingBalance}
+                  onChange={(e) =>
+                    setVisibleColumns({
+                      ...visibleColumns,
+                      closingBalance: e.target.checked,
+                    })
+                  }
+                />
+              }
+              label="Closing Balance"
+            />
+          </Box>
+        )}
       </Box>
 
       <WorkingOverlay open={exportingPdf} message="Exporting PDF..." />

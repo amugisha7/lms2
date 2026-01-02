@@ -313,7 +313,7 @@ export default function LoanCalculator() {
                   }}
                 >
                   <PlusButtonMain
-                    buttonText="VIEW LOAN SCHEDULE"
+                    buttonText="CALCULATE LOAN"
                     variant="outlined"
                     startIcon={null}
                     onClick={async () => {

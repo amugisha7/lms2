@@ -40,7 +40,23 @@ export const generateFlatRateSchedule = ({
 		interestPeriod,
 	});
 
-	const durationInYears = dayjs(maturityDate).diff(dayjs(startDate), "day") / 365;
+	let durationInYears;
+	if (interestPeriod === "per_year") {
+		durationInYears = dayjs(maturityDate).diff(dayjs(startDate), "year", true);
+	} else if (interestPeriod === "per_month") {
+		// For per_month, we want duration in months / 12
+		durationInYears = dayjs(maturityDate).diff(dayjs(startDate), "month", true) / 12;
+	} else if (interestPeriod === "per_week") {
+		// For per_week, we want duration in weeks / 52
+		durationInYears = dayjs(maturityDate).diff(dayjs(startDate), "week", true) / 52;
+	} else if (interestPeriod === "per_day") {
+		// For per_day, we want duration in days / 365
+		durationInYears = dayjs(maturityDate).diff(dayjs(startDate), "day") / 365;
+	} else {
+		// Fallback
+		durationInYears = dayjs(maturityDate).diff(dayjs(startDate), "day") / 365;
+	}
+
 	const totalInterest = principal * annualRate * durationInYears;
 
 	const interestPer = totalInterest / n;

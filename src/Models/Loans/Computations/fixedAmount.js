@@ -20,16 +20,14 @@ export const generateFixedAmountSchedule = ({
 	if (interestPeriod === "per_loan") {
 		totalInterest = interestRate;
 	} else {
-		const durationInYears = dayjs(maturityDate).diff(dayjs(startDate), "day") / 365;
-		
 		if (interestPeriod === "per_year") {
-			totalInterest = interestRate * durationInYears;
+			totalInterest = interestRate * dayjs(maturityDate).diff(dayjs(startDate), "year", true);
 		} else if (interestPeriod === "per_month") {
-			totalInterest = interestRate * durationInYears * 12;
+			totalInterest = interestRate * dayjs(maturityDate).diff(dayjs(startDate), "month", true);
 		} else if (interestPeriod === "per_week") {
-			totalInterest = interestRate * durationInYears * 52;
+			totalInterest = interestRate * dayjs(maturityDate).diff(dayjs(startDate), "week", true);
 		} else if (interestPeriod === "per_day") {
-			totalInterest = interestRate * durationInYears * 365;
+			totalInterest = interestRate * dayjs(maturityDate).diff(dayjs(startDate), "day");
 		} else {
 			// Fallback
 			totalInterest = interestRate;

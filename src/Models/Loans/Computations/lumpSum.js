@@ -112,83 +112,50 @@ export const generateLumpSumSchedule = ({
         }
     }
 
-    // 3. Calculate Rate per Step
-    // We need to convert input Interest Rate (per interestPeriod) to Rate (per stepUnit)
-    
+    // 3. Calculate Rate per Step (Dynamic per segment)
     const rawRate = Number(interestRate);
     const inputRate = rawRate / 100;
-    
-    let periodicRate = 0;
-    
-    // Frequencies per year
-    const iFreq = interestPeriodToAnnualFreq[interestPeriod]; // e.g. 12 for per_month
-    const stepFreq = durationIntervalToAnnualFreq[durationInterval] || 12; // e.g. 12 for months
-    
-    // Check if we have standard units
-    const isStandardUnits = iFreq && stepFreq;
-    
-    if (interestMethod === "COMPOUND") {
-        if (isStandardUnits) {
-            // (1+r_input)^(iFreq / stepFreq) - 1
-            // Example: Input 10% per month (iFreq=12). Step = Month (stepFreq=12).
-            // Exp = 1. Rate = 10%.
-            const exponent = iFreq / stepFreq;
-            periodicRate = Math.pow(1 + inputRate, exponent) - 1;
-        } else {
-            // Fallback to day counting
-            // This might happen if interest is "per_loan" or units are weird
-            // For now, assume standard units for the user's case.
-            // If fallback needed:
-            // Calculate annualized rate first?
-            // Let's stick to simple day ratio if units mismatch significantly
-             periodicRate = inputRate; // Placeholder if complex
-        }
-    } else if (interestMethod === "SIMPLE") {
-        if (isStandardUnits) {
-            // r_input * (iFreq / stepFreq)
-            periodicRate = inputRate * (iFreq / stepFreq);
-        } else {
-             periodicRate = inputRate;
-        }
-    } else {
-        // FLAT
-        // Usually Flat is calculated on total duration and spread?
-        // Or calculated on principal per period?
-        // For Lump Sum Flat: Total Interest = P * R * T.
-        // We can just accrue it.
-        if (isStandardUnits) {
-             periodicRate = inputRate * (iFreq / stepFreq);
-        }
-    }
 
     // 4. Build Schedule
     const installments = [];
     let outstanding = principal;
-    let accruedInterest = 0; // For Simple/Flat where it doesn't compound into principal base
-    
-    // For Compound, we update 'outstanding' to include interest if we want to show it growing.
-    // But 'outstanding' usually means 'Principal Outstanding'.
-    // However, the user wants "Opening Balance" -> "Closing Balance".
-    // If Closing Balance includes interest, then next Opening Balance includes interest.
-    // This naturally compounds.
-    
-    // For Simple, we should NOT update 'outstanding' (Principal) for calculation base.
-    // But we should update the 'Balance' shown in the table?
-    // If we update the Balance shown, but calculate interest on original Principal, that works.
+    let accruedInterest = 0; 
     
     let currentBalance = principal; // This is what we show in the table
-    
+    let prevDate = dayjs(startDate);
+
     for (let i = 0; i < dates.length; i++) {
         const date = dates[i];
+        const currentDate = dayjs(date);
         const isLast = i === dates.length - 1;
+        
+        // Calculate rate for this specific period
+        let segmentRate = 0;
+        let durationInUnits = 0;
+        
+        if (interestPeriod === "per_month") {
+            durationInUnits = currentDate.diff(prevDate, "month", true);
+        } else if (interestPeriod === "per_week") {
+            durationInUnits = currentDate.diff(prevDate, "week", true);
+        } else if (interestPeriod === "per_year") {
+            durationInUnits = currentDate.diff(prevDate, "year", true);
+        } else {
+            durationInUnits = currentDate.diff(prevDate, "day");
+        }
+        
+        if (interestMethod === "COMPOUND") {
+             segmentRate = Math.pow(1 + inputRate, durationInUnits) - 1;
+        } else {
+             segmentRate = inputRate * durationInUnits;
+        }
         
         let interestForPeriod = 0;
         
         if (interestMethod === "COMPOUND") {
-            interestForPeriod = round2(currentBalance * periodicRate);
+            interestForPeriod = round2(currentBalance * segmentRate);
         } else {
             // Simple / Flat: Interest on Principal
-            interestForPeriod = round2(principal * periodicRate);
+            interestForPeriod = round2(principal * segmentRate);
         }
         
         const openingBalance = currentBalance;
@@ -200,113 +167,39 @@ export const generateLumpSumSchedule = ({
         
         if (isLast) {
             // Pay everything
-            // For Compound: Pay currentBalance + interestForPeriod
-            // For Simple: Pay Principal + Accrued + interestForPeriod
-            
-            // Actually, currentBalance tracks the total debt (Principal + Accrued)
-            // So just pay currentBalance + interestForPeriod
-            
             totalPayment = round2(openingBalance + interestForPeriod);
             
-            // Breakdown
-            // Interest part is all accrued interest + this period interest?
-            // Or just this period?
-            // The table columns are: Interest, Principal Repaid, Total Payment.
-            // Usually "Interest" column shows interest accrued/charged in that period.
-            // "Principal Repaid" shows how much of the payment goes to principal.
+            // For the last payment, we clear the balance.
+            // Interest Paid is the interest for this period + any accrued interest if we were tracking it separately?
+            // In this model, currentBalance includes accrued interest for Compound.
+            // For Simple, currentBalance includes accrued interest too (see below).
             
-            // If we pay 161,051.
-            // Principal was 100,000.
-            // Total Interest is 61,051.
-            
-            // In the last row:
-            // Interest Due: 14,641 (example for last month)
-            // Total Payment: 161,051.
-            // If we say Interest Paid = 14,641, then Principal Repaid = 146,410? No.
-            
-            // The "Interest" column in the schedule usually means "Interest Accrued/Due for this period".
-            // The "Total Payment" is what the user pays.
-            
-            // If it's a lump sum, we pay everything at the end.
-            // So Total Payment = Opening Balance + InterestForPeriod.
-            
-            // How to split Principal/Interest in the payment?
-            // Principal Repaid = Total Payment - Total Interest Accumulated?
-            // Or Principal Repaid = Original Principal?
-            
-            // If we want the schedule to look "clean":
-            // Last row:
-            // Interest: <Interest for this period>
-            // Total Payment: <Full Amount>
-            // Principal Repaid: <Full Amount - Interest for this period>? 
-            // No, that implies we are paying off previous interest too.
-            
-            // Let's stick to the accounting flow:
-            // Closing Balance = Opening + Interest - Payment.
-            // We want Closing = 0.
-            // So Payment = Opening + Interest.
-            
-            // Principal Repaid is usually a derived field: Payment - Interest Paid.
-            // But here "Interest Paid" covers all previous interest too?
-            
-            // Let's just set Principal Repaid = Total Payment - InterestForPeriod?
-            // No, that would mean we repaid more principal than 100k.
-            
-            // Let's calculate Principal Repaid as: Total Payment - (InterestForPeriod + PreviouslyAccruedInterest??)
-            // But currentBalance includes previously accrued interest.
-            
-            // Let's just set Principal Repaid = Original Principal (if we clear debt).
-            // And Interest Paid = Total Payment - Original Principal.
-            // But the column is "Interest". Is it "Interest Accrued" or "Interest Paid"?
-            // Usually "Interest Due".
-            
-            // Let's set:
-            // Interest: interestForPeriod
-            // Total Payment: round2(openingBalance + interestForPeriod)
-            // Principal Repaid: round2(openingBalance + interestForPeriod - interestForPeriod) = openingBalance?
-            // No, openingBalance includes accrued interest.
-            
-            // Let's look at the columns again:
-            // #, Date, Opening Balance, Interest, Principal Repaid, Total Payment, Closing Balance
-            
-            // Row 1: Open 100k. Int 10k. Pay 0. Close 110k.
-            // Row 2: Open 110k. Int 11k. Pay 0. Close 121k.
-            // ...
-            // Row 5: Open 146.4k. Int 14.6k. Pay 161k. Close 0.
-            
-            // In Row 5:
-            // Interest = 14.6k.
-            // Total Payment = 161k.
-            // Principal Repaid = 161k - 14.6k = 146.4k?
-            // This "Principal Repaid" label is tricky when it includes capitalized interest.
-            // But mathematically, `Closing = Opening + Interest - Payment`.
-            // `0 = 146.4 + 14.6 - 161`. Correct.
-            // `Payment = Principal Repaid + Interest`?
-            // If `Principal Repaid` = 146.4k, and `Interest` = 14.6k. Sum = 161k. Correct.
-            
-            // So "Principal Repaid" in this context effectively means "Amount applied to reduce the balance".
-            principalRepaid = round2(openingBalance); 
-            interestPaid = interestForPeriod; // This is just the interest for this period
-            
-        } else {
-            // Intermediate
-            totalPayment = 0;
-            principalRepaid = 0;
-            interestPaid = interestForPeriod;
+            interestPaid = interestForPeriod; // Just show this period's interest
+            principalRepaid = round2(totalPayment - interestPaid); 
+            // Note: principalRepaid here will include the original principal + previously accrued interest.
+            // This might be confusing if the column is strictly "Principal Repaid".
+            // But for Lump Sum, the final payment covers everything.
         }
         
-        const closingBalance = round2(openingBalance + interestForPeriod - totalPayment);
+        const totalDue = isLast ? totalPayment : 0;
+        
+        // Update Balance
+        // Closing Balance = Opening + Interest - Payment
+        let balanceAfter = round2(openingBalance + interestForPeriod - totalPayment);
+        if (balanceAfter < 0) balanceAfter = 0; // Floating point safety
         
         installments.push({
             dueDate: date,
             openingBalance: round2(openingBalance),
-            interestDue: round2(interestForPeriod),
-            principalDue: round2(principalRepaid), // Using principalDue field for Principal Repaid
-            totalDue: round2(totalPayment),
-            balanceAfter: closingBalance
+            principalDue: principalRepaid,
+            interestDue: interestForPeriod,
+            feesDue: 0,
+            totalDue: totalDue,
+            balanceAfter: balanceAfter,
         });
         
-        currentBalance = closingBalance;
+        currentBalance = balanceAfter;
+        prevDate = currentDate;
     }
     
     // Totals

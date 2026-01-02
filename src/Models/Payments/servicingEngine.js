@@ -102,10 +102,17 @@ export const calculateSchedule = (loanTerms) => {
   // If frequency is weekly, rate is annual / 52.
   
   let periodicRate = 0;
-  if (['WEEKLY', 'BIWEEKLY', 'DAILY'].includes(repaymentFrequency)) {
-     periodicRate = (interestRate / 100) * (getFrequencyDays(repaymentFrequency) / 365);
-  } else {
+  if (repaymentFrequency === 'WEEKLY') {
+     periodicRate = (interestRate / 100) / 52;
+  } else if (repaymentFrequency === 'BIWEEKLY') {
+     periodicRate = (interestRate / 100) / 26;
+  } else if (repaymentFrequency === 'DAILY') {
+     periodicRate = (interestRate / 100) / 365;
+  } else if (['MONTHLY', 'QUARTERLY', 'SEMIANNUALLY', 'ANNUALLY'].includes(repaymentFrequency)) {
      periodicRate = (interestRate / 100) * (getFrequencyMonths(repaymentFrequency) / 12);
+  } else {
+     // Fallback
+     periodicRate = (interestRate / 100) * (getFrequencyDays(repaymentFrequency) / 365);
   }
 
   if (interestMethod === 'FLAT') {
@@ -113,7 +120,7 @@ export const calculateSchedule = (loanTerms) => {
     // Or total interest = principal * rate * duration_in_years
     
     // Duration in years
-    const durationInYears = dayjs(maturityDate).diff(start, 'day') / 365;
+    const durationInYears = dayjs(maturityDate).diff(start, 'year', true);
     const totalInterestFlat = principal * (interestRate / 100) * durationInYears;
     
     const principalPerInstallment = principal / numberOfInstallments;

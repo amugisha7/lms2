@@ -11,4 +11,4 @@
   * review how draft creation and copying to new loan works.
   * Create loan from loan schedule. Ensure loan calculations are accurate.
   *
--
+- Finish the loan module then return to the begining via the Loan Progress gdoc

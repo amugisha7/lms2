@@ -21,8 +21,68 @@ const UPDATE_USER_MUTATION = `
       nationality
       status
       userType
+      userPermissions
+      description
+      customFieldsData
+      userDocuments
+      institution {
+        id
+        name
+        currencyCode
+        subscriptionTier
+        subscriptionStatus
+        trialEndDate
+        nextBillingDate
+        stripeCustomerID
+        stripeSubscriptionID
+        defaultDateFormat
+        defaultCurrencyFormat
+        defaultLanguage
+        regulatoryRegion
+        maxUsers
+        maxBranches
+        maxStaffPerBranch
+        saccoFeaturesEnabled
+        staffManagementEnabled
+        payrollEnabled
+        collectionsModuleEnabled
+        customWorkflowsEnabled
+        advancedReportingEnabled
+        apiIntegrationSettings
+        status
+        createdAt
+        updatedAt
+      }
+      branch {
+        id
+        name
+        branchCode
+        address
+        status
+        createdAt
+        updatedAt
+        institutionBranchesId
+      }
+      userNotifications {
+        nextToken
+      }
+      sentMessages {
+        nextToken
+      }
+      receivedMessages {
+        nextToken
+      }
+      sentNotifications {
+        nextToken
+      }
+      receivedNotifications {
+        nextToken
+      }
+      customUserDetails
       createdAt
       updatedAt
+      institutionUsersId
+      branchUsersId
     }
   }
 `;

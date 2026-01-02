@@ -6,12 +6,26 @@ const UPDATE_INSTITUTION_MUTATION = `
       id
       name
       currencyCode
+      subscriptionTier
+      subscriptionStatus
+      trialEndDate
+      nextBillingDate
       stripeCustomerID
       stripeSubscriptionID
       defaultDateFormat
       defaultCurrencyFormat
       defaultLanguage
       regulatoryRegion
+      maxUsers
+      maxBranches
+      maxStaffPerBranch
+      saccoFeaturesEnabled
+      staffManagementEnabled
+      payrollEnabled
+      collectionsModuleEnabled
+      customWorkflowsEnabled
+      advancedReportingEnabled
+      apiIntegrationSettings
       status
       createdAt
       updatedAt

@@ -97,6 +97,7 @@ const TextInput = ({
   dependsOnValue,
   placeholder,
   defaultValue, // extract to prevent passing to TextField
+  adminOnly, // extract to prevent passing to DOM
   ...props
 }) => {
   const [field, meta, helpers] = useField(name);

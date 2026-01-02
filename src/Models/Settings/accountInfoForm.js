@@ -39,7 +39,7 @@ export const accountInfoForm = [
   {
     label: "Date of Birth",
     name: "dateOfBirth",
-    type: "text",
+    type: "date",
     span: 6,
   },
   {

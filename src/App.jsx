@@ -105,17 +105,59 @@ function App({ signOut, user }) {
           const res = await client.graphql({
             query: `query GetUser($id: ID!) { 
               getUser(id: $id) { 
-                id 
-                userType 
-                status 
-                institutionUsersId 
-                branchUsersId 
+                id
+                firstName
+                lastName
+                middleName
+                dateOfBirth
+                phoneNumber1
+                phoneNumber2
+                email
+                nationalID
+                status
+                userType
+                userPermissions
+                createdAt
+                updatedAt
+                institutionUsersId
+                branchUsersId
                 branch {
+                  id
                   name
+                  branchCode
+                  address
+                  status
+                  createdAt
+                  updatedAt
+                  institutionBranchesId
                 }
                 institution {
+                  id
                   name
                   currencyCode
+                  subscriptionTier
+                  subscriptionStatus
+                  trialEndDate
+                  nextBillingDate
+                  stripeCustomerID
+                  stripeSubscriptionID
+                  defaultDateFormat
+                  defaultCurrencyFormat
+                  defaultLanguage
+                  regulatoryRegion
+                  maxUsers
+                  maxBranches
+                  maxStaffPerBranch
+                  saccoFeaturesEnabled
+                  staffManagementEnabled
+                  payrollEnabled
+                  collectionsModuleEnabled
+                  customWorkflowsEnabled
+                  advancedReportingEnabled
+                  apiIntegrationSettings
+                  status
+                  createdAt
+                  updatedAt
                 }
               } 
             }`,
@@ -196,7 +238,6 @@ function App({ signOut, user }) {
       postalCode
       nationalID
       passportNumber
-      nationality
       status
       userType
       userPermissions

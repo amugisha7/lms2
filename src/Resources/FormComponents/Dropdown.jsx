@@ -28,6 +28,7 @@ const Dropdown = ({
   validationPattern,
   validationMessage,
   maxLength,
+  adminOnly, // extract to prevent passing to DOM
   ...props
 }) => {
   const [field, meta] = useField(name);

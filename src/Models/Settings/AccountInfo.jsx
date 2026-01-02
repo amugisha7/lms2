@@ -19,6 +19,7 @@ import { UserContext } from "../../App";
 import { Formik, Form } from "formik";
 import * as Yup from "yup";
 import TextInput from "../../Resources/FormComponents/TextInput";
+import DateInput from "../../Resources/FormComponents/DateInput";
 import FormLabel from "../../Resources/FormComponents/FormLabel";
 import { accountInfoForm } from "./accountInfoForm";
 import PlusButtonMain from "../../ModelAssets/PlusButtonMain";
@@ -36,10 +37,10 @@ const FormGrid = styled(Grid)(({ theme }) => ({
 
 // Validation schema for editable fields
 const validationSchema = Yup.object().shape({
-  firstName: Yup.string().required("First Name is required"),
-  lastName: Yup.string().required("Last Name is required"),
+  firstName: Yup.string(),
+  lastName: Yup.string(),
   phoneNumber1: Yup.string(),
-  dateOfBirth: Yup.string(),
+  dateOfBirth: Yup.date(),
   nationalID: Yup.string(),
 });
 
@@ -53,52 +54,72 @@ const AccountInfo = () => {
   const [submitSuccess, setSubmitSuccess] = useState("");
 
   const initialValues = {
-    email: user?.signInDetails?.loginId || "N/A",
-    userType: userDetails?.userType || "N/A",
-    firstName: userDetails?.firstName || "N/A",
-    lastName: userDetails?.lastName || "N/A",
-    phoneNumber1: userDetails?.phoneNumber1 || "N/A",
-    dateOfBirth: userDetails?.dateOfBirth || "N/A",
-    nationalID: userDetails?.nationalID || "N/A",
-    institutionName: userDetails?.institution?.name || "N/A",
-    institutionUsersId: userDetails?.institutionUsersId || "N/A",
-    branchName: userDetails?.branch?.name || "N/A",
-    branchUsersId: userDetails?.branchUsersId || "N/A",
-    id: userDetails?.id || "N/A",
-    status: userDetails?.status || "N/A",
+    email: user?.signInDetails?.loginId || "",
+    userType: userDetails?.userType || "",
+    firstName: userDetails?.firstName || "",
+    lastName: userDetails?.lastName || "",
+    phoneNumber1: userDetails?.phoneNumber1 || "",
+    dateOfBirth: userDetails?.dateOfBirth || "",
+    nationalID: userDetails?.nationalID || "",
+    institutionName: userDetails?.institution?.name || "",
+    institutionUsersId: userDetails?.institutionUsersId || "",
+    branchName: userDetails?.branch?.name || "",
+    branchUsersId: userDetails?.branchUsersId || "",
+    id: userDetails?.id || "",
+    status: userDetails?.status || "",
     createdAt: userDetails?.createdAt
       ? new Date(userDetails.createdAt).toLocaleDateString()
-      : "N/A",
+      : "",
     updatedAt: userDetails?.updatedAt
       ? new Date(userDetails.updatedAt).toLocaleDateString()
-      : "N/A",
-    subscriptionTier: userDetails?.institution?.subscriptionTier || "N/A",
-    subscriptionStatus: userDetails?.institution?.subscriptionStatus || "N/A",
+      : "",
+    subscriptionTier: userDetails?.institution?.subscriptionTier || "",
+    subscriptionStatus: userDetails?.institution?.subscriptionStatus || "",
     trialEndDate: userDetails?.institution?.trialEndDate
       ? new Date(userDetails.institution.trialEndDate).toLocaleDateString()
-      : "N/A",
+      : "",
     nextBillingDate: userDetails?.institution?.nextBillingDate
       ? new Date(userDetails.institution.nextBillingDate).toLocaleDateString()
-      : "N/A",
-    saccoFeaturesEnabled: userDetails?.institution?.saccoFeaturesEnabled
-      ? "Yes"
-      : "No",
-    staffManagementEnabled: userDetails?.institution?.staffManagementEnabled
-      ? "Yes"
-      : "No",
-    payrollEnabled: userDetails?.institution?.payrollEnabled ? "Yes" : "No",
-    collectionsModuleEnabled: userDetails?.institution?.collectionsModuleEnabled
-      ? "Yes"
-      : "No",
-    customWorkflowsEnabled: userDetails?.institution?.customWorkflowsEnabled
-      ? "Yes"
-      : "No",
-    advancedReportingEnabled: userDetails?.institution?.advancedReportingEnabled
-      ? "Yes"
-      : "No",
-    maxUsers: userDetails?.institution?.maxUsers || "N/A",
-    maxBranches: userDetails?.institution?.maxBranches || "N/A",
-    maxStaffPerBranch: userDetails?.institution?.maxStaffPerBranch || "N/A",
+      : "",
+    saccoFeaturesEnabled:
+      userDetails?.institution?.saccoFeaturesEnabled == null
+        ? ""
+        : userDetails.institution.saccoFeaturesEnabled
+        ? "Yes"
+        : "No",
+    staffManagementEnabled:
+      userDetails?.institution?.staffManagementEnabled == null
+        ? ""
+        : userDetails.institution.staffManagementEnabled
+        ? "Yes"
+        : "No",
+    payrollEnabled:
+      userDetails?.institution?.payrollEnabled == null
+        ? ""
+        : userDetails.institution.payrollEnabled
+        ? "Yes"
+        : "No",
+    collectionsModuleEnabled:
+      userDetails?.institution?.collectionsModuleEnabled == null
+        ? ""
+        : userDetails.institution.collectionsModuleEnabled
+        ? "Yes"
+        : "No",
+    customWorkflowsEnabled:
+      userDetails?.institution?.customWorkflowsEnabled == null
+        ? ""
+        : userDetails.institution.customWorkflowsEnabled
+        ? "Yes"
+        : "No",
+    advancedReportingEnabled:
+      userDetails?.institution?.advancedReportingEnabled == null
+        ? ""
+        : userDetails.institution.advancedReportingEnabled
+        ? "Yes"
+        : "No",
+    maxUsers: userDetails?.institution?.maxUsers || "",
+    maxBranches: userDetails?.institution?.maxBranches || "",
+    maxStaffPerBranch: userDetails?.institution?.maxStaffPerBranch || "",
   };
 
   const handleSubmit = async (values, { setSubmitting }) => {
@@ -128,10 +149,14 @@ const AccountInfo = () => {
 
       const updatedUser = await updateUser(updateData);
 
-      // Update the user context with the new user data
+      // Update the user context with only the submitted fields
       setUserDetails({
         ...userDetails,
-        ...updatedUser,
+        firstName: updatedUser.firstName,
+        lastName: updatedUser.lastName,
+        phoneNumber1: updatedUser.phoneNumber1,
+        dateOfBirth: updatedUser.dateOfBirth,
+        nationalID: updatedUser.nationalID,
       });
 
       setSubmitSuccess("Account information updated successfully!");
@@ -153,8 +178,8 @@ const AccountInfo = () => {
   return (
     <Box
       sx={{
-        mb: 4,
-        mt: 2,
+        pb: 4,
+        pt: 2,
       }}
     >
       {!isEditMode && (
@@ -215,10 +240,17 @@ const AccountInfo = () => {
                         flexDirection: "column",
                       }}
                     >
-                      <TextInput
-                        {...field}
-                        disabled={!isEditMode || field.disabled}
-                      />
+                      {field.type === "date" ? (
+                        <DateInput
+                          {...field}
+                          editing={isEditMode && !field.disabled}
+                        />
+                      ) : (
+                        <TextInput
+                          {...field}
+                          disabled={!isEditMode || field.disabled}
+                        />
+                      )}
                     </Box>
                   )}
                 </FormGrid>

@@ -14,6 +14,7 @@ const FormLabel = ({
   component,
   htmlFor,
   required,
+  adminOnly, // extract to prevent passing to DOM
   ...rest
 }) => {
   const theme = useTheme();

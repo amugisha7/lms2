@@ -18,7 +18,7 @@ import {
   Close as CloseIcon,
 } from "@mui/icons-material";
 import { UserContext } from "../../App";
-import { settingsForm } from "./settingsForm";
+import { settingsForm, countryOptions } from "./settingsForm";
 import TextInput from "../../Resources/FormComponents/TextInput";
 import Dropdown from "../../Resources/FormComponents/Dropdown";
 import DateInput from "../../Resources/FormComponents/DateInput";
@@ -176,10 +176,18 @@ const Settings = () => {
 
       const updatedInstitution = await updateInstitution(updateData);
 
-      // Update the user context with the new institution data
+      // Update the user context with only the submitted fields
       setUserDetails({
         ...userDetails,
-        institution: updatedInstitution,
+        institution: {
+          ...userDetails.institution,
+          name: updatedInstitution.name,
+          regulatoryRegion: updatedInstitution.regulatoryRegion,
+          currencyCode: updatedInstitution.currencyCode,
+          defaultCurrencyFormat: updatedInstitution.defaultCurrencyFormat,
+          defaultDateFormat: updatedInstitution.defaultDateFormat,
+          defaultLanguage: updatedInstitution.defaultLanguage,
+        },
       });
 
       setSubmitSuccess("Settings updated successfully!");
@@ -206,7 +214,7 @@ const Settings = () => {
   }
 
   return (
-    <Box sx={{ mt: 2, mb: 4 }}>
+    <Box sx={{ pt: 2, pb: 4 }}>
       {!isEditMode && isAdmin && (
         <Box
           sx={{

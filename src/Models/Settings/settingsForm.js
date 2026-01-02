@@ -15,6 +15,8 @@ const countryOptions = countries.map((country) => ({
   label: country,
 }));
 
+export { countryOptions };
+
 const currencyOptions = currencies.map((currency) => ({
   value: currency,
   label: `${currency} - ${currenciesObj[currency].name}`,

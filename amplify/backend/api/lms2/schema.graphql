@@ -33,21 +33,6 @@ enum LoanApprovalStatus {
   REJECTED
 }
 
-enum LoanDraftStatus {
-  DRAFT
-  SENT_FOR_APPROVAL
-  APPROVED
-  REJECTED
-  CONVERTED
-  ARCHIVED
-}
-
-enum LoanDraftSource {
-  BLANK
-  TEMPLATE
-  COPY
-}
-
 enum InstallmentStatus {
   PENDING
   PARTIALLY_PAID
@@ -542,64 +527,6 @@ type Collateral @model {
   customCollateralDetails: AWSJSON
 }
 
-type LoanDraft @model {
-  id: ID!
-  status: LoanDraftStatus!
-  source: LoanDraftSource
-  draftNumber: String
-
-  institutionID: ID @index(name: "byInstitution", sortKeyFields: ["updatedAt"])
-  branchID: ID @index(name: "byBranch", sortKeyFields: ["updatedAt"])
-
-  borrowerID: ID @index(name: "byBorrower", sortKeyFields: ["updatedAt"])
-  loanProductID: ID @index(name: "byLoanProduct", sortKeyFields: ["updatedAt"])
-  createdByEmployeeID: ID
-    @index(name: "byCreatedByEmployee", sortKeyFields: ["updatedAt"])
-  assignedToEmployeeID: ID
-    @index(name: "byAssignedToEmployee", sortKeyFields: ["updatedAt"])
-
-  submittedAt: AWSDateTime
-  approvedAt: AWSDateTime
-  rejectedAt: AWSDateTime
-  rejectionReason: String
-  convertedAt: AWSDateTime
-
-  draftRecord: AWSJSON!
-  termsSnapshot: AWSJSON
-  schedulePreview: AWSJSON
-  scheduleHash: String
-
-  editVersion: Int!
-  lastEditedByEmployeeID: ID
-  lastEditedAt: AWSDateTime
-
-  principal: Float
-  interestRate: Float
-  interestCalculationMethod: InterestCalculationMethod
-  startDate: AWSDate
-  maturityDate: AWSDate
-  loanCurrency: String
-
-  createdAt: AWSDateTime
-  updatedAt: AWSDateTime
-
-  loans: [Loan] @hasMany
-
-  customLoanDraftDetails: AWSJSON
-}
-
-type LoanDraftEvent @model {
-  id: ID!
-  loanDraftID: ID! @index(name: "byLoanDraft", sortKeyFields: ["eventAt"])
-  eventAt: AWSDateTime!
-  eventType: String!
-  actorEmployeeID: ID
-  summary: String
-  payload: AWSJSON
-
-  customLoanDraftEventDetails: AWSJSON
-}
-
 type Loan @model {
   id: ID!
   loanNumber: String @index(name: "byLoanNumber")
@@ -652,8 +579,6 @@ type Loan @model {
   createdByEmployeeID: ID @index(name: "byCreatedByEmployeeID")
   createdByEmployee: Employee @belongsTo(fields: ["createdByEmployeeID"])
 
-  loanDraftID: ID @index(name: "byLoanDraftID")
-  loanDraft: LoanDraft @belongsTo(fields: ["loanDraftID"])
   # --- Group Lending ---
   # If this is a group loan, link it to the Group
   groupID: ID @index(name: "byGroupLoan")

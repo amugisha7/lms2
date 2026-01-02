@@ -160,6 +160,8 @@ export default function LoanCreationOptions(props) {
                 borderBottom: 1,
                 borderColor: theme.palette.divider,
                 backgroundColor: theme.palette.background.paper,
+                opacity: selectedBorrower ? 1 : 0.5,
+                pointerEvents: selectedBorrower ? "auto" : "none",
                 // borderRadius: "8px 8px 0 0",
               }}
             >
@@ -170,6 +172,7 @@ export default function LoanCreationOptions(props) {
                 variant="scrollable"
                 scrollButtons
                 allowScrollButtonsMobile
+                disabled={!selectedBorrower}
                 sx={{
                   "& .MuiTabs-indicator": {
                     backgroundColor: theme.palette.blueText.main,
@@ -208,7 +211,23 @@ export default function LoanCreationOptions(props) {
             </Box>
           </Box>
 
-          {tabValue === 0 && (
+          {!selectedBorrower && (
+            <Box
+              sx={{
+                mt: 3,
+                p: 2,
+                backgroundColor: "#e3f2fd",
+                border: "1px solid #2196f3",
+                borderRadius: 1,
+              }}
+            >
+              <Typography variant="body2" sx={{ color: "#1565c0" }}>
+                Please select a borrower above to proceed with creating a loan.
+              </Typography>
+            </Box>
+          )}
+
+          {selectedBorrower && tabValue === 0 && (
             <CreateLoan
               {...props}
               onCreateSuccess={handleCreateSuccess}
@@ -217,7 +236,7 @@ export default function LoanCreationOptions(props) {
               borrower={selectedBorrower}
             />
           )}
-          {tabValue === 1 && (
+          {selectedBorrower && tabValue === 1 && (
             <UseLoanProduct
               {...props}
               onCreateSuccess={handleCreateSuccess}

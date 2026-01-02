@@ -356,9 +356,7 @@ export default function LoanScheduleDraft({
               variant="body2"
               sx={{ color: theme.palette.common.black }}
             >
-              <strong>Loan Fee:</strong>{" "}
-              {loanFeeSummary?.label ? `${loanFeeSummary.label} — ` : ""}
-              <Money value={totalLoanFee} />
+              <strong>Loan Fees:</strong> <Money value={totalLoanFee} />
             </Typography>
           ) : null}
         </Box>

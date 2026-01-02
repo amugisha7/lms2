@@ -595,13 +595,11 @@ const CreateLoan = forwardRef(
                   (c) => c.id === values.loanFees
                 );
                 if (config) {
-                  if (config.feeType === "fixed") {
-                    return parseFloat(config.feeAmount) || 0;
-                  } else if (config.feeType === "percentage") {
+                  if (config.calculationMethod === "fixed") {
+                    return parseFloat(config.rate) || 0;
+                  } else if (config.calculationMethod === "percentage") {
                     const principal = parseFloat(values.principalAmount) || 0;
-                    return (
-                      (principal * parseFloat(config.feePercentage || 0)) / 100
-                    );
+                    return (principal * parseFloat(config.rate || 0)) / 100;
                   }
                 }
               }
@@ -618,6 +616,8 @@ const CreateLoan = forwardRef(
                 return {
                   label: null,
                   amount: totalLoanFee || 0,
+                  calculationMethod: null,
+                  rate: null,
                 };
               }
 
@@ -628,6 +628,8 @@ const CreateLoan = forwardRef(
                 return {
                   label: config?.name || "Pre-defined Loan Fee",
                   amount: totalLoanFee || 0,
+                  calculationMethod: config?.calculationMethod || null,
+                  rate: config?.rate || null,
                 };
               }
 
@@ -635,6 +637,8 @@ const CreateLoan = forwardRef(
                 return {
                   label: "Pre-defined Loan Fee",
                   amount: totalLoanFee || 0,
+                  calculationMethod: null,
+                  rate: null,
                 };
               }
 

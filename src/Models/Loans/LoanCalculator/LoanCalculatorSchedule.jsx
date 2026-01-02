@@ -19,7 +19,7 @@ import PlusButtonMain from "../../../ModelAssets/PlusButtonMain";
 import WorkingOverlay from "../../../ModelAssets/WorkingOverlay";
 import { formatMoneyParts } from "../../../Resources/formatting";
 
-import { generateSchedulePreviewFromDraftValues } from "./loanCalculatorComputations";
+import { generateSchedulePreviewFromDraftValues } from "../loanComputations";
 
 const fmtDate = (d) => {
   if (!d) return "";

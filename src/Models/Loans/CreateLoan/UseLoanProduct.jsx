@@ -964,24 +964,66 @@ const UseLoanProduct = forwardRef(
                   if (values.loanFeesType === "custom") {
                     return parseFloat(values.customLoanFeeAmount) || 0;
                   }
-                  if (values.loanFeesType === "standard" && values.loanFees) {
+                  if (
+                    values.loanFeesType === "pre-defined" &&
+                    values.loanFees
+                  ) {
                     const config = loanFeesConfigs.find(
                       (c) => c.id === values.loanFees
                     );
                     if (config) {
-                      if (config.feeType === "fixed") {
-                        return parseFloat(config.feeAmount) || 0;
-                      } else if (config.feeType === "percentage") {
+                      if (config.calculationMethod === "fixed") {
+                        return parseFloat(config.rate) || 0;
+                      } else if (config.calculationMethod === "percentage") {
                         const principal =
                           parseFloat(values.principalAmount) || 0;
-                        return (
-                          (principal * parseFloat(config.feePercentage || 0)) /
-                          100
-                        );
+                        return (principal * parseFloat(config.rate || 0)) / 100;
                       }
                     }
                   }
                   return 0;
+                })();
+
+                const loanFeeSummary = (() => {
+                  const values = formik.values;
+                  if (!values?.loanFeesType || values.loanFeesType === "none") {
+                    return null;
+                  }
+
+                  if (values.loanFeesType === "custom") {
+                    return {
+                      label: null,
+                      amount: totalLoanFee || 0,
+                      calculationMethod: null,
+                      rate: null,
+                    };
+                  }
+
+                  if (
+                    values.loanFeesType === "pre-defined" &&
+                    values.loanFees
+                  ) {
+                    const config = loanFeesConfigs.find(
+                      (c) => c.id === values.loanFees
+                    );
+                    return {
+                      label: config?.name || "Loan Fee",
+                      amount: totalLoanFee || 0,
+                      calculationMethod: config?.calculationMethod || null,
+                      rate: config?.rate || null,
+                    };
+                  }
+
+                  if (values.loanFeesType === "pre-defined") {
+                    return {
+                      label: "Loan Fee",
+                      amount: totalLoanFee || 0,
+                      calculationMethod: null,
+                      rate: null,
+                    };
+                  }
+
+                  return null;
                 })();
 
                 return (
@@ -1012,6 +1054,7 @@ const UseLoanProduct = forwardRef(
                         onSendForApproval={handleSendForApproval}
                         onConfirmCreateLoan={handleConvertToLoan}
                         totalLoanFee={totalLoanFee}
+                        loanFeeSummary={loanFeeSummary}
                       />
                     </CustomPopUp>
 

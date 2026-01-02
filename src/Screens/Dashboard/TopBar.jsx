@@ -28,9 +28,10 @@ const TopBar = ({ onMenuClick }) => {
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
-  const [unreadCount, setUnreadCount] = useState(0);
 
-  const { userDetails } = React.useContext(require("../../App").UserContext);
+  const { userDetails, unreadCount } = React.useContext(
+    require("../../App").UserContext
+  );
   const institutionName = userDetails?.institution?.name || "";
 
   const handleMobileMenuToggle = () => {

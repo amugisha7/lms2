@@ -287,7 +287,7 @@ const CreateUser = forwardRef(
     }, [editClickedContext?.editClicked, forceEditMode, editMode]);
 
     const updatedCreateUserForm = React.useMemo(() => {
-      const isAdmin = formInitialValues.userType === "Admin";
+      const isAdmin = formInitialValues.userType?.toLowerCase() === "admin";
 
       return createUserForm
         .map((field) => {

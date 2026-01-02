@@ -12,6 +12,7 @@ import {
   Badge as BadgeIcon,
   Work as WorkIcon,
   Notifications as NotificationsIcon,
+  Settings as SettingsIcon,
 } from "@mui/icons-material";
 
 export const menuItems = [
@@ -121,5 +122,10 @@ export const menuItems = [
     name: "Admin",
     icon: <AdminPanelSettingsIcon sx={{ color: "white" }} />,
     route: "/admin",
+  },
+  {
+    name: "Settings",
+    icon: <SettingsIcon sx={{ color: "white" }} />,
+    route: "/settings",
   },
 ];

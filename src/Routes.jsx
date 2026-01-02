@@ -24,7 +24,7 @@ import Temp from "./temp/Temp";
 import BorrowerManagement from "./Models/Borrowers/BorrowerManagement";
 import UserManagement from "./Models/Users/UserManagement";
 import Users from "./Models/Users/Users";
-import UserSettings from "./Screens/AdminScreens/Settings/UserSettings";
+import SettingsWrapper from "./Models/Settings/SettingsWrapper";
 import NotificationsDashboard from "./Screens/Notifications/NotificationsDashboard";
 import Notifications from "./Screens/Notifications/Notifications";
 
@@ -50,7 +50,7 @@ export default function AppRoutes({ userExists }) {
             <>
               <Route index element={<MainGrid />} />
               <Route path="reports" element={<MainGrid />} />
-              <Route path="settings" element={<UserSettings />} />
+              <Route path="settings" element={<SettingsWrapper />} />
               <Route
                 path="notifications"
                 element={<NotificationsDashboard />}

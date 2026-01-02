@@ -135,6 +135,11 @@ type Institution @model {
   savingsProducts: [SavingsProduct] @hasMany
   chartOfAccounts: [ChartOfAccounts] @hasMany
   dividendDeclarations: [DividendDeclaration] @hasMany
+
+  # --- Custom document header ---
+  customDocumentHeader: AWSJSON
+
+  customInstitutionDetails: AWSJSON
 }
 
 type Branch @model {
@@ -162,6 +167,8 @@ type Branch @model {
   loanFeesConfigs: [LoanFeesConfig]
     @manyToMany(relationName: "BranchLoanFeesConfig")
   groups: [Group] @hasMany
+
+  customBranchDetails: AWSJSON
 }
 
 type User @model {
@@ -194,6 +201,8 @@ type User @model {
   receivedMessages: [Message] @hasMany
   sentNotifications: [Notification] @hasMany
   receivedNotifications: [Notification] @hasMany
+
+  customUserDetails: AWSJSON
 }
 
 type Employee @model {
@@ -263,6 +272,8 @@ type Employee @model {
   # Collections & Recovery
   assignedCollectionCases: [CollectionCase] @hasMany
   approvals: [Approval] @hasMany
+
+  customEmployeeDetails: AWSJSON
 }
 
 type Borrower @model {
@@ -322,6 +333,8 @@ type Borrower @model {
   shareAccount: ShareAccount @hasOne
 
   # --- Governance ---
+
+  customBorrowerDetails: AWSJSON
 }
 
 type Guarantor @model {
@@ -339,6 +352,9 @@ type Guarantor @model {
   isExistingMember: Boolean
   memberID: ID # Link to Borrower table if they are a member
   lockedSavingsAmount: Float # If using their savings as collateral
+  collaterals: [Collateral] @manyToMany(relationName: "GuarantorCollateral")
+
+  customGuarantorDetails: AWSJSON
 }
 
 type Security @model {
@@ -349,6 +365,8 @@ type Security @model {
   value: Float
   status: String
   borrower: Borrower @belongsTo
+
+  customSecurityDetails: AWSJSON
 }
 
 type UserNotification @model {
@@ -360,6 +378,8 @@ type UserNotification @model {
   message: String
   status: String
   user: User @belongsTo
+
+  customUserNotificationDetails: AWSJSON
 }
 
 type LoanProduct @model {
@@ -407,6 +427,8 @@ type LoanProduct @model {
   loanPenalties: [Penalty] @manyToMany(relationName: "LoanProductPenalty")
   applications: [Application] @hasMany
   loans: [Loan] @hasMany
+
+  customLoanProductDetails: AWSJSON
 }
 
 type CreditScore @model {
@@ -422,6 +444,8 @@ type CreditScore @model {
   borrower: Borrower @belongsTo(fields: ["borrowerID"])
   createdByEmployeeID: ID @index(name: "byCreatedByEmployeeID")
   createdByEmployee: Employee @belongsTo(fields: ["createdByEmployeeID"])
+
+  customCreditScoreDetails: AWSJSON
 }
 
 type Document @model {
@@ -446,6 +470,8 @@ type Document @model {
     @manyToMany(relationName: "MoneyTransactionDocument")
   createdByEmployeeID: ID @index(name: "byCreatedByEmployeeID")
   createdByEmployee: Employee @belongsTo(fields: ["createdByEmployeeID"])
+
+  customDocumentDetails: AWSJSON
 }
 
 type Contract @model {
@@ -461,6 +487,8 @@ type Contract @model {
   collaterals: [Collateral] @manyToMany(relationName: "CollateralContract")
   documents: [Document] @manyToMany(relationName: "ContractDocument")
   loans: [Loan] @manyToMany(relationName: "LoanContract")
+
+  customContractDetails: AWSJSON
 }
 
 type Application @model {
@@ -486,6 +514,8 @@ type Application @model {
   createdByEmployeeID: ID @index(name: "byCreatedByEmployeeID")
   createdByEmployee: Employee @belongsTo(fields: ["createdByEmployeeID"])
   customFieldsData: AWSJSON
+
+  customApplicationDetails: AWSJSON
 }
 
 type Collateral @model {
@@ -507,6 +537,9 @@ type Collateral @model {
   loans: [Loan] @manyToMany(relationName: "LoanCollateral")
   applications: [Application] @manyToMany(relationName: "ApplicationCollateral")
   contracts: [Contract] @manyToMany(relationName: "CollateralContract")
+  guarantors: [Guarantor] @manyToMany(relationName: "GuarantorCollateral")
+
+  customCollateralDetails: AWSJSON
 }
 
 type LoanDraft @model {
@@ -551,6 +584,8 @@ type LoanDraft @model {
   updatedAt: AWSDateTime
 
   loans: [Loan] @hasMany
+
+  customLoanDraftDetails: AWSJSON
 }
 
 type LoanDraftEvent @model {
@@ -561,6 +596,8 @@ type LoanDraftEvent @model {
   actorEmployeeID: ID
   summary: String
   payload: AWSJSON
+
+  customLoanDraftEventDetails: AWSJSON
 }
 
 type Loan @model {
@@ -629,6 +666,8 @@ type Loan @model {
   # --- Accounting Traceability ---
   # Link to the Journal Entry that disbursed this loan
   relatedJournalEntries: [JournalEntry] @hasMany
+
+  customLoanDetails: AWSJSON
 }
 
 type LoanInstallment @model {
@@ -651,6 +690,8 @@ type LoanInstallment @model {
   events: [LoanEvent] @hasMany
   moneyTransactions: [MoneyTransaction] @hasMany
   payments: [Payment] @hasMany
+
+  customLoanInstallmentDetails: AWSJSON
 }
 
 type LoanDisbursement @model {
@@ -668,6 +709,8 @@ type LoanDisbursement @model {
   moneyTransaction: MoneyTransaction @belongsTo(fields: ["moneyTransactionID"])
   moneyTransactions: [MoneyTransaction] @hasMany
   events: [LoanEvent] @hasMany
+
+  customLoanDisbursementDetails: AWSJSON
 }
 
 type LoanEvent @model {
@@ -685,6 +728,8 @@ type LoanEvent @model {
   installment: LoanInstallment @belongsTo(fields: ["installmentID"])
   disbursementID: ID @index(name: "byDisbursement")
   disbursement: LoanDisbursement @belongsTo(fields: ["disbursementID"])
+
+  customLoanEventDetails: AWSJSON
 }
 
 type LoanBalanceSnapshot @model {
@@ -699,6 +744,8 @@ type LoanBalanceSnapshot @model {
   totalOutstanding: Float
   daysPastDue: Int
   snapshotRecord: AWSJSON
+
+  customLoanBalanceSnapshotDetails: AWSJSON
 }
 
 type Investment @model {
@@ -722,6 +769,8 @@ type Investment @model {
   paymentFrequency: Float
   status: String
   accounts: [Account] @manyToMany(relationName: "InvestmentAccount")
+
+  customInvestmentDetails: AWSJSON
 }
 
 type LoanFees @model {
@@ -745,6 +794,8 @@ type LoanFees @model {
   account: Account @belongsTo(fields: ["accountID"])
   loanFeesConfigs: [LoanFeesConfig]
     @manyToMany(relationName: "LoanFeesLoanFeesConfig")
+
+  customLoanFeesDetails: AWSJSON
 }
 
 type Penalty @model {
@@ -766,6 +817,8 @@ type Penalty @model {
   loanProducts: [LoanProduct] @manyToMany(relationName: "LoanProductPenalty")
   accountID: ID @index(name: "byAccountID")
   account: Account @belongsTo(fields: ["accountID"])
+
+  customPenaltyDetails: AWSJSON
 }
 
 type Payroll @model {
@@ -783,6 +836,8 @@ type Payroll @model {
   details: String
   branch: Branch @belongsTo
   employees: [Employee] @manyToMany(relationName: "PayrollEmployee")
+
+  customPayrollDetails: AWSJSON
 }
 
 type Account @model {
@@ -815,6 +870,8 @@ type Account @model {
   penalties: [Penalty] @hasMany
   createdByEmployeeID: ID @index(name: "byCreatedByEmployeeID")
   createdByEmployee: Employee @belongsTo(fields: ["createdByEmployeeID"])
+
+  customAccountDetails: AWSJSON
 }
 
 type MoneyTransaction @model {
@@ -847,6 +904,8 @@ type MoneyTransaction @model {
 
   paymentsLink: [Payment] @hasMany
   disbursementsLink: [LoanDisbursement] @hasMany
+
+  customMoneyTransactionDetails: AWSJSON
 }
 
 type Payment @model {
@@ -880,6 +939,8 @@ type Payment @model {
   # --- Accounting Traceability ---
   # Link to the Journal Entry that recorded this payment
   relatedJournalEntries: [JournalEntry] @hasMany
+
+  customPaymentDetails: AWSJSON
 }
 
 type Expense @model {
@@ -905,6 +966,8 @@ type Expense @model {
   createdByEmployee: Employee @belongsTo(fields: ["createdByEmployeeID"])
   # --- Accounting Traceability ---
   relatedJournalEntries: [JournalEntry] @hasMany
+
+  customExpenseDetails: AWSJSON
 }
 
 type OtherIncome @model {
@@ -916,6 +979,8 @@ type OtherIncome @model {
   incomeType: String
   status: String
   accounts: [Account] @manyToMany(relationName: "OtherIncomeAccount")
+
+  customOtherIncomeDetails: AWSJSON
 }
 
 type FinancialReport @model {
@@ -928,6 +993,8 @@ type FinancialReport @model {
   reportData: AWSJSON
   status: String
   branch: Branch @belongsTo
+
+  customFinancialReportDetails: AWSJSON
 }
 
 type CustomFormField @model {
@@ -942,6 +1009,8 @@ type CustomFormField @model {
   status: String
   branch: Branch @belongsTo
   institution: Institution @belongsTo
+
+  customCustomFormFieldDetails: AWSJSON
 }
 
 type LoanFeesConfig @model {
@@ -958,6 +1027,8 @@ type LoanFeesConfig @model {
   loanFees: [LoanFees] @manyToMany(relationName: "LoanFeesLoanFeesConfig")
   loanProducts: [LoanProduct]
     @manyToMany(relationName: "LoanProductLoanFeesConfig")
+
+  customLoanFeesConfigDetails: AWSJSON
 }
 
 type Message @model {
@@ -970,6 +1041,8 @@ type Message @model {
   senderUserId: ID! @index(name: "bySender")
   recipient: User @belongsTo(fields: ["recipientUserId"])
   recipientUserId: ID! @index(name: "byRecipient")
+
+  customMessageDetails: AWSJSON
 }
 
 type Notification @model {
@@ -986,6 +1059,8 @@ type Notification @model {
   recipient: User @belongsTo(fields: ["recipientUserId"])
   recipientUserId: ID! @index(name: "byRecipient")
   institutionMessagesId: ID @index(name: "byInstitution")
+
+  customNotificationDetails: AWSJSON
 }
 
 type Group @model {
@@ -1007,6 +1082,7 @@ type Group @model {
   members: [Borrower] @hasMany
   loans: [Loan] @hasMany
   groupSavingsAccount: SavingsAccount @hasOne # Groups often save collectively
+  customGroupDetails: AWSJSON
 }
 
 # Defines the product (e.g., "Christmas Savings", "Ordinary Shares")
@@ -1019,6 +1095,8 @@ type SavingsProduct @model {
   minBalance: Float
   institution: Institution @belongsTo
   savingsAccounts: [SavingsAccount] @hasMany
+
+  customSavingsProductDetails: AWSJSON
 }
 
 # The actual account held by a member
@@ -1036,6 +1114,8 @@ type SavingsAccount @model {
   lockedForLoanID: ID
 
   transactions: [SavingsTransaction] @hasMany
+
+  customSavingsAccountDetails: AWSJSON
 }
 
 type SavingsTransaction @model {
@@ -1045,6 +1125,8 @@ type SavingsTransaction @model {
   date: AWSDateTime
   savingsAccount: SavingsAccount @belongsTo
   initiatedBy: Employee @belongsTo
+
+  customSavingsTransactionDetails: AWSJSON
 }
 
 # Share Capital Management
@@ -1056,6 +1138,8 @@ type ShareAccount @model {
 
   borrower: Borrower @belongsTo
   transactions: [ShareTransaction] @hasMany
+
+  customShareAccountDetails: AWSJSON
 }
 
 type ShareTransaction @model {
@@ -1065,6 +1149,8 @@ type ShareTransaction @model {
   amount: Float
   date: AWSDateTime
   shareAccount: ShareAccount @belongsTo
+
+  customShareTransactionDetails: AWSJSON
 }
 
 type ChartOfAccounts @model {
@@ -1077,6 +1163,8 @@ type ChartOfAccounts @model {
   institution: Institution @belongsTo
 
   journalLines: [JournalLine] @hasMany
+
+  customChartOfAccountsDetails: AWSJSON
 }
 
 type JournalEntry @model {
@@ -1093,6 +1181,8 @@ type JournalEntry @model {
   relatedLoanID: ID
   relatedPaymentID: ID
   relatedExpenseID: ID
+
+  customJournalEntryDetails: AWSJSON
 }
 
 type JournalLine @model {
@@ -1102,6 +1192,8 @@ type JournalLine @model {
   debit: Float
   credit: Float
   description: String
+
+  customJournalLineDetails: AWSJSON
 }
 type Meeting @model {
   id: ID!
@@ -1114,6 +1206,8 @@ type Meeting @model {
   attendanceRecord: AWSJSON
   # Resolutions stored as JSON array of { title, description, votesFor, votesAgainst, status }
   resolutionsRecord: AWSJSON
+
+  customMeetingDetails: AWSJSON
 }
 
 type DividendDeclaration @model {
@@ -1124,6 +1218,8 @@ type DividendDeclaration @model {
   interestRebateRate: Float # Percentage on Interest Paid (Patronage)
   status: String # Draft, Approved, Distributed
   institution: Institution @belongsTo
+
+  customDividendDeclarationDetails: AWSJSON
 }
 
 type Approval @model {
@@ -1134,6 +1230,8 @@ type Approval @model {
   status: String # Pending, Approved, Rejected
   notes: String
   employee: Employee @belongsTo
+
+  customApprovalDetails: AWSJSON
 }
 
 type CollectionCase @model {
@@ -1146,6 +1244,7 @@ type CollectionCase @model {
 
   stage: String # "Soft", "Hard", "Legal", "WriteOff"
   status: String # Open, Resolved
+  customCollectionCaseDetails: AWSJSON
 }
 
 # ---------- End of Schema ----------

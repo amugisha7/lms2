@@ -261,6 +261,18 @@ export default function LoanScheduleDraft({
 
   const renderSummaryBlock = () => (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+      {loanDraft?.draftNumber && (
+        <Typography
+          variant="body2"
+          sx={{
+            color: theme.palette.common.black,
+            fontSize: "0.8rem",
+            textDecoration: "italic",
+          }}
+        >
+          Reference: {loanDraft?.draftNumber}
+        </Typography>
+      )}
       <Typography
         variant="body2"
         className="muted"
@@ -281,7 +293,6 @@ export default function LoanScheduleDraft({
         LOAN REPAYMENT SCHEDULE
       </Typography>
       <Divider sx={{ borderColor: theme.palette.common.black }} />
-
       <Box
         sx={{
           display: "grid",
@@ -509,6 +520,7 @@ export default function LoanScheduleDraft({
           flexDirection: { xs: "column", md: "row" },
           alignItems: { xs: "stretch", md: "center" },
           gap: 1,
+          flexWrap: "wrap",
         }}
       >
         {loanFeeSummary ? (
@@ -572,6 +584,12 @@ export default function LoanScheduleDraft({
             disabled={readOnly || !onConfirmCreateLoan}
           />
         </Box>
+        {!loanDraft?.draftNumber && (
+          <Typography sx={{ width: "100%", fontSize: "0.8rem" }}>
+            Saving this draft generates a reference number. You can edit the
+            details later before creating the loan.
+          </Typography>
+        )}
       </Box>
 
       <WorkingOverlay open={exportingPdf} message="Exporting PDF..." />

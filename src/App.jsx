@@ -155,6 +155,7 @@ function App({ signOut, user }) {
                   customWorkflowsEnabled
                   advancedReportingEnabled
                   apiIntegrationSettings
+                  customDocumentHeader
                   status
                   createdAt
                   updatedAt

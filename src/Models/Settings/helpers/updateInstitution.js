@@ -76,8 +76,13 @@ export const updateInstitution = async (institutionData) => {
   if (institutionData.defaultDateFormat !== undefined) {
     updateInput.defaultDateFormat = institutionData.defaultDateFormat;
   }
+
   if (institutionData.defaultLanguage !== undefined) {
     updateInput.defaultLanguage = institutionData.defaultLanguage;
+  }
+  // Allow updating customDocumentHeader
+  if (institutionData.customDocumentHeader !== undefined) {
+    updateInput.customDocumentHeader = institutionData.customDocumentHeader;
   }
 
   console.log("Update institution input:", updateInput);

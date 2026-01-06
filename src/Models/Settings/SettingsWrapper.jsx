@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Box, Tabs, Tab, Paper, useTheme, useMediaQuery } from "@mui/material";
 import Settings from "./Settings";
 import AccountInfo from "./AccountInfo";
+import DocumentHeaderSettings from "./DocumentHeaderSettings";
 
 const SettingsWrapper = () => {
   const [activeTab, setActiveTab] = useState(0);
@@ -56,12 +57,14 @@ const SettingsWrapper = () => {
         >
           <Tab label="Institution Settings" />
           <Tab label="Account Information" />
+          <Tab label="Document Header" />
         </Tabs>
       </Paper>
 
       <Box sx={{ mt: 0 }}>
         {activeTab === 0 && <Settings />}
         {activeTab === 1 && <AccountInfo />}
+        {activeTab === 2 && <DocumentHeaderSettings />}
       </Box>
     </Box>
   );

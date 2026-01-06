@@ -10,9 +10,16 @@ const FileUpload = ({
   required,
   readOnly = false,
   editing = true,
+  maxSize,
+  imageOnly,
+  accept,
   ...props
 }) => {
   const [field, meta, helpers] = useField(name);
+
+  // Remove custom props from being passed to DOM
+  const inputProps = {};
+  if (accept) inputProps.accept = accept;
 
   const handleFileChange = (event) => {
     const file = event.target.files[0];
@@ -64,7 +71,12 @@ const FileUpload = ({
           disabled={readOnly || editing === false}
         >
           {field.value ? field.value.name : "Choose File"}
-          <input type="file" hidden onChange={handleFileChange} {...props} />
+          <input
+            type="file"
+            hidden
+            onChange={handleFileChange}
+            {...inputProps}
+          />
         </Button>
         <FormHelperText error={meta.touched && Boolean(meta.error)}>
           {meta.touched && meta.error ? meta.error : helperText}

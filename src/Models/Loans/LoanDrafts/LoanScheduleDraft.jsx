@@ -2,25 +2,23 @@ import React from "react";
 import dayjs from "dayjs";
 import {
   Box,
-  Checkbox,
   Divider,
-  FormControlLabel,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableRow,
-  Tooltip,
   Typography,
   CircularProgress,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import PlusButtonMain from "../../../ModelAssets/PlusButtonMain";
 import WorkingOverlay from "../../../ModelAssets/WorkingOverlay";
+import DraftHeader from "../../../Resources/DraftHeader";
 import { generateSchedulePreviewFromDraftValues } from "../loanComputations";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 import { formatMoneyParts } from "../../../Resources/formatting";
+import { getUrl } from "aws-amplify/storage";
 
 const fmtDate = (d) => {
   if (!d) return "";
@@ -96,6 +94,12 @@ export default function LoanScheduleDraft({
   const [showInterestMethod, setShowInterestMethod] = React.useState(false);
   const [showTotals, setShowTotals] = React.useState(false);
   const [showColumnOptions, setShowColumnOptions] = React.useState(false);
+  const [showCustomHeader, setShowCustomHeader] = React.useState(false);
+  const [showCustomHeaderFirstPageOnly, setShowCustomHeaderFirstPageOnly] =
+    React.useState(true);
+  const [showInstitutionName, setShowInstitutionName] = React.useState(true);
+  const [showBranchName, setShowBranchName] = React.useState(true);
+  const [headerImageSignedUrl, setHeaderImageSignedUrl] = React.useState(null);
   const [visibleColumns, setVisibleColumns] = React.useState({
     number: true,
     date: true,
@@ -107,6 +111,111 @@ export default function LoanScheduleDraft({
   });
 
   const currencyCode = userDetails?.institution?.currencyCode;
+
+  const revokeObjectUrl = React.useCallback((maybeUrl) => {
+    if (typeof maybeUrl === "string" && maybeUrl.startsWith("blob:")) {
+      try {
+        URL.revokeObjectURL(maybeUrl);
+      } catch {
+        // ignore
+      }
+    }
+  }, []);
+
+  // Initialize custom header checkbox and fetch signed URL
+  React.useEffect(() => {
+    let cancelled = false;
+
+    const fetchHeaderImage = async () => {
+      if (userDetails?.institution) {
+        let documentHeader = userDetails.institution.customDocumentHeader;
+        if (typeof documentHeader === "string") {
+          try {
+            documentHeader = JSON.parse(documentHeader);
+          } catch (e) {
+            console.error("Failed to parse customDocumentHeader", e);
+            documentHeader = {};
+          }
+        }
+
+        const headerImageUrl = documentHeader?.headerImageUrl || null;
+
+        // Set checkbox to checked by default only if header exists
+        setShowCustomHeader(!!headerImageUrl);
+
+        // Fetch signed URL and (optionally) convert to a same-origin blob URL.
+        // If S3 CORS is not configured, the fetch will be blocked; we fall back to using
+        // the signed URL so the image still displays in the UI.
+        if (headerImageUrl) {
+          try {
+            const signedURL = await getUrl({
+              path: `public/${headerImageUrl}`,
+              options: {
+                expiresIn: 3600, // 1 hour
+              },
+            });
+
+            const remoteUrl =
+              signedURL?.url?.toString?.() || String(signedURL?.url);
+
+            let nextSrc = remoteUrl;
+            try {
+              const response = await fetch(remoteUrl);
+              if (!response.ok) {
+                throw new Error(
+                  `Header image fetch failed: ${response.status}`
+                );
+              }
+              const blob = await response.blob();
+              nextSrc = URL.createObjectURL(blob);
+            } catch (innerError) {
+              console.warn(
+                "Header image could not be fetched as a blob (likely CORS). Falling back to remote URL.",
+                innerError
+              );
+            }
+
+            if (cancelled) {
+              revokeObjectUrl(nextSrc);
+              return;
+            }
+
+            setHeaderImageSignedUrl((prev) => {
+              revokeObjectUrl(prev);
+              return nextSrc;
+            });
+          } catch (error) {
+            console.error("Error fetching header image URL:", error);
+            if (!cancelled) {
+              setHeaderImageSignedUrl((prev) => {
+                revokeObjectUrl(prev);
+                return null;
+              });
+            }
+          }
+        } else {
+          if (!cancelled) {
+            setHeaderImageSignedUrl((prev) => {
+              revokeObjectUrl(prev);
+              return null;
+            });
+          }
+        }
+      }
+    };
+
+    fetchHeaderImage();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [userDetails?.institution, revokeObjectUrl]);
+
+  React.useEffect(() => {
+    return () => {
+      revokeObjectUrl(headerImageSignedUrl);
+    };
+  }, [headerImageSignedUrl, revokeObjectUrl]);
 
   const Money = ({ value }) => {
     const parts = formatMoneyParts(value, currency, currencyCode);
@@ -221,10 +330,27 @@ export default function LoanScheduleDraft({
         const pageElement = freshPages[i];
         if (!pageElement) continue;
 
+        // Ensure images within the page are loaded before snapshotting.
+        const imgs = Array.from(pageElement.querySelectorAll("img") || []);
+        if (imgs.length) {
+          await Promise.all(
+            imgs.map((img) => {
+              if (img.complete && img.naturalWidth > 0)
+                return Promise.resolve();
+              return new Promise((resolve) => {
+                const done = () => resolve();
+                img.addEventListener("load", done, { once: true });
+                img.addEventListener("error", done, { once: true });
+              });
+            })
+          );
+        }
+
         // Capture the page as a canvas image
         const canvas = await html2canvas(pageElement, {
           scale: 1.5, // Reduced scale to optimize file size
           useCORS: true,
+          imageTimeout: 15000,
           logging: false,
           backgroundColor: "#ffffff",
           onclone: (clonedDoc) => {
@@ -288,6 +414,61 @@ export default function LoanScheduleDraft({
         },
       }}
     >
+      {showCustomHeader &&
+        headerImageSignedUrl &&
+        (pageNumber === 1 || !showCustomHeaderFirstPageOnly) && (
+          <Box
+            sx={{
+              width: "100%",
+              display: "flex",
+              justifyContent: "center",
+              mb: 1,
+            }}
+          >
+            <img
+              src={headerImageSignedUrl}
+              alt="Document header"
+              crossOrigin="anonymous"
+              style={{
+                maxWidth: "100%",
+                height: "auto",
+                objectFit: "contain",
+              }}
+            />
+          </Box>
+        )}
+      {showInstitutionName &&
+        institutionName &&
+        (pageNumber === 1 || !showCustomHeaderFirstPageOnly) && (
+          <Box sx={{ mb: 1 }}>
+            <Typography
+              variant="h6"
+              sx={{
+                color: theme.palette.common.black,
+                textAlign: "left",
+                fontWeight: 600,
+              }}
+            >
+              {institutionName}
+            </Typography>
+          </Box>
+        )}
+      {showBranchName &&
+        branchName &&
+        (pageNumber === 1 || !showCustomHeaderFirstPageOnly) && (
+          <Box sx={{ mb: 1 }}>
+            <Typography
+              variant="h6"
+              sx={{
+                color: theme.palette.common.black,
+                textAlign: "left",
+                fontWeight: 600,
+              }}
+            >
+              {branchName}
+            </Typography>
+          </Box>
+        )}
       {children}
       <Box sx={{ mt: "auto", pt: 1 }}>
         <Divider sx={{ borderColor: theme.palette.common.black }} />
@@ -323,15 +504,6 @@ export default function LoanScheduleDraft({
           Reference: {loanDraft?.draftNumber}
         </Typography>
       )}
-      <Typography
-        variant="body2"
-        className="muted"
-        sx={{ color: theme.palette.common.black, textAlign: "right" }}
-      >
-        {institutionName ? institutionName : ""}
-        {institutionName ? " — " : ""}
-        {branchName}
-      </Typography>
       <Typography
         variant="h6"
         sx={{
@@ -641,260 +813,103 @@ export default function LoanScheduleDraft({
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-      <Box
-        className="no-print"
-        sx={{
-          display: "flex",
-          flexDirection: { xs: "column", md: "row" },
-          alignItems: { xs: "stretch", md: "center" },
-          gap: 1,
-          flexWrap: "wrap",
-        }}
-      >
-        {loanFeeSummary ? (
-          <Box sx={{ width: { xs: "100%", md: "auto" } }}>
-            <FormControlLabel
-              sx={{
-                m: 0,
-                "& .MuiFormControlLabel-label": {
-                  fontSize: theme.typography.caption.fontSize,
-                },
-              }}
-              control={
-                <Checkbox
-                  size="small"
-                  checked={showLoanFees}
-                  onChange={(e) => setShowLoanFees(e.target.checked)}
-                  disabled={readOnly}
-                />
-              }
-              label="Show Loan Fees"
-            />
-          </Box>
-        ) : null}
-        <Box sx={{ width: { xs: "100%", md: "auto" } }}>
-          <FormControlLabel
-            sx={{
-              m: 0,
-              "& .MuiFormControlLabel-label": {
-                fontSize: theme.typography.caption.fontSize,
+      <DraftHeader
+        // Header options
+        showCustomHeader={showCustomHeader}
+        onCustomHeaderChange={setShowCustomHeader}
+        hasCustomHeader={!!headerImageSignedUrl}
+        showCustomHeaderFirstPageOnly={showCustomHeaderFirstPageOnly}
+        onCustomHeaderFirstPageOnlyChange={setShowCustomHeaderFirstPageOnly}
+        // Institution display options
+        showInstitutionName={showInstitutionName}
+        onInstitutionNameChange={setShowInstitutionName}
+        showBranchName={showBranchName}
+        onBranchNameChange={setShowBranchName}
+        // Column visibility
+        visibleColumns={visibleColumns}
+        onColumnVisibilityChange={setVisibleColumns}
+        availableColumns={[
+          { key: "openingBalance", label: "Opening Balance" },
+          { key: "interest", label: "Interest" },
+          { key: "principalRepaid", label: "Principal Repaid" },
+          { key: "closingBalance", label: "Closing Balance" },
+        ]}
+        // Configurable checkbox rows
+        checkboxRows={[
+          {
+            key: "fields",
+            label: "Fields",
+            checkboxes: [
+              ...(loanFeeSummary
+                ? [
+                    {
+                      key: "loanFees",
+                      label: "Loan Fees",
+                      checked: showLoanFees,
+                      onChange: setShowLoanFees,
+                    },
+                  ]
+                : []),
+              {
+                key: "interestRate",
+                label: "Interest Rate",
+                checked: showInterestRate,
+                onChange: setShowInterestRate,
               },
-            }}
-            control={
-              <Checkbox
-                size="small"
-                checked={showInterestRate}
-                onChange={(e) => setShowInterestRate(e.target.checked)}
-                disabled={readOnly}
-              />
-            }
-            label="Show Interest Rate"
-          />
-        </Box>
-        <Box sx={{ width: { xs: "100%", md: "auto" } }}>
-          <FormControlLabel
-            sx={{
-              m: 0,
-              "& .MuiFormControlLabel-label": {
-                fontSize: theme.typography.caption.fontSize,
+              {
+                key: "interestMethod",
+                label: "Interest Method",
+                checked: showInterestMethod,
+                onChange: setShowInterestMethod,
               },
-            }}
-            control={
-              <Checkbox
-                size="small"
-                checked={showInterestMethod}
-                onChange={(e) => setShowInterestMethod(e.target.checked)}
-                disabled={readOnly}
-              />
-            }
-            label="Show Interest Method"
-          />
-        </Box>
-        <Box sx={{ width: { xs: "100%", md: "auto" } }}>
-          <FormControlLabel
-            sx={{
-              m: 0,
-              "& .MuiFormControlLabel-label": {
-                fontSize: theme.typography.caption.fontSize,
+              {
+                key: "totals",
+                label: "Totals",
+                checked: showTotals,
+                onChange: setShowTotals,
               },
-            }}
-            control={
-              <Checkbox
-                size="small"
-                checked={showTotals}
-                onChange={(e) => setShowTotals(e.target.checked)}
-                disabled={readOnly}
-              />
-            }
-            label="Show Totals"
-          />
-        </Box>
-        <Box sx={{ width: { xs: "100%", md: "auto" } }}>
-          <FormControlLabel
-            sx={{
-              m: 0,
-              "& .MuiFormControlLabel-label": {
-                fontSize: theme.typography.caption.fontSize,
-              },
-            }}
-            control={
-              <Checkbox
-                size="small"
-                checked={showColumnOptions}
-                onChange={(e) => setShowColumnOptions(e.target.checked)}
-                disabled={readOnly}
-              />
-            }
-            label="Manage Columns"
-          />
-        </Box>
-        <Box
-          sx={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: 1,
-            justifyContent: { xs: "flex-start", md: "flex-end" },
-            width: "100%",
-            flex: 1,
-          }}
-        >
-          <PlusButtonMain
-            buttonText="EDIT"
-            variant="outlined"
-            startIcon={null}
-            onClick={onEdit}
-            disabled={!onEdit}
-          />
-          <Tooltip title="Saving this draft generates a reference number. You can then edit the details later before creating the loan.">
-            <span>
-              <PlusButtonMain
-                buttonText="SAVE DRAFT"
-                variant="outlined"
-                startIcon={null}
-                onClick={onSaveDraft}
-                disabled={readOnly || !onSaveDraft}
-              />
-            </span>
-          </Tooltip>
-          <PlusButtonMain
-            buttonText="EXPORT PDF"
-            variant="outlined"
-            startIcon={null}
-            onClick={handleExportPdf}
-            disabled={exportingPdf}
-          />
-          <PlusButtonMain
-            buttonText="CREATE LOAN"
-            variant="outlined"
-            startIcon={null}
-            onClick={onConfirmCreateLoan}
-            disabled={readOnly || !onConfirmCreateLoan}
-          />
-        </Box>
-        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, width: "100%" }}>
+            ],
+          },
+        ]}
+        // Actions
+        actions={[
+          {
+            key: "edit",
+            text: "EDIT",
+            onClick: onEdit,
+            disabled: !onEdit,
+          },
+          {
+            key: "save",
+            text: "SAVE DRAFT",
+            onClick: onSaveDraft,
+            disabled: readOnly || !onSaveDraft,
+            tooltip:
+              "Saving this draft generates a reference number. You can then edit the details later before creating the loan.",
+          },
+          {
+            key: "export",
+            text: "EXPORT PDF",
+            onClick: handleExportPdf,
+            disabled: exportingPdf,
+          },
+          {
+            key: "create",
+            text: "CREATE LOAN",
+            onClick: onConfirmCreateLoan,
+            disabled: readOnly || !onConfirmCreateLoan,
+          },
+        ]}
+        // Totals
+        totalsContent={
           <Typography variant="body2">
             <strong>Totals:</strong> Interest{" "}
             <Money value={totals.totalInterest} /> | Payable{" "}
             <Money value={totals.totalPayable} />
           </Typography>
-        </Box>
-
-        {showColumnOptions && (
-          <Box
-            sx={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: 2,
-              width: "100%",
-            }}
-          >
-            <FormControlLabel
-              sx={{
-                m: 0,
-                "& .MuiFormControlLabel-label": {
-                  fontSize: theme.typography.caption.fontSize,
-                },
-              }}
-              control={
-                <Checkbox
-                  size="small"
-                  checked={visibleColumns.openingBalance}
-                  onChange={(e) =>
-                    setVisibleColumns({
-                      ...visibleColumns,
-                      openingBalance: e.target.checked,
-                    })
-                  }
-                />
-              }
-              label="Opening Balance"
-            />
-            <FormControlLabel
-              sx={{
-                m: 0,
-                "& .MuiFormControlLabel-label": {
-                  fontSize: theme.typography.caption.fontSize,
-                },
-              }}
-              control={
-                <Checkbox
-                  size="small"
-                  checked={visibleColumns.interest}
-                  onChange={(e) =>
-                    setVisibleColumns({
-                      ...visibleColumns,
-                      interest: e.target.checked,
-                    })
-                  }
-                />
-              }
-              label="Interest"
-            />
-            <FormControlLabel
-              sx={{
-                m: 0,
-                "& .MuiFormControlLabel-label": {
-                  fontSize: theme.typography.caption.fontSize,
-                },
-              }}
-              control={
-                <Checkbox
-                  size="small"
-                  checked={visibleColumns.principalRepaid}
-                  onChange={(e) =>
-                    setVisibleColumns({
-                      ...visibleColumns,
-                      principalRepaid: e.target.checked,
-                    })
-                  }
-                />
-              }
-              label="Principal Repaid"
-            />
-            <FormControlLabel
-              sx={{
-                m: 0,
-                "& .MuiFormControlLabel-label": {
-                  fontSize: theme.typography.caption.fontSize,
-                },
-              }}
-              control={
-                <Checkbox
-                  size="small"
-                  checked={visibleColumns.closingBalance}
-                  onChange={(e) =>
-                    setVisibleColumns({
-                      ...visibleColumns,
-                      closingBalance: e.target.checked,
-                    })
-                  }
-                />
-              }
-              label="Closing Balance"
-            />
-          </Box>
-        )}
-      </Box>
+        }
+        readOnly={readOnly}
+      />
 
       <WorkingOverlay open={exportingPdf} message="Exporting PDF..." />
 

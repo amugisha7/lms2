@@ -1,13 +1,25 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Box, Tabs, Tab, Paper, useTheme, useMediaQuery } from "@mui/material";
+import { useSearchParams } from "react-router-dom";
 import Settings from "./Settings";
 import AccountInfo from "./AccountInfo";
 import DocumentHeaderSettings from "./DocumentHeaderSettings";
 
 const SettingsWrapper = () => {
+  const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState(0);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
+  useEffect(() => {
+    const tabParam = searchParams.get("tab");
+    if (tabParam) {
+      const tabIndex = parseInt(tabParam, 10);
+      if (!isNaN(tabIndex) && tabIndex >= 0 && tabIndex <= 2) {
+        setActiveTab(tabIndex);
+      }
+    }
+  }, [searchParams]);
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);

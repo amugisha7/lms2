@@ -176,17 +176,12 @@ const Settings = () => {
 
       const updatedInstitution = await updateInstitution(updateData);
 
-      // Update the user context with only the submitted fields
+      // Update the user context with the complete institution data
       setUserDetails({
         ...userDetails,
         institution: {
           ...userDetails.institution,
-          name: updatedInstitution.name,
-          regulatoryRegion: updatedInstitution.regulatoryRegion,
-          currencyCode: updatedInstitution.currencyCode,
-          defaultCurrencyFormat: updatedInstitution.defaultCurrencyFormat,
-          defaultDateFormat: updatedInstitution.defaultDateFormat,
-          defaultLanguage: updatedInstitution.defaultLanguage,
+          ...updatedInstitution,
         },
       });
 

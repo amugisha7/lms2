@@ -149,14 +149,10 @@ const AccountInfo = () => {
 
       const updatedUser = await updateUser(updateData);
 
-      // Update the user context with only the submitted fields
+      // Update the user context with the complete user data
       setUserDetails({
         ...userDetails,
-        firstName: updatedUser.firstName,
-        lastName: updatedUser.lastName,
-        phoneNumber1: updatedUser.phoneNumber1,
-        dateOfBirth: updatedUser.dateOfBirth,
-        nationalID: updatedUser.nationalID,
+        ...updatedUser,
       });
 
       setSubmitSuccess("Account information updated successfully!");

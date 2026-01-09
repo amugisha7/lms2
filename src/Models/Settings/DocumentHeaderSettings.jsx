@@ -27,6 +27,7 @@ const DocumentHeaderSettings = () => {
 
   const uploadingRef = useRef(false);
   const [headerImage, setHeaderImage] = useState(null);
+  const [headerImageSignedUrl, setHeaderImageSignedUrl] = useState(null);
   const [loading, setLoading] = useState(false);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [uploadFileData, setUploadFileData] = useState({
@@ -44,12 +45,45 @@ const DocumentHeaderSettings = () => {
 
   // Initialize header image
   useEffect(() => {
-    if (userDetails?.institution) {
-      const headerImageUrl =
-        userDetails.institution?.customDocumentHeader?.headerImageUrl || null;
-      setHeaderImage(headerImageUrl);
-      setInitializedLoaded(true);
-    }
+    const fetchHeaderImage = async () => {
+      if (userDetails?.institution) {
+        // Parse customDocumentHeader if it's a string
+        let documentHeader = userDetails.institution.customDocumentHeader;
+        if (typeof documentHeader === "string") {
+          try {
+            documentHeader = JSON.parse(documentHeader);
+          } catch (e) {
+            console.error("Failed to parse customDocumentHeader", e);
+            documentHeader = {};
+          }
+        }
+
+        const headerImageUrl = documentHeader?.headerImageUrl || null;
+        setHeaderImage(headerImageUrl);
+
+        // Fetch signed URL if image exists
+        if (headerImageUrl) {
+          try {
+            const signedURL = await getUrl({
+              path: `public/${headerImageUrl}`,
+              options: {
+                expiresIn: 3600, // 1 hour
+              },
+            });
+            setHeaderImageSignedUrl(signedURL.url);
+          } catch (error) {
+            console.error("Error fetching header image URL:", error);
+            setHeaderImageSignedUrl(null);
+          }
+        } else {
+          setHeaderImageSignedUrl(null);
+        }
+
+        setInitializedLoaded(true);
+      }
+    };
+
+    fetchHeaderImage();
   }, [userDetails?.institution]);
 
   const handleFileSelect = (event) => {
@@ -74,13 +108,7 @@ const DocumentHeaderSettings = () => {
       return;
     }
 
-    const allowedTypes = [
-      "image/jpeg",
-      "image/png",
-      "image/gif",
-      "image/bmp",
-      "image/svg+xml",
-    ];
+    const allowedTypes = ["image/jpeg", "image/png", "image/jpg"];
 
     if (!allowedTypes.includes(uploadFileData.file.type)) {
       showSnackbar(
@@ -144,6 +172,7 @@ const DocumentHeaderSettings = () => {
       await updateInstitution(updateData);
 
       setHeaderImage(fileName);
+      setHeaderImageSignedUrl(signedURL.url);
       setUserDetails({
         ...userDetails,
         institution: {
@@ -158,7 +187,8 @@ const DocumentHeaderSettings = () => {
       setUploadFileData({ file: null, preview: null });
     } catch (error) {
       console.error("Error uploading file:", error);
-      const errorMsg = error.message || "Error uploading file. Please try again.";
+      const errorMsg =
+        error.message || "Error uploading file. Please try again.";
       setError(errorMsg);
       showSnackbar(errorMsg, "error");
     } finally {
@@ -290,21 +320,27 @@ const DocumentHeaderSettings = () => {
               overflow: "auto",
             }}
           >
-            <img
-              src={uploadFileData.preview || headerImage}
-              alt="Header preview"
-              style={{
-                maxWidth: "100%",
-                maxHeight: "100%",
-                objectFit: "contain",
-              }}
-            />
+            {headerImageSignedUrl ? (
+              <img
+                src={headerImageSignedUrl}
+                alt="Header preview"
+                style={{
+                  maxWidth: "100%",
+                  maxHeight: "100%",
+                  objectFit: "contain",
+                }}
+              />
+            ) : (
+              <Typography variant="body2" color="text.secondary">
+                Loading image...
+              </Typography>
+            )}
           </Box>
           <Button
-            variant="outlined"
+            // variant="outlined"
             onClick={handlePreview}
             disabled={loading}
-            sx={{ color: theme.palette.blueText.main }}
+            // sx={{ color: theme.palette.blueText.main }}
           >
             View Full Image
           </Button>

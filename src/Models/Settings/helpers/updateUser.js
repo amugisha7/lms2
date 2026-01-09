@@ -49,6 +49,8 @@ const UPDATE_USER_MUTATION = `
         customWorkflowsEnabled
         advancedReportingEnabled
         apiIntegrationSettings
+        customDocumentHeader
+        customInstitutionDetails
         status
         createdAt
         updatedAt

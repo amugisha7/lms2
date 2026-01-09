@@ -26,6 +26,8 @@ const UPDATE_INSTITUTION_MUTATION = `
       customWorkflowsEnabled
       advancedReportingEnabled
       apiIntegrationSettings
+      customDocumentHeader
+      customInstitutionDetails
       status
       createdAt
       updatedAt

@@ -100,7 +100,7 @@ export default function LoanDrafts() {
 
   const onEdit = React.useCallback(
     (id) => {
-      navigate(`/admin/loan-drafts/id/${id}/view`);
+      navigate(`/admin/add-loan?draftId=${id}`);
     },
     [navigate]
   );
@@ -110,7 +110,7 @@ export default function LoanDrafts() {
       const draft = await requireDraft(id);
       const created = await copyLoanDraft({ loanDraft: draft, userDetails });
       setNotification({ type: "success", message: "Draft copied" });
-      navigate(`/admin/loan-drafts/id/${created.id}/view`);
+      navigate(`/admin/add-loan?draftId=${created.id}`);
     } catch (err) {
       console.error(err);
       setNotification({

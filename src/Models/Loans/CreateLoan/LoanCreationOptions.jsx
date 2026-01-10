@@ -1,15 +1,18 @@
 import React, { useState, useContext, useEffect, useRef } from "react";
 import { Box, Tabs, Tab, Typography, useTheme, Grid } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import CreateLoan from "./CreateLoan";
 import UseLoanProduct from "./UseLoanProduct";
 import { UserContext } from "../../../App";
 import { fetchBorrowers, fetchLoanProducts } from "./createLoanHelpers";
 import DropDownSearchable from "../../../Resources/FormComponents/DropDownSearchable";
+import { getLoanDraftById } from "../LoanDrafts/loanDraftHelpers";
 
 export default function LoanCreationOptions(props) {
   const theme = useTheme();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const draftId = searchParams.get("draftId");
   const [tabValue, setTabValue] = useState(0);
   const { userDetails } = useContext(UserContext);
   const [borrowers, setBorrowers] = useState([]);
@@ -17,6 +20,7 @@ export default function LoanCreationOptions(props) {
   const [loanProducts, setLoanProducts] = useState([]);
   const [loanProductsLoading, setLoanProductsLoading] = useState(true);
   const [selectedBorrower, setSelectedBorrower] = useState(null);
+  const [loadingDraft, setLoadingDraft] = useState(!!draftId);
   const borrowersFetchedRef = useRef(false);
   const loanProductsFetchedRef = useRef(null); // store last fetched branch id
 
@@ -49,6 +53,30 @@ export default function LoanCreationOptions(props) {
 
     loadBorrowers();
   }, [userDetails?.branchUsersId, props.borrower]);
+
+  // Load draft if draftId is in URL
+  useEffect(() => {
+    const loadDraft = async () => {
+      if (!draftId || !borrowers.length) return;
+
+      try {
+        setLoadingDraft(true);
+        const draft = await getLoanDraftById(draftId);
+        if (draft && draft.borrowerID) {
+          const borrower = borrowers.find((b) => b.id === draft.borrowerID);
+          if (borrower) {
+            setSelectedBorrower(borrower);
+          }
+        }
+      } catch (err) {
+        console.error("Error loading draft:", err);
+      } finally {
+        setLoadingDraft(false);
+      }
+    };
+
+    loadDraft();
+  }, [draftId, borrowers]);
 
   useEffect(() => {
     const loadLoanProducts = async () => {
@@ -234,6 +262,7 @@ export default function LoanCreationOptions(props) {
               borrowers={borrowers}
               borrowersLoading={borrowersLoading}
               borrower={selectedBorrower}
+              draftId={draftId}
             />
           )}
           {selectedBorrower && tabValue === 1 && (
@@ -245,6 +274,7 @@ export default function LoanCreationOptions(props) {
               borrower={selectedBorrower}
               loanProducts={loanProducts}
               loanProductsLoading={loanProductsLoading}
+              draftId={draftId}
             />
           )}
         </>

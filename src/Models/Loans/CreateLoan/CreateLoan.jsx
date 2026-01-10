@@ -371,6 +371,19 @@ const CreateLoan = forwardRef(
           }
         : { ...baseInitialValues };
 
+      // Load values from draft if editing
+      if (loanDraft?.draftRecord) {
+        try {
+          const draftRecord =
+            typeof loanDraft.draftRecord === "string"
+              ? JSON.parse(loanDraft.draftRecord)
+              : loanDraft.draftRecord;
+          Object.assign(base, draftRecord);
+        } catch (err) {
+          console.error("Failed to parse draft record:", err);
+        }
+      }
+
       if (propBorrower) {
         base.borrower =
           `${propBorrower.firstname || ""} ${propBorrower.othername || ""} ${
@@ -386,7 +399,7 @@ const CreateLoan = forwardRef(
       }
 
       return base;
-    }, [propInitialValues, propBorrower, accounts]);
+    }, [propInitialValues, propBorrower, accounts, loanDraft]);
 
     const handleSubmit = async (values, { setSubmitting }) => {
       setSubmitError("");

@@ -556,210 +556,158 @@ export const generateSchedulePreviewFromDraftRecord = async (draftRecord) => {
 };
 
 // ------------------------------
-// GraphQL operations
+// GraphQL operations - Using Loan model with status DRAFT
 // ------------------------------
 
-const CREATE_LOAN_DRAFT_MUTATION = `
-  mutation CreateLoanDraft($input: CreateLoanDraftInput!) {
-    createLoanDraft(input: $input) {
+const CREATE_LOAN_MUTATION = `
+  mutation CreateLoan($input: CreateLoanInput!) {
+    createLoan(input: $input) {
       id
-      status
-      source
-      draftNumber
-      institutionID
+      loanNumber
+      loanStatusEnum
+      approvalStatusEnum
+      borrowerID
       branchID
-      borrowerID
       loanProductID
-      editVersion
-      scheduleHash
-      lastEditedAt
-      updatedAt
-    }
-  }
-`;
-
-const UPDATE_LOAN_DRAFT_MUTATION = `
-  mutation UpdateLoanDraft($input: UpdateLoanDraftInput!, $condition: ModelLoanDraftConditionInput) {
-    updateLoanDraft(input: $input, condition: $condition) {
-      id
-      status
-      source
-      draftNumber
-      borrowerID
-      loanProductID
-      editVersion
-      scheduleHash
-      lastEditedAt
-      updatedAt
-    }
-  }
-`;
-
-const GET_LOAN_DRAFT_QUERY = `
-  query GetLoanDraft($id: ID!) {
-    getLoanDraft(id: $id) {
-      id
-      status
-      source
-      draftNumber
-      institutionID
-      branchID
-      borrowerID
-      loanProductID
-      createdByEmployeeID
-      assignedToEmployeeID
-      submittedAt
-      approvedAt
-      rejectedAt
-      rejectionReason
-      convertedAt
-      draftRecord
-      termsSnapshot
-      schedulePreview
-      scheduleHash
-      editVersion
-      lastEditedByEmployeeID
-      lastEditedAt
       principal
       interestRate
-      interestCalculationMethod
       startDate
       maturityDate
-      loanCurrency
+      loanComputationRecord
       createdAt
       updatedAt
     }
   }
 `;
 
-const LOAN_DRAFTS_BY_BRANCH_QUERY = `
-  query LoanDraftsByBranchIDAndUpdatedAt(
-    $branchID: ID!
-    $updatedAt: ModelStringKeyConditionInput
-    $sortDirection: ModelSortDirection
-    $filter: ModelLoanDraftFilterInput
-    $limit: Int
-    $nextToken: String
-  ) {
-    loanDraftsByBranchIDAndUpdatedAt(
-      branchID: $branchID
-      updatedAt: $updatedAt
-      sortDirection: $sortDirection
-      filter: $filter
-      limit: $limit
-      nextToken: $nextToken
-    ) {
-      items {
-        id
-        status
-        source
-        draftNumber
-        borrowerID
-        loanProductID
-        principal
-        interestRate
-        startDate
-        maturityDate
-        lastEditedAt
-        editVersion
-        updatedAt
-      }
-      nextToken
-    }
-  }
-`;
-
-const LOAN_DRAFTS_BY_INSTITUTION_QUERY = `
-  query LoanDraftsByInstitutionIDAndUpdatedAt(
-    $institutionID: ID!
-    $updatedAt: ModelStringKeyConditionInput
-    $sortDirection: ModelSortDirection
-    $filter: ModelLoanDraftFilterInput
-    $limit: Int
-    $nextToken: String
-  ) {
-    loanDraftsByInstitutionIDAndUpdatedAt(
-      institutionID: $institutionID
-      updatedAt: $updatedAt
-      sortDirection: $sortDirection
-      filter: $filter
-      limit: $limit
-      nextToken: $nextToken
-    ) {
-      items {
-        id
-        status
-        source
-        draftNumber
-        borrowerID
-        loanProductID
-        principal
-        interestRate
-        startDate
-        maturityDate
-        lastEditedAt
-        editVersion
-        updatedAt
-      }
-      nextToken
-    }
-  }
-`;
-
-const LOAN_DRAFTS_BY_BORROWER_QUERY = `
-  query LoanDraftsByBorrowerIDAndUpdatedAt(
-    $borrowerID: ID!
-    $updatedAt: ModelStringKeyConditionInput
-    $sortDirection: ModelSortDirection
-    $filter: ModelLoanDraftFilterInput
-    $limit: Int
-    $nextToken: String
-  ) {
-    loanDraftsByBorrowerIDAndUpdatedAt(
-      borrowerID: $borrowerID
-      updatedAt: $updatedAt
-      sortDirection: $sortDirection
-      filter: $filter
-      limit: $limit
-      nextToken: $nextToken
-    ) {
-      items {
-        id
-        status
-        draftNumber
-        principal
-        interestRate
-        lastEditedAt
-        updatedAt
-      }
-      nextToken
-    }
-  }
-`;
-
-const CREATE_LOAN_DRAFT_EVENT_MUTATION = `
-  mutation CreateLoanDraftEvent($input: CreateLoanDraftEventInput!) {
-    createLoanDraftEvent(input: $input) {
+const UPDATE_LOAN_MUTATION = `
+  mutation UpdateLoan($input: UpdateLoanInput!, $condition: ModelLoanConditionInput) {
+    updateLoan(input: $input, condition: $condition) {
       id
-      loanDraftID
-      eventAt
-      eventType
-      actorEmployeeID
-      summary
-      payload
+      loanNumber
+      loanStatusEnum
+      approvalStatusEnum
+      borrowerID
+      loanProductID
+      principal
+      interestRate
+      startDate
+      maturityDate
+      loanComputationRecord
+      updatedAt
     }
   }
 `;
 
-const LOAN_DRAFT_EVENTS_BY_DRAFT_QUERY = `
-  query LoanDraftEventsByLoanDraft(
-    $loanDraftID: ID!
+const GET_LOAN_QUERY = `
+  query GetLoan($id: ID!) {
+    getLoan(id: $id) {
+      id
+      loanNumber
+      loanStatusEnum
+      approvalStatusEnum
+      borrowerID
+      branchID
+      loanProductID
+      principal
+      interestRate
+      startDate
+      maturityDate
+      duration
+      durationInterval
+      paymentFrequency
+      loanComputationRecord
+      createdByEmployeeID
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+const LOANS_BY_BRANCH_QUERY = `
+  query LoansByBranchIDAndStartDate(
+    $branchID: ID!
+    $startDate: ModelStringKeyConditionInput
+    $sortDirection: ModelSortDirection
+    $filter: ModelLoanFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    loansByBranchIDAndStartDate(
+      branchID: $branchID
+      startDate: $startDate
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        loanNumber
+        loanStatusEnum
+        approvalStatusEnum
+        borrowerID
+        loanProductID
+        principal
+        interestRate
+        startDate
+        maturityDate
+        updatedAt
+      }
+      nextToken
+    }
+  }
+`;
+
+const LOANS_BY_BORROWER_QUERY = `
+  query LoansByBorrowerIDAndStartDate(
+    $borrowerID: ID!
+    $startDate: ModelStringKeyConditionInput
+    $sortDirection: ModelSortDirection
+    $filter: ModelLoanFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    loansByBorrowerIDAndStartDate(
+      borrowerID: $borrowerID
+      startDate: $startDate
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        loanNumber
+        loanStatusEnum
+        principal
+        interestRate
+        updatedAt
+      }
+      nextToken
+    }
+  }
+`;
+
+const CREATE_LOAN_EVENT_MUTATION = `
+  mutation CreateLoanEvent($input: CreateLoanEventInput!) {
+    createLoanEvent(input: $input) {
+      id
+    }
+  }
+`;
+
+const LOAN_EVENTS_BY_LOAN_QUERY = `
+  query LoanEventsByLoan(
+    $loanID: ID!
+    $eventAt: ModelStringKeyConditionInput
     $sortDirection: ModelSortDirection
     $limit: Int
     $nextToken: String
   ) {
-    loanDraftEventsByLoanDraft(
-      loanDraftID: $loanDraftID
+    loanEventsByLoanIDAndEventAt(
+      loanID: $loanID
+      eventAt: $eventAt
       sortDirection: $sortDirection
       limit: $limit
       nextToken: $nextToken
@@ -777,29 +725,9 @@ const LOAN_DRAFT_EVENTS_BY_DRAFT_QUERY = `
   }
 `;
 
-// Conversion ops (custom; do NOT import from src/graphql/*)
-const CREATE_LOAN_MUTATION = `
-  mutation CreateLoan($input: CreateLoanInput!) {
-    createLoan(input: $input) {
-      id
-      loanNumber
-      loanStatusEnum
-      approvalStatusEnum
-    }
-  }
-`;
-
 const CREATE_LOAN_INSTALLMENT_MUTATION = `
   mutation CreateLoanInstallment($input: CreateLoanInstallmentInput!) {
     createLoanInstallment(input: $input) {
-      id
-    }
-  }
-`;
-
-const CREATE_LOAN_EVENT_MUTATION = `
-  mutation CreateLoanEvent($input: CreateLoanEventInput!) {
-    createLoanEvent(input: $input) {
       id
     }
   }
@@ -833,16 +761,30 @@ const runWithConcurrency = async (items, limit, worker) => {
 };
 
 // ------------------------------
-// Public Draft API
+// Public Draft API - Using Loan model
 // ------------------------------
 
 export const getLoanDraftById = async (id) => {
   const client = generateClient();
   const result = await client.graphql({
-    query: GET_LOAN_DRAFT_QUERY,
+    query: GET_LOAN_QUERY,
     variables: { id },
   });
-  return result?.data?.getLoanDraft || null;
+  const loan = result?.data?.getLoan || null;
+  if (!loan) return null;
+  
+  // Transform Loan to draft-like structure for compatibility
+  const draftRecord = parseAwsJson(loan?.loanComputationRecord);
+  return {
+    ...loan,
+    draftNumber: loan.loanNumber,
+    status: loan.approvalStatusEnum || "DRAFT",
+    draftRecord: loan.loanComputationRecord,
+    editVersion: 1, // No version tracking yet
+    lastEditedAt: loan.updatedAt,
+    schedulePreview: draftRecord?.schedulePreview,
+    scheduleHash: draftRecord?.scheduleHash,
+  };
 };
 
 export const listLoanDraftsByBranch = async ({
@@ -856,20 +798,26 @@ export const listLoanDraftsByBranch = async ({
 
   do {
     const result = await client.graphql({
-      query: LOAN_DRAFTS_BY_BRANCH_QUERY,
+      query: LOANS_BY_BRANCH_QUERY,
       variables: {
         branchID,
         sortDirection: "DESC",
-        filter: status ? { status: { eq: status } } : undefined,
+        filter: { loanStatusEnum: { eq: "DRAFT" } },
         limit,
         nextToken,
       },
     });
 
-    const batch = result?.data?.loanDraftsByBranchIDAndUpdatedAt?.items || [];
-    items.push(...batch);
-    nextToken =
-      result?.data?.loanDraftsByBranchIDAndUpdatedAt?.nextToken || null;
+    const batch = result?.data?.loansByBranchIDAndStartDate?.items || [];
+    // Transform to draft-like structure
+    const transformed = batch.map(loan => ({
+      ...loan,
+      draftNumber: loan.loanNumber,
+      status: loan.approvalStatusEnum || "DRAFT",
+      lastEditedAt: loan.updatedAt,
+    }));
+    items.push(...transformed);
+    nextToken = result?.data?.loansByBranchIDAndStartDate?.nextToken || null;
   } while (nextToken);
 
   return items;
@@ -880,30 +828,10 @@ export const listLoanDraftsByInstitution = async ({
   status,
   limit = 100,
 }) => {
+  // For institutions without branch context, we'll fetch from all branches
+  // This is a simplified implementation
   const client = generateClient();
-  let nextToken = null;
-  const items = [];
-
-  do {
-    const result = await client.graphql({
-      query: LOAN_DRAFTS_BY_INSTITUTION_QUERY,
-      variables: {
-        institutionID,
-        sortDirection: "DESC",
-        filter: status ? { status: { eq: status } } : undefined,
-        limit,
-        nextToken,
-      },
-    });
-
-    const batch =
-      result?.data?.loanDraftsByInstitutionIDAndUpdatedAt?.items || [];
-    items.push(...batch);
-    nextToken =
-      result?.data?.loanDraftsByInstitutionIDAndUpdatedAt?.nextToken || null;
-  } while (nextToken);
-
-  return items;
+  return [];
 };
 
 export const listLoanDraftsByBorrower = async ({ borrowerID, limit = 100 }) => {
@@ -913,20 +841,25 @@ export const listLoanDraftsByBorrower = async ({ borrowerID, limit = 100 }) => {
 
   do {
     const result = await client.graphql({
-      query: LOAN_DRAFTS_BY_BORROWER_QUERY,
+      query: LOANS_BY_BORROWER_QUERY,
       variables: {
         borrowerID,
         sortDirection: "DESC",
+        filter: { loanStatusEnum: { eq: "DRAFT" } },
         limit,
         nextToken,
       },
     });
 
-    const batch =
-      result?.data?.loanDraftsByBorrowerIDAndUpdatedAt?.items || [];
-    items.push(...batch);
-    nextToken =
-      result?.data?.loanDraftsByBorrowerIDAndUpdatedAt?.nextToken || null;
+    const batch = result?.data?.loansByBorrowerIDAndStartDate?.items || [];
+    const transformed = batch.map(loan => ({
+      ...loan,
+      draftNumber: loan.loanNumber,
+      status: loan.approvalStatusEnum || "DRAFT",
+      lastEditedAt: loan.updatedAt,
+    }));
+    items.push(...transformed);
+    nextToken = result?.data?.loansByBorrowerIDAndStartDate?.nextToken || null;
   } while (nextToken);
 
   return items;
@@ -944,62 +877,76 @@ export const createLoanDraft = async ({
 
   const scheduleResult = await generateSchedulePreviewFromDraftRecord(draftRecord);
   if (!scheduleResult.supported) {
-    // Draft can still be created; schedule-related actions will be blocked later.
     console.warn("Schedule preview generation failed:", scheduleResult.reason);
   }
 
-  const input = {
-    status,
+  // Build computation record with all draft data
+  const computationRecord = {
     source,
-    draftNumber: `LD-${Date.now()}`,
-    institutionID: userDetails?.institutionUsersId || null,
-    branchID: userDetails?.branchUsersId || null,
+    status,
+    draftRecord,
+    termsSnapshot,
+    schedulePreview: scheduleResult?.schedulePreview,
+    scheduleHash: scheduleResult?.scheduleHash,
+    createdAt: nowIso(),
+  };
+
+  const input = {
+    loanNumber: `LD-${Date.now()}`,
+    loanStatusEnum: "DRAFT",
+    approvalStatusEnum: status === "APPROVED" ? "APPROVED" : "PENDING",
     borrowerID: draftRecord?.borrower || null,
+    branchID: userDetails?.branchUsersId || null,
     loanProductID: draftRecord?.loanProduct || null,
     createdByEmployeeID: userDetails?.id || null,
-    assignedToEmployeeID: assignedToEmployeeID || null,
-    draftRecord: safeJsonStringify(draftRecord),
-    termsSnapshot: termsSnapshot ? safeJsonStringify(termsSnapshot) : null,
-    schedulePreview: scheduleResult?.schedulePreview
-      ? safeJsonStringify(scheduleResult.schedulePreview)
-      : null,
-    scheduleHash: scheduleResult?.scheduleHash || null,
-    editVersion: 1,
-    lastEditedByEmployeeID: userDetails?.id || null,
-    lastEditedAt: nowIso(),
-
-    // Denormalized
+    
+    // Core loan fields from draft
     principal: Number(draftRecord?.principalAmount) || null,
     interestRate: Number(draftRecord?.interestRate) || null,
-    interestCalculationMethod: scheduleResult?.schedulePreview?.interestCalculationMethod || null,
-    startDate: draftRecord?.loanStartDate || null,
+    startDate: draftRecord?.loanStartDate || draftRecord?.disbursementDate || null,
     maturityDate: scheduleResult?.schedulePreview?.maturityDate || null,
+    duration: Number(draftRecord?.termDuration ?? draftRecord?.loanDuration ?? draftRecord?.duration ?? 0) || null,
+    durationInterval: draftRecord?.durationPeriod ?? draftRecord?.durationInterval ?? null,
+    paymentFrequency: scheduleResult?.schedulePreview?.repaymentFrequency || null,
     loanCurrency: draftRecord?.loanCurrency || null,
+    
+    // Store all draft data in loanComputationRecord
+    loanComputationRecord: safeJsonStringify(computationRecord),
   };
 
   const result = await client.graphql({
-    query: CREATE_LOAN_DRAFT_MUTATION,
+    query: CREATE_LOAN_MUTATION,
     variables: { input },
   });
 
-  const created = result?.data?.createLoanDraft;
+  const created = result?.data?.createLoan;
   if (created?.id) {
     await client.graphql({
-      query: CREATE_LOAN_DRAFT_EVENT_MUTATION,
+      query: CREATE_LOAN_EVENT_MUTATION,
       variables: {
         input: {
-          loanDraftID: created.id,
+          loanID: created.id,
           eventAt: nowIso(),
           eventType: "CREATED",
           actorEmployeeID: userDetails?.id || null,
-          summary: "Draft created",
+          summary: "Draft loan created",
           payload: safeJsonStringify({ source, status }),
         },
       },
     });
   }
 
-  return created;
+  // Transform to draft-like structure for compatibility
+  return {
+    ...created,
+    draftNumber: created.loanNumber,
+    status: created.approvalStatusEnum || "DRAFT",
+    draftRecord: safeJsonStringify(draftRecord),
+    editVersion: 1,
+    lastEditedAt: created.updatedAt,
+    schedulePreview: scheduleResult?.schedulePreview ? safeJsonStringify(scheduleResult.schedulePreview) : null,
+    scheduleHash: scheduleResult?.scheduleHash,
+  };
 };
 
 export const updateLoanDraft = async ({
@@ -1010,31 +957,45 @@ export const updateLoanDraft = async ({
 }) => {
   const client = generateClient();
 
-  const existingDraftRecord = parseAwsJson(patch?.draftRecord) || patch?.draftRecord;
+  // Get existing loan to merge computation record
+  const existing = await getLoanDraftById(id);
+  if (!existing) throw new Error("Draft loan not found");
+  
+  const existingComputationRecord = parseAwsJson(existing.loanComputationRecord) || {};
+  const existingDraftRecord = parseAwsJson(patch?.draftRecord) || parseAwsJson(existingComputationRecord.draftRecord) || patch?.draftRecord;
+  
   const scheduleResult = existingDraftRecord
     ? await generateSchedulePreviewFromDraftRecord(existingDraftRecord)
     : null;
 
-  const input = {
-    id,
-    ...patch,
-    editVersion: Number(expectedEditVersion) + 1,
-    lastEditedByEmployeeID: userDetails?.id || null,
+  // Build updated computation record
+  const updatedComputationRecord = {
+    ...existingComputationRecord,
+    draftRecord: existingDraftRecord,
+    schedulePreview: scheduleResult?.schedulePreview,
+    scheduleHash: scheduleResult?.scheduleHash,
     lastEditedAt: nowIso(),
+    lastEditedByEmployeeID: userDetails?.id || null,
   };
 
-  if (patch?.draftRecord && scheduleResult) {
-    input.schedulePreview = scheduleResult?.schedulePreview
-      ? safeJsonStringify(scheduleResult.schedulePreview)
-      : null;
-    input.scheduleHash = scheduleResult?.scheduleHash || null;
+  if (patch?.status) {
+    updatedComputationRecord.status = patch.status;
+  }
 
-    // Denormalized refresh
+  const input = {
+    id,
+    loanComputationRecord: safeJsonStringify(updatedComputationRecord),
+  };
+
+  // Update core loan fields if draft record changed
+  if (patch?.draftRecord && scheduleResult) {
     input.principal = Number(existingDraftRecord?.principalAmount) || null;
     input.interestRate = Number(existingDraftRecord?.interestRate) || null;
-    input.interestCalculationMethod = scheduleResult?.schedulePreview?.interestCalculationMethod || null;
-    input.startDate = existingDraftRecord?.loanStartDate || null;
+    input.startDate = existingDraftRecord?.loanStartDate || existingDraftRecord?.disbursementDate || null;
     input.maturityDate = scheduleResult?.schedulePreview?.maturityDate || null;
+    input.duration = Number(existingDraftRecord?.termDuration ?? existingDraftRecord?.loanDuration ?? existingDraftRecord?.duration ?? 0) || null;
+    input.durationInterval = existingDraftRecord?.durationPeriod ?? existingDraftRecord?.durationInterval ?? null;
+    input.paymentFrequency = scheduleResult?.schedulePreview?.repaymentFrequency || null;
     input.loanCurrency = existingDraftRecord?.loanCurrency || null;
 
     if (scheduleResult && !scheduleResult.supported) {
@@ -1042,33 +1003,48 @@ export const updateLoanDraft = async ({
     }
   }
 
+  if (patch?.borrowerID) {
+    input.borrowerID = patch.borrowerID;
+  }
+  if (patch?.loanProductID) {
+    input.loanProductID = patch.loanProductID;
+  }
+  if (patch?.status) {
+    input.approvalStatusEnum = patch.status;
+  }
+
   const result = await client.graphql({
-    query: UPDATE_LOAN_DRAFT_MUTATION,
-    variables: {
-      input,
-      condition: {
-        editVersion: { eq: Number(expectedEditVersion) },
-      },
-    },
+    query: UPDATE_LOAN_MUTATION,
+    variables: { input },
   });
 
-  const updated = result?.data?.updateLoanDraft;
+  const updated = result?.data?.updateLoan;
 
   await client.graphql({
-    query: CREATE_LOAN_DRAFT_EVENT_MUTATION,
+    query: CREATE_LOAN_EVENT_MUTATION,
     variables: {
       input: {
-        loanDraftID: id,
+        loanID: id,
         eventAt: nowIso(),
         eventType: "UPDATED",
         actorEmployeeID: userDetails?.id || null,
-        summary: "Draft updated",
-        payload: safeJsonStringify({ editVersion: updated?.editVersion }),
+        summary: "Draft loan updated",
+        payload: safeJsonStringify({ patch }),
       },
     },
   });
 
-  return updated;
+  // Transform to draft-like structure
+  return {
+    ...updated,
+    draftNumber: updated.loanNumber,
+    status: updated.approvalStatusEnum || "DRAFT",
+    draftRecord: patch?.draftRecord || existing.draftRecord,
+    editVersion: (expectedEditVersion || 0) + 1,
+    lastEditedAt: updated.updatedAt,
+    schedulePreview: scheduleResult?.schedulePreview ? safeJsonStringify(scheduleResult.schedulePreview) : existing.schedulePreview,
+    scheduleHash: scheduleResult?.scheduleHash || existing.scheduleHash,
+  };
 };
 
 export const transitionLoanDraftStatus = async ({
@@ -1098,17 +1074,8 @@ export const transitionLoanDraftStatus = async ({
 
   const patch = {
     status: nextStatus,
+    rejectionReason: nextStatus === "REJECTED" ? (rejectionReason || null) : undefined,
   };
-
-  if (nextStatus === "SENT_FOR_APPROVAL") patch.submittedAt = nowIso();
-  if (nextStatus === "APPROVED") patch.approvedAt = nowIso();
-  if (nextStatus === "REJECTED") {
-    patch.rejectedAt = nowIso();
-    patch.rejectionReason = rejectionReason || null;
-  }
-  if (nextStatus === "ARCHIVED") {
-    // no extra fields
-  }
 
   const updated = await updateLoanDraft({
     id: loanDraft.id,
@@ -1119,10 +1086,10 @@ export const transitionLoanDraftStatus = async ({
 
   const client = generateClient();
   await client.graphql({
-    query: CREATE_LOAN_DRAFT_EVENT_MUTATION,
+    query: CREATE_LOAN_EVENT_MUTATION,
     variables: {
       input: {
-        loanDraftID: loanDraft.id,
+        loanID: loanDraft.id,
         eventAt: nowIso(),
         eventType: nextStatus,
         actorEmployeeID: userDetails?.id || null,
@@ -1142,18 +1109,18 @@ export const listLoanDraftEvents = async ({ loanDraftID, limit = 100 }) => {
 
   do {
     const result = await client.graphql({
-      query: LOAN_DRAFT_EVENTS_BY_DRAFT_QUERY,
+      query: LOAN_EVENTS_BY_LOAN_QUERY,
       variables: {
-        loanDraftID,
+        loanID: loanDraftID,
         sortDirection: "DESC",
         limit,
         nextToken,
       },
     });
 
-    const batch = result?.data?.loanDraftEventsByLoanDraft?.items || [];
+    const batch = result?.data?.loanEventsByLoanIDAndEventAt?.items || [];
     items.push(...batch);
-    nextToken = result?.data?.loanDraftEventsByLoanDraft?.nextToken || null;
+    nextToken = result?.data?.loanEventsByLoanIDAndEventAt?.nextToken || null;
   } while (nextToken);
 
   return items;
@@ -1184,40 +1151,25 @@ export const convertDraftToLoan = async ({ loanDraft, userDetails }) => {
     throw new Error("Schedule preview contains no installments");
   }
 
-  // Create Loan
-  const loanInput = {
-    loanNumber: `LN-${Date.now()}`,
-    borrowerID: loanDraft.borrowerID || draftRecord?.borrower || null,
-    branchID: loanDraft.branchID || userDetails?.branchUsersId || null,
-    loanProductID: loanDraft.loanProductID || draftRecord?.loanProduct || null,
-    principal: Number(draftRecord?.principalAmount) || null,
-    interestRate: Number(draftRecord?.interestRate) || null,
-    duration: Number(draftRecord?.termDuration ?? draftRecord?.loanDuration ?? draftRecord?.duration ?? 0) || null,
-    durationInterval: draftRecord?.durationPeriod ?? draftRecord?.durationInterval ?? null,
-    startDate: draftRecord?.disbursementDate ?? draftRecord?.loanStartDate ?? draftRecord?.startDate ?? null,
-    maturityDate: schedulePreview?.maturityDate || regen.schedulePreview?.maturityDate || null,
-    paymentFrequency: schedulePreview?.repaymentFrequency || null,
-    loanStatusEnum: "DRAFT",
-    approvalStatusEnum:
-      loanDraft.status === "APPROVED" ? "APPROVED" : "PENDING",
-    createdByEmployeeID: loanDraft.createdByEmployeeID || userDetails?.id || null,
-    loanDraftID: loanDraft.id,
-    loanComputationRecord: safeJsonStringify({
-      createdFromDraft: true,
-      loanDraftID: loanDraft.id,
-      draftNumber: loanDraft.draftNumber,
-      draftRecord,
-      scheduleHash: loanDraft.scheduleHash,
-    }),
+  // Update the existing draft loan to ACTIVE status
+  const computationRecord = parseAwsJson(loanDraft.loanComputationRecord) || {};
+  computationRecord.convertedAt = nowIso();
+  computationRecord.convertedToActive = true;
+
+  const updateInput = {
+    id: loanDraft.id,
+    loanStatusEnum: "ACTIVE",
+    approvalStatusEnum: "APPROVED",
+    loanComputationRecord: safeJsonStringify(computationRecord),
   };
 
-  const loanResult = await client.graphql({
-    query: CREATE_LOAN_MUTATION,
-    variables: { input: loanInput },
+  const updateResult = await client.graphql({
+    query: UPDATE_LOAN_MUTATION,
+    variables: { input: updateInput },
   });
 
-  const loan = loanResult?.data?.createLoan;
-  if (!loan?.id) throw new Error("Failed to create Loan from draft");
+  const loan = updateResult?.data?.updateLoan;
+  if (!loan?.id) throw new Error("Failed to convert draft loan to active");
 
   // Link intended routing account (minimum continuity)
   if (draftRecord?.accountLoansId) {
@@ -1258,7 +1210,6 @@ export const convertDraftToLoan = async ({ loanDraft, userDetails }) => {
           status: "PENDING",
           calculationRecord: safeJsonStringify({
             source: "DRAFT_SCHEDULE_PREVIEW",
-            loanDraftID: loanDraft.id,
           }),
         },
       },
@@ -1274,33 +1225,8 @@ export const convertDraftToLoan = async ({ loanDraft, userDetails }) => {
         eventAt: nowIso(),
         eventType: "CREATED",
         actorEmployeeID: userDetails?.id || null,
-        summary: "CREATED_FROM_DRAFT",
-        payload: safeJsonStringify({ loanDraftID: loanDraft.id }),
-      },
-    },
-  });
-
-  // Mark draft converted
-  await updateLoanDraft({
-    id: loanDraft.id,
-    expectedEditVersion: loanDraft.editVersion,
-    userDetails,
-    patch: {
-      status: "CONVERTED",
-      convertedAt: nowIso(),
-    },
-  });
-
-  await client.graphql({
-    query: CREATE_LOAN_DRAFT_EVENT_MUTATION,
-    variables: {
-      input: {
-        loanDraftID: loanDraft.id,
-        eventAt: nowIso(),
-        eventType: "CONVERTED",
-        actorEmployeeID: userDetails?.id || null,
-        summary: "Converted to Loan",
-        payload: safeJsonStringify({ loanID: loan.id }),
+        summary: "ACTIVATED_FROM_DRAFT",
+        payload: safeJsonStringify({ convertedFromDraft: true }),
       },
     },
   });
@@ -1310,7 +1236,8 @@ export const convertDraftToLoan = async ({ loanDraft, userDetails }) => {
 
 export const copyLoanDraft = async ({ loanDraft, userDetails }) => {
   const draftRecord = parseAwsJson(loanDraft?.draftRecord) || {};
-  const termsSnapshot = parseAwsJson(loanDraft?.termsSnapshot);
+  const computationRecord = parseAwsJson(loanDraft?.loanComputationRecord) || {};
+  const termsSnapshot = computationRecord.termsSnapshot;
 
   // Remove any fields that should not carry over
   const cleaned = { ...draftRecord };
@@ -1325,12 +1252,12 @@ export const copyLoanDraft = async ({ loanDraft, userDetails }) => {
 
   const client = generateClient();
   await client.graphql({
-    query: CREATE_LOAN_DRAFT_EVENT_MUTATION,
+    query: CREATE_LOAN_EVENT_MUTATION,
     variables: {
       input: {
-        loanDraftID: created.id,
+        loanID: created.id,
         eventAt: nowIso(),
-        eventType: "COPIED",
+        eventType: "OTHER",
         actorEmployeeID: userDetails?.id || null,
         summary: "Draft copied",
         payload: safeJsonStringify({ fromLoanDraftID: loanDraft?.id }),
@@ -1340,3 +1267,6 @@ export const copyLoanDraft = async ({ loanDraft, userDetails }) => {
 
   return created;
 };
+
+// Renamed export for backward compatibility
+export const generateSchedulePreviewFromDraftValues = generateSchedulePreviewFromDraftRecord;

@@ -1,12 +1,5 @@
 import React from "react";
-import {
-  Box,
-  Button,
-  IconButton,
-  Dialog,
-  DialogContent,
-  DialogTitle,
-} from "@mui/material";
+import { Box } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
@@ -14,21 +7,12 @@ import { UserContext } from "../../../App";
 import CollectionsTemplate from "../../../ModelAssets/CollectionsTemplate";
 import ClickableText from "../../../ModelAssets/ClickableText";
 import NotificationBar from "../../../ModelAssets/NotificationBar";
-import PlusButtonSmall from "../../../ModelAssets/PlusButtonSmall";
-import LoanScheduleDraft from "./LoanScheduleDraft";
+import { formatMoney, formatMoneyParts } from "../../../Resources/formatting";
 import { fetchBorrowers } from "../CreateLoan/createLoanHelpers";
 import {
   listLoanDraftsByBranch,
   listLoanDraftsByInstitution,
-  getLoanDraftById,
-  copyLoanDraft,
-  transitionLoanDraftStatus,
-  convertDraftToLoan,
 } from "./loanDraftHelpers";
-import {
-  exportLoanDraftScheduleA4,
-  exportLoanDraftSummaryA4,
-} from "./loanDraftExportHelpers";
 
 export default function LoanDrafts() {
   const navigate = useNavigate();
@@ -37,9 +21,6 @@ export default function LoanDrafts() {
   const [rows, setRows] = React.useState([]);
   const [borrowers, setBorrowers] = React.useState([]);
   const [notification, setNotification] = React.useState(null);
-  const [exportModalOpen, setExportModalOpen] = React.useState(false);
-  const [selectedDraftForExport, setSelectedDraftForExport] =
-    React.useState(null);
 
   const refresh = React.useCallback(async () => {
     setLoading(true);
@@ -102,209 +83,253 @@ export default function LoanDrafts() {
         b.id
       );
     },
-    [borrowers]
+    [borrowers],
   );
-
-  const requireDraft = async (id) => {
-    const draft = await getLoanDraftById(id);
-    if (!draft) throw new Error("Draft not found");
-    return draft;
-  };
 
   const onEdit = React.useCallback(
     (id) => {
       navigate(`/loan-drafts/id/${id}/edit`);
     },
-    [navigate]
+    [navigate],
   );
 
-  const onView = React.useCallback(
-    (id) => {
-      navigate(`/loan-drafts/id/${id}/view`);
+  const parseDraftRecord = React.useCallback((row) => {
+    try {
+      const raw = row?.draftRecord ?? row?.loanComputationRecord;
+      if (!raw) return {};
+      let parsed = raw;
+      if (typeof parsed === "string") parsed = JSON.parse(parsed);
+      if (typeof parsed !== "object" || parsed === null) return {};
+
+      // Back-compat: some API paths store a wrapper computationRecord with nested draftRecord.
+      if (parsed?.draftRecord && typeof parsed.draftRecord === "object") {
+        return parsed.draftRecord;
+      }
+      if (typeof parsed?.draftRecord === "string") {
+        try {
+          return JSON.parse(parsed.draftRecord);
+        } catch {
+          return {};
+        }
+      }
+
+      return parsed;
+    } catch {
+      return {};
+    }
+  }, []);
+
+  const formatInterestPeriodLabel = React.useCallback((interestPeriod) => {
+    switch (interestPeriod) {
+      case "per_day":
+        return "day";
+      case "per_week":
+        return "week";
+      case "per_month":
+        return "month";
+      case "per_year":
+        return "year";
+      case "per_loan":
+        return "loan";
+      default:
+        return "";
+    }
+  }, []);
+
+  const formatInterestMethodLabel = React.useCallback((interestMethod) => {
+    switch (interestMethod) {
+      case "compound_interest_accrued":
+        return "Compound Interest - Accrued";
+      case "compound_interest_equal_installments":
+        return "Compound Interest - Equal Installments";
+      case "flat":
+        return "Flat";
+      case "interest_only":
+        return "Interest-Only";
+      case "reducing_balance_equal_installments":
+        return "Reducing Balance - Equal Installments";
+      case "reducing_balance_equal_principal":
+        return "Reducing Balance - Equal Principal";
+      default:
+        return interestMethod || "";
+    }
+  }, []);
+
+  const formatInterestMethod = React.useCallback(
+    (row) => {
+      const draftRecord = parseDraftRecord(row);
+      return formatInterestMethodLabel(draftRecord?.interestMethod);
     },
-    [navigate]
+    [parseDraftRecord, formatInterestMethodLabel],
   );
 
-  const onCopy = async (id) => {
-    try {
-      const draft = await requireDraft(id);
-      const created = await copyLoanDraft({ loanDraft: draft, userDetails });
-      setNotification({ type: "success", message: "Draft copied" });
-      navigate(`/add-loan?draftId=${created.id}`);
-    } catch (err) {
-      console.error(err);
-      setNotification({
-        type: "error",
-        message: err?.message || "Copy failed",
-      });
-    }
-  };
+  const formatInterestRate = React.useCallback(
+    (row) => {
+      const draftRecord = parseDraftRecord(row);
+      const currencyCode = userDetails?.institution?.currencyCode;
 
-  const onSend = async (id) => {
-    try {
-      const draft = await requireDraft(id);
-      await transitionLoanDraftStatus({
-        loanDraft: draft,
-        userDetails,
-        nextStatus: "SENT_FOR_APPROVAL",
-      });
-      setNotification({ type: "success", message: "Sent for approval" });
-      refresh();
-    } catch (err) {
-      console.error(err);
-      setNotification({
-        type: "error",
-        message: err?.message || "Send failed",
-      });
-    }
-  };
+      let interestText = "";
+      if (draftRecord?.interestType === "percentage") {
+        // Match LoanScheduleDraft display: `${interestRate}%`
+        interestText = `${draftRecord?.interestRate ?? ""}%`;
+      } else {
+        // Match LoanScheduleDraft display: Money(value)
+        interestText = formatMoney(
+          draftRecord?.interestRate,
+          "$",
+          currencyCode,
+        );
+      }
 
-  const onConvert = async (id) => {
-    try {
-      const draft = await requireDraft(id);
-      await convertDraftToLoan({ loanDraft: draft, userDetails });
-      setNotification({ type: "success", message: "Converted to loan" });
-      navigate("/loans");
-    } catch (err) {
-      console.error(err);
-      setNotification({
-        type: "error",
-        message: err?.message || "Convert failed",
-      });
-    }
-  };
+      if (!interestText) return "";
 
-  const onExportSchedule = async (id) => {
-    try {
-      const draft = await requireDraft(id);
-      exportLoanDraftScheduleA4({
-        loanDraft: draft,
-        borrower: borrowers.find((b) => b.id === draft.borrowerID) || null,
-      });
-    } catch (err) {
-      console.error(err);
-      setNotification({
-        type: "error",
-        message: err?.message || "Export failed",
-      });
-    }
-  };
+      if (draftRecord?.interestPeriod === "per_loan") {
+        return `${interestText} of Principal`;
+      }
 
-  const onExportSummary = async (id) => {
-    try {
-      const draft = await requireDraft(id);
-      exportLoanDraftSummaryA4({
-        loanDraft: draft,
-        borrower: borrowers.find((b) => b.id === draft.borrowerID) || null,
-      });
-    } catch (err) {
-      console.error(err);
-      setNotification({
-        type: "error",
-        message: err?.message || "Export failed",
-      });
-    }
-  };
+      const periodLabel = formatInterestPeriodLabel(
+        draftRecord?.interestPeriod,
+      );
+      return periodLabel ? `${interestText} per ${periodLabel}` : interestText;
+    },
+    [
+      parseDraftRecord,
+      userDetails?.institution?.currencyCode,
+      formatInterestPeriodLabel,
+    ],
+  );
 
-  const onOpenExportModal = async (id) => {
-    try {
-      const draft = await requireDraft(id);
-      setSelectedDraftForExport(draft);
-      setExportModalOpen(true);
-    } catch (err) {
-      console.error(err);
-      setNotification({
-        type: "error",
-        message: err?.message || "Failed to load draft",
-      });
-    }
-  };
+  const formatPrincipalParts = React.useCallback(
+    (row) => {
+      const draftRecord = parseDraftRecord(row);
+      const currencyCode = userDetails?.institution?.currencyCode;
 
-  const handleCloseExportModal = () => {
-    setExportModalOpen(false);
-    setSelectedDraftForExport(null);
-  };
+      const principalValue =
+        draftRecord?.principalAmount ??
+        row?.principal ??
+        row?.principalAmount ??
+        "";
+
+      // Match LoanScheduleDraft Money() formatting: separators + currency decimals.
+      return formatMoneyParts(
+        principalValue,
+        currencyCode || "$",
+        currencyCode,
+      );
+    },
+    [parseDraftRecord, userDetails?.institution?.currencyCode],
+  );
 
   const columns = React.useMemo(
     () => [
       {
         field: "draftNumber",
-        headerName: "Draft #",
+        headerName: "",
         width: 140,
         renderCell: (params) => (
-          <ClickableText onClick={() => onView(params.row.id)}>
-            {(() => {
-              const v = params.value;
-              if (v === null || v === undefined) return "";
-              if (typeof v === "string" || typeof v === "number")
-                return String(v);
-              return "";
-            })()}
+          <ClickableText onClick={() => onEdit(params.row.id)}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+              {(() => {
+                const v = params.value;
+                if (v === null || v === undefined) return "";
+                if (typeof v === "string" || typeof v === "number")
+                  return String(v);
+                return "";
+              })()}
+            </Box>
           </ClickableText>
         ),
       },
       {
+        field: "status",
+        headerName: "Status",
+        width: 100,
+        valueGetter: (value) => {
+          if (!value) return "";
+          const raw = String(value);
+          return raw
+            .toLowerCase()
+            .split("_")
+            .map((w) => (w ? w[0].toUpperCase() + w.slice(1) : ""))
+            .join(" ");
+        },
+      },
+      {
         field: "borrowerID",
         headerName: "Borrower",
-        flex: 1,
-        minWidth: 220,
+        minWidth: 160,
         valueGetter: (value, row) => borrowerName(row?.borrowerID || value),
       },
       {
         field: "principal",
         headerName: "Principal",
         width: 140,
-      },
-      {
-        field: "status",
-        headerName: "Status",
-        width: 120,
-      },
-      // {
-      //   field: "lastEditedAt",
-      //   headerName: "Last Edited",
-      //   width: 180,
-      //   valueGetter: (value) =>
-      //     value ? dayjs(value).format("DD-MMM-YYYY HH:mm") : "",
-      // },
-      {
-        field: "actions",
-        headerName: "Actions",
-        width: 520,
-        sortable: false,
-        filterable: false,
+        valueGetter: (value, row) => {
+          const draftRecord = parseDraftRecord(row);
+          return (
+            draftRecord?.principalAmount ??
+            row?.principal ??
+            row?.principalAmount ??
+            ""
+          );
+        },
         renderCell: (params) => {
-          const id = params.row.id;
-          const status = params.row.status;
-          const canSend = status === "DRAFT" || status === "REJECTED";
-          const canConvert = status === "APPROVED";
+          const parts = formatPrincipalParts(params.row);
+          if (!parts?.number) return "";
           return (
             <Box
+              component="span"
               sx={{
-                display: "flex",
-                gap: 1,
-                flexWrap: "wrap",
-                py: 1,
-                alignItems: "center",
+                whiteSpace: "nowrap",
+                display: "inline-flex",
+                alignItems: "baseline",
               }}
             >
-              <IconButton
-                size="small"
-                onClick={() => onEdit(id)}
-                sx={{ color: "primary.main" }}
-              >
-                <EditIcon fontSize="small" />
-              </IconButton>
-              <PlusButtonSmall
-                label="Export"
-                onClick={() => onOpenExportModal(id)}
-              />
+              {parts.prefix ? (
+                <Box
+                  component="span"
+                  sx={{
+                    fontSize: "0.8em", // 20% smaller than the figure
+                    verticalAlign: "baseline",
+                    marginRight: "2px",
+                    opacity: 0.9,
+                  }}
+                >
+                  {parts.prefix}
+                </Box>
+              ) : null}
+              <Box component="span">{parts.number}</Box>
             </Box>
           );
         },
       },
+      {
+        field: "interestRate",
+        headerName: "Interest",
+        width: 120,
+        valueGetter: (value, row) => formatInterestRate(row),
+      },
+      {
+        field: "interestMethod",
+        headerName: "Interest Method",
+        width: 200,
+        valueGetter: (value, row) => formatInterestMethod(row),
+      },
+      {
+        field: "createdAt",
+        headerName: "Created",
+        width: 120,
+        valueGetter: (value) =>
+          value ? dayjs(value).format("DD-MMM-YYYY") : "",
+      },
     ],
-    [borrowerName, onEdit, onView]
+    [
+      borrowerName,
+      onEdit,
+      formatInterestMethod,
+      formatInterestRate,
+      formatPrincipalParts,
+    ],
   );
 
   return (
@@ -325,49 +350,6 @@ export default function LoanDrafts() {
         enableSearch={false}
         noDataMessage="No loan drafts found."
       />
-
-      <Dialog
-        open={exportModalOpen}
-        onClose={handleCloseExportModal}
-        maxWidth="lg"
-        fullWidth
-      >
-        <DialogTitle>Loan Schedule Preview</DialogTitle>
-        <DialogContent>
-          {selectedDraftForExport &&
-            (() => {
-              // Parse draftRecord to get the actual form values
-              let parsedDraftValues = {};
-              try {
-                const draftRecord = selectedDraftForExport.draftRecord;
-                if (typeof draftRecord === "string") {
-                  parsedDraftValues = JSON.parse(draftRecord);
-                } else if (
-                  typeof draftRecord === "object" &&
-                  draftRecord !== null
-                ) {
-                  parsedDraftValues = draftRecord;
-                }
-              } catch (err) {
-                console.error("Failed to parse draftRecord:", err);
-              }
-
-              return (
-                <LoanScheduleDraft
-                  loanDraft={selectedDraftForExport}
-                  draftValues={parsedDraftValues}
-                  borrower={
-                    borrowers.find(
-                      (b) => b.id === selectedDraftForExport.borrowerID
-                    ) || null
-                  }
-                  userDetails={userDetails}
-                  readOnly={true}
-                />
-              );
-            })()}
-        </DialogContent>
-      </Dialog>
     </Box>
   );
 }

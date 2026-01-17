@@ -1,6 +1,6 @@
 - Create loans form. Also create from loan product.
   - Ensure everything about loan drafts is working.
-  * Resume: Clicking the pencil icon in loandraft still show the edit form in read only mode with is not correct. The form should be editable with only the borrower name and loanproduct non-editable.
+  * Resume: Clicking the loandraft id should open in readonly mode with an "edit" button at the top. Remember to instruct that editing be for the currently editable fields.
   * ensure that all exports work, check loan product flow.
   * Move saving from loandraft to loan with status draft.
     After clicking create loan, go to contracts, collateral and gurantors, other incomes and expenses.

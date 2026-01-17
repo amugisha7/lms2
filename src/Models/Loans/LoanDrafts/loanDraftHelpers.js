@@ -663,6 +663,8 @@ const LOANS_BY_BRANCH_QUERY = `
         interestRate
         startDate
         maturityDate
+        loanComputationRecord
+        createdAt
         updatedAt
       }
       nextToken
@@ -691,8 +693,13 @@ const LOANS_BY_BORROWER_QUERY = `
         id
         loanNumber
         loanStatusEnum
+        approvalStatusEnum
+        borrowerID
+        branchID
         principal
         interestRate
+        loanComputationRecord
+        createdAt
         updatedAt
       }
       nextToken
@@ -785,16 +792,20 @@ export const getLoanDraftById = async (id) => {
   if (!loan) return null;
   
   // Transform Loan to draft-like structure for compatibility
-  const draftRecord = parseAwsJson(loan?.loanComputationRecord);
+  const computationRecord = parseAwsJson(loan?.loanComputationRecord) || {};
+  const draftRecord = computationRecord?.draftRecord || null;
   return {
     ...loan,
     draftNumber: loan.loanNumber,
-    status: loan.approvalStatusEnum || "DRAFT",
-    draftRecord: loan.loanComputationRecord,
+    // This screen is about draft loans; prefer the workflow status stored in computationRecord.
+    // Fall back to loanStatusEnum (e.g., DRAFT) rather than approvalStatusEnum (e.g., PENDING).
+    status: computationRecord?.status || loan.loanStatusEnum || "DRAFT",
+    // Expose the actual draft values (matches CreateLoan / LoanScheduleDraft expectations)
+    draftRecord: draftRecord ? safeJsonStringify(draftRecord) : null,
     editVersion: 1, // No version tracking yet
     lastEditedAt: loan.updatedAt,
-    schedulePreview: draftRecord?.schedulePreview,
-    scheduleHash: draftRecord?.scheduleHash,
+    schedulePreview: computationRecord?.schedulePreview,
+    scheduleHash: computationRecord?.scheduleHash,
   };
 };
 
@@ -821,12 +832,17 @@ export const listLoanDraftsByBranch = async ({
 
     const batch = result?.data?.loansByBranchIDAndStartDate?.items || [];
     // Transform to draft-like structure
-    const transformed = batch.map(loan => ({
-      ...loan,
-      draftNumber: loan.loanNumber,
-      status: loan.approvalStatusEnum || "DRAFT",
-      lastEditedAt: loan.updatedAt,
-    }));
+    const transformed = batch.map((loan) => {
+      const computationRecord = parseAwsJson(loan?.loanComputationRecord) || {};
+      const draftRecord = computationRecord?.draftRecord || null;
+      return {
+        ...loan,
+        draftNumber: loan.loanNumber,
+        status: computationRecord?.status || loan.loanStatusEnum || "DRAFT",
+        draftRecord: draftRecord ? safeJsonStringify(draftRecord) : null,
+        lastEditedAt: loan.updatedAt,
+      };
+    });
     items.push(...transformed);
     nextToken = result?.data?.loansByBranchIDAndStartDate?.nextToken || null;
   } while (nextToken);
@@ -863,12 +879,17 @@ export const listLoanDraftsByBorrower = async ({ borrowerID, limit = 100 }) => {
     });
 
     const batch = result?.data?.loansByBorrowerIDAndStartDate?.items || [];
-    const transformed = batch.map(loan => ({
-      ...loan,
-      draftNumber: loan.loanNumber,
-      status: loan.approvalStatusEnum || "DRAFT",
-      lastEditedAt: loan.updatedAt,
-    }));
+    const transformed = batch.map((loan) => {
+      const computationRecord = parseAwsJson(loan?.loanComputationRecord) || {};
+      const draftRecord = computationRecord?.draftRecord || null;
+      return {
+        ...loan,
+        draftNumber: loan.loanNumber,
+        status: computationRecord?.status || loan.loanStatusEnum || "DRAFT",
+        draftRecord: draftRecord ? safeJsonStringify(draftRecord) : null,
+        lastEditedAt: loan.updatedAt,
+      };
+    });
     items.push(...transformed);
     nextToken = result?.data?.loansByBorrowerIDAndStartDate?.nextToken || null;
   } while (nextToken);

@@ -1,11 +1,21 @@
 import React from "react";
-import { Box, Button } from "@mui/material";
+import {
+  Box,
+  Button,
+  IconButton,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+} from "@mui/material";
+import EditIcon from "@mui/icons-material/Edit";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import { UserContext } from "../../../App";
 import CollectionsTemplate from "../../../ModelAssets/CollectionsTemplate";
 import ClickableText from "../../../ModelAssets/ClickableText";
 import NotificationBar from "../../../ModelAssets/NotificationBar";
+import PlusButtonSmall from "../../../ModelAssets/PlusButtonSmall";
+import LoanScheduleDraft from "./LoanScheduleDraft";
 import { fetchBorrowers } from "../CreateLoan/createLoanHelpers";
 import {
   listLoanDraftsByBranch,
@@ -27,6 +37,9 @@ export default function LoanDrafts() {
   const [rows, setRows] = React.useState([]);
   const [borrowers, setBorrowers] = React.useState([]);
   const [notification, setNotification] = React.useState(null);
+  const [exportModalOpen, setExportModalOpen] = React.useState(false);
+  const [selectedDraftForExport, setSelectedDraftForExport] =
+    React.useState(null);
 
   const refresh = React.useCallback(async () => {
     setLoading(true);
@@ -100,7 +113,14 @@ export default function LoanDrafts() {
 
   const onEdit = React.useCallback(
     (id) => {
-      navigate(`/admin/add-loan?draftId=${id}`);
+      navigate(`/loan-drafts/id/${id}/edit`);
+    },
+    [navigate]
+  );
+
+  const onView = React.useCallback(
+    (id) => {
+      navigate(`/loan-drafts/id/${id}/view`);
     },
     [navigate]
   );
@@ -110,7 +130,7 @@ export default function LoanDrafts() {
       const draft = await requireDraft(id);
       const created = await copyLoanDraft({ loanDraft: draft, userDetails });
       setNotification({ type: "success", message: "Draft copied" });
-      navigate(`/admin/add-loan?draftId=${created.id}`);
+      navigate(`/add-loan?draftId=${created.id}`);
     } catch (err) {
       console.error(err);
       setNotification({
@@ -144,7 +164,7 @@ export default function LoanDrafts() {
       const draft = await requireDraft(id);
       await convertDraftToLoan({ loanDraft: draft, userDetails });
       setNotification({ type: "success", message: "Converted to loan" });
-      navigate("/admin/loans");
+      navigate("/loans");
     } catch (err) {
       console.error(err);
       setNotification({
@@ -186,6 +206,25 @@ export default function LoanDrafts() {
     }
   };
 
+  const onOpenExportModal = async (id) => {
+    try {
+      const draft = await requireDraft(id);
+      setSelectedDraftForExport(draft);
+      setExportModalOpen(true);
+    } catch (err) {
+      console.error(err);
+      setNotification({
+        type: "error",
+        message: err?.message || "Failed to load draft",
+      });
+    }
+  };
+
+  const handleCloseExportModal = () => {
+    setExportModalOpen(false);
+    setSelectedDraftForExport(null);
+  };
+
   const columns = React.useMemo(
     () => [
       {
@@ -193,8 +232,14 @@ export default function LoanDrafts() {
         headerName: "Draft #",
         width: 140,
         renderCell: (params) => (
-          <ClickableText onClick={() => onEdit(params.row.id)}>
-            {params.value || ""}
+          <ClickableText onClick={() => onView(params.row.id)}>
+            {(() => {
+              const v = params.value;
+              if (v === null || v === undefined) return "";
+              if (typeof v === "string" || typeof v === "number")
+                return String(v);
+              return "";
+            })()}
           </ClickableText>
         ),
       },
@@ -213,15 +258,15 @@ export default function LoanDrafts() {
       {
         field: "status",
         headerName: "Status",
-        width: 170,
+        width: 120,
       },
-      {
-        field: "lastEditedAt",
-        headerName: "Last Edited",
-        width: 180,
-        valueGetter: (value) =>
-          value ? dayjs(value).format("DD-MMM-YYYY HH:mm") : "",
-      },
+      // {
+      //   field: "lastEditedAt",
+      //   headerName: "Last Edited",
+      //   width: 180,
+      //   valueGetter: (value) =>
+      //     value ? dayjs(value).format("DD-MMM-YYYY HH:mm") : "",
+      // },
       {
         field: "actions",
         headerName: "Actions",
@@ -234,57 +279,32 @@ export default function LoanDrafts() {
           const canSend = status === "DRAFT" || status === "REJECTED";
           const canConvert = status === "APPROVED";
           return (
-            <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", py: 1 }}>
-              <Button
+            <Box
+              sx={{
+                display: "flex",
+                gap: 1,
+                flexWrap: "wrap",
+                py: 1,
+                alignItems: "center",
+              }}
+            >
+              <IconButton
                 size="small"
-                variant="outlined"
                 onClick={() => onEdit(id)}
+                sx={{ color: "primary.main" }}
               >
-                Edit
-              </Button>
-              <Button
-                size="small"
-                variant="outlined"
-                onClick={() => onCopy(id)}
-              >
-                Copy
-              </Button>
-              <Button
-                size="small"
-                variant="outlined"
-                disabled={!canSend}
-                onClick={() => onSend(id)}
-              >
-                Send for approval
-              </Button>
-              <Button
-                size="small"
-                variant="contained"
-                disabled={!canConvert}
-                onClick={() => onConvert(id)}
-              >
-                Save as new loan
-              </Button>
-              <Button
-                size="small"
-                variant="outlined"
-                onClick={() => onExportSchedule(id)}
-              >
-                Export schedule
-              </Button>
-              <Button
-                size="small"
-                variant="outlined"
-                onClick={() => onExportSummary(id)}
-              >
-                Export summary
-              </Button>
+                <EditIcon fontSize="small" />
+              </IconButton>
+              <PlusButtonSmall
+                label="Export"
+                onClick={() => onOpenExportModal(id)}
+              />
             </Box>
           );
         },
       },
     ],
-    [borrowerName, onEdit]
+    [borrowerName, onEdit, onView]
   );
 
   return (
@@ -297,14 +317,57 @@ export default function LoanDrafts() {
       )}
       <CollectionsTemplate
         title="Loan Drafts"
-        createButtonText="Create Draft"
-        onCreateClick={() => navigate("/admin/add-loan")}
+        createButtonText="Create Loan"
+        onCreateClick={() => navigate("/add-loan")}
         items={rows}
         loading={loading}
         columns={columns}
         enableSearch={false}
         noDataMessage="No loan drafts found."
       />
+
+      <Dialog
+        open={exportModalOpen}
+        onClose={handleCloseExportModal}
+        maxWidth="lg"
+        fullWidth
+      >
+        <DialogTitle>Loan Schedule Preview</DialogTitle>
+        <DialogContent>
+          {selectedDraftForExport &&
+            (() => {
+              // Parse draftRecord to get the actual form values
+              let parsedDraftValues = {};
+              try {
+                const draftRecord = selectedDraftForExport.draftRecord;
+                if (typeof draftRecord === "string") {
+                  parsedDraftValues = JSON.parse(draftRecord);
+                } else if (
+                  typeof draftRecord === "object" &&
+                  draftRecord !== null
+                ) {
+                  parsedDraftValues = draftRecord;
+                }
+              } catch (err) {
+                console.error("Failed to parse draftRecord:", err);
+              }
+
+              return (
+                <LoanScheduleDraft
+                  loanDraft={selectedDraftForExport}
+                  draftValues={parsedDraftValues}
+                  borrower={
+                    borrowers.find(
+                      (b) => b.id === selectedDraftForExport.borrowerID
+                    ) || null
+                  }
+                  userDetails={userDetails}
+                  readOnly={true}
+                />
+              );
+            })()}
+        </DialogContent>
+      </Dialog>
     </Box>
   );
 }

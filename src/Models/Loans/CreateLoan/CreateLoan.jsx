@@ -472,7 +472,7 @@ const CreateLoan = forwardRef(
         if (!loanDraft?.id) throw new Error("Save Draft first.");
         const loan = await convertDraftToLoan({ loanDraft, userDetails });
         setSubmitSuccess("Draft converted to loan.");
-        navigate("/admin/loans");
+        navigate("/loans");
         return loan;
       } catch (err) {
         console.error(err);

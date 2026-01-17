@@ -52,22 +52,22 @@ export const menuItems = [
       {
         name: "Create Loan",
         icon: <PersonAddIcon sx={{ color: "white" }} />,
-        route: "/admin/add-loan",
+        route: "/add-loan",
       },
       {
         name: "View Loans",
         icon: <ListAltIcon sx={{ color: "white" }} />,
-        route: "/admin/loans",
+        route: "/loans",
       },
       {
         name: "Loan Drafts",
         icon: <ListAltIcon sx={{ color: "white" }} />,
-        route: "/admin/loan-drafts",
+        route: "/loan-drafts",
       },
       {
         name: "Loan Calculator",
         icon: <ListAltIcon sx={{ color: "white" }} />,
-        route: "/admin/loan-calculator",
+        route: "/loan-calculator",
       },
       {
         name: "Loan Fees",

@@ -34,6 +34,15 @@ const Dropdown = ({
   const [field, meta] = useField(name);
   const isReadOnly = readOnly || editing === false || disabled;
 
+  const coerceLabel = (labelValue) => {
+    if (labelValue === null || labelValue === undefined) return "";
+    if (typeof labelValue === "string" || typeof labelValue === "number") {
+      return String(labelValue);
+    }
+    // Avoid rendering objects/arrays as React children.
+    return "";
+  };
+
   const StyledOutlinedInput = styled(OutlinedInput)(({ theme }) => {
     const colors = tokens(theme.palette.mode);
     return {
@@ -119,7 +128,7 @@ const Dropdown = ({
                   },
                 }}
               >
-                {option.label}
+                {coerceLabel(option.label)}
               </MenuItem>
             ))}
           </Select>
@@ -140,7 +149,7 @@ const Dropdown = ({
             // color: "text.primary",
           }}
         >
-          {selectedOption ? selectedOption.label : ""}
+          {selectedOption ? coerceLabel(selectedOption.label) : ""}
         </Typography>
       )}
     </Box>

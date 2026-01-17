@@ -1,5 +1,6 @@
 - Create loans form. Also create from loan product.
   - Ensure everything about loan drafts is working.
+  * Resume: Clicking the pencil icon in loandraft still show the edit form in read only mode with is not correct. The form should be editable with only the borrower name and loanproduct non-editable.
   * ensure that all exports work, check loan product flow.
   * Move saving from loandraft to loan with status draft.
     After clicking create loan, go to contracts, collateral and gurantors, other incomes and expenses.
@@ -11,3 +12,4 @@
   * Create loan from loan schedule. Ensure loan calculations are accurate.
   *
 - Finish the loan module then return to the begining via the Loan Progress gdoc
+- Upon login, redirect to tutorials with option of go to platform.

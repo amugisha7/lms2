@@ -7,22 +7,38 @@ import React, {
 } from "react";
 import { Formik, Form } from "formik";
 import * as Yup from "yup";
-import { Box, Grid, Typography } from "@mui/material";
+import { Box, Grid, Typography, CircularProgress } from "@mui/material";
 import { styled } from "@mui/material/styles";
-import { generateClient } from "aws-amplify/api";
+import { useTheme } from "@mui/material/styles";
+import { useNavigate } from "react-router-dom";
 
 import editLoanForm from "./editLoanForm";
 import TextInput from "../../../Resources/FormComponents/TextInput";
 import Dropdown from "../../../Resources/FormComponents/Dropdown";
 import OrderedList from "../../../Resources/FormComponents/OrderedList";
-import Label from "../../../Resources/FormComponents/FormLabel";
-import CustomEditFormButtons from "../../../ComponentAssets/CustomEditFormButtons";
+import FormLabel from "../../../Resources/FormComponents/FormLabel";
+import FormLinkText from "../../../Resources/FormComponents/FormLinkText";
+import RadioGroup from "../../../Resources/FormComponents/RadioGroup";
+import RadioGroupNoLabel from "../../../Resources/FormComponents/RadioGroupNoLabel";
+import TextAndRadio from "../../../Resources/FormComponents/TextAndRadio";
+import TextAndDropdown from "../../../Resources/FormComponents/TextAndDropdown";
+import MultipleDropDown from "../../../Resources/FormComponents/MultipleDropDown";
+
+import PlusButtonMain from "../../../ModelAssets/PlusButtonMain";
+import WorkingOverlay from "../../../ModelAssets/WorkingOverlay";
+import CustomPopUp from "../../../ModelAssets/CustomPopUp";
+import LoanScheduleDraft from "../LoanDrafts/LoanScheduleDraft";
+
 import { UserContext } from "../../../App";
 import {
-  updateLoan,
-  buildLoanUpdateInput,
-  fetchBorrowersAndProducts,
-} from "./editLoanHelpers";
+  updateLoanDraft,
+  transitionLoanDraftStatus,
+  convertDraftToLoan,
+} from "../LoanDrafts/loanDraftHelpers";
+import {
+  fetchAccounts,
+  fetchLoanFeesConfig,
+} from "../CreateLoan/createLoanHelpers";
 
 const FormGrid = styled(Grid)(({ theme }) => ({
   display: "flex",
@@ -33,82 +49,211 @@ const FormGrid = styled(Grid)(({ theme }) => ({
 }));
 
 const baseInitialValues = editLoanForm.reduce((acc, field) => {
-  // Skip label fields as they don't need values
-  if (field.type === "label") return acc;
-  acc[field.name] = field.defaultValue || "";
+  if (field.type === "label" || field.type === "formLink") return acc;
+
+  if (field.type === "textAndDropdown") {
+    acc[field.textName] =
+      field.textDefaultValue !== undefined ? field.textDefaultValue : "";
+    acc[field.dropdownName] =
+      field.dropdownDefaultValue !== undefined
+        ? field.dropdownDefaultValue
+        : "";
+  } else if (field.type === "textAndRadio") {
+    acc[field.textName] =
+      field.textDefaultValue !== undefined ? field.textDefaultValue : "";
+    acc[field.radioName] =
+      field.radioDefaultValue !== undefined ? field.radioDefaultValue : "";
+  } else if (field.name) {
+    acc[field.name] =
+      field.defaultValue !== undefined ? field.defaultValue : "";
+  }
   return acc;
 }, {});
 
+// display-only helpers for drafts
+baseInitialValues.borrowerName = "";
+baseInitialValues.loanProductName = "";
+
 const buildValidationSchema = () => {
-  const validationShape = {
-    borrower: Yup.string().required("Borrower is required"),
-    loanProduct: Yup.string().required("Loan Product is required"),
+  // Match CreateLoan validation behavior
+  return Yup.object().shape({
+    accountLoansId: Yup.string().required("Source Account is required"),
     principalAmount: Yup.number()
       .required("Principal Amount is required")
       .min(0, "Principal Amount must be at least 0"),
+    interestMethod: Yup.string().required("Interest Method is required"),
+    interestType: Yup.string()
+      .oneOf(["percentage", "fixed"])
+      .required("Interest Type is required"),
     interestRate: Yup.number()
+      .typeError("Interest Rate is required")
       .required("Interest Rate is required")
       .min(0, "Interest Rate must be at least 0")
-      .max(100, "Interest Rate cannot exceed 100%"),
-    termDuration: Yup.number()
-      .required("Term Duration is required")
-      .min(1, "Term Duration must be at least 1"),
+      .when("interestType", {
+        is: "percentage",
+        then: (schema) => schema.max(100, "Interest Rate cannot exceed 100%"),
+        otherwise: (schema) => schema,
+      }),
+    interestPeriod: Yup.string().required("Interest Period is required"),
+    loanStartDate: Yup.string().required("Loan Start Date is required"),
+    loanDuration: Yup.number()
+      .typeError("Loan Duration is required")
+      .required("Loan Duration is required")
+      .min(1, "Loan Duration must be at least 1"),
     durationPeriod: Yup.string()
       .oneOf(["days", "weeks", "months", "years"])
       .required("Duration Period is required"),
-    disbursementDate: Yup.string().required("Disbursement Date is required"),
-    maturityDate: Yup.string().required("Maturity Date is required"),
-    repaymentFrequency: Yup.string()
-      .oneOf([
-        "daily",
-        "weekly",
-        "biweekly",
-        "monthly",
-        "bimonthly",
-        "quarterly",
-        "every_4_months",
-        "semi_annual",
-        "every_9_months",
-        "yearly",
-        "lump_sum",
-      ])
+    repaymentFrequencyType: Yup.string()
+      .oneOf(["interval", "setDays", "setDates", "lumpSum"])
       .required("Repayment Frequency is required"),
-    status: Yup.string()
-      .oneOf(["Active", "Pending", "Approved", "Rejected", "Closed"])
-      .required("Status is required"),
-    totalAmountDue: Yup.number()
-      .min(0, "Total Amount Due must be at least 0")
-      .nullable()
-      .transform((value, originalValue) =>
-        originalValue === "" ? null : value
-      ),
-  };
-
-  return Yup.object().shape(validationShape);
+    repaymentFrequency: Yup.string().when("repaymentFrequencyType", {
+      is: "interval",
+      then: (schema) =>
+        schema
+          .oneOf([
+            "daily",
+            "weekly",
+            "biweekly",
+            "monthly",
+            "bimonthly",
+            "quarterly",
+            "every_4_months",
+            "semi_annual",
+            "every_9_months",
+            "yearly",
+          ])
+          .required("Repayment Interval is required"),
+      otherwise: (schema) => schema.notRequired(),
+    }),
+  });
 };
 
 const baseValidationSchema = buildValidationSchema();
 
 const renderFormField = (field, formikValues) => {
+  const { dynamicHelperText, dynamicLabelMap, ...fieldProps } = field;
+
+  let displayLabel = field.label;
+  if (field.dynamicLabel) {
+    if (field.name === "calculateInterestOn") {
+      displayLabel =
+        formikValues.interestTypeMaturity === "fixed"
+          ? "Calculate Interest if there is"
+          : "Calculate Interest on";
+    } else if (field.name === "loanInterestRateAfterMaturity") {
+      displayLabel =
+        formikValues.interestTypeMaturity === "fixed"
+          ? "Interest Amount After Maturity"
+          : "Interest Rate After Maturity";
+    } else if (field.name === "interestRate") {
+      displayLabel =
+        formikValues.interestType === "fixed"
+          ? "Interest Amount"
+          : "Interest Rate";
+    }
+  }
+
+  let displayTextLabel = field.textLabel;
+  if (field.dynamicLabelMap && field.dependsOn) {
+    const dependencyValue = formikValues[field.dependsOn];
+    if (dependencyValue && field.dynamicLabelMap[dependencyValue]) {
+      displayTextLabel = field.dynamicLabelMap[dependencyValue];
+    }
+  }
+
+  let computedHelperText = field.helperText;
+  if (dynamicHelperText && field.name) {
+    const currentValue = formikValues[field.name];
+    if (currentValue && dynamicHelperText[currentValue]) {
+      computedHelperText = dynamicHelperText[currentValue];
+    }
+  }
+
   switch (field.type) {
     case "text":
     case "number":
-      return <TextInput {...field} disabled={!field.editing} />;
+    case "date":
+      return (
+        <TextInput
+          {...fieldProps}
+          label={displayLabel}
+          helperText={computedHelperText}
+          disabled={!field.editing}
+        />
+      );
     case "select":
-      return <Dropdown {...field} disabled={!field.editing} />;
+      return (
+        <Dropdown
+          {...fieldProps}
+          label={displayLabel}
+          helperText={computedHelperText}
+          disabled={!field.editing}
+        />
+      );
+    case "selectMultiple":
+      return (
+        <MultipleDropDown
+          {...fieldProps}
+          label={displayLabel}
+          helperText={computedHelperText}
+          disabled={!field.editing}
+        />
+      );
     case "orderedList":
       return (
         <OrderedList
-          {...field}
-          items={formikValues[field.name]}
-          onChange={(value) => field.formik.setFieldValue(field.name, value)}
+          label={field.label}
+          items={field.formik.values[field.name] || field.defaultValue || []}
+          onChange={(newOrder) =>
+            field.formik.setFieldValue(field.name, newOrder)
+          }
+          helperText={computedHelperText}
+          required={field.required}
           editing={field.editing}
         />
       );
     case "label":
-      return <Label {...field} />;
+      return <FormLabel label={field.label} />;
+    case "formLink":
+      return (
+        <FormLinkText
+          linkText={field.linkText}
+          linkUrl={field.linkUrl}
+          icon={field.icon}
+        />
+      );
+    case "radio":
+      return (
+        <RadioGroup
+          {...fieldProps}
+          helperText={computedHelperText}
+          disabled={!field.editing}
+        />
+      );
+    case "radioNoLabel":
+      return <RadioGroupNoLabel {...fieldProps} disabled={!field.editing} />;
+    case "textAndRadio":
+      return (
+        <TextAndRadio
+          {...fieldProps}
+          textLabel={displayLabel}
+          editing={field.editing}
+          readOnly={!field.editing}
+          disabled={!field.editing}
+        />
+      );
+    case "textAndDropdown":
+      return (
+        <TextAndDropdown
+          {...fieldProps}
+          textLabel={displayTextLabel}
+          editing={field.editing}
+          readOnly={!field.editing}
+          disabled={!field.editing}
+        />
+      );
     default:
-      return <TextInput {...field} disabled={!field.editing} />;
+      return <TextInput {...fieldProps} disabled={!field.editing} />;
   }
 };
 
@@ -119,93 +264,96 @@ const EditLoan = forwardRef(
       initialValues: propInitialValues,
       isEditMode = true,
       onCancel,
+      readOnlyFields = [],
+      loanDraft,
     },
     ref
   ) => {
-    const [initialValues, setInitialValues] = useState(baseInitialValues);
     const { userDetails } = useContext(UserContext);
+    const theme = useTheme();
+    const navigate = useNavigate();
     const [submitError, setSubmitError] = useState("");
     const [submitSuccess, setSubmitSuccess] = useState("");
-    const [borrowers, setBorrowers] = useState([]);
-    const [loanProducts, setLoanProducts] = useState([]);
-    const [viewBorrowers, setViewBorrowers] = useState([]);
-    const [viewLoanProducts, setViewLoanProducts] = useState([]);
     const [editMode, setEditMode] = useState(isEditMode);
+    const [scheduleOpen, setScheduleOpen] = useState(false);
+    const [accounts, setAccounts] = useState([]);
+    const [accountsLoading, setAccountsLoading] = useState(false);
+    const [loanFeesConfigs, setLoanFeesConfigs] = useState([]);
+    const [loanFeesLoading, setLoanFeesLoading] = useState(false);
+    const [localDraft, setLocalDraft] = useState(loanDraft || null);
 
     useEffect(() => {
-      const fetchData = async () => {
-        if (!editMode || !userDetails?.institutionUsersId) return;
+      setLocalDraft(loanDraft || null);
+    }, [loanDraft]);
 
-        try {
-          const { borrowers: fetchedBorrowers, loanProducts: fetchedProducts } =
-            await fetchBorrowersAndProducts(userDetails.institutionUsersId);
-          setBorrowers(fetchedBorrowers);
-          setLoanProducts(fetchedProducts);
-        } catch (err) {
-          console.error("Error fetching borrowers or loan products:", err);
-        }
-      };
+    const normalizedStatus = (() => {
+      const raw =
+        localDraft?.status ??
+        localDraft?.approvalStatusEnum ??
+        localDraft?.loanStatusEnum ??
+        localDraft?.loanStatus ??
+        "";
+      return String(raw || "")
+        .trim()
+        .toUpperCase();
+    })();
 
-      fetchData();
-    }, [editMode, userDetails?.institutionUsersId]);
+    const canEditDraft =
+      normalizedStatus === "DRAFT" || normalizedStatus === "REJECTED";
 
-    const mapDbFieldsToFormFields = (dbData) => {
-      if (!dbData) return {};
+    const readOnly = Boolean(localDraft) && !canEditDraft;
 
-      return {
-        borrower: dbData.borrowerLoansId || "",
-        loanProduct: dbData.loanProductLoansId || "",
-        principalAmount: dbData.principalAmount || "",
-        interestRate: dbData.interestRate || "",
-        termDuration: dbData.termDuration || "",
-        durationPeriod: dbData.durationPeriod || "",
-        disbursementDate: dbData.disbursementDate || "",
-        maturityDate: dbData.maturityDate || "",
-        repaymentFrequency: dbData.repaymentFrequency || "",
-        repaymentOrder: dbData.repaymentOrder
-          ? typeof dbData.repaymentOrder === "string"
-            ? JSON.parse(dbData.repaymentOrder)
-            : dbData.repaymentOrder
-          : ["Penalty", "Fees", "Interest", "Principal"],
-        status: dbData.status || "",
-        totalAmountDue: dbData.totalAmountDue || "",
-      };
-    };
+    useEffect(() => {
+      const currentInstitutionId = userDetails?.institutionUsersId;
+      if (!currentInstitutionId) return;
+
+      setAccountsLoading(true);
+      fetchAccounts(currentInstitutionId)
+        .then((data) => {
+          const activeAccounts = Array.isArray(data)
+            ? data.filter((a) => a && a.status === "active")
+            : [];
+          setAccounts(activeAccounts);
+        })
+        .catch((err) => {
+          console.error("Error fetching accounts:", err);
+        })
+        .finally(() => {
+          setAccountsLoading(false);
+        });
+    }, [userDetails?.institutionUsersId]);
+
+    useEffect(() => {
+      const currentInstitutionId = userDetails?.institutionUsersId;
+      if (!currentInstitutionId) return;
+
+      setLoanFeesLoading(true);
+      fetchLoanFeesConfig(currentInstitutionId)
+        .then((data) => {
+          setLoanFeesConfigs(Array.isArray(data) ? data : []);
+        })
+        .catch((err) => {
+          console.error("Error fetching loan fees configs:", err);
+        })
+        .finally(() => {
+          setLoanFeesLoading(false);
+        });
+    }, [userDetails?.institutionUsersId]);
 
     const formInitialValues = propInitialValues
       ? {
           ...baseInitialValues,
-          ...mapDbFieldsToFormFields(propInitialValues),
+          ...propInitialValues,
         }
-      : initialValues;
+      : { ...baseInitialValues };
 
-    useEffect(() => {
-      if (propInitialValues) {
-        const borrowerOptions = propInitialValues.borrower
-          ? [
-              {
-                value: propInitialValues.borrower.id,
-                label:
-                  `${propInitialValues.borrower.firstname || ""} ${
-                    propInitialValues.borrower.othername || ""
-                  } ${propInitialValues.borrower.businessName || ""}`.trim() ||
-                  propInitialValues.borrower.uniqueIdNumber,
-              },
-            ]
-          : [];
-        setViewBorrowers(borrowerOptions);
-
-        const productOptions = propInitialValues.loanProduct
-          ? [
-              {
-                value: propInitialValues.loanProduct.id,
-                label: propInitialValues.loanProduct.name,
-              },
-            ]
-          : [];
-        setViewLoanProducts(productOptions);
-      }
-    }, [propInitialValues]);
+    // Ensure accounts defaults are set (CreateLoan behavior)
+    if (accounts.length > 0 && !formInitialValues.accountLoansId) {
+      formInitialValues.accountLoansId = accounts[0].id;
+    }
+    if (accounts.length > 0 && !formInitialValues.loanFeesAccountId) {
+      formInitialValues.loanFeesAccountId = accounts[0].id;
+    }
 
     useImperativeHandle(ref, () => ({
       toggleEdit: () => {
@@ -215,35 +363,71 @@ const EditLoan = forwardRef(
     }));
 
     const updatedEditLoanForm = React.useMemo(() => {
-      return editLoanForm.map((field) => {
-        if (field.name === "borrower") {
-          return {
-            ...field,
-            options: editMode
-              ? borrowers.map((borrower) => ({
-                  value: borrower.id,
-                  label:
-                    `${borrower.firstname || ""} ${borrower.othername || ""} ${
-                      borrower.businessName || ""
-                    }`.trim() || borrower.uniqueIdNumber,
-                }))
-              : viewBorrowers,
+      const currency = userDetails?.institution?.currencyCode || "$";
+
+      const formatLoanFeeAmount = (loanFee, currencySym) => {
+        const value =
+          loanFee?.rate !== undefined && loanFee?.rate !== null
+            ? Number(loanFee.rate).toLocaleString()
+            : "-";
+
+        if (loanFee?.calculationMethod === "percentage") {
+          const percentageBaseLabels = {
+            principal: "Principal",
+            interest: "Interest",
+            principal_interest: "(Principal + Interest)",
           };
+          const base =
+            percentageBaseLabels[loanFee?.percentageBase] ||
+            loanFee?.percentageBase ||
+            "";
+          return value !== "-" ? `${value}% of ${base}` : "-";
         }
-        if (field.name === "loanProduct") {
-          return {
-            ...field,
-            options: editMode
-              ? loanProducts.map((product) => ({
-                  value: product.id,
-                  label: product.name,
-                }))
-              : viewLoanProducts,
-          };
+        if (loanFee?.calculationMethod === "fixed") {
+          return value !== "-" ? `${currencySym} ${value} (fixed)` : "-";
         }
-        return field;
-      });
-    }, [borrowers, loanProducts, viewBorrowers, viewLoanProducts, editMode]);
+        return "-";
+      };
+
+      return editLoanForm
+        .filter((field) => field?.name !== "loanProduct")
+        .map((field) => {
+          if (field.name === "accountLoansId") {
+            return {
+              ...field,
+              options: (accounts || []).map((account) => ({
+                value: account.id,
+                label: account.name,
+              })),
+            };
+          }
+
+          if (field.name === "loanFees") {
+            return {
+              ...field,
+              options: (loanFeesConfigs || []).map((loanFee) => ({
+                value: loanFee.id,
+                label: `${loanFee.name} - ${formatLoanFeeAmount(
+                  loanFee,
+                  currency
+                )}`,
+              })),
+            };
+          }
+
+          if (field.name === "loanFeesAccountId") {
+            return {
+              ...field,
+              options: (accounts || []).map((account) => ({
+                value: account.id,
+                label: account.name,
+              })),
+            };
+          }
+
+          return field;
+        });
+    }, [accounts, loanFeesConfigs, userDetails?.institution]);
 
     const handleSubmit = async (values, { setSubmitting }) => {
       setSubmitError("");
@@ -251,24 +435,94 @@ const EditLoan = forwardRef(
       setSubmitting(true);
 
       try {
-        const input = buildLoanUpdateInput(
-          values,
-          userDetails,
-          propInitialValues.id
-        );
-        console.log("API Mutation: updateLoan", { input });
-        const result = await updateLoan(input);
+        if (!localDraft?.id) throw new Error("Missing draft context");
 
-        setSubmitSuccess("Loan updated successfully!");
+        const { borrowerName, loanProductName, ...draftRecord } = values;
+
+        const updated = await updateLoanDraft({
+          id: localDraft.id,
+          expectedEditVersion: localDraft.editVersion,
+          userDetails,
+          patch: {
+            borrowerID: localDraft.borrowerID,
+            loanProductID: localDraft.loanProductID || null,
+            draftRecord: JSON.stringify(draftRecord),
+          },
+        });
+
+        setLocalDraft((prev) => ({
+          ...updated,
+          borrower: prev?.borrower || localDraft?.borrower || null,
+          loanProduct: prev?.loanProduct || localDraft?.loanProduct || null,
+        }));
+        setSubmitSuccess("Draft saved successfully!");
         setEditMode(false);
-        if (onEditSuccess) onEditSuccess(result);
+        if (onEditSuccess) onEditSuccess(updated);
       } catch (err) {
         console.error("Error updating loan:", err);
-        setSubmitError("Failed to update loan. Please try again.");
+        setSubmitError(
+          err?.message || "Failed to save draft. Please try again."
+        );
       } finally {
         setSubmitting(false);
       }
     };
+
+    const handleSendForApproval = async () => {
+      setSubmitError("");
+      setSubmitSuccess("");
+      try {
+        if (!localDraft?.id) throw new Error("Save Draft first.");
+        const updated = await transitionLoanDraftStatus({
+          loanDraft: localDraft,
+          userDetails,
+          nextStatus: "SENT_FOR_APPROVAL",
+        });
+        setLocalDraft((prev) => ({
+          ...updated,
+          borrower: prev?.borrower || localDraft?.borrower || null,
+          loanProduct: prev?.loanProduct || localDraft?.loanProduct || null,
+        }));
+        setSubmitSuccess("Draft sent for approval.");
+      } catch (err) {
+        console.error(err);
+        setSubmitError(err?.message || "Failed to send for approval.");
+      }
+    };
+
+    const handleConvertToLoan = async () => {
+      setSubmitError("");
+      setSubmitSuccess("");
+      try {
+        if (!localDraft?.id) throw new Error("Save Draft first.");
+        await convertDraftToLoan({ loanDraft: localDraft, userDetails });
+        setSubmitSuccess("Draft converted to loan.");
+        navigate("/loans");
+      } catch (err) {
+        console.error(err);
+        setSubmitError(err?.message || "Failed to convert to loan.");
+      }
+    };
+
+    const handleOpenSchedule = () => {
+      setSubmitError("");
+      setScheduleOpen(true);
+    };
+
+    if (accountsLoading || loanFeesLoading) {
+      return (
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            minHeight: "300px",
+          }}
+        >
+          <CircularProgress />
+        </Box>
+      );
+    }
 
     return (
       <>
@@ -278,51 +532,218 @@ const EditLoan = forwardRef(
           onSubmit={handleSubmit}
           enableReinitialize={true}
         >
-          {(formik) => (
-            <Form>
-              <Box
-                sx={{
-                  display: "flex",
-                  flexDirection: "column",
-                  width: "100%",
-                  flex: 1,
-                }}
-              >
-                {editMode ? (
-                  <CustomEditFormButtons
-                    formik={formik}
-                    setEditMode={setEditMode}
-                    setSubmitError={setSubmitError}
-                    setSubmitSuccess={setSubmitSuccess}
-                    onCancel={onCancel}
+          {(formik) => {
+            const totalLoanFee = (() => {
+              const values = formik.values;
+              if (values.loanFeesType === "custom") {
+                return parseFloat(values.customLoanFeeAmount) || 0;
+              }
+              if (values.loanFeesType === "pre-defined" && values.loanFees) {
+                const config = loanFeesConfigs.find(
+                  (c) => c.id === values.loanFees
+                );
+                if (config) {
+                  if (config.calculationMethod === "fixed") {
+                    return parseFloat(config.rate) || 0;
+                  } else if (config.calculationMethod === "percentage") {
+                    const principal = parseFloat(values.principalAmount) || 0;
+                    return (principal * parseFloat(config.rate || 0)) / 100;
+                  }
+                }
+              }
+              return 0;
+            })();
+
+            const loanFeeSummary = (() => {
+              const values = formik.values;
+              if (!values?.loanFeesType || values.loanFeesType === "none") {
+                return null;
+              }
+
+              if (values.loanFeesType === "custom") {
+                return {
+                  label: null,
+                  amount: totalLoanFee || 0,
+                  calculationMethod: null,
+                  rate: null,
+                };
+              }
+
+              if (values.loanFeesType === "pre-defined" && values.loanFees) {
+                const config = loanFeesConfigs.find(
+                  (c) => c.id === values.loanFees
+                );
+                return {
+                  label: config?.name || "Pre-defined Loan Fee",
+                  amount: totalLoanFee || 0,
+                  calculationMethod: config?.calculationMethod || null,
+                  rate: config?.rate || null,
+                };
+              }
+
+              if (values.loanFeesType === "pre-defined") {
+                return {
+                  label: "Pre-defined Loan Fee",
+                  amount: totalLoanFee || 0,
+                  calculationMethod: null,
+                  rate: null,
+                };
+              }
+
+              return null;
+            })();
+
+            return (
+              <Form>
+                <WorkingOverlay
+                  open={formik.isSubmitting}
+                  message="Saving draft..."
+                />
+
+                <CustomPopUp
+                  open={scheduleOpen}
+                  onClose={() => setScheduleOpen(false)}
+                  title="Loan Draft"
+                  showEdit={false}
+                  showDelete={false}
+                  maxWidth="lg"
+                >
+                  <LoanScheduleDraft
+                    loanDraft={localDraft}
+                    draftValues={formik.values}
+                    borrower={localDraft?.borrower || null}
+                    userDetails={userDetails}
+                    currency={userDetails?.institution?.currencyCode || "$"}
+                    readOnly={readOnly}
+                    onEdit={() => setScheduleOpen(false)}
+                    onSaveDraft={() => formik.submitForm()}
+                    setDraftField={formik.setFieldValue}
+                    onSendForApproval={handleSendForApproval}
+                    onConfirmCreateLoan={handleConvertToLoan}
+                    totalLoanFee={totalLoanFee}
+                    loanFeeSummary={loanFeeSummary}
                   />
-                ) : null}
-                <Grid container spacing={1}>
-                  {updatedEditLoanForm.map((field, index) => (
-                    <FormGrid
-                      size={{ xs: 12, md: field.span }}
-                      key={`${field.name}-${index}`}
-                    >
-                      {renderFormField(
-                        { ...field, formik, editing: editMode },
-                        formik.values
-                      )}
+                </CustomPopUp>
+
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    width: "100%",
+                    flex: 1,
+                  }}
+                >
+                  <Grid container spacing={1}>
+                    <FormGrid size={{ xs: 12, md: 12 }}>
+                      <TextInput
+                        label="Borrower"
+                        name="borrowerName"
+                        type="text"
+                        helperText="Borrower is fixed for a draft."
+                        disabled
+                      />
                     </FormGrid>
-                  ))}
-                  {submitError && (
-                    <Typography color="error" sx={{ mt: 2 }}>
-                      {submitError}
-                    </Typography>
-                  )}
-                  {submitSuccess && (
-                    <Typography color="primary" sx={{ mt: 2 }}>
-                      {submitSuccess}
-                    </Typography>
-                  )}
-                </Grid>
-              </Box>
-            </Form>
-          )}
+                    <FormGrid size={{ xs: 12, md: 12 }}>
+                      <TextInput
+                        label="Loan Product"
+                        name="loanProductName"
+                        type="text"
+                        helperText="Loan Product is read-only for a draft."
+                        disabled
+                      />
+                    </FormGrid>
+
+                    {updatedEditLoanForm.map((field, index) => {
+                      if (field.dependsOn && field.dependsOnValue) {
+                        const dependencyValue = formik.values[field.dependsOn];
+                        const allowed = Array.isArray(field.dependsOnValue)
+                          ? field.dependsOnValue
+                          : [field.dependsOnValue];
+                        if (!allowed.includes(dependencyValue)) return null;
+                      }
+
+                      let helperText = field.helperText;
+                      if (field.dynamicHelperText && field.name) {
+                        const currentValue = formik.values[field.name];
+                        if (
+                          currentValue &&
+                          field.dynamicHelperText[currentValue]
+                        ) {
+                          helperText = field.dynamicHelperText[currentValue];
+                        }
+                      }
+
+                      const isFieldReadOnly =
+                        readOnly || readOnlyFields.includes(field.name);
+                      const fieldEditing = editMode && !isFieldReadOnly;
+
+                      const fieldRenderProps = {
+                        ...field,
+                        helperText,
+                        formik,
+                        editing: fieldEditing,
+                        readOnly: isFieldReadOnly,
+                      };
+
+                      return (
+                        <FormGrid
+                          size={{ xs: 12, md: field.span }}
+                          key={`${field.name}-${index}`}
+                        >
+                          {renderFormField(fieldRenderProps, formik.values)}
+                        </FormGrid>
+                      );
+                    })}
+
+                    <Box
+                      sx={{
+                        display: "flex",
+                        pr: 2,
+                        justifyContent: { xs: "center", md: "flex-end" },
+                        width: "100%",
+                        gap: 1,
+                        flexWrap: "wrap",
+                        mb: 8,
+                        mt: 2,
+                      }}
+                    >
+                      <PlusButtonMain
+                        buttonText="CANCEL"
+                        variant="outlined"
+                        startIcon={null}
+                        color={theme.palette.error.main}
+                        onClick={() => {
+                          formik.resetForm();
+                          setSubmitError("");
+                          setSubmitSuccess("");
+                          if (onCancel) onCancel();
+                        }}
+                        disabled={formik.isSubmitting}
+                      />
+                      <PlusButtonMain
+                        buttonText="VIEW LOAN SCHEDULE"
+                        variant="outlined"
+                        startIcon={null}
+                        onClick={handleOpenSchedule}
+                        disabled={formik.isSubmitting}
+                      />
+                    </Box>
+
+                    {submitError && (
+                      <Typography color="error" sx={{ mt: 2 }}>
+                        {submitError}
+                      </Typography>
+                    )}
+                    {submitSuccess && (
+                      <Typography color="primary" sx={{ mt: 2 }}>
+                        {submitSuccess}
+                      </Typography>
+                    )}
+                  </Grid>
+                </Box>
+              </Form>
+            );
+          }}
         </Formik>
       </>
     );

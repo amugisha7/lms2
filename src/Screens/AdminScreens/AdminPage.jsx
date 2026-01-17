@@ -13,7 +13,7 @@ export default function AdminPage() {
       category: "Loans",
       links: [
         { label: "Loan Products", href: "/admin/loan-products" },
-        { label: "Loan Drafts", href: "/admin/loan-drafts" },
+        { label: "Loan Drafts", href: "/loan-drafts" },
         { label: "Loan Fees", href: "/admin/loan-fees" },
         { label: "Add Loan Fee", href: "/admin/add-loan-fee" },
       ],

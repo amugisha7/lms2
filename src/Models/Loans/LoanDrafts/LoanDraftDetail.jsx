@@ -2,12 +2,7 @@ import React from "react";
 import { Box, CircularProgress, Typography, Button } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
 import { UserContext } from "../../../App";
-import CreateLoan from "../CreateLoan/CreateLoan";
-import UseLoanProduct from "../CreateLoan/UseLoanProduct";
-import {
-  fetchBorrowers,
-  fetchLoanProducts,
-} from "../CreateLoan/createLoanHelpers";
+import { fetchBorrowers } from "../CreateLoan/createLoanHelpers";
 import {
   getLoanDraftById,
   transitionLoanDraftStatus,
@@ -29,10 +24,6 @@ export default function LoanDraftDetail() {
   const [loading, setLoading] = React.useState(true);
   const [loanDraft, setLoanDraft] = React.useState(null);
   const [borrower, setBorrower] = React.useState(null);
-  const [borrowers, setBorrowers] = React.useState([]);
-  const [borrowersLoading, setBorrowersLoading] = React.useState(true);
-  const [loanProducts, setLoanProducts] = React.useState([]);
-  const [loanProductsLoading, setLoanProductsLoading] = React.useState(true);
   const [notification, setNotification] = React.useState(null);
 
   const load = React.useCallback(async () => {
@@ -44,20 +35,9 @@ export default function LoanDraftDetail() {
       setLoanDraft(draft);
 
       if (userDetails?.branchUsersId) {
-        setBorrowersLoading(true);
         const list = await fetchBorrowers(userDetails.branchUsersId);
-        setBorrowers(list);
         const b = list.find((x) => x.id === draft?.borrowerID);
         setBorrower(b || null);
-      }
-
-      if (userDetails?.institutionUsersId && userDetails?.branchUsersId) {
-        setLoanProductsLoading(true);
-        const prods = await fetchLoanProducts(
-          userDetails.institutionUsersId,
-          userDetails.branchUsersId
-        );
-        setLoanProducts(prods);
       }
     } catch (err) {
       console.error("Failed to load loan draft:", err);
@@ -66,8 +46,6 @@ export default function LoanDraftDetail() {
         message: err?.message || "Failed to load draft",
       });
     } finally {
-      setBorrowersLoading(false);
-      setLoanProductsLoading(false);
       setLoading(false);
     }
   }, [draftId, userDetails?.branchUsersId, userDetails?.institutionUsersId]);
@@ -147,7 +125,7 @@ export default function LoanDraftDetail() {
       if (!loanDraft) return;
       const loan = await convertDraftToLoan({ loanDraft, userDetails });
       setNotification({ type: "success", message: "Draft converted to loan" });
-      navigate("/admin/loans");
+      navigate("/loans");
       return loan;
     } catch (err) {
       console.error(err);
@@ -199,7 +177,7 @@ export default function LoanDraftDetail() {
         <Button
           sx={{ mt: 2 }}
           variant="outlined"
-          onClick={() => navigate("/admin/loan-drafts")}
+          onClick={() => navigate("/loan-drafts")}
         >
           Back to Drafts
         </Button>
@@ -208,7 +186,9 @@ export default function LoanDraftDetail() {
   }
 
   const readOnly = !canEdit(loanDraft.status);
-  const hasLoanProduct = Boolean(loanDraft.loanProductID);
+  const loanProductName =
+    loanDraft?.loanProduct?.name ||
+    (loanDraft?.loanProductID ? "Unknown" : "N/A");
 
   return (
     <Box sx={{ width: "100%", p: 2 }}>
@@ -247,12 +227,17 @@ export default function LoanDraftDetail() {
         </Box>
 
         <Box sx={{ display: "flex", gap: 1 }}>
-          <Button
-            variant="outlined"
-            onClick={() => navigate("/admin/loan-drafts")}
-          >
+          <Button variant="outlined" onClick={() => navigate("/loan-drafts")}>
             Back
           </Button>
+          {!readOnly && (
+            <Button
+              variant="contained"
+              onClick={() => navigate(`/loan-drafts/id/${draftId}/edit`)}
+            >
+              Edit draft
+            </Button>
+          )}
           <Button variant="outlined" onClick={handleExportSchedule}>
             Export schedule
           </Button>
@@ -283,41 +268,26 @@ export default function LoanDraftDetail() {
         </Box>
       </Box>
 
-      {hasLoanProduct ? (
-        <UseLoanProduct
-          borrower={borrower}
-          borrowers={borrowers}
-          borrowersLoading={borrowersLoading}
-          loanProducts={loanProducts}
-          loanProductsLoading={loanProductsLoading}
-          initialValues={parseDraftRecord(loanDraft)}
-          hideCancel
-          readOnly={readOnly}
-          draftId={loanDraft.id}
-          onDraftUpdated={setLoanDraft}
-        />
-      ) : (
-        <CreateLoan
-          borrower={borrower}
-          borrowers={borrowers}
-          borrowersLoading={borrowersLoading}
-          initialValues={parseDraftRecord(loanDraft)}
-          hideCancel
-          readOnly={readOnly}
-          draftId={loanDraft.id}
-          onDraftUpdated={setLoanDraft}
-        />
-      )}
+      <Box sx={{ mt: 2 }}>
+        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+          Summary
+        </Typography>
+        <Typography variant="body2" sx={{ opacity: 0.85, mt: 0.5 }}>
+          Loan Product: {loanProductName}
+        </Typography>
+        <Typography variant="body2" sx={{ opacity: 0.85, mt: 0.5 }}>
+          Principal: {loanDraft?.principal ?? "N/A"}
+        </Typography>
+        <Typography variant="body2" sx={{ opacity: 0.85, mt: 0.5 }}>
+          Interest Rate: {loanDraft?.interestRate ?? "N/A"}
+        </Typography>
+        <Typography variant="body2" sx={{ opacity: 0.85, mt: 0.5 }}>
+          Start Date: {loanDraft?.startDate || "N/A"}
+        </Typography>
+        <Typography variant="body2" sx={{ opacity: 0.85, mt: 0.5 }}>
+          Maturity Date: {loanDraft?.maturityDate || "N/A"}
+        </Typography>
+      </Box>
     </Box>
   );
-}
-
-function parseDraftRecord(loanDraft) {
-  if (!loanDraft?.draftRecord) return undefined;
-  if (typeof loanDraft.draftRecord === "object") return loanDraft.draftRecord;
-  try {
-    return JSON.parse(loanDraft.draftRecord);
-  } catch {
-    return undefined;
-  }
 }

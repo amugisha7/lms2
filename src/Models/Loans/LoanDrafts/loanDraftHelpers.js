@@ -620,6 +620,17 @@ const GET_LOAN_QUERY = `
       createdByEmployeeID
       createdAt
       updatedAt
+      borrower {
+        id
+        firstname
+        othername
+        businessName
+        uniqueIdNumber
+      }
+      loanProduct {
+        id
+        name
+      }
     }
   }
 `;

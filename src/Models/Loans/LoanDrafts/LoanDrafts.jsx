@@ -88,7 +88,7 @@ export default function LoanDrafts() {
 
   const onEdit = React.useCallback(
     (id) => {
-      navigate(`/loan-drafts/id/${id}/edit`);
+      navigate(`/loan-drafts/id/${id}/view`);
     },
     [navigate],
   );
@@ -224,7 +224,7 @@ export default function LoanDrafts() {
     () => [
       {
         field: "draftNumber",
-        headerName: "",
+        headerName: "ID",
         width: 140,
         renderCell: (params) => (
           <ClickableText onClick={() => onEdit(params.row.id)}>
@@ -316,9 +316,9 @@ export default function LoanDrafts() {
         valueGetter: (value, row) => formatInterestMethod(row),
       },
       {
-        field: "createdAt",
-        headerName: "Created",
-        width: 120,
+        field: "lastEditedAt",
+        headerName: "Last Edited",
+        width: 110,
         valueGetter: (value) =>
           value ? dayjs(value).format("DD-MMM-YYYY") : "",
       },
@@ -342,7 +342,7 @@ export default function LoanDrafts() {
       )}
       <CollectionsTemplate
         title="Loan Drafts"
-        createButtonText="Create Loan"
+        createButtonText="New Loan"
         onCreateClick={() => navigate("/add-loan")}
         items={rows}
         loading={loading}

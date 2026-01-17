@@ -268,7 +268,7 @@ const CreateLoan = forwardRef(
       draftId,
       onDraftUpdated,
     },
-    ref
+    ref,
   ) => {
     const { userDetails } = useContext(UserContext);
     const navigate = useNavigate();
@@ -439,7 +439,7 @@ const CreateLoan = forwardRef(
       } catch (err) {
         console.error("Error saving draft:", err);
         setSubmitError(
-          err?.message || "Failed to save draft. Please try again."
+          err?.message || "Failed to save draft. Please try again.",
         );
       } finally {
         setSubmitting(false);
@@ -575,7 +575,7 @@ const CreateLoan = forwardRef(
                       value: loanFee.id,
                       label: `${loanFee.name} - ${formatLoanFeeAmount(
                         loanFee,
-                        currency
+                        currency,
                       )}`,
                     })),
                   });
@@ -605,7 +605,7 @@ const CreateLoan = forwardRef(
               }
               if (values.loanFeesType === "pre-defined" && values.loanFees) {
                 const config = loanFeesConfigs.find(
-                  (c) => c.id === values.loanFees
+                  (c) => c.id === values.loanFees,
                 );
                 if (config) {
                   if (config.calculationMethod === "fixed") {
@@ -636,7 +636,7 @@ const CreateLoan = forwardRef(
 
               if (values.loanFeesType === "pre-defined" && values.loanFees) {
                 const config = loanFeesConfigs.find(
-                  (c) => c.id === values.loanFees
+                  (c) => c.id === values.loanFees,
                 );
                 return {
                   label: config?.name || "Pre-defined Loan Fee",
@@ -687,6 +687,7 @@ const CreateLoan = forwardRef(
                     onConfirmCreateLoan={handleConvertToLoan}
                     totalLoanFee={totalLoanFee}
                     loanFeeSummary={loanFeeSummary}
+                    isEditDraftFlow={false}
                   />
                 </CustomPopUp>
 
@@ -795,7 +796,7 @@ const CreateLoan = forwardRef(
         </Formik>
       </>
     );
-  }
+  },
 );
 
 CreateLoan.displayName = "CreateLoan";

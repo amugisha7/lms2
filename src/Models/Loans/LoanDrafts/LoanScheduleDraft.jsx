@@ -85,6 +85,7 @@ export default function LoanScheduleDraft({
   onConfirmCreateLoan,
   totalLoanFee = 0,
   loanFeeSummary,
+  isEditDraftFlow = false,
 }) {
   const theme = useTheme();
   const printAreaRef = React.useRef(null);
@@ -163,7 +164,7 @@ export default function LoanScheduleDraft({
               const response = await fetch(remoteUrl);
               if (!response.ok) {
                 throw new Error(
-                  `Header image fetch failed: ${response.status}`
+                  `Header image fetch failed: ${response.status}`,
                 );
               }
               const blob = await response.blob();
@@ -171,7 +172,7 @@ export default function LoanScheduleDraft({
             } catch (innerError) {
               console.warn(
                 "Header image could not be fetched as a blob (likely CORS). Falling back to remote URL.",
-                innerError
+                innerError,
               );
             }
 
@@ -342,7 +343,7 @@ export default function LoanScheduleDraft({
                 img.addEventListener("load", done, { once: true });
                 img.addEventListener("error", done, { once: true });
               });
-            })
+            }),
           );
         }
 
@@ -378,7 +379,7 @@ export default function LoanScheduleDraft({
           0,
           0,
           imgWidth,
-          Math.min(imgHeight, pageHeight)
+          Math.min(imgHeight, pageHeight),
         );
       }
 
@@ -549,7 +550,7 @@ export default function LoanScheduleDraft({
               )}
               {(() => {
                 const periodLabel = formatInterestPeriodLabel(
-                  draftRecord?.interestPeriod
+                  draftRecord?.interestPeriod,
                 );
                 if (draftRecord?.interestPeriod === "per_loan") {
                   return <> of Principal</>;
@@ -875,7 +876,7 @@ export default function LoanScheduleDraft({
         actions={[
           {
             key: "edit",
-            text: "EDIT",
+            text: isEditDraftFlow ? "BACK" : "EDIT",
             onClick: onEdit,
             disabled: !onEdit,
           },

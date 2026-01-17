@@ -1058,7 +1058,7 @@ export const updateLoanDraft = async ({
       input: {
         loanID: id,
         eventAt: nowIso(),
-        eventType: "UPDATED",
+        eventType: "OTHER",
         actorEmployeeID: userDetails?.id || null,
         summary: "Draft loan updated",
         payload: safeJsonStringify({ patch }),

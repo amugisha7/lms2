@@ -25,6 +25,10 @@ import TextAndDropdown from "../../../Resources/FormComponents/TextAndDropdown";
 import MultipleDropDown from "../../../Resources/FormComponents/MultipleDropDown";
 
 import PlusButtonMain from "../../../ModelAssets/PlusButtonMain";
+import PlusButtonSmall from "../../../ModelAssets/PlusButtonSmall";
+import CustomEditFormButtons from "../../../ModelAssets/CustomEditFormButtons";
+import EditIcon from "@mui/icons-material/Edit";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import WorkingOverlay from "../../../ModelAssets/WorkingOverlay";
 import CustomPopUp from "../../../ModelAssets/CustomPopUp";
 import LoanScheduleDraft from "../LoanDrafts/LoanScheduleDraft";
@@ -267,7 +271,7 @@ const EditLoan = forwardRef(
       readOnlyFields = [],
       loanDraft,
     },
-    ref
+    ref,
   ) => {
     const { userDetails } = useContext(UserContext);
     const theme = useTheme();
@@ -302,6 +306,10 @@ const EditLoan = forwardRef(
       normalizedStatus === "DRAFT" || normalizedStatus === "REJECTED";
 
     const readOnly = Boolean(localDraft) && !canEditDraft;
+
+    useEffect(() => {
+      if (readOnly) setEditMode(false);
+    }, [readOnly]);
 
     useEffect(() => {
       const currentInstitutionId = userDetails?.institutionUsersId;
@@ -409,7 +417,7 @@ const EditLoan = forwardRef(
                 value: loanFee.id,
                 label: `${loanFee.name} - ${formatLoanFeeAmount(
                   loanFee,
-                  currency
+                  currency,
                 )}`,
               })),
             };
@@ -461,7 +469,7 @@ const EditLoan = forwardRef(
       } catch (err) {
         console.error("Error updating loan:", err);
         setSubmitError(
-          err?.message || "Failed to save draft. Please try again."
+          err?.message || "Failed to save draft. Please try again.",
         );
       } finally {
         setSubmitting(false);
@@ -540,7 +548,7 @@ const EditLoan = forwardRef(
               }
               if (values.loanFeesType === "pre-defined" && values.loanFees) {
                 const config = loanFeesConfigs.find(
-                  (c) => c.id === values.loanFees
+                  (c) => c.id === values.loanFees,
                 );
                 if (config) {
                   if (config.calculationMethod === "fixed") {
@@ -571,7 +579,7 @@ const EditLoan = forwardRef(
 
               if (values.loanFeesType === "pre-defined" && values.loanFees) {
                 const config = loanFeesConfigs.find(
-                  (c) => c.id === values.loanFees
+                  (c) => c.id === values.loanFees,
                 );
                 return {
                   label: config?.name || "Pre-defined Loan Fee",
@@ -595,6 +603,45 @@ const EditLoan = forwardRef(
 
             return (
               <Form>
+                {!editMode && (
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "flex-end",
+                      alignItems: "center",
+                      mb: 1,
+                      gap: 1,
+                    }}
+                  >
+                    <PlusButtonSmall
+                      variant="outlined"
+                      label="BACK"
+                      IconComponent={ArrowBackIcon}
+                      onClick={() => {
+                        if (onCancel) onCancel();
+                        else navigate(-1);
+                      }}
+                    />
+                    {!readOnly && (
+                      <PlusButtonSmall
+                        variant="outlined"
+                        label="EDIT"
+                        IconComponent={EditIcon}
+                        onClick={() => setEditMode(true)}
+                      />
+                    )}
+                  </Box>
+                )}
+
+                {editMode && !readOnly && (
+                  <CustomEditFormButtons
+                    formik={formik}
+                    setEditMode={setEditMode}
+                    setSubmitError={setSubmitError}
+                    setSubmitSuccess={setSubmitSuccess}
+                  />
+                )}
+
                 <WorkingOverlay
                   open={formik.isSubmitting}
                   message="Saving draft..."
@@ -622,6 +669,7 @@ const EditLoan = forwardRef(
                     onConfirmCreateLoan={handleConvertToLoan}
                     totalLoanFee={totalLoanFee}
                     loanFeeSummary={loanFeeSummary}
+                    isEditDraftFlow={true}
                   />
                 </CustomPopUp>
 
@@ -708,19 +756,6 @@ const EditLoan = forwardRef(
                       }}
                     >
                       <PlusButtonMain
-                        buttonText="CANCEL"
-                        variant="outlined"
-                        startIcon={null}
-                        color={theme.palette.error.main}
-                        onClick={() => {
-                          formik.resetForm();
-                          setSubmitError("");
-                          setSubmitSuccess("");
-                          if (onCancel) onCancel();
-                        }}
-                        disabled={formik.isSubmitting}
-                      />
-                      <PlusButtonMain
                         buttonText="VIEW LOAN SCHEDULE"
                         variant="outlined"
                         startIcon={null}
@@ -747,7 +782,7 @@ const EditLoan = forwardRef(
         </Formik>
       </>
     );
-  }
+  },
 );
 
 EditLoan.displayName = "EditLoan";

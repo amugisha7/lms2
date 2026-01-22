@@ -4,6 +4,7 @@ import { useSearchParams } from "react-router-dom";
 import Settings from "./Settings";
 import AccountInfo from "./AccountInfo";
 import DocumentHeaderSettings from "./DocumentHeaderSettings";
+import CustomerApplicationsSettings from "./CustomerApplicationsSettings";
 
 const SettingsWrapper = () => {
   const [searchParams] = useSearchParams();
@@ -15,7 +16,7 @@ const SettingsWrapper = () => {
     const tabParam = searchParams.get("tab");
     if (tabParam) {
       const tabIndex = parseInt(tabParam, 10);
-      if (!isNaN(tabIndex) && tabIndex >= 0 && tabIndex <= 2) {
+      if (!isNaN(tabIndex) && tabIndex >= 0 && tabIndex <= 3) {
         setActiveTab(tabIndex);
       }
     }
@@ -70,6 +71,7 @@ const SettingsWrapper = () => {
           <Tab label="Institution Settings" />
           <Tab label="Account Information" />
           <Tab label="Document Header" />
+          <Tab label="Customer Portal Link" />
         </Tabs>
       </Paper>
 
@@ -77,6 +79,7 @@ const SettingsWrapper = () => {
         {activeTab === 0 && <Settings />}
         {activeTab === 1 && <AccountInfo />}
         {activeTab === 2 && <DocumentHeaderSettings />}
+        {activeTab === 3 && <CustomerApplicationsSettings />}
       </Box>
     </Box>
   );

@@ -1,6 +1,6 @@
 - Create loans form. Also create from loan product.
   - Ensure everything about loan drafts is working.
-  * Resume: Clicking the loandraft id should open in readonly mode with an "edit" button at the top. Remember to instruct that editing be for the currently editable fields.
+  * Resume: Work on the loan approval workflow.
   * ensure that all exports work, check loan product flow.
   * Move saving from loandraft to loan with status draft.
     After clicking create loan, go to contracts, collateral and gurantors, other incomes and expenses.

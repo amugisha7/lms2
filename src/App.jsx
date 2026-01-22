@@ -2,8 +2,8 @@ import "./App.css";
 import { withAuthenticator } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
 import { createContext, useEffect, useState, useRef } from "react";
-import { NotificationProvider } from "./ComponentAssets/NotificationContext";
-import { SnackbarProvider } from "./ComponentAssets/SnackbarContext";
+import { NotificationProvider } from "./ModelAssets/NotificationContext";
+import { SnackbarProvider } from "./ModelAssets/SnackbarContext";
 import { generateClient } from "aws-amplify/api";
 import AppRoutes from "./Routes";
 import LoadingScreen from "./Resources/LoadingScreen";
@@ -66,7 +66,7 @@ function App({ signOut, user }) {
       // Combine and deduplicate
       const allMsgs = [...sent, ...received];
       const uniqueMessages = Array.from(
-        new Map(allMsgs.map((msg) => [msg.id, msg])).values()
+        new Map(allMsgs.map((msg) => [msg.id, msg])).values(),
       );
 
       setAllMessages(uniqueMessages);
@@ -88,7 +88,7 @@ function App({ signOut, user }) {
 
   useEffect(() => {
     const count = allMessages.filter(
-      (m) => m.recipientUserId === userDetails?.id && m.status === "unread"
+      (m) => m.recipientUserId === userDetails?.id && m.status === "unread",
     ).length;
     setUnreadCount(count);
   }, [allMessages, userDetails?.id]);
@@ -206,7 +206,7 @@ function App({ signOut, user }) {
         next: ({ data }) => {
           console.log(
             "Subscription received new message:",
-            data.onCreateNotification
+            data.onCreateNotification,
           );
           const newMessage = data.onCreateNotification;
           setAllMessages((prev) => [newMessage, ...prev]);

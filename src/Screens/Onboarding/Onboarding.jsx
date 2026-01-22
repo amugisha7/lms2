@@ -28,12 +28,12 @@ import * as Yup from "yup";
 import { currenciesObj } from "../../Resources/currenciesObj";
 import { countries } from "../../Resources/listOfCountries";
 import { getGMTOffset, timezonesList } from "../../Resources/timezones";
-import TwoRadialButtons from "../../ComponentAssets/TwoRadialButtons";
+import TwoRadialButtons from "../../ModelAssets/TwoRadialButtons";
 import myLogo from "../../Resources/loantabs_logo.png";
 import { generateClient } from "aws-amplify/api";
-import { useNotification } from "../../ComponentAssets/NotificationContext";
+import { useNotification } from "../../ModelAssets/NotificationContext";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useSnackbar } from "../../ComponentAssets/SnackbarContext";
+import { useSnackbar } from "../../ModelAssets/SnackbarContext";
 import {
   CREATE_INSTITUTION_MUTATION,
   CREATE_BRANCH_MUTATION,
@@ -89,7 +89,7 @@ const AccountSettingsForm = () => {
   });
   const [decimalPoints, setDecimalPoints] = React.useState(0);
   const [companyOption, setCompanyOption] = React.useState(
-    "Set up a new Business on LoanTabs"
+    "Set up a new Business on LoanTabs",
   );
   const [businessID, setBusinessID] = React.useState("");
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -104,7 +104,7 @@ const AccountSettingsForm = () => {
     console.log("user::: ", user.signInDetails.loginId);
     console.log(
       "new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()::: ",
-      new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+      new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
     );
   }, [formData.currency]);
 
@@ -308,7 +308,7 @@ const AccountSettingsForm = () => {
           console.error(
             "Error creating notification for admin:",
             admin.id,
-            notifError
+            notifError,
           );
         }
       }

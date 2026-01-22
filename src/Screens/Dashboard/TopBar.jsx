@@ -17,7 +17,7 @@ import {
   Apps as AppsIcon,
   Menu as MenuIcon,
 } from "@mui/icons-material";
-import ColorModeToggle from "../../ComponentAssets/ColorModeToggle";
+import ColorModeToggle from "../../ModelAssets/ColorModeToggle";
 import { useTheme } from "@mui/material/styles";
 import myLogo from "../../Resources/loantabs_logo.png";
 import MobileMenu from "./MobileMenu";
@@ -30,7 +30,7 @@ const TopBar = ({ onMenuClick }) => {
   const navigate = useNavigate();
 
   const { userDetails, unreadCount } = React.useContext(
-    require("../../App").UserContext
+    require("../../App").UserContext,
   );
   const institutionName = userDetails?.institution?.name || "";
 

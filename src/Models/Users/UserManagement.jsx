@@ -13,8 +13,8 @@ import { useTheme } from "@mui/material/styles";
 import { Formik } from "formik";
 import { UserContext } from "../../App";
 import CreateUser from "./CreateUser/CreateUser";
-import NotificationBar from "../../ComponentAssets/NotificationBar";
-import ClickableText from "../../ComponentAssets/ClickableText";
+import NotificationBar from "../../ModelAssets/NotificationBar";
+import ClickableText from "../../ModelAssets/ClickableText";
 import EditContentPopup from "../../ModelAssets/EditContentPopup";
 import DeleteDialog from "../../ModelAssets/DeleteDialog";
 import {
@@ -42,7 +42,7 @@ const downloadPdf = async (
   colorMode,
   originalMode,
   filename = "document.pdf",
-  heading = ""
+  heading = "",
 ) => {
   // Switch to light mode before generating PDF
   if (originalMode === "dark") {
@@ -179,7 +179,7 @@ const downloadPdf = async (
       0,
       0,
       canvas.width,
-      sliceHeightPx
+      sliceHeightPx,
     );
 
     const sliceImgData = sliceCanvas.toDataURL("image/png");
@@ -192,7 +192,7 @@ const downloadPdf = async (
         leftPadding,
         contentStartYFirstPage,
         availableWidth,
-        sliceHeightMm
+        sliceHeightMm,
       );
     } else {
       pdf.addPage();
@@ -202,7 +202,7 @@ const downloadPdf = async (
         leftPadding,
         topMarginOtherPages,
         availableWidth,
-        sliceHeightMm
+        sliceHeightMm,
       );
     }
   };
@@ -219,7 +219,7 @@ const downloadPdf = async (
     while (remainingHeightPx > 0) {
       const sliceHeightPx = Math.min(
         remainingHeightPx,
-        availableHeightOther * pxPerMm
+        availableHeightOther * pxPerMm,
       );
       addSlice(currentTopPx, sliceHeightPx, false);
       remainingHeightPx -= sliceHeightPx;
@@ -321,7 +321,7 @@ export default function UserManagement() {
         });
         const fields = await fetchCustomFieldsForUser(
           userDetails.institutionUsersId,
-          userDetails.branchUsersId
+          userDetails.branchUsersId,
         );
         console.log("API Call: Custom fields fetched successfully", fields);
         setCustomFields(fields);
@@ -413,7 +413,7 @@ export default function UserManagement() {
       colorMode,
       theme.palette.mode,
       filename,
-      heading
+      heading,
     );
   };
 
@@ -432,7 +432,7 @@ export default function UserManagement() {
       customFields,
       values,
       userDetails.institutionUsersId,
-      userDetails.branchUsersId
+      userDetails.branchUsersId,
     );
     console.log("API Call: Custom fields updated successfully", result);
     return result;
@@ -454,7 +454,7 @@ export default function UserManagement() {
       colorMode,
       originalMode,
       `${getUserName()}_details.pdf`,
-      `${getUserName()} - User Details`
+      `${getUserName()} - User Details`,
     );
   };
 
@@ -728,7 +728,7 @@ export default function UserManagement() {
                 <Formik
                   initialValues={mapCustomFieldsToFormValues(
                     user,
-                    customFields
+                    customFields,
                   )}
                   enableReinitialize
                 >

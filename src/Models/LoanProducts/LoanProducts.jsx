@@ -3,11 +3,11 @@ import { generateClient } from "aws-amplify/api";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { UserContext } from "../../App";
-import CustomDataGrid from "../../ComponentAssets/CustomDataGrid";
-import CustomSlider from "../../ComponentAssets/CustomSlider";
-import DeleteDialog from "../../ComponentAssets/DeleteDialog";
+import CustomDataGrid from "../../ModelAssets/CustomDataGrid";
+import CustomSlider from "../../ModelAssets/CustomSlider";
+import DeleteDialog from "../../ModelAssets/DeleteDialog";
 import { useTheme } from "@mui/material/styles";
-import ClickableText from "../../ComponentAssets/ClickableText";
+import ClickableText from "../../ModelAssets/ClickableText";
 import EditLoanProduct from "./EditLoanProduct/EditLoanProduct";
 import CreateLoanProduct from "./CreateLoanProduct/CreateLoanProduct";
 import PlusButtonMain from "../../ModelAssets/PlusButtonMain";
@@ -159,7 +159,7 @@ export default function LoanProducts() {
 
         // Remove duplicates if any
         const uniqueLoanProducts = Array.from(
-          new Map(allLoanProducts.map((item) => [item.id, item])).values()
+          new Map(allLoanProducts.map((item) => [item.id, item])).values(),
         );
 
         setLoanProducts(uniqueLoanProducts);
@@ -199,7 +199,7 @@ export default function LoanProducts() {
   const handleEditSuccess = (updatedRow) => {
     // Update the loan product in the local state with the complete updated data
     setLoanProducts((prev) =>
-      prev.map((row) => (row.id === updatedRow.id ? updatedRow : row))
+      prev.map((row) => (row.id === updatedRow.id ? updatedRow : row)),
     );
 
     // Also update the view dialog if it's showing the same product
@@ -231,7 +231,7 @@ export default function LoanProducts() {
       // Then, clear relationships with loan fees configs
       console.log(
         "Clearing LoanProductLoanFeesConfigs for loan product:",
-        deleteDialogRow.id
+        deleteDialogRow.id,
       );
       const loanFeesConfigsResult = await client.graphql({
         query: LIST_LOAN_PRODUCT_LOAN_FEES_CONFIGS_QUERY,
@@ -240,7 +240,7 @@ export default function LoanProducts() {
       const feeItems =
         loanFeesConfigsResult.data.listLoanProductLoanFeesConfigs.items;
       console.log(
-        `Found ${feeItems.length} LoanProductLoanFeesConfigs to delete`
+        `Found ${feeItems.length} LoanProductLoanFeesConfigs to delete`,
       );
       for (const item of feeItems) {
         console.log("Deleting LoanProductLoanFeesConfig:", item.id);
@@ -254,7 +254,7 @@ export default function LoanProducts() {
       // Clear relationships with branches
       console.log(
         "Clearing BranchLoanProducts for loan product:",
-        deleteDialogRow.id
+        deleteDialogRow.id,
       );
       const branchLoanProductsResult = await client.graphql({
         query: LIST_BRANCH_LOAN_PRODUCTS_QUERY,
@@ -286,7 +286,7 @@ export default function LoanProducts() {
         },
       });
       setLoanProducts((prev) =>
-        prev.filter((row) => row.id !== deleteDialogRow.id)
+        prev.filter((row) => row.id !== deleteDialogRow.id),
       );
       handleDeleteDialogClose();
     } catch (err) {
@@ -425,7 +425,7 @@ export default function LoanProducts() {
             rows={
               search
                 ? loanProducts.filter((row) =>
-                    row.name?.toLowerCase().includes(search.toLowerCase())
+                    row.name?.toLowerCase().includes(search.toLowerCase()),
                   )
                 : loanProducts
             }

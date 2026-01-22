@@ -11,7 +11,7 @@ import DateInput from "../Resources/FormComponents/DateInput";
 import FileUpload from "../Resources/FormComponents/FileUpload";
 import TextArea from "../Resources/FormComponents/TextArea";
 import NumberInput from "../Resources/FormComponents/NumberInput";
-import CreateFormButtons from "../ComponentAssets/CreateFormButtons";
+import CreateFormButtons from "../ModelAssets/CreateFormButtons";
 
 // Styled FormGrid component for consistent layout
 const FormGrid = styled(Grid)(({ theme }) => ({

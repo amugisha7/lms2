@@ -13,8 +13,8 @@ import { useTheme } from "@mui/material/styles";
 import { Formik } from "formik";
 import { UserContext } from "../../App";
 import CreateBorrower from "./CreateBorrower/CreateBorrower";
-import NotificationBar from "../../ComponentAssets/NotificationBar";
-import ClickableText from "../../ComponentAssets/ClickableText";
+import NotificationBar from "../../ModelAssets/NotificationBar";
+import ClickableText from "../../ModelAssets/ClickableText";
 import CustomSlider from "../../ModelAssets/CustomSlider";
 import CustomBorrowerFields from "./CustomBorrowerFields/CustomBorrowerFields";
 import EditableCustomBorrowerFields from "./CustomBorrowerFields/EditableCustomBorrowerFields";
@@ -42,7 +42,7 @@ const downloadPdf = async (
   colorMode,
   originalMode,
   filename = "document.pdf",
-  heading = ""
+  heading = "",
 ) => {
   // Switch to light mode before generating PDF
   if (originalMode === "dark") {
@@ -205,7 +205,7 @@ const downloadPdf = async (
           0,
           0,
           canvas.width,
-          sliceHeightPx
+          sliceHeightPx,
         );
         const sliceImg = sliceCanvas.toDataURL("image/jpeg", 1.0);
         const sliceHeightMm = (sliceHeightPx / canvas.width) * availableWidth;
@@ -217,7 +217,7 @@ const downloadPdf = async (
           xPos,
           yPos,
           availableWidth,
-          sliceHeightMm
+          sliceHeightMm,
         );
       };
 
@@ -368,7 +368,7 @@ export default function BorrowerManagement() {
         });
         const fields = await fetchCustomFieldsForBorrower(
           userDetails.institutionUsersId,
-          userDetails.branchUsersId
+          userDetails.branchUsersId,
         );
         console.log("API Call: Custom fields fetched successfully", fields);
         setCustomFields(fields);
@@ -515,7 +515,7 @@ export default function BorrowerManagement() {
       colorMode,
       theme.palette.mode,
       filename,
-      heading
+      heading,
     );
   };
 
@@ -532,7 +532,7 @@ export default function BorrowerManagement() {
     const result = await updateBorrowerCustomFields(
       borrowerId,
       customFields,
-      values
+      values,
     );
     console.log("API Call: Custom fields updated successfully", result);
     return result;
@@ -803,7 +803,7 @@ export default function BorrowerManagement() {
                 <Formik
                   initialValues={mapCustomFieldsToFormValues(
                     borrower,
-                    customFields
+                    customFields,
                   )}
                   enableReinitialize
                 >

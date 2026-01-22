@@ -5,7 +5,7 @@ import { Box, Grid, Typography } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { useTheme } from "@mui/material";
 import { FormikProvider } from "formik";
-import CustomEditFormButtons from "../../../ComponentAssets/CustomEditFormButtons";
+import CustomEditFormButtons from "../../../ModelAssets/CustomEditFormButtons";
 import CustomUserFields from "./CustomUserFields";
 
 // Import form components
@@ -47,7 +47,7 @@ const EditableCustomUserFields = ({
   // Create validation schema from custom fields
   const createValidationSchema = () => {
     return Yup.object().shape(
-      CustomUserFields.createValidationSchema(customFields)
+      CustomUserFields.createValidationSchema(customFields),
     );
   };
 

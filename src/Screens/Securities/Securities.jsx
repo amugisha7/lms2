@@ -1,9 +1,9 @@
 import React from "react";
 import { UserContext } from "../../App";
-import ClickableText from "../../ComponentAssets/ClickableText";
+import ClickableText from "../../ModelAssets/ClickableText";
 import CreateSecurities from "./CreateSecurities/CreateSecurities";
 import { useTheme } from "@mui/material/styles";
-import CollectionsTemplate from "../../ComponentAssets/CollectionsTemplate";
+import CollectionsTemplate from "../../ModelAssets/CollectionsTemplate";
 import { useCrudOperations } from "../../hooks/useCrudOperations";
 
 const LIST_SECURITIES_QUERY = `
@@ -77,7 +77,7 @@ export default function Securities() {
     null, // create mutation
     UPDATE_SECURITY_MUTATION, // update mutation
     DELETE_SECURITY_MUTATION,
-    "listSecurities" // Explicitly specify the query key
+    "listSecurities", // Explicitly specify the query key
   );
 
   React.useEffect(() => {

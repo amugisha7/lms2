@@ -8,8 +8,8 @@ import {
   remove,
 } from "aws-amplify/storage";
 import { generateClient } from "aws-amplify/api";
-import CustomDataGrid from "../../../../ComponentAssets/CustomDataGrid";
-import DeleteDialog from "../../../../ComponentAssets/DeleteDialog";
+import CustomDataGrid from "../../../../ModelAssets/CustomDataGrid";
+import DeleteDialog from "../../../../ModelAssets/DeleteDialog";
 import { UserContext } from "../../../../App";
 import UploadDialogBox from "../../../../ModelAssets/UploadDialogBox";
 import { formatFileSize, formatDate } from "../../../../Resources/filesUtils";
@@ -356,8 +356,8 @@ const MoneyTransactionsFiles = ({
             client.graphql({
               query: deleteMoneyTransactionDocument,
               variables: { input: { id: record.id } },
-            })
-          )
+            }),
+          ),
         );
       }
 
@@ -382,7 +382,7 @@ const MoneyTransactionsFiles = ({
         documents: {
           ...prev.documents,
           items: (prev.documents?.items || []).filter(
-            (item) => item.document?.id !== fileId
+            (item) => item.document?.id !== fileId,
           ),
         },
       }));
@@ -417,7 +417,7 @@ const MoneyTransactionsFiles = ({
     openDeleteDialog,
     formatFileSize,
     formatDate,
-    canDeleteFiles
+    canDeleteFiles,
   );
 
   return (

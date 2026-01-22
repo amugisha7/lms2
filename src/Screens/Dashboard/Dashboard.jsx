@@ -19,7 +19,7 @@ import {
 } from "@mui/icons-material";
 import SideBar from "./SideBar";
 import { Outlet } from "react-router-dom";
-import ColorModeToggle from "../../ComponentAssets/ColorModeToggle";
+import ColorModeToggle from "../../ModelAssets/ColorModeToggle";
 import { useTheme } from "@mui/material/styles";
 import TopBar from "./TopBar";
 import { UserContext } from "../../App";

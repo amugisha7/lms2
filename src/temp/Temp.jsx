@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import Button from "@mui/material/Button";
-import CustomSlider from "../ComponentAssets/CustomSlider";
+import CustomSlider from "../ModelAssets/CustomSlider";
 import FormTemplate from "./FormTemplate";
 
 export default function Temp() {

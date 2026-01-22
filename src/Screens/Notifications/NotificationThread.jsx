@@ -20,7 +20,7 @@ import {
   UPDATE_USER_MUTATION,
 } from "./notificationQueries";
 import { getUserDisplayName, formatFullDate } from "./notificationUtils";
-import { useSnackbar } from "../../ComponentAssets/SnackbarContext";
+import { useSnackbar } from "../../ModelAssets/SnackbarContext";
 import CustomPopUp from "../../ModelAssets/CustomPopUp";
 import CreateUser from "../../Models/Users/CreateUser/CreateUser";
 

@@ -1,7 +1,7 @@
 import React from "react";
 import { Typography, IconButton } from "@mui/material";
 import { Delete } from "@mui/icons-material";
-import ClickableText from "../../../ComponentAssets/ClickableText";
+import ClickableText from "../../../ModelAssets/ClickableText";
 
 export const getUserFilesColumns = (theme, handleDownload, openDeleteDialog, formatFileSize, formatDate, canDelete) => [
   {

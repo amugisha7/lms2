@@ -14,7 +14,7 @@ import {
 import { useTheme } from "@mui/material/styles";
 import { CloudUpload } from "@mui/icons-material";
 import { UserContext } from "../../App";
-import { useSnackbar } from "../../ComponentAssets/SnackbarContext";
+import { useSnackbar } from "../../ModelAssets/SnackbarContext";
 import { uploadData as amplifyUploadData, getUrl } from "aws-amplify/storage";
 import { updateInstitution } from "./helpers/updateInstitution";
 
@@ -113,7 +113,7 @@ const DocumentHeaderSettings = () => {
     if (!allowedTypes.includes(uploadFileData.file.type)) {
       showSnackbar(
         "File type not allowed. Please select an image file.",
-        "error"
+        "error",
       );
       return;
     }

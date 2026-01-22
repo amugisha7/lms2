@@ -1,7 +1,7 @@
 import React from "react";
 import { Typography, IconButton } from "@mui/material";
 import { Delete } from "@mui/icons-material";
-import ClickableText from "../../ComponentAssets/ClickableText";
+import ClickableText from "../../ModelAssets/ClickableText";
 
 const formatFileSize = (bytes) => {
   if (bytes === undefined || bytes === null) return "N/A";

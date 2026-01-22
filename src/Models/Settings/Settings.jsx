@@ -24,7 +24,7 @@ import Dropdown from "../../Resources/FormComponents/Dropdown";
 import DateInput from "../../Resources/FormComponents/DateInput";
 import FormLabel from "../../Resources/FormComponents/FormLabel";
 import PlusButtonMain from "../../ModelAssets/PlusButtonMain";
-import { useSnackbar } from "../../ComponentAssets/SnackbarContext";
+import { useSnackbar } from "../../ModelAssets/SnackbarContext";
 import { updateInstitution } from "./helpers/updateInstitution";
 import CustomEditFormButtons from "../../ModelAssets/CustomEditFormButtons";
 
@@ -157,7 +157,7 @@ const Settings = () => {
       // Validate institution ID exists
       if (!userDetails?.institutionUsersId) {
         throw new Error(
-          "Institution ID not found. Please refresh the page and try again."
+          "Institution ID not found. Please refresh the page and try again.",
         );
       }
 
@@ -266,7 +266,7 @@ const Settings = () => {
                         {renderFormField(
                           field,
                           formik.values,
-                          !isEditMode || field.readOnly
+                          !isEditMode || field.readOnly,
                         )}
                       </Box>
                     )}

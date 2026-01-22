@@ -9,8 +9,8 @@ import createSecuritiesForm from "./createSecuritiesForm";
 import TextInput from "../../../Resources/FormComponents/TextInput";
 import TextArea from "../../../Resources/FormComponents/TextArea";
 import RadioGroup from "../../../Resources/FormComponents/RadioGroup";
-import CreateFormButtons from "../../../ComponentAssets/CreateFormButtons";
-import CustomEditFormButtons from "../../../ComponentAssets/CustomEditFormButtons";
+import CreateFormButtons from "../../../ModelAssets/CreateFormButtons";
+import CustomEditFormButtons from "../../../ModelAssets/CustomEditFormButtons";
 import { UserContext } from "../../../App";
 
 const FormGrid = styled(Grid)(() => ({
@@ -36,7 +36,7 @@ createSecuritiesForm.forEach((field) => {
     if (field.validationPattern) {
       validator = validator.matches(
         field.validationPattern,
-        field.validationMessage
+        field.validationMessage,
       );
     }
     if (field.maxLength) {
@@ -78,7 +78,7 @@ const CreateSecuritiesForm = forwardRef(
       isEditMode = false,
       hideCancel,
     },
-    ref
+    ref,
   ) => {
     const client = generateClient();
     const { userDetails } = React.useContext(UserContext);
@@ -186,7 +186,7 @@ const CreateSecuritiesForm = forwardRef(
         setSubmitError(
           `Failed to ${
             isEditMode ? "update" : "create"
-          } security. Please try again.`
+          } security. Please try again.`,
         );
       } finally {
         setSubmitting(false);
@@ -261,7 +261,7 @@ const CreateSecuritiesForm = forwardRef(
         )}
       </Formik>
     );
-  }
+  },
 );
 
 CreateSecuritiesForm.displayName = "CreateSecuritiesForm";

@@ -23,7 +23,7 @@ import DateInput from "../../Resources/FormComponents/DateInput";
 import FormLabel from "../../Resources/FormComponents/FormLabel";
 import { accountInfoForm } from "./accountInfoForm";
 import PlusButtonMain from "../../ModelAssets/PlusButtonMain";
-import { useSnackbar } from "../../ComponentAssets/SnackbarContext";
+import { useSnackbar } from "../../ModelAssets/SnackbarContext";
 import { updateUser } from "./helpers/updateUser";
 import CustomEditFormButtons from "../../ModelAssets/CustomEditFormButtons";
 
@@ -85,38 +85,38 @@ const AccountInfo = () => {
       userDetails?.institution?.saccoFeaturesEnabled == null
         ? ""
         : userDetails.institution.saccoFeaturesEnabled
-        ? "Yes"
-        : "No",
+          ? "Yes"
+          : "No",
     staffManagementEnabled:
       userDetails?.institution?.staffManagementEnabled == null
         ? ""
         : userDetails.institution.staffManagementEnabled
-        ? "Yes"
-        : "No",
+          ? "Yes"
+          : "No",
     payrollEnabled:
       userDetails?.institution?.payrollEnabled == null
         ? ""
         : userDetails.institution.payrollEnabled
-        ? "Yes"
-        : "No",
+          ? "Yes"
+          : "No",
     collectionsModuleEnabled:
       userDetails?.institution?.collectionsModuleEnabled == null
         ? ""
         : userDetails.institution.collectionsModuleEnabled
-        ? "Yes"
-        : "No",
+          ? "Yes"
+          : "No",
     customWorkflowsEnabled:
       userDetails?.institution?.customWorkflowsEnabled == null
         ? ""
         : userDetails.institution.customWorkflowsEnabled
-        ? "Yes"
-        : "No",
+          ? "Yes"
+          : "No",
     advancedReportingEnabled:
       userDetails?.institution?.advancedReportingEnabled == null
         ? ""
         : userDetails.institution.advancedReportingEnabled
-        ? "Yes"
-        : "No",
+          ? "Yes"
+          : "No",
     maxUsers: userDetails?.institution?.maxUsers || "",
     maxBranches: userDetails?.institution?.maxBranches || "",
     maxStaffPerBranch: userDetails?.institution?.maxStaffPerBranch || "",
@@ -131,7 +131,7 @@ const AccountInfo = () => {
       // Validate user ID exists
       if (!userDetails?.id) {
         throw new Error(
-          "User ID not found. Please refresh the page and try again."
+          "User ID not found. Please refresh the page and try again.",
         );
       }
 

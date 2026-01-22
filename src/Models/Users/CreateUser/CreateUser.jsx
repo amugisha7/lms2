@@ -17,12 +17,12 @@ import TextInput from "../../../Resources/FormComponents/TextInput";
 import Dropdown from "../../../Resources/FormComponents/Dropdown";
 import DateInput from "../../../Resources/FormComponents/DateInput";
 import TextArea from "../../../Resources/FormComponents/TextArea";
-import CreateFormButtons from "../../../ComponentAssets/CreateFormButtons";
-import CustomEditFormButtons from "../../../ComponentAssets/CustomEditFormButtons";
+import CreateFormButtons from "../../../ModelAssets/CreateFormButtons";
+import CustomEditFormButtons from "../../../ModelAssets/CustomEditFormButtons";
 // import CustomFields from "../../AdminScreens/CustomFields/CustomFields";
 import { UserContext } from "../../../App";
 import { generateClient } from "aws-amplify/api";
-import { EditClickedContext } from "../../../ComponentAssets/CollectionsTemplate"; // <-- import context
+import { EditClickedContext } from "../../../ModelAssets/CollectionsTemplate"; // <-- import context
 
 // Styled FormGrid component for consistent layout
 const FormGrid = styled(Grid)(({ theme }) => ({
@@ -85,7 +85,7 @@ const buildValidationSchema = (isReviewMode = false) => {
           function (value) {
             if (!value || value.trim() === "") return true; // Allow empty values
             return field.validationPattern.test(value);
-          }
+          },
         );
       }
 
@@ -150,12 +150,12 @@ const CreateUser = forwardRef(
       forceEditMode = false, // Add prop to force edit mode
       canEdit = true, // Add canEdit prop
     },
-    ref
+    ref,
   ) => {
     const [initialValues, setInitialValues] = useState(baseInitialValues);
     // Use review mode validation schema if in forceEditMode (review popup)
     const [dynamicValidationSchema, setDynamicValidationSchema] = useState(
-      forceEditMode ? buildValidationSchema(true) : baseValidationSchema
+      forceEditMode ? buildValidationSchema(true) : baseValidationSchema,
     );
     const navigate = useNavigate();
     const { userDetails } = React.useContext(UserContext);
@@ -458,7 +458,7 @@ const CreateUser = forwardRef(
           err.message ||
             `Failed to ${
               isEditMode ? "update" : "create"
-            } user. Please try again.`
+            } user. Please try again.`,
         );
       } finally {
         setSubmitting(false);
@@ -565,7 +565,7 @@ const CreateUser = forwardRef(
         </Formik>
       </>
     );
-  }
+  },
 );
 
 CreateUser.displayName = "CreateUser";

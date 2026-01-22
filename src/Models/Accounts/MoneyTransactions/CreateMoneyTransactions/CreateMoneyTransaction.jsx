@@ -21,7 +21,7 @@ import {
   CREATE_DOCUMENT_MUTATION,
   CREATE_MONEY_TRANSACTION_DOCUMENT_MUTATION,
 } from "../moneyTransactionHelpes";
-import CreateFormButtons from "../../../../ComponentAssets/CreateFormButtons";
+import CreateFormButtons from "../../../../ModelAssets/CreateFormButtons";
 import CustomEditFormButtons from "../../../../ModelAssets/CustomEditFormButtons";
 import { EditClickedContext } from "../../../../ModelAssets/CollectionsTemplate";
 import { UserContext } from "../../../../App";
@@ -45,7 +45,7 @@ const CreateMoneyTransaction = forwardRef(function CreateMoneyTransaction(
     initialValues: propInitialValues,
     isEditMode = false,
   },
-  ref
+  ref,
 ) {
   const client = React.useMemo(() => generateClient(), []);
   const { userDetails } = useContext(UserContext);
@@ -90,13 +90,13 @@ const CreateMoneyTransaction = forwardRef(function CreateMoneyTransaction(
 
       if (field.required) {
         validator = validator.required(
-          field.validationMessage || `${field.label} is required`
+          field.validationMessage || `${field.label} is required`,
         );
       }
 
       acc[field.name] = validator;
       return acc;
-    }, {})
+    }, {}),
   );
 
   const handleSubmit = async (values, { setSubmitting, resetForm }) => {
@@ -132,7 +132,7 @@ const CreateMoneyTransaction = forwardRef(function CreateMoneyTransaction(
         if (pendingFiles.length > 0) {
           await uploadFilesAndLinkToTransaction(
             pendingFiles,
-            updatedTransaction.id
+            updatedTransaction.id,
           );
         }
 
@@ -166,7 +166,7 @@ const CreateMoneyTransaction = forwardRef(function CreateMoneyTransaction(
         if (pendingFiles.length > 0) {
           await uploadFilesAndLinkToTransaction(
             pendingFiles,
-            newTransaction.id
+            newTransaction.id,
           );
         }
 
@@ -204,7 +204,7 @@ const CreateMoneyTransaction = forwardRef(function CreateMoneyTransaction(
    */
   const uploadFilesAndLinkToTransaction = async (
     pendingFiles,
-    transactionId
+    transactionId,
   ) => {
     for (const fileItem of pendingFiles) {
       try {

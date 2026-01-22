@@ -9,7 +9,7 @@ import CustomPopUp from "../../../ModelAssets/CustomPopUp";
 import CustomSlider from "../../../ModelAssets/CustomSlider";
 import MoneyTransactions from "../MoneyTransactions/MoneyTransactions";
 import NotificationBar from "../../../ModelAssets/NotificationBar";
-import ClickableText from "../../../ComponentAssets/ClickableText";
+import ClickableText from "../../../ModelAssets/ClickableText";
 
 export default function AccountTransactions({
   transactions,

@@ -8,7 +8,7 @@ import {
   remove,
 } from "aws-amplify/storage";
 import { generateClient } from "aws-amplify/api";
-import CustomDataGrid from "../../../ComponentAssets/CustomDataGrid";
+import CustomDataGrid from "../../../ModelAssets/CustomDataGrid";
 import DeleteDialog from "../../../ModelAssets/DeleteDialog";
 import { UserContext } from "../../../App";
 import UploadDialogBox from "../../../ModelAssets/UploadDialogBox";
@@ -325,7 +325,7 @@ const UserFiles = ({ user, setUser, setNotification }) => {
     openDeleteDialog,
     formatFileSize,
     formatDate,
-    canDeleteUserFiles
+    canDeleteUserFiles,
   );
 
   return (

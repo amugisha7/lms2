@@ -15,7 +15,7 @@ import { generateClient } from "aws-amplify/api";
 import CreateMoneyTransaction from "./CreateMoneyTransactions/CreateMoneyTransaction";
 import { GET_MONEY_TRANSACTION_WITH_DOCUMENTS } from "./moneyTransactionHelpes";
 import MoneyTransactionsFiles from "./MoneyTransactionsFiles/MoneyTransactionsFiles";
-import NotificationBar from "../../../ComponentAssets/NotificationBar";
+import NotificationBar from "../../../ModelAssets/NotificationBar";
 
 function TabPanel({ children, value, index, ...other }) {
   return (

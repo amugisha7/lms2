@@ -18,11 +18,11 @@ import Dropdown from "../../../Resources/FormComponents/Dropdown";
 import DateInput from "../../../Resources/FormComponents/DateInput";
 import FormNotice from "../../../Resources/FormComponents/FormNotice";
 import FormLabel from "../../../Resources/FormComponents/FormLabel";
-import CreateFormButtons from "../../../ComponentAssets/CreateFormButtons";
-import CustomEditFormButtons from "../../../ComponentAssets/CustomEditFormButtons";
+import CreateFormButtons from "../../../ModelAssets/CreateFormButtons";
+import CustomEditFormButtons from "../../../ModelAssets/CustomEditFormButtons";
 // import CustomFields from "../../AdminScreens/CustomFields/CustomFields";
 import { UserContext } from "../../../App";
-import { EditClickedContext } from "../../../ComponentAssets/CollectionsTemplate"; // <-- import context
+import { EditClickedContext } from "../../../ModelAssets/CollectionsTemplate"; // <-- import context
 
 // Styled FormGrid component for consistent layout
 const FormGrid = styled(Grid)(({ theme }) => ({
@@ -62,7 +62,7 @@ createBorrowerForm.forEach((field) => {
         function (value) {
           if (!value || value.trim() === "") return true; // Allow empty values
           return field.validationPattern.test(value);
-        }
+        },
       );
     }
 
@@ -100,7 +100,7 @@ validationShape.firstname = validationShape.firstname.test(
   function (value) {
     const { businessName } = this.parent;
     return !!(value?.trim() || businessName?.trim());
-  }
+  },
 );
 
 validationShape.businessName = validationShape.businessName.test(
@@ -109,7 +109,7 @@ validationShape.businessName = validationShape.businessName.test(
   function (value) {
     const { firstname } = this.parent;
     return !!(value?.trim() || firstname?.trim());
-  }
+  },
 );
 
 const baseValidationSchema = Yup.object().shape(validationShape);
@@ -149,7 +149,7 @@ const CreateBorrower = forwardRef(
       onCancel, // Add onCancel prop
       forceEditMode = false, // Add prop to force edit mode
     },
-    ref
+    ref,
   ) => {
     const [initialValues, setInitialValues] = useState(baseInitialValues);
     const [dynamicValidationSchema, setDynamicValidationSchema] =
@@ -261,7 +261,7 @@ const CreateBorrower = forwardRef(
           }
         } else {
           setSubmitError(
-            "API handler function not available. Please try again."
+            "API handler function not available. Please try again.",
           );
         }
       } catch (err) {
@@ -270,7 +270,7 @@ const CreateBorrower = forwardRef(
           err.message ||
             `Failed to ${
               isEditMode ? "update" : "create"
-            } borrower. Please try again.`
+            } borrower. Please try again.`,
         );
       } finally {
         setSubmitting(false);
@@ -289,7 +289,7 @@ const CreateBorrower = forwardRef(
     // Handle validation schema changes from custom fields
     const handleValidationSchemaChange = (customFieldsValidation) => {
       const newValidationSchema = baseValidationSchema.shape(
-        customFieldsValidation
+        customFieldsValidation,
       );
       setDynamicValidationSchema(newValidationSchema);
     };
@@ -380,7 +380,7 @@ const CreateBorrower = forwardRef(
         </Formik>
       </>
     );
-  }
+  },
 );
 
 CreateBorrower.displayName = "CreateBorrower";

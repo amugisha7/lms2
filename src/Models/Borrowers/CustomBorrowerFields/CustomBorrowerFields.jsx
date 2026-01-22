@@ -15,7 +15,7 @@ import * as Yup from "yup";
 import { useTheme } from "@mui/material";
 import { tokens } from "../../../theme";
 import { FormikProvider } from "formik";
-import ClickableText from "../../../ComponentAssets/ClickableText";
+import ClickableText from "../../../ModelAssets/ClickableText";
 import { useNavigate } from "react-router-dom"; // <-- Add this import
 
 // Import custom form components
@@ -216,7 +216,7 @@ CustomBorrowerFields.createValidationSchema = (customFields) => {
           .nullable()
           .matches(
             /^[^,"'!{}]+$/,
-            "Invalid characters found. Cannot use , \" ' ! { }"
+            "Invalid characters found. Cannot use , \" ' ! { }",
           );
         if (field.required) {
           fieldSchema = fieldSchema.required(`${field.label} is required`);

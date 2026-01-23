@@ -148,6 +148,8 @@ const CreateBorrower = forwardRef(
       hideCancel,
       onCancel, // Add onCancel prop
       forceEditMode = false, // Add prop to force edit mode
+      isCustomerPortal = false, // Customer portal mode
+      prefilledEmail = null, // Pre-filled email for customer portal
     },
     ref,
   ) => {
@@ -155,12 +157,28 @@ const CreateBorrower = forwardRef(
     const [dynamicValidationSchema, setDynamicValidationSchema] =
       useState(baseValidationSchema);
     const navigate = useNavigate();
-    const { userDetails } = React.useContext(UserContext);
+    const userContext = React.useContext(UserContext);
+    const userDetails = userContext?.userDetails; // Make it optional
     const [submitError, setSubmitError] = useState("");
     const [submitSuccess, setSubmitSuccess] = useState("");
     // Only enable edit mode if explicitly forced (popup) or not in edit mode (create)
     const [editMode, setEditMode] = useState(forceEditMode || !isEditMode);
     const editClickedContext = useContext(EditClickedContext); // <-- get context
+
+    // Update validation schema based on customer portal mode
+    useEffect(() => {
+      if (isCustomerPortal) {
+        // Make phoneNumber required in customer portal
+        const customerPortalValidation = baseValidationSchema.shape({
+          phoneNumber: Yup.string()
+            .required("Phone number is required")
+            .matches(/^[0-9]*$/, "Mobile must contain numbers only")
+            .min(7, "Phone number must be at least 7 digits")
+            .max(20, "Phone number cannot exceed 20 digits"),
+        });
+        setDynamicValidationSchema(customerPortalValidation);
+      }
+    }, [isCustomerPortal]);
 
     // Scroll to top on component mount
     useEffect(() => {
@@ -217,7 +235,13 @@ const CreateBorrower = forwardRef(
           ...baseInitialValues,
           ...mapDbFieldsToFormFields(propInitialValues),
         }
-      : initialValues;
+      : {
+          ...initialValues,
+          // Pre-fill email in customer portal mode
+          ...(isCustomerPortal && prefilledEmail
+            ? { email: prefilledEmail }
+            : {}),
+        };
 
     useImperativeHandle(ref, () => ({
       toggleEdit: () => {
@@ -322,18 +346,41 @@ const CreateBorrower = forwardRef(
                   />
                 ) : null}
                 <Grid container spacing={1}>
-                  {createBorrowerForm.map((field) => (
-                    <FormGrid
-                      size={{ xs: 12, md: field.span }}
-                      key={field.name}
-                    >
-                      {renderFormField({
-                        ...field,
-                        editing: editMode,
-                        isEditMode: isEditMode,
-                      })}
-                    </FormGrid>
-                  ))}
+                  {createBorrowerForm.map((field) => {
+                    // Skip "Files & Custom Fields" notice in customer portal
+                    if (isCustomerPortal && field.type === "notice") {
+                      return <React.Fragment key={field.name} />;
+                    }
+
+                    // Skip creditScore field in customer portal
+                    if (isCustomerPortal && field.name === "creditScore") {
+                      return <React.Fragment key={field.name} />;
+                    }
+
+                    // Disable email field if pre-filled in customer portal
+                    const fieldProps = { ...field };
+                    if (
+                      isCustomerPortal &&
+                      field.name === "email" &&
+                      prefilledEmail
+                    ) {
+                      fieldProps.disabled = true;
+                      fieldProps.helperText = "Email address from your account";
+                    }
+
+                    return (
+                      <FormGrid
+                        size={{ xs: 12, md: field.span }}
+                        key={field.name}
+                      >
+                        {renderFormField({
+                          ...fieldProps,
+                          editing: editMode,
+                          isEditMode: isEditMode,
+                        })}
+                      </FormGrid>
+                    );
+                  })}
 
                   {/* Custom Fields Component */}
                   <Box sx={{ display: "flex" }}>
@@ -360,6 +407,9 @@ const CreateBorrower = forwardRef(
                         setSubmitSuccess={setSubmitSuccess}
                         onClose={onClose}
                         hideCancel={hideCancel}
+                        submitLabel={
+                          isCustomerPortal ? "Save My Profile" : "Save"
+                        }
                       />
                     ) : null}
                   </Box>

@@ -29,6 +29,7 @@ export const createLoanProduct = async (input) => {
           termDurationMax
           termDurationMin
           status
+          customLoanProductDetails
         }
       }
     `,
@@ -75,43 +76,51 @@ export const associateBranchWithLoanProduct = async (loanProductId, branchId) =>
   });
 };
 
-export const buildLoanProductInput = (values, userDetails) => ({
-  institutionLoanProductsId: userDetails.institutionUsersId,
-  name: values.name,
-  status: values.status || "Active",
-  description: "",
-  principalAmountMin: values.minPrincipal ? Number(values.minPrincipal) : null,
-  principalAmountMax: values.maxPrincipal ? Number(values.maxPrincipal) : null,
-  principalAmountDefault: values.defaultPrincipal
-    ? Number(values.defaultPrincipal)
-    : null,
-  interestRateMin: values.minInterest ? Number(values.minInterest) : null,
-  interestRateMax: values.maxInterest ? Number(values.maxInterest) : null,
-  interestRateDefault: values.defaultInterest
-    ? Number(values.defaultInterest)
-    : null,
-  interestCalculationMethod: values.interestMethod || null,
-  interestType: values.interestType || null,
-  interestPeriod: values.interestPeriod || null,
-  termDurationMin: values.minDuration ? Number(values.minDuration) : null,
-  termDurationMax: values.maxDuration ? Number(values.maxDuration) : null,
-  termDurationDefault: values.defaultDuration
-    ? Number(values.defaultDuration)
-    : null,
-  durationPeriod: values.durationPeriod || null,
-  repaymentFrequency: values.repaymentFrequency || null,
-  repaymentOrder: values.repaymentOrder
-    ? JSON.stringify(values.repaymentOrder)
-    : null,
-  extendLoanAfterMaturity:
-    values.extendLoanAfterMaturity === ""
-      ? null
-      : values.extendLoanAfterMaturity === "yes",
-  interestTypeMaturity: values.interestTypeMaturity || null,
-  calculateInterestOn: values.calculateInterestOn || null,
-  loanInterestRateAfterMaturity: values.loanInterestRateAfterMaturity
-    ? Number(values.loanInterestRateAfterMaturity)
-    : null,
-  recurringPeriodAfterMaturityUnit:
-    values.recurringPeriodAfterMaturityUnit || null,
-});
+export const buildLoanProductInput = (values, userDetails) => {
+  // Build customLoanProductDetails
+  const customDetails = {
+    customerPortalVisible: values.customerPortalVisible === 'yes',
+  };
+
+  return {
+    institutionLoanProductsId: userDetails.institutionUsersId,
+    name: values.name,
+    status: values.status || "Active",
+    description: "",
+    principalAmountMin: values.minPrincipal ? Number(values.minPrincipal) : null,
+    principalAmountMax: values.maxPrincipal ? Number(values.maxPrincipal) : null,
+    principalAmountDefault: values.defaultPrincipal
+      ? Number(values.defaultPrincipal)
+      : null,
+    interestRateMin: values.minInterest ? Number(values.minInterest) : null,
+    interestRateMax: values.maxInterest ? Number(values.maxInterest) : null,
+    interestRateDefault: values.defaultInterest
+      ? Number(values.defaultInterest)
+      : null,
+    interestCalculationMethod: values.interestMethod || null,
+    interestType: values.interestType || null,
+    interestPeriod: values.interestPeriod || null,
+    termDurationMin: values.minDuration ? Number(values.minDuration) : null,
+    termDurationMax: values.maxDuration ? Number(values.maxDuration) : null,
+    termDurationDefault: values.defaultDuration
+      ? Number(values.defaultDuration)
+      : null,
+    durationPeriod: values.durationPeriod || null,
+    repaymentFrequency: values.repaymentFrequency || null,
+    repaymentOrder: values.repaymentOrder
+      ? JSON.stringify(values.repaymentOrder)
+      : null,
+    extendLoanAfterMaturity:
+      values.extendLoanAfterMaturity === ""
+        ? null
+        : values.extendLoanAfterMaturity === "yes",
+    interestTypeMaturity: values.interestTypeMaturity || null,
+    calculateInterestOn: values.calculateInterestOn || null,
+    loanInterestRateAfterMaturity: values.loanInterestRateAfterMaturity
+      ? Number(values.loanInterestRateAfterMaturity)
+      : null,
+    recurringPeriodAfterMaturityUnit:
+      values.recurringPeriodAfterMaturityUnit || null,
+    customLoanProductDetails: JSON.stringify(customDetails),
+  };
+};

@@ -63,13 +63,13 @@ const buildValidationSchema = () => {
       .min(0, "Minimum Principal must be at least 0")
       .nullable()
       .transform((value, originalValue) =>
-        originalValue === "" ? null : value
+        originalValue === "" ? null : value,
       ),
     maxPrincipal: Yup.number()
       .min(0, "Maximum Principal must be at least 0")
       .nullable()
       .transform((value, originalValue) =>
-        originalValue === "" ? null : value
+        originalValue === "" ? null : value,
       )
       .when("minPrincipal", (minPrincipal, schema) =>
         minPrincipal !== null &&
@@ -77,15 +77,15 @@ const buildValidationSchema = () => {
         minPrincipal !== ""
           ? schema.min(
               minPrincipal,
-              "Maximum Principal must be greater than or equal to Minimum Principal"
+              "Maximum Principal must be greater than or equal to Minimum Principal",
             )
-          : schema
+          : schema,
       ),
     defaultPrincipal: Yup.number()
       .min(0, "Default Principal must be at least 0")
       .nullable()
       .transform((value, originalValue) =>
-        originalValue === "" ? null : value
+        originalValue === "" ? null : value,
       )
       .when("minPrincipal", (minPrincipalValue, schema) => {
         if (
@@ -97,7 +97,7 @@ const buildValidationSchema = () => {
           if (!isNaN(numMinPrincipal)) {
             return schema.min(
               numMinPrincipal,
-              "Default Principal must be greater than or equal to Minimum Principal"
+              "Default Principal must be greater than or equal to Minimum Principal",
             );
           }
         }
@@ -113,7 +113,7 @@ const buildValidationSchema = () => {
           if (!isNaN(numMaxPrincipal)) {
             return schema.max(
               numMaxPrincipal,
-              "Default Principal must be less than or equal to Maximum Principal"
+              "Default Principal must be less than or equal to Maximum Principal",
             );
           }
         }
@@ -123,27 +123,27 @@ const buildValidationSchema = () => {
       .min(0, "Minimum Interest must be at least 0")
       .nullable()
       .transform((value, originalValue) =>
-        originalValue === "" ? null : value
+        originalValue === "" ? null : value,
       ),
     maxInterest: Yup.number()
       .min(0, "Maximum Interest must be at least 0")
       .nullable()
       .transform((value, originalValue) =>
-        originalValue === "" ? null : value
+        originalValue === "" ? null : value,
       )
       .when("minInterest", (minInterest, schema) =>
         minInterest !== null && minInterest !== undefined && minInterest !== ""
           ? schema.min(
               minInterest,
-              "Maximum Interest must be greater than or equal to Minimum Interest"
+              "Maximum Interest must be greater than or equal to Minimum Interest",
             )
-          : schema
+          : schema,
       ),
     defaultInterest: Yup.number()
       .min(0, "Default Interest must be at least 0")
       .nullable()
       .transform((value, originalValue) =>
-        originalValue === "" ? null : value
+        originalValue === "" ? null : value,
       )
       .when("minInterest", (minInterestValue, schema) => {
         if (
@@ -155,7 +155,7 @@ const buildValidationSchema = () => {
           if (!isNaN(numMinInterest)) {
             return schema.min(
               numMinInterest,
-              "Default Interest must be greater than or equal to Minimum Interest"
+              "Default Interest must be greater than or equal to Minimum Interest",
             );
           }
         }
@@ -171,7 +171,7 @@ const buildValidationSchema = () => {
           if (!isNaN(numMaxInterest)) {
             return schema.max(
               numMaxInterest,
-              "Default Interest must be less than or equal to Maximum Interest"
+              "Default Interest must be less than or equal to Maximum Interest",
             );
           }
         }
@@ -184,27 +184,27 @@ const buildValidationSchema = () => {
       .min(0, "Minimum Duration must be at least 0")
       .nullable()
       .transform((value, originalValue) =>
-        originalValue === "" ? null : value
+        originalValue === "" ? null : value,
       ),
     maxDuration: Yup.number()
       .min(0, "Maximum Duration must be at least 0")
       .nullable()
       .transform((value, originalValue) =>
-        originalValue === "" ? null : value
+        originalValue === "" ? null : value,
       )
       .when("minDuration", (minDuration, schema) =>
         minDuration !== null && minDuration !== undefined && minDuration !== ""
           ? schema.min(
               minDuration,
-              "Maximum Duration must be greater than or equal to Minimum Duration"
+              "Maximum Duration must be greater than or equal to Minimum Duration",
             )
-          : schema
+          : schema,
       ),
     defaultDuration: Yup.number()
       .min(0, "Default Duration must be at least 0")
       .nullable()
       .transform((value, originalValue) =>
-        originalValue === "" ? null : value
+        originalValue === "" ? null : value,
       )
       .when("minDuration", (minDurationValue, schema) => {
         if (
@@ -216,7 +216,7 @@ const buildValidationSchema = () => {
           if (!isNaN(numMinDuration)) {
             return schema.min(
               numMinDuration,
-              "Default Duration must be greater than or equal to Minimum Duration"
+              "Default Duration must be greater than or equal to Minimum Duration",
             );
           }
         }
@@ -232,7 +232,7 @@ const buildValidationSchema = () => {
           if (!isNaN(numMaxDuration)) {
             return schema.max(
               numMaxDuration,
-              "Default Duration must be less than or equal to Maximum Duration"
+              "Default Duration must be less than or equal to Maximum Duration",
             );
           }
         }
@@ -394,7 +394,7 @@ const CreateLoanProduct = forwardRef(
       onCancel,
       forceEditMode = false,
     },
-    ref
+    ref,
   ) => {
     const { userDetails } = useContext(UserContext);
     const [submitError, setSubmitError] = useState("");
@@ -488,6 +488,14 @@ const CreateLoanProduct = forwardRef(
     const mapDbFieldsToFormFields = (dbData) => {
       if (!dbData) return {};
 
+      // Parse customLoanProductDetails if present
+      let customDetails = {};
+      try {
+        customDetails = JSON.parse(dbData.customLoanProductDetails || "{}");
+      } catch (e) {
+        console.error("Error parsing customLoanProductDetails:", e);
+      }
+
       return {
         name: dbData.name || "",
         status: dbData.status || "Active",
@@ -519,6 +527,9 @@ const CreateLoanProduct = forwardRef(
           dbData.loanInterestRateAfterMaturity || "",
         recurringPeriodAfterMaturityUnit:
           dbData.recurringPeriodAfterMaturityUnit || "",
+        customerPortalVisible: customDetails.customerPortalVisible
+          ? "yes"
+          : "no",
       };
     };
 
@@ -579,7 +590,7 @@ const CreateLoanProduct = forwardRef(
           });
           const result = await onUpdateLoanProductAPI(
             values,
-            propInitialValues
+            propInitialValues,
           );
           setSubmitSuccess("Loan product updated!");
           setEditMode(false);
@@ -678,7 +689,7 @@ const CreateLoanProduct = forwardRef(
           err.message ||
             `Failed to ${
               isEditMode ? "update" : "create"
-            } loan product. Please try again.`
+            } loan product. Please try again.`,
         );
       } finally {
         setSubmitting(false);
@@ -732,7 +743,7 @@ const CreateLoanProduct = forwardRef(
                       >
                         {renderFormField(
                           { ...field, formik, editing: editMode, helperText },
-                          formik.values
+                          formik.values,
                         )}
                       </FormGrid>
                     );
@@ -773,7 +784,7 @@ const CreateLoanProduct = forwardRef(
         </Formik>
       </>
     );
-  }
+  },
 );
 
 CreateLoanProduct.displayName = "CreateLoanProduct";

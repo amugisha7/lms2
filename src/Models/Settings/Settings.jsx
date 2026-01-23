@@ -16,6 +16,7 @@ import {
   Edit as EditIcon,
   Save as SaveIcon,
   Close as CloseIcon,
+  Logout as LogoutIcon,
 } from "@mui/icons-material";
 import { UserContext } from "../../App";
 import { settingsForm, countryOptions } from "./settingsForm";
@@ -27,6 +28,7 @@ import PlusButtonMain from "../../ModelAssets/PlusButtonMain";
 import { useSnackbar } from "../../ModelAssets/SnackbarContext";
 import { updateInstitution } from "./helpers/updateInstitution";
 import CustomEditFormButtons from "../../ModelAssets/CustomEditFormButtons";
+import { useNavigate } from "react-router-dom";
 
 const FormGrid = styled(Grid)(({ theme }) => ({
   display: "flex",
@@ -115,8 +117,9 @@ const renderFormField = (field, formikValues, readOnly) => {
 };
 
 const Settings = () => {
-  const { userDetails, setUserDetails } = useContext(UserContext);
+  const { userDetails, setUserDetails, signOut } = useContext(UserContext);
   const theme = useTheme();
+  const navigate = useNavigate();
   const { showSnackbar } = useSnackbar();
   const [isEditMode, setIsEditMode] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -124,6 +127,13 @@ const Settings = () => {
   const [submitError, setSubmitError] = useState("");
   const [submitSuccess, setSubmitSuccess] = useState("");
   const [initialValues, setInitialValues] = useState(null);
+
+  const handleSignOut = () => {
+    navigate("/");
+    setTimeout(() => {
+      if (signOut) signOut();
+    }, 300);
+  };
 
   // Check if user is admin
   const isAdmin =
@@ -276,6 +286,36 @@ const Settings = () => {
           </Form>
         )}
       </Formik>
+
+      {/* Sign Out Section */}
+      <Paper
+        elevation={1}
+        sx={{
+          mt: 4,
+          p: 3,
+          border: "1px solid",
+          borderColor: "divider",
+        }}
+      >
+        <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
+          Account
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          Sign out of your account on this device
+        </Typography>
+        <Button
+          variant="outlined"
+          color="error"
+          startIcon={<LogoutIcon />}
+          onClick={handleSignOut}
+          sx={{
+            textTransform: "none",
+            fontWeight: 500,
+          }}
+        >
+          Sign Out
+        </Button>
+      </Paper>
     </Box>
   );
 };

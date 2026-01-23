@@ -53,7 +53,7 @@ const Dropdown = ({
 
   // Find the label for the current value
   const selectedOption = options?.find(
-    (option) => option.value === field.value
+    (option) => option.value === field.value,
   );
 
   return (

@@ -11,11 +11,13 @@ import {
   IconButton,
   Divider,
   Badge,
+  Button,
 } from "@mui/material";
 import {
   ExpandLess,
   ExpandMore,
   Close as CloseIcon,
+  Logout as LogoutIcon,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import myLogo from "../../Resources/loantabs_logo.png";
@@ -26,6 +28,7 @@ const MobileMenu = ({ open, onClose }) => {
   const [expandedItems, setExpandedItems] = useState({});
   const navigate = useNavigate();
   const unreadCount = useUnreadMessageCount();
+  const { signOut } = React.useContext(require("../../App").UserContext);
 
   const handleToggleExpand = (itemName) => {
     setExpandedItems((prev) => ({
@@ -39,6 +42,14 @@ const MobileMenu = ({ open, onClose }) => {
       navigate(route);
       onClose();
     }
+  };
+
+  const handleSignOut = () => {
+    onClose();
+    navigate("/");
+    setTimeout(() => {
+      if (signOut) signOut();
+    }, 300);
   };
 
   return (
@@ -199,6 +210,34 @@ const MobileMenu = ({ open, onClose }) => {
               );
             })}
           </List>
+        </Box>
+
+        {/* Sign Out Button at Bottom */}
+        <Box
+          sx={{
+            p: 2,
+            borderTop: "1px solid #404040",
+            mt: "auto",
+          }}
+        >
+          <Button
+            fullWidth
+            variant="outlined"
+            startIcon={<LogoutIcon />}
+            onClick={handleSignOut}
+            sx={{
+              color: "white",
+              borderColor: "rgba(255, 255, 255, 0.3)",
+              textTransform: "none",
+              fontWeight: 500,
+              "&:hover": {
+                borderColor: "rgba(255, 255, 255, 0.5)",
+                bgcolor: "rgba(255, 255, 255, 0.05)",
+              },
+            }}
+          >
+            Sign Out
+          </Button>
         </Box>
       </Box>
     </Drawer>

@@ -8,6 +8,11 @@ import {
   Avatar,
   useMediaQuery,
   Badge,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
+  Divider,
 } from "@mui/material";
 import {
   Help as HelpIcon,
@@ -16,6 +21,7 @@ import {
   Search as SearchIcon,
   Apps as AppsIcon,
   Menu as MenuIcon,
+  Logout as LogoutIcon,
 } from "@mui/icons-material";
 import ColorModeToggle from "../../ModelAssets/ColorModeToggle";
 import { useTheme } from "@mui/material/styles";
@@ -27,9 +33,10 @@ const TopBar = ({ onMenuClick }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [anchorEl, setAnchorEl] = useState(null);
   const navigate = useNavigate();
 
-  const { userDetails, unreadCount } = React.useContext(
+  const { userDetails, unreadCount, signOut } = React.useContext(
     require("../../App").UserContext,
   );
   const institutionName = userDetails?.institution?.name || "";
@@ -37,6 +44,25 @@ const TopBar = ({ onMenuClick }) => {
   const handleMobileMenuToggle = () => {
     setMobileMenuOpen(!mobileMenuOpen);
   };
+
+  const handleUserMenuOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleUserMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleSignOut = () => {
+    handleUserMenuClose();
+    navigate("/");
+    setTimeout(() => {
+      if (signOut) signOut();
+    }, 300);
+  };
+
+  const userInitial =
+    userDetails?.firstName?.[0] || userDetails?.email?.[0] || "U";
 
   return (
     <>
@@ -169,9 +195,11 @@ const TopBar = ({ onMenuClick }) => {
                   <SettingsIcon />
                 </IconButton>
                 <ColorModeToggle />
-                <Avatar sx={{ bgcolor: "#2196f3", width: 32, height: 32 }}>
-                  A
-                </Avatar>
+                <IconButton onClick={handleUserMenuOpen} sx={{ p: 0.5 }}>
+                  <Avatar sx={{ bgcolor: "#2196f3", width: 32, height: 32 }}>
+                    {userInitial}
+                  </Avatar>
+                </IconButton>
               </Box>
             </>
           )}
@@ -183,6 +211,52 @@ const TopBar = ({ onMenuClick }) => {
         open={mobileMenuOpen}
         onClose={() => setMobileMenuOpen(false)}
       />
+
+      {/* User Menu Dropdown */}
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleUserMenuClose}
+        transformOrigin={{ horizontal: "right", vertical: "top" }}
+        anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+        PaperProps={{
+          sx: {
+            mt: 1.5,
+            minWidth: 200,
+          },
+        }}
+      >
+        <Box sx={{ px: 2, py: 1.5 }}>
+          <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+            {userDetails?.firstName} {userDetails?.lastName}
+          </Typography>
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ fontSize: "0.875rem" }}
+          >
+            {userDetails?.email}
+          </Typography>
+        </Box>
+        <Divider />
+        <MenuItem
+          onClick={() => {
+            handleUserMenuClose();
+            navigate("/settings");
+          }}
+        >
+          <ListItemIcon>
+            <SettingsIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Settings</ListItemText>
+        </MenuItem>
+        <MenuItem onClick={handleSignOut}>
+          <ListItemIcon>
+            <LogoutIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Sign Out</ListItemText>
+        </MenuItem>
+      </Menu>
     </>
   );
 };

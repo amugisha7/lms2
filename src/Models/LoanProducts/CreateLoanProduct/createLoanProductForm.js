@@ -317,6 +317,24 @@ const createLoanProductForm = [
     options: [], // Will be populated dynamically
     dynamicoptions: "true",
   },
+  // Customer Portal Settings
+  {
+    label: "Customer Portal Settings",
+    type: "label",
+    span: 12,
+  },
+  {
+    label: "Customer Portal Visibility",
+    name: "customerPortalVisible",
+    type: "radio",
+    span: 6,
+    options: [
+      { value: "yes", label: "Visible to customers" },
+      { value: "no", label: "Internal only" },
+    ],
+    defaultValue: "no",
+    helperText: "If enabled, customers can apply for this loan product",
+  },
 ];
 
 export default createLoanProductForm;

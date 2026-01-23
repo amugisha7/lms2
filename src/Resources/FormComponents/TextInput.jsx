@@ -98,6 +98,7 @@ const TextInput = ({
   placeholder,
   defaultValue, // extract to prevent passing to TextField
   adminOnly, // extract to prevent passing to DOM
+  isEditMode, // extract to prevent passing to DOM
   ...props
 }) => {
   const [field, meta, helpers] = useField(name);
@@ -191,7 +192,7 @@ const TextInput = ({
           const currentInput = e.target.value;
           const caret = e.target.selectionStart ?? currentInput.length;
           const strippedLenBeforeCaret = stripCommas(
-            currentInput.slice(0, caret)
+            currentInput.slice(0, caret),
           ).length;
 
           const nextRaw = sanitizeNumericInput(currentInput);
@@ -203,11 +204,11 @@ const TextInput = ({
           // Restore caret based on logical (comma-stripped) position.
           const targetStrippedLen = Math.min(
             strippedLenBeforeCaret,
-            stripCommas(nextFormatted).length
+            stripCommas(nextFormatted).length,
           );
           const nextCaret = caretIndexFromStrippedLength(
             nextFormatted,
-            targetStrippedLen
+            targetStrippedLen,
           );
           setTimeout(() => {
             const el = inputRef.current;
@@ -224,8 +225,8 @@ const TextInput = ({
           isReadOnly
             ? undefined
             : meta.touched && meta.error
-            ? meta.error
-            : helperText // hide helper text when read-only
+              ? meta.error
+              : helperText // hide helper text when read-only
         }
         size="small"
         // inputProps removed; moved into slotProps.input

@@ -2,15 +2,20 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
+import CustomerApp from './CustomerApp';
 import reportWebVitals from './reportWebVitals';
 import { Amplify } from 'aws-amplify';
 import config from './amplifyconfiguration.json';
 Amplify.configure(config);
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
+
+// Check if this is a customer portal route
+const isCustomerPortal = window.location.pathname.startsWith('/client/');
+
 root.render(
   <React.StrictMode>
-    <App />
+    {isCustomerPortal ? <CustomerApp /> : <App />}
   </React.StrictMode>
 );
 

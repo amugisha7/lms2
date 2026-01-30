@@ -174,11 +174,30 @@ function CustomerApp({ signOut, user }) {
                 getBorrower(id: $id) { 
                   id 
                   firstname 
+                  othername
                   businessName 
-                  lastname
                   email
                   phoneNumber
-                  borrowerType
+                  address
+                  city
+                  state
+                  status
+                  branchBorrowersId
+                  title
+                  gender
+                  dateOfBirth
+                  nationality
+                  uniqueIdNumber
+                  otherPhoneNumber
+                  typeOfBusiness
+                  zipcode
+                  employmentStatus
+                  employerName
+                  branch {
+                    id
+                    name
+                    branchCode
+                  }
                 } 
               }`,
               variables: { id: customDetails.borrowerId },

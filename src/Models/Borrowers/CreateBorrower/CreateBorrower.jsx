@@ -250,6 +250,13 @@ const CreateBorrower = forwardRef(
       getEditMode: () => editMode,
     }));
 
+    // Update editMode when forceEditMode changes
+    useEffect(() => {
+      if (forceEditMode !== undefined) {
+        setEditMode(forceEditMode);
+      }
+    }, [forceEditMode]);
+
     // Add effect to respond to editClicked from context (like CreateBranches)
     useEffect(() => {
       // Only allow edit mode changes from context if forceEditMode is true (popup)
@@ -346,10 +353,10 @@ const CreateBorrower = forwardRef(
                   />
                 ) : null}
                 <Grid container spacing={1}>
-                  {createBorrowerForm.map((field) => {
+                  {createBorrowerForm.map((field, index) => {
                     // Skip "Files & Custom Fields" notice in customer portal
                     if (isCustomerPortal && field.type === "notice") {
-                      return <React.Fragment key={field.name} />;
+                      return <React.Fragment key={`${field.type}-${index}`} />;
                     }
 
                     // Skip creditScore field in customer portal
@@ -371,7 +378,7 @@ const CreateBorrower = forwardRef(
                     return (
                       <FormGrid
                         size={{ xs: 12, md: field.span }}
-                        key={field.name}
+                        key={field.name || `${field.type}-${index}`}
                       >
                         {renderFormField({
                           ...fieldProps,

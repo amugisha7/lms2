@@ -10,6 +10,7 @@ const CustomEditFormButtons = ({
   setEditMode,
   setSubmitError,
   setSubmitSuccess,
+  onCancel,
 }) => {
   const theme = useTheme();
   const { setEditClicked } = useContext(EditClickedContext) || {};
@@ -87,6 +88,9 @@ const CustomEditFormButtons = ({
             setSubmitSuccess("");
             if (setEditClicked) {
               setEditClicked(false);
+            }
+            if (onCancel) {
+              onCancel();
             }
           }}
           sx={{

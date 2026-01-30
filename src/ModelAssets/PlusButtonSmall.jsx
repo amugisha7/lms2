@@ -9,6 +9,7 @@ const PlusButtonSmall = ({
   IconComponent = Add,
   disabled = false,
   variant = "outlined",
+  iconSx: iconSxProp,
   ...otherProps
 }) => {
   const theme = useTheme();
@@ -18,6 +19,7 @@ const PlusButtonSmall = ({
       ? theme.palette.action.disabled
       : theme.palette.blueText.main,
     fontSize: "0.5rem",
+    ...iconSxProp,
   };
 
   const buttonSx = {
@@ -66,7 +68,7 @@ const PlusButtonSmall = ({
         onClick={onClick}
         disabled={disabled}
         startIcon={IconComponent ? <IconComponent sx={iconSx} /> : null}
-        sx={buttonSx}
+        sx={{ ...buttonSx, ...otherProps?.sx }}
         {...otherProps}
       >
         {label}

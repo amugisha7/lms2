@@ -124,6 +124,7 @@ export default function LoanProducts() {
                     termDurationDefault
                     termDurationMax
                     termDurationMin
+                    customLoanProductDetails
                     branches {
                       items {
                         branch {

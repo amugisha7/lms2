@@ -332,7 +332,7 @@ const createLoanProductForm = [
       { value: "yes", label: "Visible to customers" },
       { value: "no", label: "Internal only" },
     ],
-    defaultValue: "no",
+    defaultValue: "yes",
     helperText: "If enabled, customers can apply for this loan product",
   },
 ];

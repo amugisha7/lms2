@@ -364,6 +364,14 @@ const EditLoanProduct = forwardRef(
     const mapDbFieldsToFormFields = (dbData) => {
       if (!dbData) return {};
 
+      // Parse customLoanProductDetails if present
+      let customDetails = {};
+      try {
+        customDetails = JSON.parse(dbData.customLoanProductDetails || "{}");
+      } catch (e) {
+        console.error("Error parsing customLoanProductDetails:", e);
+      }
+
       return {
         name: dbData.name || "",
         status: dbData.status || "Active",
@@ -396,6 +404,9 @@ const EditLoanProduct = forwardRef(
           dbData.loanInterestRateAfterMaturity || "",
         recurringPeriodAfterMaturityUnit:
           dbData.recurringPeriodAfterMaturityUnit || "",
+        customerPortalVisible: customDetails.customerPortalVisible
+          ? "yes"
+          : "no",
       };
     };
 

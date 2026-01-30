@@ -1,4 +1,5 @@
 const customerLoanApplicationForm = [
+  // Loan Product Selection
   {
     label: "Select Loan Product",
     name: "loanProduct",
@@ -9,6 +10,8 @@ const customerLoanApplicationForm = [
     dynamicoptions: "true",
     helperText: "Choose the type of loan you wish to apply for",
   },
+
+  // Loan Amount
   {
     label: "Loan Amount",
     name: "principalAmount",
@@ -17,6 +20,56 @@ const customerLoanApplicationForm = [
     span: 6,
     helperText: "Enter the amount you wish to borrow",
   },
+
+  // Loan Duration (combined text and dropdown)
+  {
+    type: "textAndDropdown",
+    span: 6,
+    textLabel: "Loan Duration",
+    textName: "loanDuration",
+    textType: "number",
+    textRequired: true,
+    textDefaultValue: "",
+    textPlaceholder: "",
+    textHelperText: "How long do you need the loan for?",
+    textInputProps: {
+      min: 1,
+    },
+    dropdownLabel: "",
+    dropdownName: "durationPeriod",
+    dropdownRequired: true,
+    dropdownDefaultValue: "months",
+    dropdownHelperText: "",
+    dropdownOptions: [
+      { value: "days", label: "Days" },
+      { value: "weeks", label: "Weeks" },
+      { value: "months", label: "Months" },
+      { value: "years", label: "Years" },
+    ],
+  },
+
+  // Preferred Start Date
+  {
+    label: "Preferred Start Date",
+    name: "loanStartDate",
+    type: "date",
+    required: true,
+    span: 6,
+    helperText: "When would you like the loan to start?",
+  },
+
+  // Interest Rate (read-only for customer, set by product)
+  {
+    label: "Interest Rate",
+    name: "interestRate",
+    type: "number",
+    required: false,
+    span: 6,
+    readOnly: true,
+    helperText: "Interest rate is determined by the loan product",
+  },
+
+  // Loan Purpose
   {
     label: "Loan Purpose",
     name: "loanPurpose",

@@ -47,12 +47,6 @@ const formatCurrency = (value, currency = "") => {
   return `${currency}${Number(value).toLocaleString()}`;
 };
 
-// Helper to format duration
-const formatDuration = (value, period) => {
-  if (value === null || value === undefined || value === "") return "N/A";
-  return `${value} ${period || "months"}`;
-};
-
 // Component to show product constraints
 const ProductConstraints = ({ selectedProduct }) => {
   if (!selectedProduct) return null;
@@ -265,7 +259,7 @@ const renderFormField = (field, selectedProduct) => {
   }
 };
 
-export default function CustomerLoanApplication() {
+export default function CustomerLoanProductForm() {
   const { borrower, institution, customerUser } = useContext(CustomerContext);
   const [loanProducts, setLoanProducts] = useState([]);
   const [branches, setBranches] = useState([]);
@@ -490,122 +484,111 @@ export default function CustomerLoanApplication() {
 
   if (loanProducts.length === 0) {
     return (
-      <Box>
-        <Typography variant="h4" sx={{ mb: 3 }}>
-          Apply for Loan
+      <Paper sx={{ p: 3, bgcolor: "warning.light" }}>
+        <Typography>
+          No loan products are currently available for customer applications.
+          Please contact the institution for assistance.
         </Typography>
-        <Paper sx={{ p: 3, bgcolor: "warning.light" }}>
-          <Typography>
-            No loan products are currently available for customer applications.
-            Please contact the institution for assistance.
-          </Typography>
-        </Paper>
-      </Box>
+      </Paper>
     );
   }
 
   return (
-    <Box>
-      <Typography variant="h4" sx={{ mb: 3 }}>
-        Apply for Loan
-      </Typography>
+    <Paper sx={{ p: 3 }}>
+      <Formik
+        initialValues={baseInitialValues}
+        validationSchema={validationSchema}
+        onSubmit={handleSubmit}
+        enableReinitialize={false}
+      >
+        {(formik) => (
+          <Form>
+            {/* Product change handler to update defaults and constraints */}
+            <ProductChangeHandler
+              loanProducts={loanProducts}
+              onProductChange={handleProductChange}
+            />
 
-      <Paper sx={{ p: 3 }}>
-        <Formik
-          initialValues={baseInitialValues}
-          validationSchema={validationSchema}
-          onSubmit={handleSubmit}
-          enableReinitialize={false}
-        >
-          {(formik) => (
-            <Form>
-              {/* Product change handler to update defaults and constraints */}
-              <ProductChangeHandler
-                loanProducts={loanProducts}
-                onProductChange={handleProductChange}
-              />
-
-              <Grid container spacing={2}>
-                {/* Loan Product Selection - first field */}
-                <FormGrid size={{ xs: 12, md: 12 }} key="loanProduct">
-                  {renderFormField(
-                    {
-                      ...updatedForm.find((f) => f.name === "loanProduct"),
-                      editing: true,
-                      isEditMode: false,
-                    },
-                    selectedProduct,
-                  )}
-                </FormGrid>
-
-                {/* Show product constraints when a product is selected */}
-                {selectedProduct && (
-                  <Grid size={{ xs: 12 }}>
-                    <ProductConstraints selectedProduct={selectedProduct} />
-                  </Grid>
+            <Grid container spacing={2}>
+              {/* Loan Product Selection - first field */}
+              <FormGrid size={{ xs: 12, md: 12 }} key="loanProduct">
+                {renderFormField(
+                  {
+                    ...updatedForm.find((f) => f.name === "loanProduct"),
+                    editing: true,
+                    isEditMode: false,
+                  },
+                  selectedProduct,
                 )}
+              </FormGrid>
 
-                {/* Rest of the form fields */}
-                {updatedForm
-                  .filter((f) => f.name !== "loanProduct")
-                  .map((field) => (
-                    <FormGrid
-                      size={{ xs: 12, md: field.span }}
-                      key={
-                        field.name || field.textName || `field-${Math.random()}`
-                      }
-                    >
-                      {renderFormField(
-                        {
-                          ...field,
-                          editing: true,
-                          isEditMode: false,
-                        },
-                        selectedProduct,
-                      )}
-                    </FormGrid>
-                  ))}
+              {/* Show product constraints when a product is selected */}
+              {selectedProduct && (
+                <Grid size={{ xs: 12 }}>
+                  <ProductConstraints selectedProduct={selectedProduct} />
+                </Grid>
+              )}
 
-                {/* Error and success messages */}
-                {submitError && (
-                  <Grid size={{ xs: 12 }}>
-                    <Alert severity="error" sx={{ mt: 1 }}>
-                      {submitError}
-                    </Alert>
-                  </Grid>
-                )}
-                {submitSuccess && (
-                  <Grid size={{ xs: 12 }}>
-                    <Alert severity="success" sx={{ mt: 1 }}>
-                      {submitSuccess}
-                    </Alert>
-                  </Grid>
-                )}
+              {/* Rest of the form fields */}
+              {updatedForm
+                .filter((f) => f.name !== "loanProduct")
+                .map((field) => (
+                  <FormGrid
+                    size={{ xs: 12, md: field.span }}
+                    key={
+                      field.name || field.textName || `field-${Math.random()}`
+                    }
+                  >
+                    {renderFormField(
+                      {
+                        ...field,
+                        editing: true,
+                        isEditMode: false,
+                      },
+                      selectedProduct,
+                    )}
+                  </FormGrid>
+                ))}
 
-                {/* Submit button */}
-                <Box
-                  sx={{
-                    display: "flex",
-                    pr: 2,
-                    justifyContent: { xs: "center", md: "flex-end" },
-                    width: "100%",
-                    mt: 2,
-                  }}
-                >
-                  <CreateFormButtons
-                    formik={formik}
-                    setEditMode={() => {}}
-                    setSubmitError={setSubmitError}
-                    setSubmitSuccess={setSubmitSuccess}
-                    hideCancel={true}
-                    submitLabel="Submit Loan Application"
-                  />
-                </Box>
-              </Grid>
-            </Form>
-          )}
-        </Formik>
-      </Paper>
-    </Box>
+              {/* Error and success messages */}
+              {submitError && (
+                <Grid size={{ xs: 12 }}>
+                  <Alert severity="error" sx={{ mt: 1 }}>
+                    {submitError}
+                  </Alert>
+                </Grid>
+              )}
+              {submitSuccess && (
+                <Grid size={{ xs: 12 }}>
+                  <Alert severity="success" sx={{ mt: 1 }}>
+                    {submitSuccess}
+                  </Alert>
+                </Grid>
+              )}
+
+              {/* Submit button */}
+              <Box
+                sx={{
+                  display: "flex",
+                  pr: 2,
+                  justifyContent: { xs: "center", md: "flex-end" },
+                  width: "100%",
+                  mt: 2,
+                }}
+              >
+                <CreateFormButtons
+                  formik={formik}
+                  setEditMode={() => {}}
+                  setSubmitError={setSubmitError}
+                  setSubmitSuccess={setSubmitSuccess}
+                  hideCancel={true}
+                  submitLabel="Submit Loan Application"
+                />
+              </Box>
+            </Grid>
+          </Form>
+        )}
+      </Formik>
+    </Paper>
   );
 }

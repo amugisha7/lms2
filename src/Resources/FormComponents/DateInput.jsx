@@ -12,6 +12,7 @@ const DateInput = ({
   editing = true,
   validationType, // <-- destructure and ignore
   adminOnly, // extract to prevent passing to DOM
+  isEditMode, // extract to prevent passing to DOM
   ...props
 }) => {
   const [field, meta, helpers] = useField(name);

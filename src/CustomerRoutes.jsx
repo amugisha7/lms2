@@ -6,7 +6,7 @@ import {
 } from "react-router-dom";
 import CustomerDashboard from "./Screens/CustomerPortal/CustomerDashboard";
 import CustomerProfile from "./Screens/CustomerPortal/CustomerProfile";
-import CustomerLoanApplication from "./Screens/CustomerPortal/CustomerLoanApplication";
+import CustomerLoanApplication from "./Screens/CustomerPortal/CustomerLoanApplicationTabs";
 import CustomerLoans from "./Screens/CustomerPortal/CustomerLoans";
 import CustomerLoanDetail from "./Screens/CustomerPortal/CustomerLoanDetail";
 

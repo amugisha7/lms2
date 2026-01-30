@@ -32,3 +32,11 @@ export const LIST_USERS_QUERY = `query ListUsers($filter: ModelUserFilterInput) 
     }
   }
 }`;
+
+export const CREATE_LOAN_PRODUCT_MUTATION = `mutation CreateLoanProduct($input: CreateLoanProductInput!) {
+  createLoanProduct(input: $input) { id }
+}`;
+
+export const CREATE_BRANCH_LOAN_PRODUCT_MUTATION = `mutation CreateBranchLoanProduct($input: CreateBranchLoanProductInput!) {
+  createBranchLoanProduct(input: $input) { id }
+}`;

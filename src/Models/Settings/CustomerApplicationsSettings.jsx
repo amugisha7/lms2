@@ -9,10 +9,13 @@ import {
   useTheme,
   Alert,
   CircularProgress,
+  Switch,
+  FormControlLabel,
 } from "@mui/material";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DownloadIcon from "@mui/icons-material/Download";
 import { UserContext } from "../../App";
+import { generateClient } from "aws-amplify/api";
 import QRCode from "qrcode";
 
 const CustomerApplicationsSettings = () => {
@@ -23,10 +26,14 @@ const CustomerApplicationsSettings = () => {
   const [loading, setLoading] = useState(true);
   const [copySuccess, setCopySuccess] = useState(false);
   const [qrCopySuccess, setQrCopySuccess] = useState(false);
+  const [hideBlankForm, setHideBlankForm] = useState(false);
+  const [savingSettings, setSavingSettings] = useState(false);
+  const [settingsSaveSuccess, setSettingsSaveSuccess] = useState(false);
+  const [settingsSaveError, setSettingsSaveError] = useState("");
 
   const institutionId = userDetails?.institution?.id;
 
-  // Initialize URL and QR code
+  // Initialize URL, QR code, and load settings
   useEffect(() => {
     if (!institutionId) {
       setLoading(false);
@@ -37,7 +44,7 @@ const CustomerApplicationsSettings = () => {
       const url = `https://app.loantabs.com/client/${institutionId}`;
       setApplicationUrl(url);
 
-      // Generate QR code on demand
+      // Generate QR code
       try {
         const dataUrl = await QRCode.toDataURL(url, {
           width: 1200,
@@ -50,6 +57,33 @@ const CustomerApplicationsSettings = () => {
         setQrCodeDataUrl(dataUrl);
       } catch (error) {
         console.error("Error generating QR code:", error);
+      }
+
+      // Load institution settings
+      try {
+        const client = generateClient();
+        const result = await client.graphql({
+          query: `query GetInstitution($id: ID!) {
+            getInstitution(id: $id) {
+              id
+              customInstitutionDetails
+            }
+          }`,
+          variables: { id: institutionId },
+        });
+
+        const customDetails =
+          result?.data?.getInstitution?.customInstitutionDetails;
+        if (customDetails) {
+          try {
+            const settings = JSON.parse(customDetails);
+            setHideBlankForm(settings.hideBlankForm === true);
+          } catch (e) {
+            console.error("Error parsing institution settings:", e);
+          }
+        }
+      } catch (error) {
+        console.error("Error loading institution settings:", error);
       }
 
       setLoading(false);
@@ -99,6 +133,72 @@ const CustomerApplicationsSettings = () => {
     document.body.removeChild(link);
   };
 
+  const handleToggleBlankForm = async (event) => {
+    const newValue = event.target.checked;
+    setHideBlankForm(newValue);
+    setSavingSettings(true);
+    setSettingsSaveSuccess(false);
+    setSettingsSaveError("");
+
+    try {
+      const client = generateClient();
+
+      // First, get current settings to preserve other fields
+      const getResult = await client.graphql({
+        query: `query GetInstitution($id: ID!) {
+          getInstitution(id: $id) {
+            id
+            customInstitutionDetails
+          }
+        }`,
+        variables: { id: institutionId },
+      });
+
+      let currentSettings = {};
+      const customDetails =
+        getResult?.data?.getInstitution?.customInstitutionDetails;
+      if (customDetails) {
+        try {
+          currentSettings = JSON.parse(customDetails);
+        } catch (e) {
+          currentSettings = {};
+        }
+      }
+
+      // Update the hideBlankForm setting
+      const updatedSettings = {
+        ...currentSettings,
+        hideBlankForm: newValue,
+      };
+
+      // Save the updated settings
+      await client.graphql({
+        query: `mutation UpdateInstitution($input: UpdateInstitutionInput!) {
+          updateInstitution(input: $input) {
+            id
+            customInstitutionDetails
+          }
+        }`,
+        variables: {
+          input: {
+            id: institutionId,
+            customInstitutionDetails: JSON.stringify(updatedSettings),
+          },
+        },
+      });
+
+      setSettingsSaveSuccess(true);
+      setTimeout(() => setSettingsSaveSuccess(false), 2000);
+    } catch (error) {
+      console.error("Error saving settings:", error);
+      setSettingsSaveError("Failed to save setting. Please try again.");
+      // Revert the toggle
+      setHideBlankForm(!newValue);
+    } finally {
+      setSavingSettings(false);
+    }
+  };
+
   if (loading) {
     return (
       <Box
@@ -137,10 +237,8 @@ const CustomerApplicationsSettings = () => {
         Customer Portal Link
       </Typography>
       <Typography
-        // variant="body1"
         sx={{
           mb: 3,
-          //   color: theme.palette.text.secondary,
         }}
       >
         Customers can apply for loans, view loan statements, and upload their
@@ -305,6 +403,81 @@ const CustomerApplicationsSettings = () => {
             Unable to generate QR code. Please try refreshing the page.
           </Alert>
         )}
+      </Paper>
+
+      <Paper
+        elevation={2}
+        sx={{
+          p: 3,
+          mt: 3,
+          borderRadius: 2,
+        }}
+      >
+        <Typography
+          variant="h6"
+          sx={{
+            mb: 2,
+            fontWeight: 500,
+            color: theme.palette.text.primary,
+          }}
+        >
+          Application Form Settings
+        </Typography>
+        <Typography
+          variant="body2"
+          sx={{
+            mb: 3,
+            color: theme.palette.text.secondary,
+          }}
+        >
+          Configure how customers can apply for loans through the portal.
+        </Typography>
+
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={hideBlankForm}
+                onChange={handleToggleBlankForm}
+                disabled={savingSettings}
+                color="primary"
+              />
+            }
+            label={
+              <Box>
+                <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                  Hide Blank Form Option
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  When enabled, customers can only apply using predefined loan
+                  products. The blank form option will be hidden.
+                </Typography>
+              </Box>
+            }
+            sx={{ alignItems: "flex-start", ml: 0 }}
+          />
+
+          {savingSettings && (
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <CircularProgress size={16} />
+              <Typography variant="body2" color="text.secondary">
+                Saving...
+              </Typography>
+            </Box>
+          )}
+
+          {settingsSaveSuccess && (
+            <Alert severity="success" sx={{ mt: 1 }}>
+              Setting saved successfully!
+            </Alert>
+          )}
+
+          {settingsSaveError && (
+            <Alert severity="error" sx={{ mt: 1 }}>
+              {settingsSaveError}
+            </Alert>
+          )}
+        </Box>
       </Paper>
     </Box>
   );

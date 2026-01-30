@@ -11,6 +11,8 @@ import {
   Person as PersonIcon,
   Add as AddIcon,
   List as ListIcon,
+  Calculate as CalculateIcon,
+  Assignment as AssignmentIcon,
 } from "@mui/icons-material";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import myLogo from "../../Resources/loantabs_logo.png";
@@ -32,9 +34,21 @@ const CustomerSideBar = ({ open = true }) => {
       disabled: false,
     },
     {
+      name: "Loan Calculator",
+      route: `/client/${institutionId}/calculator`,
+      icon: <CalculateIcon sx={{ color: "white" }} />,
+      disabled: false,
+    },
+    {
       name: "Apply for Loan",
       route: `/client/${institutionId}/apply`,
       icon: <AddIcon sx={{ color: "white" }} />,
+      disabled: !hasBorrower,
+    },
+    {
+      name: "My Applications",
+      route: `/client/${institutionId}/applications`,
+      icon: <AssignmentIcon sx={{ color: "white" }} />,
       disabled: !hasBorrower,
     },
     {

@@ -17,8 +17,9 @@ import TextInput from "../../Resources/FormComponents/TextInput";
 import Dropdown from "../../Resources/FormComponents/Dropdown";
 import DateInput from "../../Resources/FormComponents/DateInput";
 import TextAndDropdown from "../../Resources/FormComponents/TextAndDropdown";
-import CreateFormButtons from "../../ModelAssets/CreateFormButtons";
+import PlusButtonMain from "../../ModelAssets/PlusButtonMain";
 import { createLoanDraft } from "../../Models/Loans/LoanDrafts/loanDraftHelpers";
+import CustomerLoanSchedulePreview from "./CustomerLoanSchedulePreview";
 
 const FormGrid = styled(Grid)(({ theme }) => ({
   display: "flex",
@@ -41,6 +42,31 @@ const baseInitialValues = {
   loanPurpose: "",
 };
 
+// Helper to parse customLoanProductDetails
+const parseCustomDetails = (product) => {
+  if (!product?.customLoanProductDetails) {
+    return {
+      customerPortalVisible: true,
+      allowCustomerAmountEdit: true,
+      allowCustomerDurationEdit: true,
+    };
+  }
+  try {
+    const details = JSON.parse(product.customLoanProductDetails);
+    return {
+      customerPortalVisible: details.customerPortalVisible !== false,
+      allowCustomerAmountEdit: details.allowCustomerAmountEdit !== false,
+      allowCustomerDurationEdit: details.allowCustomerDurationEdit !== false,
+    };
+  } catch (e) {
+    return {
+      customerPortalVisible: true,
+      allowCustomerAmountEdit: true,
+      allowCustomerDurationEdit: true,
+    };
+  }
+};
+
 // Helper to format currency
 const formatCurrency = (value, currency = "") => {
   if (value === null || value === undefined || value === "") return "N/A";
@@ -51,30 +77,52 @@ const formatCurrency = (value, currency = "") => {
 const ProductConstraints = ({ selectedProduct }) => {
   if (!selectedProduct) return null;
 
+  const customDetails = parseCustomDetails(selectedProduct);
   const constraints = [];
 
-  // Principal constraints
-  if (
-    selectedProduct.principalAmountMin ||
-    selectedProduct.principalAmountMax
-  ) {
-    const min = formatCurrency(selectedProduct.principalAmountMin);
-    const max = formatCurrency(selectedProduct.principalAmountMax);
-    constraints.push({
-      label: "Loan Amount Range",
-      value: `${min} - ${max}`,
-    });
+  // Principal constraints - only show range if customer can edit amount
+  if (customDetails.allowCustomerAmountEdit) {
+    if (
+      selectedProduct.principalAmountMin ||
+      selectedProduct.principalAmountMax
+    ) {
+      const min = formatCurrency(selectedProduct.principalAmountMin);
+      const max = formatCurrency(selectedProduct.principalAmountMax);
+      constraints.push({
+        label: "Loan Amount Range",
+        value: `${min} - ${max}`,
+      });
+    }
+  } else {
+    // Show fixed amount when customer cannot edit
+    if (selectedProduct.principalAmountDefault) {
+      constraints.push({
+        label: "Fixed Loan Amount",
+        value: formatCurrency(selectedProduct.principalAmountDefault),
+      });
+    }
   }
 
-  // Duration constraints
-  if (selectedProduct.termDurationMin || selectedProduct.termDurationMax) {
-    const period = selectedProduct.durationPeriod || "months";
-    const min = selectedProduct.termDurationMin || 1;
-    const max = selectedProduct.termDurationMax || "N/A";
-    constraints.push({
-      label: "Duration Range",
-      value: `${min} - ${max} ${period}`,
-    });
+  // Duration constraints - only show range if customer can edit duration
+  if (customDetails.allowCustomerDurationEdit) {
+    if (selectedProduct.termDurationMin || selectedProduct.termDurationMax) {
+      const period = selectedProduct.durationPeriod || "months";
+      const min = selectedProduct.termDurationMin || 1;
+      const max = selectedProduct.termDurationMax || "N/A";
+      constraints.push({
+        label: "Duration Range",
+        value: `${min} - ${max} ${period}`,
+      });
+    }
+  } else {
+    // Show fixed duration when customer cannot edit
+    if (selectedProduct.termDurationDefault) {
+      const period = selectedProduct.durationPeriod || "months";
+      constraints.push({
+        label: "Fixed Duration",
+        value: `${selectedProduct.termDurationDefault} ${period}`,
+      });
+    }
   }
 
   // Interest rate info
@@ -146,16 +194,42 @@ const ProductChangeHandler = ({ loanProducts, onProductChange }) => {
         (p) => p.id === values.loanProduct,
       );
       if (selectedProduct) {
-        // Set defaults from product
-        if (selectedProduct.principalAmountDefault && !values.principalAmount) {
+        const customDetails = parseCustomDetails(selectedProduct);
+
+        // For amount: Set default if customer cannot edit OR if no value yet
+        if (!customDetails.allowCustomerAmountEdit) {
+          // Locked - always use product default
+          if (selectedProduct.principalAmountDefault) {
+            setFieldValue(
+              "principalAmount",
+              selectedProduct.principalAmountDefault,
+            );
+          }
+        } else if (
+          selectedProduct.principalAmountDefault &&
+          !values.principalAmount
+        ) {
+          // Editable - only set default if empty
           setFieldValue(
             "principalAmount",
             selectedProduct.principalAmountDefault,
           );
         }
-        if (selectedProduct.termDurationDefault && !values.loanDuration) {
+
+        // For duration: Set default if customer cannot edit OR if no value yet
+        if (!customDetails.allowCustomerDurationEdit) {
+          // Locked - always use product default
+          if (selectedProduct.termDurationDefault) {
+            setFieldValue("loanDuration", selectedProduct.termDurationDefault);
+          }
+        } else if (
+          selectedProduct.termDurationDefault &&
+          !values.loanDuration
+        ) {
+          // Editable - only set default if empty
           setFieldValue("loanDuration", selectedProduct.termDurationDefault);
         }
+
         if (selectedProduct.durationPeriod) {
           setFieldValue("durationPeriod", selectedProduct.durationPeriod);
         }
@@ -177,6 +251,8 @@ const ProductChangeHandler = ({ loanProducts, onProductChange }) => {
 
 // Build dynamic validation schema based on selected product
 const buildValidationSchema = (selectedProduct) => {
+  const customDetails = parseCustomDetails(selectedProduct);
+
   let principalValidation = Yup.number()
     .required("Principal amount is required")
     .min(1, "Amount must be greater than 0");
@@ -186,29 +262,35 @@ const buildValidationSchema = (selectedProduct) => {
     .min(1, "Duration must be at least 1");
 
   if (selectedProduct) {
-    if (selectedProduct.principalAmountMin) {
-      principalValidation = principalValidation.min(
-        selectedProduct.principalAmountMin,
-        `Minimum amount is ${formatCurrency(selectedProduct.principalAmountMin)}`,
-      );
+    // Only apply min/max validation if customer can edit the field
+    if (customDetails.allowCustomerAmountEdit) {
+      if (selectedProduct.principalAmountMin) {
+        principalValidation = principalValidation.min(
+          selectedProduct.principalAmountMin,
+          `Minimum amount is ${formatCurrency(selectedProduct.principalAmountMin)}`,
+        );
+      }
+      if (selectedProduct.principalAmountMax) {
+        principalValidation = principalValidation.max(
+          selectedProduct.principalAmountMax,
+          `Maximum amount is ${formatCurrency(selectedProduct.principalAmountMax)}`,
+        );
+      }
     }
-    if (selectedProduct.principalAmountMax) {
-      principalValidation = principalValidation.max(
-        selectedProduct.principalAmountMax,
-        `Maximum amount is ${formatCurrency(selectedProduct.principalAmountMax)}`,
-      );
-    }
-    if (selectedProduct.termDurationMin) {
-      durationValidation = durationValidation.min(
-        selectedProduct.termDurationMin,
-        `Minimum duration is ${selectedProduct.termDurationMin} ${selectedProduct.durationPeriod || "months"}`,
-      );
-    }
-    if (selectedProduct.termDurationMax) {
-      durationValidation = durationValidation.max(
-        selectedProduct.termDurationMax,
-        `Maximum duration is ${selectedProduct.termDurationMax} ${selectedProduct.durationPeriod || "months"}`,
-      );
+
+    if (customDetails.allowCustomerDurationEdit) {
+      if (selectedProduct.termDurationMin) {
+        durationValidation = durationValidation.min(
+          selectedProduct.termDurationMin,
+          `Minimum duration is ${selectedProduct.termDurationMin} ${selectedProduct.durationPeriod || "months"}`,
+        );
+      }
+      if (selectedProduct.termDurationMax) {
+        durationValidation = durationValidation.max(
+          selectedProduct.termDurationMax,
+          `Maximum duration is ${selectedProduct.termDurationMax} ${selectedProduct.durationPeriod || "months"}`,
+        );
+      }
     }
   }
 
@@ -226,6 +308,8 @@ const buildValidationSchema = (selectedProduct) => {
 };
 
 const renderFormField = (field, selectedProduct) => {
+  const customDetails = parseCustomDetails(selectedProduct);
+
   switch (field.type) {
     case "select":
       return <Dropdown {...field} />;
@@ -247,12 +331,45 @@ const renderFormField = (field, selectedProduct) => {
           />
         );
       }
+      // For principal amount, check if customer can edit
+      if (field.name === "principalAmount") {
+        const isLocked =
+          selectedProduct && !customDetails.allowCustomerAmountEdit;
+        return (
+          <TextInput
+            {...field}
+            type="number"
+            disabled={isLocked}
+            helperText={
+              isLocked
+                ? `Fixed amount set by loan product: ${formatCurrency(selectedProduct.principalAmountDefault)}`
+                : field.helperText
+            }
+          />
+        );
+      }
       return <TextInput {...field} type="number" />;
     case "textarea":
       return <TextInput {...field} multiline rows={4} />;
     case "date":
       return <DateInput {...field} />;
     case "textAndDropdown":
+      // For loan duration, check if customer can edit
+      if (field.textName === "loanDuration") {
+        const isLocked =
+          selectedProduct && !customDetails.allowCustomerDurationEdit;
+        return (
+          <TextAndDropdown
+            {...field}
+            textDisabled={isLocked}
+            textHelperText={
+              isLocked
+                ? `Fixed duration set by loan product: ${selectedProduct.termDurationDefault} ${selectedProduct.durationPeriod || "months"}`
+                : field.textHelperText
+            }
+          />
+        );
+      }
       return <TextAndDropdown {...field} />;
     default:
       return <TextInput {...field} />;
@@ -266,6 +383,9 @@ export default function CustomerLoanProductForm() {
   const [submitError, setSubmitError] = useState("");
   const [submitSuccess, setSubmitSuccess] = useState("");
   const [loading, setLoading] = useState(true);
+  const [step, setStep] = useState("form"); // "form" or "preview"
+  const [formValues, setFormValues] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -391,6 +511,89 @@ export default function CustomerLoanProductForm() {
     [selectedProduct],
   );
 
+  // Called when user clicks "View Schedule" on the form - validates and moves to preview
+  const handleViewSchedule = async (
+    values,
+    { setSubmitting: setFormSubmitting },
+  ) => {
+    setSubmitError("");
+    setSubmitSuccess("");
+    setFormSubmitting(true);
+
+    try {
+      const product = loanProducts.find((p) => p.id === values.loanProduct);
+
+      // Build the draft record for preview
+      const draftRecord = {
+        borrower: borrower.id,
+        loanProduct: values.loanProduct,
+        principalAmount: Number(values.principalAmount),
+        loanPurpose: values.loanPurpose || null,
+        loanDuration: Number(values.loanDuration),
+        durationPeriod:
+          values.durationPeriod || product?.durationPeriod || "months",
+        loanStartDate: values.loanStartDate,
+        interestRate: product?.interestRateDefault || 0,
+        interestMethod: product?.interestCalculationMethod || "flat",
+        interestType: product?.interestType || "percentage",
+        interestPeriod: product?.interestPeriod || "per_month",
+        repaymentFrequency: product?.repaymentFrequency || "monthly",
+        repaymentFrequencyType: "interval",
+      };
+
+      setFormValues(draftRecord);
+      setStep("preview");
+    } catch (err) {
+      console.error("Error preparing schedule preview:", err);
+      setSubmitError("Failed to prepare schedule preview. Please try again.");
+    } finally {
+      setFormSubmitting(false);
+    }
+  };
+
+  // Called from the preview screen when user confirms submission
+  const handleFinalSubmit = async () => {
+    setSubmitError("");
+    setSubmitSuccess("");
+    setSubmitting(true);
+
+    try {
+      const userDetails = {
+        id: customerUser.id,
+        institutionUsersId: institution.id,
+        branchUsersId: branches[0]?.id || null,
+      };
+
+      // Create with DRAFT status - customer applications need staff approval
+      await createLoanDraft({
+        userDetails,
+        draftRecord: formValues,
+        source: "CUSTOMER_PORTAL",
+        status: "DRAFT",
+      });
+
+      setSubmitSuccess(
+        "Loan application submitted successfully! Your application is now pending review. You'll be notified once it's processed.",
+      );
+
+      // Navigate to loans list after a delay
+      setTimeout(() => {
+        navigate(`/client/${institution.id}/loans`);
+      }, 2500);
+    } catch (err) {
+      console.error("Error submitting loan application:", err);
+      setSubmitError("Failed to submit application. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // Go back to form from preview
+  const handleBackToForm = () => {
+    setStep("form");
+    setSubmitError("");
+  };
+
   const handleSubmit = async (values, { setSubmitting, resetForm }) => {
     setSubmitError("");
     setSubmitSuccess("");
@@ -493,12 +696,49 @@ export default function CustomerLoanProductForm() {
     );
   }
 
+  // Show schedule preview step
+  if (step === "preview" && formValues) {
+    return (
+      <Box>
+        <Typography variant="body2" sx={{ mb: 2, color: "text.secondary" }}>
+          Please review your loan schedule below. You can export it as a PDF or
+          go back to edit your application.
+        </Typography>
+
+        {submitError && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {submitError}
+          </Alert>
+        )}
+        {submitSuccess && (
+          <Alert severity="success" sx={{ mb: 2 }}>
+            {submitSuccess}
+          </Alert>
+        )}
+
+        <Paper sx={{ p: 3 }}>
+          <CustomerLoanSchedulePreview
+            draftValues={formValues}
+            borrower={borrower}
+            institution={institution}
+            currency={institution?.currencyCode || "$"}
+            onBack={handleBackToForm}
+            onSubmit={handleFinalSubmit}
+            submitLabel="Submit Loan Application"
+            submitting={submitting}
+          />
+        </Paper>
+      </Box>
+    );
+  }
+
+  // Show the form step
   return (
     <Paper sx={{ p: 3 }}>
       <Formik
         initialValues={baseInitialValues}
         validationSchema={validationSchema}
-        onSubmit={handleSubmit}
+        onSubmit={handleViewSchedule}
         enableReinitialize={false}
       >
         {(formik) => (
@@ -566,7 +806,7 @@ export default function CustomerLoanProductForm() {
                 </Grid>
               )}
 
-              {/* Submit button */}
+              {/* View Schedule button */}
               <Box
                 sx={{
                   display: "flex",
@@ -576,13 +816,11 @@ export default function CustomerLoanProductForm() {
                   mt: 2,
                 }}
               >
-                <CreateFormButtons
-                  formik={formik}
-                  setEditMode={() => {}}
-                  setSubmitError={setSubmitError}
-                  setSubmitSuccess={setSubmitSuccess}
-                  hideCancel={true}
-                  submitLabel="Submit Loan Application"
+                <PlusButtonMain
+                  buttonText="View Loan Schedule"
+                  variant="contained"
+                  onClick={formik.handleSubmit}
+                  disabled={formik.isSubmitting || !formik.isValid}
                 />
               </Box>
             </Grid>

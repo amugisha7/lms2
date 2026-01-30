@@ -54,6 +54,37 @@ const buildValidationSchema = () => {
     name: Yup.string()
       .required("Loan Product Name is required")
       .max(100, "Name too long"),
+    // Interest Settings - Required for enterprise-grade loan products
+    interestMethod: Yup.string()
+      .required("Interest Method is required")
+      .oneOf(
+        [
+          "flat",
+          "declining_balance",
+          "reducing_balance_equal_installments",
+          "reducing_balance_equal_principal",
+          "interest_only",
+          "compound_interest_accrued",
+          "compound_interest_equal_installments",
+        ],
+        "Invalid interest method",
+      ),
+    interestType: Yup.string()
+      .required("Interest Type is required")
+      .oneOf(["percentage", "fixed"], "Invalid interest type"),
+    interestPeriod: Yup.string()
+      .required("Interest Period is required")
+      .oneOf(
+        ["per_day", "per_week", "per_month", "per_year", "per_loan_cycle"],
+        "Invalid interest period",
+      ),
+    defaultInterest: Yup.number()
+      .required("Default Interest is required for customers to apply")
+      .min(0, "Default Interest must be at least 0")
+      .transform((value, originalValue) =>
+        originalValue === "" ? undefined : value,
+      ),
+    // Principal Settings
     minPrincipal: Yup.number()
       .min(0, "Minimum Principal must be at least 0")
       .nullable()
@@ -81,6 +112,13 @@ const buildValidationSchema = () => {
       .nullable()
       .transform((value, originalValue) =>
         originalValue === "" ? null : value,
+      )
+      .when("allowCustomerAmountEdit", (allowCustomerAmountEdit, schema) =>
+        allowCustomerAmountEdit === "no"
+          ? schema.required(
+              "Default Principal is required when customers cannot edit amount",
+            )
+          : schema,
       )
       .when("minPrincipal", (minPrincipalValue, schema) => {
         if (
@@ -134,55 +172,18 @@ const buildValidationSchema = () => {
             )
           : schema,
       ),
-    defaultInterest: Yup.number()
-      .min(0, "Default Interest must be at least 0")
-      .nullable()
-      .transform((value, originalValue) =>
-        originalValue === "" ? null : value,
-      )
-      .when("minInterest", (minInterestValue, schema) => {
-        if (
-          minInterestValue !== null &&
-          minInterestValue !== undefined &&
-          minInterestValue !== ""
-        ) {
-          const numMinInterest = Number(minInterestValue);
-          if (!isNaN(numMinInterest)) {
-            return schema.min(
-              numMinInterest,
-              "Default Interest must be greater than or equal to Minimum Interest",
-            );
-          }
-        }
-        return schema;
-      })
-      .when("maxInterest", (maxInterestValue, schema) => {
-        if (
-          maxInterestValue !== null &&
-          maxInterestValue !== undefined &&
-          maxInterestValue !== ""
-        ) {
-          const numMaxInterest = Number(maxInterestValue);
-          if (!isNaN(numMaxInterest)) {
-            return schema.max(
-              numMaxInterest,
-              "Default Interest must be less than or equal to Maximum Interest",
-            );
-          }
-        }
-        return schema;
-      }),
+    // Duration Settings - Required for customer applications
     durationPeriod: Yup.string()
-      .oneOf(["days", "weeks", "months", "years"])
-      .nullable(),
+      .required("Duration Period is required")
+      .oneOf(["days", "weeks", "months", "years"], "Invalid duration period"),
     minDuration: Yup.number()
-      .min(0, "Minimum Duration must be at least 0")
+      .min(1, "Minimum Duration must be at least 1")
       .nullable()
       .transform((value, originalValue) =>
         originalValue === "" ? null : value,
       ),
     maxDuration: Yup.number()
-      .min(0, "Maximum Duration must be at least 0")
+      .min(1, "Maximum Duration must be at least 1")
       .nullable()
       .transform((value, originalValue) =>
         originalValue === "" ? null : value,
@@ -196,10 +197,17 @@ const buildValidationSchema = () => {
           : schema,
       ),
     defaultDuration: Yup.number()
-      .min(0, "Default Duration must be at least 0")
+      .min(1, "Default Duration must be at least 1")
       .nullable()
       .transform((value, originalValue) =>
         originalValue === "" ? null : value,
+      )
+      .when("allowCustomerDurationEdit", (allowCustomerDurationEdit, schema) =>
+        allowCustomerDurationEdit === "no"
+          ? schema.required(
+              "Default Duration is required when customers cannot edit duration",
+            )
+          : schema,
       )
       .when("minDuration", (minDurationValue, schema) => {
         if (
@@ -233,21 +241,25 @@ const buildValidationSchema = () => {
         }
         return schema;
       }),
+    // Repayment Frequency - Required for customer applications
     repaymentFrequency: Yup.string()
-      .oneOf([
-        "daily",
-        "weekly",
-        "biweekly",
-        "monthly",
-        "bimonthly",
-        "quarterly",
-        "every_4_months",
-        "semi_annual",
-        "every_9_months",
-        "yearly",
-        "lump_sum",
-      ])
-      .nullable(),
+      .required("Repayment Frequency is required")
+      .oneOf(
+        [
+          "daily",
+          "weekly",
+          "biweekly",
+          "monthly",
+          "bimonthly",
+          "quarterly",
+          "every_4_months",
+          "semi_annual",
+          "every_9_months",
+          "yearly",
+          "lump_sum",
+        ],
+        "Invalid repayment frequency",
+      ),
     branch: Yup.array()
       .min(1, "At least one branch is required")
       .required("Branch is required"),
@@ -407,6 +419,10 @@ const EditLoanProduct = forwardRef(
         customerPortalVisible: customDetails.customerPortalVisible
           ? "yes"
           : "no",
+        allowCustomerAmountEdit:
+          customDetails.allowCustomerAmountEdit !== false ? "yes" : "no",
+        allowCustomerDurationEdit:
+          customDetails.allowCustomerDurationEdit !== false ? "yes" : "no",
       };
     };
 

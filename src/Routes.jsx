@@ -9,7 +9,8 @@ import MainGrid from "./muiTemplates/dashboard/components/MainGrid";
 import CustomFieldsManager from "./Screens/AdminScreens/CustomFields/CustomFieldsManager";
 import Dashboard from "./Screens/Dashboard/Dashboard";
 import CreateLoanFeesForm from "./Models/LoanFees/CreateLoanFeesForm"; // Add this import
-import CreateLoanProduct from "./Models/LoanProducts/CreateLoanProduct/CreateLoanProduct"; // Add this import
+import CreateLoanProductPage from "./Models/LoanProducts/CreateLoanProduct/CreateLoanProductPage"; // Updated import for standalone page
+import LoanProductDetail from "./Models/LoanProducts/LoanProductDetail"; // Add this import for loan product detail
 import AdminPage from "./Screens/AdminScreens/AdminPage";
 import LoanFees from "./Models/LoanFees/LoanFees"; // Add this import
 import CreateBranches from "./Screens/Branches/CreateBranches/CreateBranch";
@@ -72,13 +73,16 @@ export default function AppRoutes({ userExists }) {
               <Route path="customFields" element={<CustomFieldsManager />} />
               {/* Add more routes as needed */}
 
-              {/* Loan Products route */}
+              {/* Loan Products routes */}
               <Route
                 path="admin/add-loan-product"
-                element={<CreateLoanProduct />}
+                element={<CreateLoanProductPage />}
               />
-              {/* Loan Products list route */}
               <Route path="admin/loan-products" element={<LoanProducts />} />
+              <Route
+                path="admin/loan-products/id/:id/view"
+                element={<LoanProductDetail />}
+              />
 
               {/* Loans routes */}
               <Route path="add-loan" element={<LoanCreationOptions />} />

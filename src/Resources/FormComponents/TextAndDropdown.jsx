@@ -27,6 +27,7 @@ const TextAndDropdown = ({
   textRequired,
   textPlaceholder,
   textInputProps, // for any remaining TextField specific props
+  textDisabled = false, // Allow disabling just the text field
 
   // Dropdown Props
   dropdownLabel,
@@ -36,6 +37,7 @@ const TextAndDropdown = ({
   dropdownRequired,
   dropdownOnChange, // Pass through for external onChange handling
   dropdownProps, // for any remaining TextField specific props
+  dropdownDisabled = false, // Allow disabling just the dropdown
 
   // Extract validation/dependency props to prevent passing to DOM
   validationType,
@@ -71,11 +73,15 @@ const TextAndDropdown = ({
   const [dropdownField, dropdownMeta, dropdownHelpers] = useField(dropdownName);
 
   const isReadOnly = readOnly || !editing || disabled;
+  const isTextReadOnly = isReadOnly || textDisabled;
+  const isDropdownReadOnly = isReadOnly || dropdownDisabled;
 
   const StyledOutlinedInput = styled(OutlinedInput)(({ theme }) => {
     const colors = tokens(theme.palette.mode);
     return {
-      border: isReadOnly ? `transparent` : `1px solid ${colors.grey[200]}`,
+      border: isDropdownReadOnly
+        ? `transparent`
+        : `1px solid ${colors.grey[200]}`,
     };
   });
 
@@ -133,17 +139,17 @@ const TextAndDropdown = ({
           placeholder={textPlaceholder}
           required={textRequired}
           error={
-            isReadOnly ? false : textMeta.touched && Boolean(textMeta.error)
+            isTextReadOnly ? false : textMeta.touched && Boolean(textMeta.error)
           }
           helperText={
-            isReadOnly
-              ? undefined
+            isTextReadOnly
+              ? textHelperText
               : textMeta.touched && textMeta.error
-              ? textMeta.error
-              : textHelperText
+                ? textMeta.error
+                : textHelperText
           }
           size="small"
-          inputProps={{ readOnly: isReadOnly }}
+          inputProps={{ readOnly: isTextReadOnly }}
           sx={{
             width: "100%",
             "& .MuiFilledInput-input": {
@@ -152,18 +158,18 @@ const TextAndDropdown = ({
               borderRadius: 0,
             },
             "& .MuiFilledInput-root": {
-              backgroundColor: isReadOnly ? "transparent" : undefined,
+              backgroundColor: isTextReadOnly ? "transparent" : undefined,
               "&:hover": {
-                backgroundColor: isReadOnly ? "transparent" : undefined,
+                backgroundColor: isTextReadOnly ? "transparent" : undefined,
               },
               "&.Mui-focused": {
-                backgroundColor: isReadOnly ? "transparent" : undefined,
+                backgroundColor: isTextReadOnly ? "transparent" : undefined,
               },
               "&:before, &:after": {
-                borderBottomColor: isReadOnly ? "transparent" : undefined,
+                borderBottomColor: isTextReadOnly ? "transparent" : undefined,
               },
               "&.Mui-focused:after": {
-                borderBottomColor: isReadOnly
+                borderBottomColor: isTextReadOnly
                   ? "transparent"
                   : (theme) =>
                       theme.palette.mode === "dark"
@@ -220,9 +226,9 @@ const TextAndDropdown = ({
             displayEmpty
             input={<StyledOutlinedInput />}
             onChange={handleDropdownChange}
-            disabled={isReadOnly}
+            disabled={isDropdownReadOnly}
             slotProps={{
-              input: { readOnly: isReadOnly },
+              input: { readOnly: isDropdownReadOnly },
             }}
           >
             <MenuItem value="">

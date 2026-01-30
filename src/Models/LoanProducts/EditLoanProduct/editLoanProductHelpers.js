@@ -112,6 +112,8 @@ export const buildLoanProductUpdateInput = (values, userDetails, id) => {
   // Build customLoanProductDetails
   const customDetails = {
     customerPortalVisible: values.customerPortalVisible === 'yes',
+    allowCustomerAmountEdit: values.allowCustomerAmountEdit !== 'no', // Default to true
+    allowCustomerDurationEdit: values.allowCustomerDurationEdit !== 'no', // Default to true
   };
 
   return {

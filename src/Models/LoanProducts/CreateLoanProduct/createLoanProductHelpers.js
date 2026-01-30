@@ -80,6 +80,8 @@ export const buildLoanProductInput = (values, userDetails) => {
   // Build customLoanProductDetails
   const customDetails = {
     customerPortalVisible: values.customerPortalVisible === 'yes',
+    allowCustomerAmountEdit: values.allowCustomerAmountEdit !== 'no', // Default to true
+    allowCustomerDurationEdit: values.allowCustomerDurationEdit !== 'no', // Default to true
   };
 
   return {

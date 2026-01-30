@@ -17,7 +17,7 @@ const customerLoanApplicationForm = [
     name: "principalAmount",
     type: "number",
     required: true,
-    span: 6,
+    span: 12,
     helperText: "Enter the amount you wish to borrow",
   },
 
@@ -58,18 +58,7 @@ const customerLoanApplicationForm = [
     helperText: "When would you like the loan to start?",
   },
 
-  // Interest Rate (read-only for customer, set by product)
-  {
-    label: "Interest Rate",
-    name: "interestRate",
-    type: "number",
-    required: false,
-    span: 6,
-    readOnly: true,
-    helperText: "Interest rate is determined by the loan product",
-  },
-
-  // Loan Purpose
+    // Loan Purpose
   {
     label: "Loan Purpose",
     name: "loanPurpose",

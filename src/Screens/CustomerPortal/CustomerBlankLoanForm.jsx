@@ -13,8 +13,9 @@ import DateInput from "../../Resources/FormComponents/DateInput";
 import RadioGroup from "../../Resources/FormComponents/RadioGroup";
 import TextAndDropdown from "../../Resources/FormComponents/TextAndDropdown";
 import FormLabel from "../../Resources/FormComponents/FormLabel";
-import CreateFormButtons from "../../ModelAssets/CreateFormButtons";
+import PlusButtonMain from "../../ModelAssets/PlusButtonMain";
 import { createLoanDraft } from "../../Models/Loans/LoanDrafts/loanDraftHelpers";
+import CustomerLoanSchedulePreview from "./CustomerLoanSchedulePreview";
 
 const FormGrid = styled(Grid)(({ theme }) => ({
   display: "flex",
@@ -195,6 +196,9 @@ export default function CustomerBlankLoanForm() {
   const [submitError, setSubmitError] = useState("");
   const [submitSuccess, setSubmitSuccess] = useState("");
   const [loading, setLoading] = useState(true);
+  const [step, setStep] = useState("form"); // "form" or "preview"
+  const [formValues, setFormValues] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -235,6 +239,86 @@ export default function CustomerBlankLoanForm() {
 
     fetchData();
   }, [institution]);
+
+  // Called when user clicks "View Schedule" on the form - validates and moves to preview
+  const handleViewSchedule = async (
+    values,
+    { setSubmitting: setFormSubmitting },
+  ) => {
+    setSubmitError("");
+    setSubmitSuccess("");
+    setFormSubmitting(true);
+
+    try {
+      // Build the draft record for preview
+      const draftRecord = {
+        borrower: borrower.id,
+        loanProduct: null, // No product for blank form
+        principalAmount: Number(values.principalAmount),
+        loanPurpose: values.loanPurpose || null,
+        loanDuration: Number(values.loanDuration),
+        durationPeriod: values.durationPeriod || "months",
+        loanStartDate: values.loanStartDate,
+        interestRate: Number(values.interestRate),
+        interestMethod: values.interestMethod,
+        interestType: values.interestType,
+        interestPeriod: values.interestPeriod,
+        repaymentFrequency: values.repaymentFrequency,
+        repaymentFrequencyType: "interval",
+      };
+
+      setFormValues(draftRecord);
+      setStep("preview");
+    } catch (err) {
+      console.error("Error preparing schedule preview:", err);
+      setSubmitError("Failed to prepare schedule preview. Please try again.");
+    } finally {
+      setFormSubmitting(false);
+    }
+  };
+
+  // Called from the preview screen when user confirms submission
+  const handleFinalSubmit = async () => {
+    setSubmitError("");
+    setSubmitSuccess("");
+    setSubmitting(true);
+
+    try {
+      const userDetails = {
+        id: customerUser.id,
+        institutionUsersId: institution.id,
+        branchUsersId: branches[0]?.id || null,
+      };
+
+      // Create with DRAFT status - customer applications need staff approval
+      await createLoanDraft({
+        userDetails,
+        draftRecord: formValues,
+        source: "CUSTOMER_PORTAL",
+        status: "DRAFT",
+      });
+
+      setSubmitSuccess(
+        "Loan application submitted successfully! Your application is now pending review. You'll be notified once it's processed.",
+      );
+
+      // Navigate to loans list after a delay
+      setTimeout(() => {
+        navigate(`/client/${institution.id}/loans`);
+      }, 2500);
+    } catch (err) {
+      console.error("Error submitting loan application:", err);
+      setSubmitError("Failed to submit application. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // Go back to form from preview
+  const handleBackToForm = () => {
+    setStep("form");
+    setSubmitError("");
+  };
 
   const handleSubmit = async (values, { setSubmitting, resetForm }) => {
     setSubmitError("");
@@ -308,6 +392,43 @@ export default function CustomerBlankLoanForm() {
     );
   }
 
+  // Show schedule preview step
+  if (step === "preview" && formValues) {
+    return (
+      <Box>
+        <Typography variant="body2" sx={{ mb: 2, color: "text.secondary" }}>
+          Please review your loan schedule below. You can export it as a PDF or
+          go back to edit your application.
+        </Typography>
+
+        {submitError && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {submitError}
+          </Alert>
+        )}
+        {submitSuccess && (
+          <Alert severity="success" sx={{ mb: 2 }}>
+            {submitSuccess}
+          </Alert>
+        )}
+
+        <Paper sx={{ p: 3 }}>
+          <CustomerLoanSchedulePreview
+            draftValues={formValues}
+            borrower={borrower}
+            institution={institution}
+            currency={institution?.currencyCode || "$"}
+            onBack={handleBackToForm}
+            onSubmit={handleFinalSubmit}
+            submitLabel="Submit Loan Application"
+            submitting={submitting}
+          />
+        </Paper>
+      </Box>
+    );
+  }
+
+  // Show the form step
   return (
     <Paper sx={{ p: 3 }}>
       <Typography variant="body2" sx={{ mb: 3, color: "text.secondary" }}>
@@ -317,7 +438,7 @@ export default function CustomerBlankLoanForm() {
       <Formik
         initialValues={baseInitialValues}
         validationSchema={validationSchema}
-        onSubmit={handleSubmit}
+        onSubmit={handleViewSchedule}
         enableReinitialize={false}
       >
         {(formik) => (
@@ -358,7 +479,7 @@ export default function CustomerBlankLoanForm() {
                 </Grid>
               )}
 
-              {/* Submit button */}
+              {/* View Schedule button */}
               <Box
                 sx={{
                   display: "flex",
@@ -368,13 +489,11 @@ export default function CustomerBlankLoanForm() {
                   mt: 2,
                 }}
               >
-                <CreateFormButtons
-                  formik={formik}
-                  setEditMode={() => {}}
-                  setSubmitError={setSubmitError}
-                  setSubmitSuccess={setSubmitSuccess}
-                  hideCancel={true}
-                  submitLabel="Submit Loan Application"
+                <PlusButtonMain
+                  buttonText="View Loan Schedule"
+                  variant="contained"
+                  onClick={formik.handleSubmit}
+                  disabled={formik.isSubmitting || !formik.isValid}
                 />
               </Box>
             </Grid>

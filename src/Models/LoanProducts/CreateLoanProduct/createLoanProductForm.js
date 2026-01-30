@@ -32,11 +32,36 @@ const createLoanProductForm = [
     helperText: "This loan product will only be available to the selected Branches.",
     showSelectAll: true
   },
+  {
+    label: "Applicant Portal Visibility",
+    name: "customerPortalVisible",
+    type: "radio",
+    span: 12,
+    options: [
+      { value: "yes", label: "Visible to applicants" },
+      { value: "no", label: "Internal only" },
+    ],
+    defaultValue: "yes",
+    helperText: "If enabled, applicants can apply for this loan product",
+  },
+  
   // Principal Settings
   {
     label: "Principal Settings",
     type: "label",
     span: 12,
+  },
+  {
+    label: "Allow Applicant to Edit Loan Amount",
+    name: "allowCustomerAmountEdit",
+    type: "radio",
+    span: 12,
+    options: [
+      { value: "yes", label: "Yes - Applicant can choose amount within range" },
+      { value: "no", label: "No - Use fixed default amount" },
+    ],
+    defaultValue: "yes",
+    helperText: "When disabled, the default principal becomes mandatory and applicants cannot modify it",
   },
   {
     label: "Minimum Principal",
@@ -45,6 +70,9 @@ const createLoanProductForm = [
     span: 6,
     validationType: "number",
     min: 0,
+    dependsOn: "allowCustomerAmountEdit",
+    dependsOnValue: "yes",
+    helperText: "The minimum amount applicants can request",
   },
   {
     label: "Default Principal",
@@ -53,6 +81,9 @@ const createLoanProductForm = [
     span: 6,
     validationType: "number",
     min: 0,
+    dynamicRequired: "allowCustomerAmountEdit",
+    dynamicRequiredValue: "no",
+    helperText: "The default loan amount. Required when applicants cannot edit.",
   },
   {
     label: "Maximum Principal",
@@ -61,6 +92,9 @@ const createLoanProductForm = [
     span: 6,
     validationType: "number",
     min: 0,
+    dependsOn: "allowCustomerAmountEdit",
+    dependsOnValue: "yes",
+    helperText: "The maximum amount applicants can request",
   },
   // Interest Settings
   {
@@ -73,6 +107,7 @@ const createLoanProductForm = [
     name: "interestMethod",
     type: "select",
     span: 6,
+    required: true,
     options: [
       { value: "flat", label: "Flat" },
       { value: "declining_balance", label: "Declining Balance" },
@@ -97,6 +132,7 @@ const createLoanProductForm = [
     name: "interestType",
     type: "select",
     span: 6,
+    required: true,
     options: [
       { value: "percentage", label: "Percentage" },
       { value: "fixed", label: "Fixed Amount" },
@@ -107,6 +143,7 @@ const createLoanProductForm = [
     name: "interestPeriod",
     type: "select",
     span: 6,
+    required: true,
     options: [
       { value: "per_day", label: "Per Day" },
       { value: "per_week", label: "Per Week" },
@@ -128,8 +165,10 @@ const createLoanProductForm = [
     name: "defaultInterest",
     type: "number",
     span: 6,
+    required: true,
     validationType: "number",
     min: 0,
+    helperText: "Required. This is the interest rate/amount shown to customers when applying.",
   },
   {
     label: "Maximum Interest",
@@ -145,11 +184,26 @@ const createLoanProductForm = [
     type: "label",
     span: 12,
   },
+    {
+    label: "Allow Applicant to Edit Loan Duration",
+    name: "allowCustomerDurationEdit",
+    type: "radio",
+    span: 12,
+    options: [
+      { value: "yes", label: "Yes - Applicant can choose duration within range" },
+      { value: "no", label: "No - Use fixed default duration" },
+    ],
+    defaultValue: "yes",
+    helperText: "When disabled, the default duration becomes mandatory and applicants cannot modify it",
+  },
+
   {
     label: "Duration Period",
     name: "durationPeriod",
     type: "radioNoLabel",
     span: 6,
+    required: true,
+    defaultValue: "months",
     options: [
       { value: "days", label: "Days" },
       { value: "weeks", label: "Weeks" },
@@ -163,7 +217,10 @@ const createLoanProductForm = [
     type: "number",
     span: 6,
     validationType: "number",
-    min: 0,
+    min: 1,
+    dependsOn: "allowCustomerDurationEdit",
+    dependsOnValue: "yes",
+    helperText: "The minimum loan term applicants can select",
   },
   {
     label: "Default Duration",
@@ -171,7 +228,10 @@ const createLoanProductForm = [
     type: "number",
     span: 6,
     validationType: "number",
-    min: 0,
+    min: 1,
+    dynamicRequired: "allowCustomerDurationEdit",
+    dynamicRequiredValue: "no",
+    helperText: "The default loan duration. Required when applicants cannot edit.",
   },
   {
     label: "Maximum Duration",
@@ -179,7 +239,10 @@ const createLoanProductForm = [
     type: "number",
     span: 6,
     validationType: "number",
-    min: 0,
+    min: 1,
+    dependsOn: "allowCustomerDurationEdit",
+    dependsOnValue: "yes",
+    helperText: "The maximum loan term applicants can select",
   },
   // Repayment Settings
   {
@@ -192,6 +255,8 @@ const createLoanProductForm = [
     name: "repaymentFrequency",
     type: "select",
     span: 12,
+    required: true,
+    helperText: "Required. How often borrowers will make payments.",
     options: [
       { value: "daily", label: "Daily" },
       { value: "weekly", label: "Weekly" },
@@ -316,24 +381,6 @@ const createLoanProductForm = [
     multiple: true,
     options: [], // Will be populated dynamically
     dynamicoptions: "true",
-  },
-  // Customer Portal Settings
-  {
-    label: "Customer Portal Settings",
-    type: "label",
-    span: 12,
-  },
-  {
-    label: "Customer Portal Visibility",
-    name: "customerPortalVisible",
-    type: "radio",
-    span: 6,
-    options: [
-      { value: "yes", label: "Visible to customers" },
-      { value: "no", label: "Internal only" },
-    ],
-    defaultValue: "yes",
-    helperText: "If enabled, customers can apply for this loan product",
   },
 ];
 

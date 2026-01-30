@@ -1,70 +1,19 @@
 import React from "react";
 import { generateClient } from "aws-amplify/api";
+import { useNavigate } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { UserContext } from "../../App";
 import CustomDataGrid from "../../ModelAssets/CustomDataGrid";
-import CustomSlider from "../../ModelAssets/CustomSlider";
-import DeleteDialog from "../../ModelAssets/DeleteDialog";
-import { useTheme } from "@mui/material/styles";
 import ClickableText from "../../ModelAssets/ClickableText";
-import EditLoanProduct from "./EditLoanProduct/EditLoanProduct";
-import CreateLoanProduct from "./CreateLoanProduct/CreateLoanProduct";
 import PlusButtonMain from "../../ModelAssets/PlusButtonMain";
-
-const LIST_LOAN_PRODUCT_LOAN_FEES_CONFIGS_QUERY = `
-  query ListLoanProductLoanFeesConfigs($filter: ModelLoanProductLoanFeesConfigFilterInput) {
-    listLoanProductLoanFeesConfigs(filter: $filter) {
-      items {
-        id
-      }
-    }
-  }
-`;
-
-const DELETE_LOAN_PRODUCT_LOAN_FEES_CONFIG_MUTATION = `
-  mutation DeleteLoanProductLoanFeesConfig($input: DeleteLoanProductLoanFeesConfigInput!) {
-    deleteLoanProductLoanFeesConfig(input: $input) {
-      id
-    }
-  }
-`;
-
-const LIST_BRANCH_LOAN_PRODUCTS_QUERY = `
-  query ListBranchLoanProducts($filter: ModelBranchLoanProductFilterInput) {
-    listBranchLoanProducts(filter: $filter) {
-      items {
-        id
-      }
-    }
-  }
-`;
-
-const DELETE_BRANCH_LOAN_PRODUCT_MUTATION = `
-  mutation DeleteBranchLoanProduct($input: DeleteBranchLoanProductInput!) {
-    deleteBranchLoanProduct(input: $input) {
-      id
-    }
-  }
-`;
 
 export default function LoanProducts() {
   const [loanProducts, setLoanProducts] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
   const [search] = React.useState("");
-  const [editDialogOpen, setEditDialogOpen] = React.useState(false);
-  const [editDialogRow, setEditDialogRow] = React.useState(null);
-  const [createDialogOpen, setCreateDialogOpen] = React.useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
-  const [deleteDialogRow, setDeleteDialogRow] = React.useState(null);
-  const [deleteLoading, setDeleteLoading] = React.useState(false);
-  const [deleteError, setDeleteError] = React.useState("");
-  const [editMode, setEditMode] = React.useState(false);
-  const [viewDialogOpen, setViewDialogOpen] = React.useState(false);
-  const [viewDialogRow, setViewDialogRow] = React.useState(null);
-  const formRef = React.useRef();
   const { userDetails } = React.useContext(UserContext);
-  const theme = useTheme();
+  const navigate = useNavigate();
   const lastBranchIdRef = React.useRef();
 
   React.useEffect(() => {
@@ -187,152 +136,12 @@ export default function LoanProducts() {
     }
   }, [userDetails?.branchUsersId]);
 
-  const handleEditDialogOpen = (row) => {
-    setEditDialogRow(row);
-    setEditDialogOpen(true);
+  const handleViewLoanProduct = (row) => {
+    navigate(`/admin/loan-products/id/${row.id}/view`);
   };
 
-  const handleEditDialogClose = () => {
-    setEditDialogOpen(false);
-    setEditDialogRow(null);
-  };
-
-  const handleEditSuccess = (updatedRow) => {
-    // Update the loan product in the local state with the complete updated data
-    setLoanProducts((prev) =>
-      prev.map((row) => (row.id === updatedRow.id ? updatedRow : row)),
-    );
-
-    // Also update the view dialog if it's showing the same product
-    if (viewDialogRow && viewDialogRow.id === updatedRow.id) {
-      setViewDialogRow(updatedRow);
-    }
-
-    handleEditDialogClose();
-  };
-
-  const handleDeleteDialogOpen = (row) => {
-    setDeleteDialogRow(row);
-    setDeleteDialogOpen(true);
-    setDeleteError("");
-  };
-
-  const handleDeleteDialogClose = () => {
-    setDeleteDialogOpen(false);
-    setDeleteDialogRow(null);
-    setDeleteError("");
-  };
-
-  const handleDeleteConfirm = async () => {
-    setDeleteLoading(true);
-    setDeleteError("");
-    try {
-      const client = generateClient();
-
-      // Then, clear relationships with loan fees configs
-      console.log(
-        "Clearing LoanProductLoanFeesConfigs for loan product:",
-        deleteDialogRow.id,
-      );
-      const loanFeesConfigsResult = await client.graphql({
-        query: LIST_LOAN_PRODUCT_LOAN_FEES_CONFIGS_QUERY,
-        variables: { filter: { loanProductId: { eq: deleteDialogRow.id } } },
-      });
-      const feeItems =
-        loanFeesConfigsResult.data.listLoanProductLoanFeesConfigs.items;
-      console.log(
-        `Found ${feeItems.length} LoanProductLoanFeesConfigs to delete`,
-      );
-      for (const item of feeItems) {
-        console.log("Deleting LoanProductLoanFeesConfig:", item.id);
-        await client.graphql({
-          query: DELETE_LOAN_PRODUCT_LOAN_FEES_CONFIG_MUTATION,
-          variables: { input: { id: item.id } },
-        });
-      }
-      console.log("Finished clearing LoanProductLoanFeesConfigs");
-
-      // Clear relationships with branches
-      console.log(
-        "Clearing BranchLoanProducts for loan product:",
-        deleteDialogRow.id,
-      );
-      const branchLoanProductsResult = await client.graphql({
-        query: LIST_BRANCH_LOAN_PRODUCTS_QUERY,
-        variables: { filter: { loanProductId: { eq: deleteDialogRow.id } } },
-      });
-      const branchItems =
-        branchLoanProductsResult.data.listBranchLoanProducts.items;
-      console.log(`Found ${branchItems.length} BranchLoanProducts to delete`);
-      for (const item of branchItems) {
-        console.log("Deleting BranchLoanProduct:", item.id);
-        await client.graphql({
-          query: DELETE_BRANCH_LOAN_PRODUCT_MUTATION,
-          variables: { input: { id: item.id } },
-        });
-      }
-      console.log("Finished clearing BranchLoanProducts");
-
-      // Placeholder mutation for deleting a loan product
-      await client.graphql({
-        query: `
-          mutation DeleteLoanProduct($input: DeleteLoanProductInput!) {
-            deleteLoanProduct(input: $input) {
-              id
-            }
-          }
-        `,
-        variables: {
-          input: { id: deleteDialogRow.id },
-        },
-      });
-      setLoanProducts((prev) =>
-        prev.filter((row) => row.id !== deleteDialogRow.id),
-      );
-      handleDeleteDialogClose();
-    } catch (err) {
-      console.error("Error deleting loan product:", err);
-      setDeleteError("Failed to delete. Please try again.");
-    } finally {
-      setDeleteLoading(false);
-    }
-  };
-
-  const handleEditClick = () => {
-    if (formRef.current && formRef.current.toggleEdit) {
-      formRef.current.toggleEdit();
-      setEditMode(formRef.current.getEditMode());
-    }
-  };
-
-  const handlePopupDeleteClick = () => {
-    setEditDialogOpen(false);
-    if (editDialogRow) {
-      handleDeleteDialogOpen(editDialogRow);
-    }
-  };
-
-  const handleCreateDialogOpen = () => {
-    setCreateDialogOpen(true);
-  };
-
-  const handleCreateDialogClose = () => {
-    setCreateDialogOpen(false);
-  };
-
-  const handleCreateSuccess = (newLoanProduct) => {
-    setLoanProducts((prev) => [...prev, newLoanProduct]);
-    handleCreateDialogClose();
-  };
-
-  const handleViewDialogOpen = (row) => {
-    setViewDialogRow(row);
-    setViewDialogOpen(true);
-  };
-
-  const handleViewDialogClose = () => {
-    setViewDialogOpen(false);
-    setViewDialogRow(null);
+  const handleCreateLoanProduct = () => {
+    navigate("/admin/add-loan-product");
   };
 
   // Updated columns to show only name, branches, and status
@@ -342,7 +151,7 @@ export default function LoanProducts() {
       headerName: "Name",
       width: 250,
       renderCell: (params) => (
-        <ClickableText onClick={() => handleViewDialogOpen(params.row)}>
+        <ClickableText onClick={() => handleViewLoanProduct(params.row)}>
           {params.value}
         </ClickableText>
       ),
@@ -407,7 +216,7 @@ export default function LoanProducts() {
         </Typography>
         <Box sx={{ display: "flex", justifyContent: "space-between" }}>
           <PlusButtonMain
-            onClick={handleCreateDialogOpen}
+            onClick={handleCreateLoanProduct}
             buttonText="NEW LOAN PRODUCT"
           />
         </Box>
@@ -438,74 +247,6 @@ export default function LoanProducts() {
           />
         )}
       </Box>
-
-      <CustomSlider
-        open={createDialogOpen}
-        onClose={handleCreateDialogClose}
-        title="Create Loan Product"
-        showEdit={false}
-        showDelete={false}
-        maxWidth="md"
-        fullWidth
-      >
-        <CreateLoanProduct
-          onClose={handleCreateDialogClose}
-          onCreateSuccess={handleCreateSuccess}
-        />
-      </CustomSlider>
-
-      <CustomSlider
-        open={viewDialogOpen}
-        onClose={handleViewDialogClose}
-        title={viewDialogRow ? `${viewDialogRow.name}` : "Loan Product Details"}
-        showEdit={true}
-        showDelete={true}
-        onEdit={() => handleEditDialogOpen(viewDialogRow)}
-        onDelete={() => {
-          setViewDialogOpen(false);
-          handleDeleteDialogOpen(viewDialogRow);
-        }}
-        maxWidth="md"
-        fullWidth
-      >
-        {viewDialogRow && (
-          <EditLoanProduct
-            initialValues={viewDialogRow}
-            onClose={handleViewDialogClose}
-            isEditMode={false}
-          />
-        )}
-      </CustomSlider>
-
-      <CustomSlider
-        open={editDialogOpen}
-        onClose={handleEditDialogClose}
-        title={editDialogRow ? `${editDialogRow.name}` : "Loan Product Details"}
-        onEdit={handleEditClick}
-        onDelete={handlePopupDeleteClick}
-        maxWidth="md"
-        fullWidth
-        editMode={editMode}
-      >
-        {editDialogRow && (
-          <EditLoanProduct
-            ref={formRef}
-            initialValues={editDialogRow}
-            onClose={handleEditDialogClose}
-            onEditSuccess={handleEditSuccess}
-            isEditMode={true}
-          />
-        )}
-      </CustomSlider>
-
-      <DeleteDialog
-        open={deleteDialogOpen}
-        onClose={handleDeleteDialogClose}
-        onConfirm={handleDeleteConfirm}
-        loading={deleteLoading}
-        error={deleteError}
-        name={deleteDialogRow?.name}
-      />
     </Box>
   );
 }

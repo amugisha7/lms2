@@ -17,6 +17,7 @@ import TextInput from "../../Resources/FormComponents/TextInput";
 import Dropdown from "../../Resources/FormComponents/Dropdown";
 import DateInput from "../../Resources/FormComponents/DateInput";
 import TextAndDropdown from "../../Resources/FormComponents/TextAndDropdown";
+import FormLabel from "../../Resources/FormComponents/FormLabel";
 import PlusButtonMain from "../../ModelAssets/PlusButtonMain";
 import { createLoanDraft } from "../../Models/Loans/LoanDrafts/loanDraftHelpers";
 import CustomerLoanSchedulePreview from "./CustomerLoanSchedulePreview";
@@ -31,6 +32,13 @@ const FormGrid = styled(Grid)(({ theme }) => ({
 
 // Get today's date in YYYY-MM-DD format
 const getTodayDate = () => new Date().toISOString().split("T")[0];
+
+// Get today's date at midnight for validation
+const getTodayMidnight = () => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return today;
+};
 
 const baseInitialValues = {
   loanProduct: "",
@@ -165,7 +173,7 @@ const ProductConstraints = ({ selectedProduct }) => {
   if (constraints.length === 0) return null;
 
   return (
-    <Box sx={{ mb: 3, p: 2, bgcolor: "action.hover", borderRadius: 1 }}>
+    <Box sx={{ mb: 2, borderRadius: 1 }}>
       <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 600 }}>
         Product Terms & Constraints
       </Typography>
@@ -301,7 +309,7 @@ const buildValidationSchema = (selectedProduct) => {
     durationPeriod: Yup.string().required("Duration period is required"),
     loanStartDate: Yup.date()
       .required("Start date is required")
-      .min(new Date(getTodayDate()), "Start date cannot be in the past"),
+      .min(getTodayMidnight(), "Start date cannot be in the past"),
     interestRate: Yup.number().nullable(),
     loanPurpose: Yup.string(),
   });
@@ -311,6 +319,8 @@ const renderFormField = (field, selectedProduct) => {
   const customDetails = parseCustomDetails(selectedProduct);
 
   switch (field.type) {
+    case "label":
+      return <FormLabel label={field.label} />;
     case "select":
       return <Dropdown {...field} />;
     case "number":
@@ -594,65 +604,6 @@ export default function CustomerLoanProductForm() {
     setSubmitError("");
   };
 
-  const handleSubmit = async (values, { setSubmitting, resetForm }) => {
-    setSubmitError("");
-    setSubmitSuccess("");
-    setSubmitting(true);
-
-    try {
-      const product = loanProducts.find((p) => p.id === values.loanProduct);
-
-      // Create draft record with all fields from the form
-      const draftRecord = {
-        borrower: borrower.id,
-        loanProduct: values.loanProduct,
-        principalAmount: Number(values.principalAmount),
-        loanPurpose: values.loanPurpose || null,
-        // Use form values for duration and start date
-        loanDuration: Number(values.loanDuration),
-        durationPeriod:
-          values.durationPeriod || product?.durationPeriod || "months",
-        loanStartDate: values.loanStartDate,
-        // Use product defaults for interest settings
-        interestRate: product?.interestRateDefault || 0,
-        interestMethod: product?.interestCalculationMethod || "flat",
-        interestType: product?.interestType || "percentage",
-        interestPeriod: product?.interestPeriod || "per_month",
-        repaymentFrequency: product?.repaymentFrequency || "monthly",
-        repaymentFrequencyType: "interval",
-      };
-
-      const userDetails = {
-        id: customerUser.id,
-        institutionUsersId: institution.id,
-        branchUsersId: branches[0]?.id || null, // Use first branch
-      };
-
-      // Create with DRAFT status - customer applications need staff approval
-      await createLoanDraft({
-        userDetails,
-        draftRecord,
-        source: "CUSTOMER_PORTAL",
-        status: "DRAFT",
-      });
-
-      setSubmitSuccess(
-        "Loan application submitted successfully! Your application is now pending review. You'll be notified once it's processed.",
-      );
-      resetForm();
-
-      // Navigate to loans list after a delay
-      setTimeout(() => {
-        navigate(`/client/${institution.id}/loans`);
-      }, 2500);
-    } catch (err) {
-      console.error("Error submitting loan application:", err);
-      setSubmitError("Failed to submit application. Please try again.");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   const updatedForm = customerLoanApplicationForm.map((field) => {
     if (field.name === "loanProduct") {
       return {
@@ -734,99 +685,82 @@ export default function CustomerLoanProductForm() {
 
   // Show the form step
   return (
-    <Paper sx={{ p: 3 }}>
-      <Formik
-        initialValues={baseInitialValues}
-        validationSchema={validationSchema}
-        onSubmit={handleViewSchedule}
-        enableReinitialize={false}
-      >
-        {(formik) => (
-          <Form>
-            {/* Product change handler to update defaults and constraints */}
-            <ProductChangeHandler
-              loanProducts={loanProducts}
-              onProductChange={handleProductChange}
-            />
+    <Formik
+      initialValues={baseInitialValues}
+      validationSchema={validationSchema}
+      onSubmit={handleViewSchedule}
+      enableReinitialize={false}
+    >
+      {(formik) => (
+        <Form>
+          {/* Product change handler to update defaults and constraints */}
+          <ProductChangeHandler
+            loanProducts={loanProducts}
+            onProductChange={handleProductChange}
+          />
 
-            <Grid container spacing={2}>
-              {/* Loan Product Selection - first field */}
-              <FormGrid size={{ xs: 12, md: 12 }} key="loanProduct">
-                {renderFormField(
-                  {
-                    ...updatedForm.find((f) => f.name === "loanProduct"),
-                    editing: true,
-                    isEditMode: false,
-                  },
-                  selectedProduct,
-                )}
-              </FormGrid>
-
-              {/* Show product constraints when a product is selected */}
-              {selectedProduct && (
-                <Grid size={{ xs: 12 }}>
-                  <ProductConstraints selectedProduct={selectedProduct} />
-                </Grid>
-              )}
-
-              {/* Rest of the form fields */}
-              {updatedForm
-                .filter((f) => f.name !== "loanProduct")
-                .map((field) => (
-                  <FormGrid
-                    size={{ xs: 12, md: field.span }}
-                    key={
-                      field.name || field.textName || `field-${Math.random()}`
-                    }
-                  >
-                    {renderFormField(
-                      {
-                        ...field,
-                        editing: true,
-                        isEditMode: false,
-                      },
-                      selectedProduct,
-                    )}
-                  </FormGrid>
-                ))}
-
-              {/* Error and success messages */}
-              {submitError && (
-                <Grid size={{ xs: 12 }}>
-                  <Alert severity="error" sx={{ mt: 1 }}>
-                    {submitError}
-                  </Alert>
-                </Grid>
-              )}
-              {submitSuccess && (
-                <Grid size={{ xs: 12 }}>
-                  <Alert severity="success" sx={{ mt: 1 }}>
-                    {submitSuccess}
-                  </Alert>
-                </Grid>
-              )}
-
-              {/* View Schedule button */}
-              <Box
-                sx={{
-                  display: "flex",
-                  pr: 2,
-                  justifyContent: { xs: "center", md: "flex-end" },
-                  width: "100%",
-                  mt: 2,
-                }}
+          <Grid container spacing={2}>
+            {/* Render all form fields in order */}
+            {updatedForm.map((field, index) => (
+              <React.Fragment
+                key={field.name || field.textName || `field-${index}`}
               >
-                <PlusButtonMain
-                  buttonText="View Loan Schedule"
-                  variant="contained"
-                  onClick={formik.handleSubmit}
-                  disabled={formik.isSubmitting || !formik.isValid}
-                />
-              </Box>
-            </Grid>
-          </Form>
-        )}
-      </Formik>
-    </Paper>
+                <FormGrid size={{ xs: 12, md: field.span || 12 }}>
+                  {renderFormField(
+                    {
+                      ...field,
+                      editing: true,
+                      isEditMode: false,
+                    },
+                    selectedProduct,
+                  )}
+                </FormGrid>
+
+                {/* Show product constraints after loan product select */}
+                {field.name === "loanProduct" && selectedProduct && (
+                  <Grid size={{ xs: 12 }}>
+                    <ProductConstraints selectedProduct={selectedProduct} />
+                  </Grid>
+                )}
+              </React.Fragment>
+            ))}
+
+            {/* Error and success messages */}
+            {submitError && (
+              <Grid size={{ xs: 12 }}>
+                <Alert severity="error" sx={{ mt: 1 }}>
+                  {submitError}
+                </Alert>
+              </Grid>
+            )}
+            {submitSuccess && (
+              <Grid size={{ xs: 12 }}>
+                <Alert severity="success" sx={{ mt: 1 }}>
+                  {submitSuccess}
+                </Alert>
+              </Grid>
+            )}
+
+            {/* View Schedule button */}
+            <Box
+              sx={{
+                display: "flex",
+                pr: 2,
+                justifyContent: { xs: "center", md: "flex-end" },
+                width: "100%",
+                mt: 2,
+              }}
+            >
+              <PlusButtonMain
+                buttonText="View Loan Schedule"
+                //   variant="contained"
+                onClick={formik.handleSubmit}
+                disabled={formik.isSubmitting || !formik.isValid}
+              />
+            </Box>
+          </Grid>
+        </Form>
+      )}
+    </Formik>
   );
 }

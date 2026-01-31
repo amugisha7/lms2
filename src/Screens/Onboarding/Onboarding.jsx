@@ -41,8 +41,6 @@ import {
   CREATE_ACCOUNT_MUTATION,
   GET_INSTITUTION_QUERY,
   LIST_USERS_QUERY,
-  CREATE_LOAN_PRODUCT_MUTATION,
-  CREATE_BRANCH_LOAN_PRODUCT_MUTATION,
 } from "./onboardingQueries";
 import { CREATE_NOTIFICATION_MUTATION } from "../Notifications/notificationQueries";
 
@@ -210,58 +208,7 @@ const AccountSettingsForm = () => {
         variables: { input: accountInput },
       });
 
-      // 5. Create default Loan Product for the Institution
-      const loanProductInput = {
-        institutionLoanProductsId: institutionId,
-        name: "Default Loan Product",
-        status: "Active",
-        description: "",
-        // All configuration fields left as null - no preset configurations
-        principalAmountMin: null,
-        principalAmountMax: null,
-        principalAmountDefault: null,
-        interestRateMin: null,
-        interestRateMax: null,
-        interestRateDefault: null,
-        interestCalculationMethod: null,
-        interestType: null,
-        interestPeriod: null,
-        termDurationMin: null,
-        termDurationMax: null,
-        termDurationDefault: null,
-        durationPeriod: null,
-        repaymentFrequency: null,
-        repaymentOrder: null,
-        extendLoanAfterMaturity: null,
-        interestTypeMaturity: null,
-        calculateInterestOn: null,
-        loanInterestRateAfterMaturity: null,
-        recurringPeriodAfterMaturityUnit: null,
-        // Make visible to customers in the customer portal
-        customLoanProductDetails: JSON.stringify({
-          customerPortalVisible: true,
-        }),
-      };
-
-      const loanProductRes = await client.graphql({
-        query: CREATE_LOAN_PRODUCT_MUTATION,
-        variables: { input: loanProductInput },
-      });
-
-      const loanProductId = loanProductRes.data.createLoanProduct.id;
-
-      // 6. Associate the default Loan Product with the default Branch
-      await client.graphql({
-        query: CREATE_BRANCH_LOAN_PRODUCT_MUTATION,
-        variables: {
-          input: {
-            branchId: branchId,
-            loanProductId: loanProductId,
-          },
-        },
-      });
-
-      // 7. Create User with more details
+      // 5. Create User with more details
       const userInput = {
         id: user.userId,
         branchUsersId: branchId,

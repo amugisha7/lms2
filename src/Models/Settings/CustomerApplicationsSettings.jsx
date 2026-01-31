@@ -9,14 +9,19 @@ import {
   useTheme,
   Alert,
   CircularProgress,
+  Link,
 } from "@mui/material";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DownloadIcon from "@mui/icons-material/Download";
 import { UserContext } from "../../App";
 import QRCode from "qrcode";
+import { useNavigate } from "react-router-dom";
+import { tokens } from "../../theme";
 
 const CustomerApplicationsSettings = () => {
   const theme = useTheme();
+  const colors = tokens(theme.palette.mode);
+  const navigate = useNavigate();
   const { userDetails } = useContext(UserContext);
   const [applicationUrl, setApplicationUrl] = useState("");
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState("");
@@ -138,12 +143,40 @@ const CustomerApplicationsSettings = () => {
       </Typography>
       <Typography
         sx={{
-          mb: 3,
+          mb: 2,
         }}
       >
         Customers can apply for loans, view loan statements, and upload their
         details.
       </Typography>
+
+      <Alert
+        severity="info"
+        sx={{
+          mb: 3,
+          alignItems: "center",
+        }}
+      >
+        <Typography variant="body2">
+          Customers can only apply for loan products that have been made
+          available to them. Manage visibility settings in the{" "}
+          <Link
+            component="span"
+            onClick={() => navigate("/admin/loan-products")}
+            sx={{
+              cursor: "pointer",
+              color: colors.blueText.main,
+              textDecoration: "underline",
+              "&:hover": {
+                color: colors.blueText.light,
+              },
+            }}
+          >
+            Loan Products
+          </Link>{" "}
+          page.
+        </Typography>
+      </Alert>
 
       <Paper
         elevation={2}

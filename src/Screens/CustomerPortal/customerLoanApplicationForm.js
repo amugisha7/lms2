@@ -1,6 +1,11 @@
 const customerLoanApplicationForm = [
   // Loan Product Selection
   {
+    label: "Loan Product",
+    type: "label",
+    span: 12,
+  },
+  {
     label: "Select Loan Product",
     name: "loanProduct",
     type: "select",
@@ -8,10 +13,16 @@ const customerLoanApplicationForm = [
     span: 12,
     options: [], // Populated dynamically with visible products
     dynamicoptions: "true",
-    helperText: "Choose the type of loan you wish to apply for",
+    helperText: "Choose the type of loan you wish to apply for", 
   },
 
   // Loan Amount
+    {
+    label: "Loan Amount",
+    type: "label",
+    span: 12,
+  },
+
   {
     label: "Loan Amount",
     name: "principalAmount",
@@ -22,6 +33,12 @@ const customerLoanApplicationForm = [
   },
 
   // Loan Duration (combined text and dropdown)
+    {
+    label: "Loan Duration",
+    type: "label",
+    span: 12,
+  },
+
   {
     type: "textAndDropdown",
     span: 6,

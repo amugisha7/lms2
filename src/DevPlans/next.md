@@ -1,6 +1,6 @@
 - Create loans form. Also create from loan product.
   - Resume:
-    - create default loan product that is availabe to customers.
+    - fix loan product editing and deleting.
     - work on saving and approval for loan drafts
   - ensure that all exports work, check loan product flow.
   - Move saving from loandraft to loan with status draft.

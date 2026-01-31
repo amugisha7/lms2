@@ -31,13 +31,9 @@ export default function CustomerLoanApplication() {
   }
 
   return (
-    <Box sx={{ width: "100%" }}>
+    <Box sx={{ width: "100%", pb: 8 }}>
       <Typography variant="h4" sx={{ fontWeight: 600, mb: 3 }}>
         Apply for Loan
-      </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Select a loan product below to view terms and submit your application.
-        Use the Loan Calculator to explore different scenarios before applying.
       </Typography>
       <CustomerLoanProductForm />
     </Box>

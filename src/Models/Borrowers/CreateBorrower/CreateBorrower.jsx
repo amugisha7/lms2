@@ -24,6 +24,9 @@ import CustomEditFormButtons from "../../../ModelAssets/CustomEditFormButtons";
 import { UserContext } from "../../../App";
 import { EditClickedContext } from "../../../ModelAssets/CollectionsTemplate"; // <-- import context
 
+import { generateClient } from "aws-amplify/api";
+import { listBranches } from "../../../graphql/queries";
+
 // Styled FormGrid component for consistent layout
 const FormGrid = styled(Grid)(({ theme }) => ({
   display: "flex",
@@ -165,6 +168,34 @@ const CreateBorrower = forwardRef(
     const [editMode, setEditMode] = useState(forceEditMode || !isEditMode);
     const editClickedContext = useContext(EditClickedContext); // <-- get context
 
+    const [branches, setBranches] = useState([]);
+
+    useEffect(() => {
+      const fetchBranches = async () => {
+        if (userDetails?.userType === "Admin" && userDetails?.institution?.id) {
+          try {
+            const client = generateClient();
+            const branchData = await client.graphql({
+              query: listBranches,
+              variables: {
+                limit: 1000,
+                filter: {
+                  institutionBranchesId: { eq: userDetails.institution.id },
+                },
+              },
+            });
+            const items = branchData.data.listBranches.items;
+            setBranches(items.map((b) => ({ value: b.id, label: b.name })));
+          } catch (e) {
+            console.error("Error fetching branches", e);
+          }
+        }
+      };
+      if (userDetails) {
+        fetchBranches();
+      }
+    }, [userDetails]);
+
     // Update validation schema based on customer portal mode
     useEffect(() => {
       if (isCustomerPortal) {
@@ -192,6 +223,7 @@ const CreateBorrower = forwardRef(
       return {
         firstname: dbData.firstname || "",
         othername: dbData.othername || "",
+        branchBorrowersId: dbData.branchBorrowersId || "",
         businessName: dbData.businessName || "",
         typeOfBusiness: dbData.typeOfBusiness || "",
         uniqueIdNumber: dbData.uniqueIdNumber || "",
@@ -272,10 +304,19 @@ const CreateBorrower = forwardRef(
 
       console.log("CreateBorrower Form Values:", values); // <-- Add this log
 
+      const submissionValues = { ...values };
+      if (userDetails?.userType !== "Admin") {
+        submissionValues.branchBorrowersId =
+          userDetails?.branchUsersId || userDetails?.branch?.id;
+      }
+
       try {
         if (isEditMode && propInitialValues && onUpdateBorrowerAPI) {
           // Update existing borrower using parent-provided API function
-          const result = await onUpdateBorrowerAPI(values, propInitialValues);
+          const result = await onUpdateBorrowerAPI(
+            submissionValues,
+            propInitialValues,
+          );
           setSubmitSuccess("Borrower updated!");
           setEditMode(false);
           setTimeout(() => setSubmitSuccess(""), 2000);
@@ -284,7 +325,7 @@ const CreateBorrower = forwardRef(
           }
         } else if (!isEditMode && onCreateBorrowerAPI) {
           // Create new borrower using parent-provided API function
-          const result = await onCreateBorrowerAPI(values);
+          const result = await onCreateBorrowerAPI(submissionValues);
           setSubmitSuccess("Borrower created!");
           resetForm();
           if (onCreateSuccess) {
@@ -354,6 +395,14 @@ const CreateBorrower = forwardRef(
                 ) : null}
                 <Grid container spacing={1}>
                   {createBorrowerForm.map((field, index) => {
+                    // Branch Logic
+                    if (
+                      field.name === "branchBorrowersId" &&
+                      userDetails?.userType !== "Admin"
+                    ) {
+                      return null;
+                    }
+
                     // Skip "Files & Custom Fields" notice in customer portal
                     if (isCustomerPortal && field.type === "notice") {
                       return <React.Fragment key={`${field.type}-${index}`} />;
@@ -366,6 +415,11 @@ const CreateBorrower = forwardRef(
 
                     // Disable email field if pre-filled in customer portal
                     const fieldProps = { ...field };
+
+                    if (field.name === "branchBorrowersId") {
+                      fieldProps.options = branches;
+                    }
+
                     if (
                       isCustomerPortal &&
                       field.name === "email" &&

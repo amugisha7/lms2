@@ -55,19 +55,34 @@ export default function Borrowers() {
 
   // Fetch borrowers
   const fetchBorrowers = async () => {
-    if (!userDetails?.branchUsersId) return;
+    // if (!userDetails?.branchUsersId) return; // COMMENTED OUT limitation
 
     setLoading(true);
     try {
       let allBorrowers = [];
       let nextToken = null;
 
+      const variables = {
+        limit: 100,
+        ...(nextToken && { nextToken }),
+      };
+
+      if (userDetails.userType !== "Admin") {
+        variables.filter = {
+          branchBorrowersId: { eq: userDetails.branchUsersId },
+        };
+      }
+      // Note: For Admin, we are currently fetching all borrowers.
+      // Ideally we would filter by institution, but Borrower model might not have direct institution link
+      // except through branch. If DynamoDB scan is issue, we might need a GSI.
+      // For now, consistent with "retrieve correctly".
+
       do {
         console.log("API Call: Fetching borrowers"); // <-- Added
         const result = await client.graphql({
           query: LIST_BORROWERS_QUERY,
           variables: {
-            branchId: userDetails.branchUsersId,
+            ...variables,
             ...(nextToken && { nextToken }),
           },
         });
@@ -78,10 +93,20 @@ export default function Borrowers() {
       } while (nextToken);
 
       // Process borrowers
-      const processed = allBorrowers.map((borrower) => ({
+      // Admin View: Filter by Institution
+      // Since we don't have a direct query for "Borrowers by Institution", we are fetching all (or scanned)
+      // and filtering client-side. We updated the query to include branch info.
+      let processed = allBorrowers.map((borrower) => ({
         ...borrower,
         displayName: getBorrowerDisplayName(borrower),
       }));
+
+      // If Admin, filter by institution
+      if (userDetails.userType === "Admin" && userDetails.institution?.id) {
+        processed = processed.filter(
+          (b) => b.branch?.institutionBranchesId === userDetails.institution.id,
+        );
+      }
 
       setBorrowers(processed);
     } catch (error) {
@@ -136,6 +161,7 @@ export default function Borrowers() {
     "additionalNote1",
     "additionalNote2",
     "borrowerDocuments",
+    "branchBorrowersId",
   ];
 
   // CRUD operations
@@ -157,8 +183,19 @@ export default function Borrowers() {
 
       const input = {
         ...filteredData,
-        branchBorrowersId: userDetails.branchUsersId,
       };
+
+      // Ensure branchBorrowersId is set for non-Admin users if not already in filteredData
+      // (though CreateBorrower form handles submissionValues, this handles direct API calls if any)
+      // Actually CreateBorrower calls handleCreate which calls this.
+      // CreateBorrower ALREADY puts branchBorrowersId into the values it passes to onCreateBorrowerAPI (which is this function)
+      // BUT, validBorrowerFields filter might strip it if it's not in the list.
+      // I added "branchBorrowersId" to validBorrowerFields. So it should be fine.
+
+      // However, for extra safety given the prompt:
+      if (userDetails.userType !== "Admin" && !input.branchBorrowersId) {
+        input.branchBorrowersId = userDetails.branchUsersId;
+      }
 
       console.log("API Call: Creating borrower"); // <-- Added
 
@@ -205,6 +242,19 @@ export default function Borrowers() {
         ...filteredData,
       };
 
+      // Ensure specific fields are included if stripped by filter but present in formData
+      if (
+        formData.branchBorrowersId &&
+        validBorrowerFields.includes("branchBorrowersId")
+      ) {
+        input.branchBorrowersId = formData.branchBorrowersId;
+      }
+
+      // If non-admin, ensure it stays in their branch (or set it if missing)
+      if (userDetails.userType !== "Admin" && !input.branchBorrowersId) {
+        input.branchBorrowersId = userDetails.branchUsersId;
+      }
+
       console.log("API Call: Updating borrower"); // <-- Added
       const result = await client.graphql({
         query: UPDATE_BORROWER_MUTATION,
@@ -217,7 +267,7 @@ export default function Borrowers() {
       };
 
       setBorrowers((prev) =>
-        prev.map((b) => (b.id === updatedBorrower.id ? updatedBorrower : b))
+        prev.map((b) => (b.id === updatedBorrower.id ? updatedBorrower : b)),
       );
       setNotification({
         message: `${updatedBorrower.displayName} updated successfully!`,

@@ -1,9 +1,9 @@
 // GraphQL queries for Borrowers
 export const LIST_BORROWERS_QUERY = `
-  query ListBorrowers($branchId: ID!, $nextToken: String) {
+  query ListBorrowers($filter: ModelBorrowerFilterInput, $limit: Int, $nextToken: String) {
     listBorrowers(
-      filter: { branchBorrowersId: { eq: $branchId } }
-      limit: 100
+      filter: $filter
+      limit: $limit
       nextToken: $nextToken
     ) {
       items {
@@ -28,6 +28,12 @@ export const LIST_BORROWERS_QUERY = `
         employerName
         creditScore
         customFieldsData
+        branchBorrowersId
+        branch {
+          id
+          name
+          institutionBranchesId
+        }
         createdAt
         updatedAt
       }
@@ -90,6 +96,7 @@ export const UPDATE_BORROWER_MUTATION = `
       employerName
       creditScore
       customFieldsData
+      branchBorrowersId
       createdAt
       updatedAt
     }

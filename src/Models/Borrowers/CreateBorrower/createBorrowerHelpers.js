@@ -31,6 +31,11 @@ export const fetchBorrowerById = async (borrowerId) => {
         creditScore
         customFieldsData
         borrowerDocuments
+        branchBorrowersId
+        branch {
+          id
+          name
+        }
         createdAt
         updatedAt
       }
@@ -88,6 +93,11 @@ export const updateBorrowerById = async (values, initialValues) => {
         employerName
         creditScore
         customFieldsData
+        branchBorrowersId
+        branch {
+          id
+          name
+        }
         createdAt
         updatedAt
       }
@@ -118,6 +128,7 @@ export const updateBorrowerById = async (values, initialValues) => {
     employmentStatus: values.employmentStatus || null,
     employerName: values.employerName?.trim() || null,
     creditScore: values.creditScore?.trim() || null,
+    branchBorrowersId: values.branchBorrowersId || null,
   };
 
   const customFieldsData = {};

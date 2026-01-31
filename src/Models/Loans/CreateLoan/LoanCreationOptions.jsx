@@ -78,6 +78,9 @@ export default function LoanCreationOptions(props) {
     loadDraft();
   }, [draftId, borrowers]);
 
+  // Determine if current user is an admin
+  const isAdmin = userDetails?.userType?.toLowerCase() === "admin";
+
   useEffect(() => {
     const loadLoanProducts = async () => {
       // Require both institution and branch to determine branch-scoped products
@@ -86,8 +89,11 @@ export default function LoanCreationOptions(props) {
         return;
       }
 
-      // If we've already fetched for this branch, skip
-      if (loanProductsFetchedRef.current === userDetails.branchUsersId) {
+      // Create a cache key that includes admin status to ensure re-fetch if role changes
+      const cacheKey = `${userDetails.branchUsersId}-${isAdmin}`;
+
+      // If we've already fetched for this branch/admin combination, skip
+      if (loanProductsFetchedRef.current === cacheKey) {
         setLoanProductsLoading(false);
         return;
       }
@@ -95,10 +101,11 @@ export default function LoanCreationOptions(props) {
       try {
         const productsList = await fetchLoanProducts(
           userDetails.institutionUsersId,
-          userDetails.branchUsersId
+          userDetails.branchUsersId,
+          isAdmin,
         );
         setLoanProducts(productsList);
-        loanProductsFetchedRef.current = userDetails.branchUsersId;
+        loanProductsFetchedRef.current = cacheKey;
       } catch (err) {
         console.error("Error loading loan products:", err);
       } finally {
@@ -107,7 +114,7 @@ export default function LoanCreationOptions(props) {
     };
 
     loadLoanProducts();
-  }, [userDetails?.institutionUsersId, userDetails?.branchUsersId]);
+  }, [userDetails?.institutionUsersId, userDetails?.branchUsersId, isAdmin]);
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);

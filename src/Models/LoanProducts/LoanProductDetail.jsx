@@ -5,6 +5,7 @@ import {
   Typography,
   Button,
   IconButton,
+  useTheme,
 } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -15,6 +16,7 @@ import { UserContext } from "../../App";
 import EditLoanProduct from "./EditLoanProduct/EditLoanProduct";
 import DeleteDialog from "../../ModelAssets/DeleteDialog";
 import NotificationBar from "../../ModelAssets/NotificationBar";
+import PlusButtonSmall from "../../ModelAssets/PlusButtonSmall";
 
 const GET_LOAN_PRODUCT_QUERY = `
   query GetLoanProduct($id: ID!) {
@@ -113,6 +115,7 @@ export default function LoanProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { userDetails } = useContext(UserContext);
+  const theme = useTheme();
   const formRef = React.useRef();
 
   const [loading, setLoading] = useState(true);
@@ -310,21 +313,26 @@ export default function LoanProductDetail() {
         </Box>
         {!editMode && (
           <Box sx={{ display: "flex", gap: 1 }}>
-            <Button
+            <PlusButtonSmall
               variant="outlined"
-              startIcon={<EditIcon />}
+              label="EDIT"
+              IconComponent={EditIcon}
               onClick={handleEditClick}
-            >
-              Edit
-            </Button>
-            <Button
+            />
+            <PlusButtonSmall
               variant="outlined"
-              color="error"
-              startIcon={<DeleteIcon />}
+              label="DELETE"
+              IconComponent={DeleteIcon}
               onClick={handleDeleteDialogOpen}
-            >
-              Delete
-            </Button>
+              // sx={{
+              //   borderColor: theme.palette.error.main,
+              //   color: theme.palette.error.main,
+              //   "&:hover": {
+              //     borderColor: theme.palette.error.dark,
+              //     color: theme.palette.error.dark,
+              //   },
+              // }}
+            />
           </Box>
         )}
       </Box>

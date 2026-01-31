@@ -112,7 +112,7 @@ export const fetchBorrowers = async (branchId) => {
   }
 };
 
-export const fetchLoanProducts = async (institutionId, branchId) => {
+export const fetchLoanProducts = async (institutionId, branchId, isAdmin = false) => {
   const client = generateClient();
   let allLoanProductsList = [];
   let nextToken = null;
@@ -123,6 +123,7 @@ export const fetchLoanProducts = async (institutionId, branchId) => {
       console.log("API Call: LIST_LOAN_PRODUCTS_QUERY", {
         institutionId,
         nextToken,
+        isAdmin,
       });
         const result = await client.graphql({
         query: `
@@ -200,8 +201,9 @@ export const fetchLoanProducts = async (institutionId, branchId) => {
       }
       nextToken = newNextToken;
     }
-    // If branchId provided, filter products to those associated with the branch
-    if (branchId) {
+    // Admin users can see all loan products for the institution
+    // Non-admin users only see products associated with their branch
+    if (branchId && !isAdmin) {
       const filtered = allLoanProductsList.filter((p) => {
         const branchItems = p?.branches?.items || [];
         return branchItems.some((bi) => bi?.branch?.id === branchId);

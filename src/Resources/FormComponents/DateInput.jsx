@@ -10,6 +10,8 @@ const DateInput = ({
   required,
   readOnly = false,
   editing = true,
+  min,
+  minToday, // extract to prevent passing to DOM
   validationType, // <-- destructure and ignore
   adminOnly, // extract to prevent passing to DOM
   isEditMode, // extract to prevent passing to DOM
@@ -62,6 +64,7 @@ const DateInput = ({
         size="small"
         slotProps={{
           input: { readOnly: isReadOnly },
+          htmlInput: { min },
         }}
         sx={{
           flex: { xs: "unset", sm: "1 1 auto" },

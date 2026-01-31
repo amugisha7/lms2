@@ -73,6 +73,7 @@ const customerLoanApplicationForm = [
     required: true,
     span: 6,
     helperText: "When would you like the loan to start?",
+    minToday: true,
   },
 
     // Loan Purpose

@@ -87,7 +87,7 @@ export default function CustomerLoanSchedulePreview({
   error,
   onBack,
   onSubmit,
-  submitLabel = "Submit Loan Application",
+  submitLabel = "SUBMIT APPLICATION",
   submitting = false,
 }) {
   const theme = useTheme();
@@ -394,11 +394,13 @@ export default function CustomerLoanSchedulePreview({
       </Box>
 
       <Box sx={{ mt: 0.5 }}>
+        {/* Totals hidden as per requirement
         <Typography variant="body2" sx={{ color: theme.palette.common.black }}>
           <strong>Totals:</strong> Interest{" "}
           <Money value={totals.totalInterest} /> | Total Payable{" "}
           <Money value={totals.totalPayable} />
         </Typography>
+        */}
       </Box>
 
       <Box sx={{ mt: 0.5 }}>
@@ -613,20 +615,11 @@ export default function CustomerLoanSchedulePreview({
         />
         <PlusButtonMain
           buttonText={submitLabel}
-          variant="contained"
+          variant="outlined"
           startIcon={null}
           onClick={onSubmit}
           disabled={submitting}
         />
-      </Box>
-
-      {/* Totals Summary */}
-      <Box className="no-print">
-        <Typography variant="body2">
-          <strong>Totals:</strong> Interest{" "}
-          <Money value={totals.totalInterest} /> | Total Payable{" "}
-          <Money value={totals.totalPayable} />
-        </Typography>
       </Box>
 
       <WorkingOverlay open={exportingPdf} message="Exporting PDF..." />

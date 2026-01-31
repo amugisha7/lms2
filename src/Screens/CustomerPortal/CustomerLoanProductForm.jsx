@@ -45,7 +45,7 @@ const baseInitialValues = {
   principalAmount: "",
   loanDuration: "",
   durationPeriod: "months",
-  loanStartDate: getTodayDate(),
+  loanStartDate: "",
   interestRate: "",
   loanPurpose: "",
 };
@@ -79,6 +79,69 @@ const parseCustomDetails = (product) => {
 const formatCurrency = (value, currency = "") => {
   if (value === null || value === undefined || value === "") return "N/A";
   return `${currency}${Number(value).toLocaleString()}`;
+};
+
+// --- Normalization Helpers (matching UseLoanProduct.jsx logic) ---
+
+const normalizeEnumKey = (value) => {
+  if (value === null || value === undefined) return value;
+  const raw = String(value).trim();
+  if (!raw) return raw;
+  return raw
+    .toLowerCase()
+    .replace(/\//g, " ")
+    .replace(/-/g, "_")
+    .replace(/\s+/g, "_");
+};
+
+const normalizeInterestType = (v) => {
+  const key = normalizeEnumKey(v);
+  if (!key) return v;
+  if (key === "percent" || key === "percentage" || key === "percent_based") {
+    return "percentage";
+  }
+  if (key === "fixed" || key === "fixed_amount") return "fixed";
+  return key;
+};
+
+const normalizeDurationPeriod = (v) => {
+  const key = normalizeEnumKey(v);
+  if (!key) return v;
+  if (["day", "days"].includes(key)) return "days";
+  if (["week", "weeks"].includes(key)) return "weeks";
+  if (["month", "months"].includes(key)) return "months";
+  if (["year", "years"].includes(key)) return "years";
+  return key;
+};
+
+const normalizeRepaymentFrequency = (v) => {
+  const key = normalizeEnumKey(v);
+  if (!key) return v;
+  const map = {
+    bi_weekly: "biweekly",
+    biweekly: "biweekly",
+    bi_monthly: "bimonthly",
+    bimonthly: "bimonthly",
+    every_4_month: "every_4_months",
+    every_4_months: "every_4_months",
+    every_9_month: "every_9_months",
+    every_9_months: "every_9_months",
+    semi_annual: "semi_annual",
+    semi_annually: "semi_annual",
+    semiannually: "semi_annual",
+    one_off: "lump_sum",
+    one_off_lump_sum: "lump_sum",
+    lump_sum: "lump_sum",
+  };
+  return map[key] || key;
+};
+
+const normalizeInterestPeriod = (v) => {
+  const key = normalizeEnumKey(v);
+  if (!key) return v;
+  // LoanProduct uses per_loan_cycle but Loan form expects per_loan
+  if (key === "per_loan_cycle") return "per_loan";
+  return key;
 };
 
 // Component to show product constraints
@@ -307,11 +370,9 @@ const buildValidationSchema = (selectedProduct) => {
     principalAmount: principalValidation,
     loanDuration: durationValidation,
     durationPeriod: Yup.string().required("Duration period is required"),
-    loanStartDate: Yup.date()
-      .required("Start date is required")
-      .min(getTodayMidnight(), "Start date cannot be in the past"),
+    loanStartDate: Yup.string().required("Start date is required"),
     interestRate: Yup.number().nullable(),
-    loanPurpose: Yup.string(),
+    loanPurpose: Yup.string().nullable(),
   });
 };
 
@@ -362,7 +423,12 @@ const renderFormField = (field, selectedProduct) => {
     case "textarea":
       return <TextInput {...field} multiline rows={4} />;
     case "date":
-      return <DateInput {...field} />;
+      return (
+        <DateInput
+          {...field}
+          min={field.minToday ? getTodayDate() : field.min}
+        />
+      );
     case "textAndDropdown":
       // For loan duration, check if customer can edit
       if (field.textName === "loanDuration") {
@@ -533,22 +599,51 @@ export default function CustomerLoanProductForm() {
     try {
       const product = loanProducts.find((p) => p.id === values.loanProduct);
 
-      // Build the draft record for preview
+      // Normalize values using the helpers - CRITICAL for matching backend calculation logic
+      const interestType = normalizeInterestType(
+        product?.interestType || "percentage",
+      );
+      const interestPeriod = normalizeInterestPeriod(
+        product?.interestPeriod || "per_month",
+      );
+      const durationPeriod = normalizeDurationPeriod(
+        values.durationPeriod || product?.durationPeriod || "months",
+      );
+      const repaymentFrequencyRaw = normalizeRepaymentFrequency(
+        product?.repaymentFrequency || "monthly",
+      );
+
+      let repaymentFrequencyType = "interval";
+      let repaymentFrequency = repaymentFrequencyRaw;
+
+      // Special handling for lump sum to match UseLoanProduct.jsx logic
+      if (repaymentFrequencyRaw === "lump_sum") {
+        repaymentFrequencyType = "lumpSum";
+        repaymentFrequency = "";
+      }
+
+      // Build the draft record for preview - matching add-loan workflow structure
       const draftRecord = {
         borrower: borrower.id,
         loanProduct: values.loanProduct,
         principalAmount: Number(values.principalAmount),
         loanPurpose: values.loanPurpose || null,
+        // Use termDuration for consistency with add-loan workflow
+        termDuration: Number(values.loanDuration),
         loanDuration: Number(values.loanDuration),
-        durationPeriod:
-          values.durationPeriod || product?.durationPeriod || "months",
+        durationPeriod: durationPeriod,
         loanStartDate: values.loanStartDate,
-        interestRate: product?.interestRateDefault || 0,
+        startDate: values.loanStartDate,
+        disbursementDate: values.loanStartDate,
+        // Interest configuration from loan product
+        interestRate: Number(product?.interestRateDefault || 0),
         interestMethod: product?.interestCalculationMethod || "flat",
-        interestType: product?.interestType || "percentage",
-        interestPeriod: product?.interestPeriod || "per_month",
-        repaymentFrequency: product?.repaymentFrequency || "monthly",
-        repaymentFrequencyType: "interval",
+        interestCalculationMethod: product?.interestCalculationMethod || "flat",
+        interestType: interestType,
+        interestPeriod: interestPeriod,
+        // Repayment configuration from loan product (normalized)
+        repaymentFrequency: repaymentFrequency,
+        repaymentFrequencyType: repaymentFrequencyType,
       };
 
       setFormValues(draftRecord);
@@ -690,6 +785,7 @@ export default function CustomerLoanProductForm() {
       validationSchema={validationSchema}
       onSubmit={handleViewSchedule}
       enableReinitialize={false}
+      validateOnMount={true}
     >
       {(formik) => (
         <Form>

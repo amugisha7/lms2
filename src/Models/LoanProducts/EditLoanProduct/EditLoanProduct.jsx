@@ -120,38 +120,48 @@ const buildValidationSchema = () => {
             )
           : schema,
       )
-      .when("minPrincipal", (minPrincipalValue, schema) => {
-        if (
-          minPrincipalValue !== null &&
-          minPrincipalValue !== undefined &&
-          minPrincipalValue !== ""
-        ) {
-          const numMinPrincipal = Number(minPrincipalValue);
-          if (!isNaN(numMinPrincipal)) {
-            return schema.min(
-              numMinPrincipal,
-              "Default Principal must be greater than or equal to Minimum Principal",
-            );
+      .when(
+        ["allowCustomerAmountEdit", "minPrincipal"],
+        ([allowEdit, minPrincipalValue], schema) => {
+          // Only validate against minPrincipal when customers can edit (min/max fields are visible)
+          if (allowEdit !== "yes") return schema;
+          if (
+            minPrincipalValue !== null &&
+            minPrincipalValue !== undefined &&
+            minPrincipalValue !== ""
+          ) {
+            const numMinPrincipal = Number(minPrincipalValue);
+            if (!isNaN(numMinPrincipal)) {
+              return schema.min(
+                numMinPrincipal,
+                "Default Principal must be greater than or equal to Minimum Principal",
+              );
+            }
           }
-        }
-        return schema;
-      })
-      .when("maxPrincipal", (maxPrincipalValue, schema) => {
-        if (
-          maxPrincipalValue !== null &&
-          maxPrincipalValue !== undefined &&
-          maxPrincipalValue !== ""
-        ) {
-          const numMaxPrincipal = Number(maxPrincipalValue);
-          if (!isNaN(numMaxPrincipal)) {
-            return schema.max(
-              numMaxPrincipal,
-              "Default Principal must be less than or equal to Maximum Principal",
-            );
+          return schema;
+        },
+      )
+      .when(
+        ["allowCustomerAmountEdit", "maxPrincipal"],
+        ([allowEdit, maxPrincipalValue], schema) => {
+          // Only validate against maxPrincipal when customers can edit (min/max fields are visible)
+          if (allowEdit !== "yes") return schema;
+          if (
+            maxPrincipalValue !== null &&
+            maxPrincipalValue !== undefined &&
+            maxPrincipalValue !== ""
+          ) {
+            const numMaxPrincipal = Number(maxPrincipalValue);
+            if (!isNaN(numMaxPrincipal)) {
+              return schema.max(
+                numMaxPrincipal,
+                "Default Principal must be less than or equal to Maximum Principal",
+              );
+            }
           }
-        }
-        return schema;
-      }),
+          return schema;
+        },
+      ),
     minInterest: Yup.number()
       .min(0, "Minimum Interest must be at least 0")
       .nullable()
@@ -209,38 +219,48 @@ const buildValidationSchema = () => {
             )
           : schema,
       )
-      .when("minDuration", (minDurationValue, schema) => {
-        if (
-          minDurationValue !== null &&
-          minDurationValue !== undefined &&
-          minDurationValue !== ""
-        ) {
-          const numMinDuration = Number(minDurationValue);
-          if (!isNaN(numMinDuration)) {
-            return schema.min(
-              numMinDuration,
-              "Default Duration must be greater than or equal to Minimum Duration",
-            );
+      .when(
+        ["allowCustomerDurationEdit", "minDuration"],
+        ([allowEdit, minDurationValue], schema) => {
+          // Only validate against minDuration when customers can edit (min/max fields are visible)
+          if (allowEdit !== "yes") return schema;
+          if (
+            minDurationValue !== null &&
+            minDurationValue !== undefined &&
+            minDurationValue !== ""
+          ) {
+            const numMinDuration = Number(minDurationValue);
+            if (!isNaN(numMinDuration)) {
+              return schema.min(
+                numMinDuration,
+                "Default Duration must be greater than or equal to Minimum Duration",
+              );
+            }
           }
-        }
-        return schema;
-      })
-      .when("maxDuration", (maxDurationValue, schema) => {
-        if (
-          maxDurationValue !== null &&
-          maxDurationValue !== undefined &&
-          maxDurationValue !== ""
-        ) {
-          const numMaxDuration = Number(maxDurationValue);
-          if (!isNaN(numMaxDuration)) {
-            return schema.max(
-              numMaxDuration,
-              "Default Duration must be less than or equal to Maximum Duration",
-            );
+          return schema;
+        },
+      )
+      .when(
+        ["allowCustomerDurationEdit", "maxDuration"],
+        ([allowEdit, maxDurationValue], schema) => {
+          // Only validate against maxDuration when customers can edit (min/max fields are visible)
+          if (allowEdit !== "yes") return schema;
+          if (
+            maxDurationValue !== null &&
+            maxDurationValue !== undefined &&
+            maxDurationValue !== ""
+          ) {
+            const numMaxDuration = Number(maxDurationValue);
+            if (!isNaN(numMaxDuration)) {
+              return schema.max(
+                numMaxDuration,
+                "Default Duration must be less than or equal to Maximum Duration",
+              );
+            }
           }
-        }
-        return schema;
-      }),
+          return schema;
+        },
+      ),
     // Repayment Frequency - Required for customer applications
     repaymentFrequency: Yup.string()
       .required("Repayment Frequency is required")
@@ -355,6 +375,11 @@ const EditLoanProduct = forwardRef(
     const [viewBranches, setViewBranches] = useState([]);
     const [viewLoanFees, setViewLoanFees] = useState([]);
     const [editMode, setEditMode] = useState(isEditMode);
+
+    // Sync internal editMode state with isEditMode prop from parent
+    useEffect(() => {
+      setEditMode(isEditMode);
+    }, [isEditMode]);
 
     useEffect(() => {
       const fetchData = async () => {

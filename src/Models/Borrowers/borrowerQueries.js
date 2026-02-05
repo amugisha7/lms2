@@ -28,6 +28,7 @@ export const LIST_BORROWERS_QUERY = `
         employerName
         creditScore
         customFieldsData
+        status
         branchBorrowersId
         branch {
           id

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, Tabs, Tab } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { useNavigate } from "react-router-dom";
 import { generateClient } from "aws-amplify/api";
@@ -49,6 +49,9 @@ export default function Borrowers() {
   const [selectedBorrower, setSelectedBorrower] = useState(null);
   const [borrowerToDelete, setBorrowerToDelete] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+
+  // Tab state for filtering borrowers
+  const [selectedTab, setSelectedTab] = useState("all");
 
   // Ref to track fetched branch ID
   const hasFetchedRef = React.useRef();
@@ -343,6 +346,26 @@ export default function Borrowers() {
       headerName: "Email",
       width: 240,
     },
+    {
+      field: "status",
+      headerName: "Status",
+      width: 120,
+      renderCell: (params) => {
+        const status = params.value || "active";
+        return (
+          <Typography
+            variant="body2"
+            sx={{
+              color: status === "pending" ? "warning.main" : "success.main",
+              fontWeight: 500,
+              textTransform: "capitalize",
+            }}
+          >
+            {status}
+          </Typography>
+        );
+      },
+    },
   ];
 
   // Effects
@@ -357,6 +380,27 @@ export default function Borrowers() {
   }, [userDetails?.branchUsersId]);
 
   const canCreateBorrower = useHasPermission("create", "borrower");
+
+  // Tab change handler
+  const handleTabChange = (event, newValue) => {
+    setSelectedTab(newValue);
+  };
+
+  // Filter borrowers based on selected tab
+  // "pending" tab shows borrowers with status "pending" (applicant approval)
+  // "all" tab shows borrowers with status "active" or no status (approved + internally created)
+  const filteredBorrowers = React.useMemo(() => {
+    if (selectedTab === "pending") {
+      return borrowers.filter((b) => b.status === "pending");
+    }
+    // "all" tab shows approved and internal borrowers (those without pending status)
+    return borrowers.filter((b) => b.status !== "pending");
+  }, [borrowers, selectedTab]);
+
+  // Count pending borrowers for tab badge
+  const pendingCount = React.useMemo(() => {
+    return borrowers.filter((b) => b.status === "pending").length;
+  }, [borrowers]);
 
   return (
     <>
@@ -391,9 +435,67 @@ export default function Borrowers() {
           custom fields.
         </Typography>
 
+        {/* Tabs */}
+        <Box sx={{ width: "100%", mb: 2 }}>
+          <Box
+            sx={{
+              borderBottom: 1,
+              borderColor: theme.palette.divider,
+              backgroundColor: theme.palette.background.paper,
+              borderRadius: "8px 8px 0 0",
+            }}
+          >
+            <Tabs
+              value={selectedTab}
+              onChange={handleTabChange}
+              aria-label="borrower filter tabs"
+              variant="scrollable"
+              scrollButtons
+              allowScrollButtonsMobile
+              sx={{
+                "& .MuiTabs-indicator": {
+                  backgroundColor: theme.palette.blueText.main,
+                  height: 3,
+                  borderRadius: "1.5px",
+                },
+                "& .MuiTab-root": {
+                  fontFamily: theme.typography.fontFamily,
+                  fontSize: "0.875rem",
+                  fontWeight: 500,
+                  textTransform: "none",
+                  letterSpacing: "0.02em",
+                  color: theme.palette.text.secondary,
+                  minHeight: 48,
+                  padding: "12px 24px",
+                  transition: "all 0.2s ease-in-out",
+                  "&:hover": {
+                    color: theme.palette.blueText.main,
+                  },
+                  "&.Mui-selected": {
+                    color: theme.palette.blueText.main,
+                    fontWeight: 600,
+                  },
+                  "&.Mui-focusVisible": {
+                    backgroundColor: theme.palette.action.focus,
+                  },
+                },
+                "& .MuiTabs-flexContainer": {
+                  gap: 1,
+                },
+              }}
+            >
+              <Tab label="All Borrowers" value="all" />
+              <Tab
+                label={`Inactive (Pending Approval)${pendingCount > 0 ? ` (${pendingCount})` : ""}`}
+                value="pending"
+              />
+            </Tabs>
+          </Box>
+        </Box>
+
         {/* Data Grid */}
         <CustomDataGrid
-          rows={borrowers}
+          rows={filteredBorrowers}
           columns={columns}
           loading={loading}
           getRowId={(row) => row.id}

@@ -656,16 +656,26 @@ export default function BorrowerManagement() {
             >
               <ArrowBackIcon />
             </IconButton>
-            <Typography
-              variant="h4"
-              sx={{
-                fontWeight: 600,
-                color: theme.palette.text.primary,
-                fontFamily: theme.typography.h4.fontFamily,
-              }}
-            >
-              {getBorrowerName()}
-            </Typography>
+            <Box>
+              <Typography
+                variant="h4"
+                sx={{
+                  fontWeight: 600,
+                  color: theme.palette.text.primary,
+                  fontFamily: theme.typography.h4.fontFamily,
+                }}
+              >
+                {getBorrowerName()}
+              </Typography>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: theme.palette.text.secondary,
+                }}
+              >
+                Borrower Key: {borrower.id}
+              </Typography>
+            </Box>
           </Box>
           <Box
             sx={{

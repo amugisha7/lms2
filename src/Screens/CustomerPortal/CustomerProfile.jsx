@@ -248,6 +248,12 @@ export default function CustomerProfile() {
         )}
       </Box>
 
+      {borrower && (
+        <Typography variant="body1" sx={{ mb: 2 }}>
+          Borrower Key: {borrower.id}
+        </Typography>
+      )}
+
       {!borrower && (
         <Paper sx={{ p: 2, mb: 3, bgcolor: "info.light" }}>
           <Typography color="black">

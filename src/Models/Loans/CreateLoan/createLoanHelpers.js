@@ -74,6 +74,62 @@ const LIST_LOAN_PRODUCTS_QUERY = `
   }
 `;
 
+const LIST_BRANCHES_QUERY = `
+  query ListBranches($institutionId: ID!, $nextToken: String) {
+    listBranches(
+      filter: { institutionBranchesId: { eq: $institutionId } }
+      limit: 100
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+      }
+      nextToken
+    }
+  }
+`;
+
+export const fetchBorrowersByInstitution = async (institutionId) => {
+  const client = generateClient();
+  let allBranches = [];
+  let nextToken = null;
+
+  // 1. Fetch all branches of the institution
+  try {
+    while (true) {
+      const result = await client.graphql({
+        query: LIST_BRANCHES_QUERY,
+        variables: {
+          institutionId,
+          nextToken,
+        },
+      });
+
+      const listResult = result?.data?.listBranches || {};
+      const batchItems = Array.isArray(listResult.items) ? listResult.items : [];
+      allBranches.push(...batchItems);
+
+      nextToken = listResult.nextToken;
+      if (!nextToken) break;
+    }
+  } catch (err) {
+    console.error("Error fetching branches:", err);
+    throw err;
+  }
+
+  // 2. Fetch borrowers for each branch (in parallel)
+  try {
+    const borrowersPromises = allBranches.map((branch) =>
+      fetchBorrowers(branch.id)
+    );
+    const results = await Promise.all(borrowersPromises);
+    return results.flat();
+  } catch (err) {
+    console.error("Error fetching borrowers for institution:", err);
+    throw err;
+  }
+};
+
 export const fetchBorrowers = async (branchId) => {
   const client = generateClient();
   let allBorrowersList = [];

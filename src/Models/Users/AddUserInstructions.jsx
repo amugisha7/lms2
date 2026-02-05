@@ -28,7 +28,7 @@ const AddUserInstructions = ({ open, onClose, institutionId }) => {
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle>
-        <Typography variant="h5" sx={{ fontWeight: 600 }}>
+        <Typography variant="h6" sx={{ fontWeight: 600 }}>
           How to Add a New User
         </Typography>
       </DialogTitle>

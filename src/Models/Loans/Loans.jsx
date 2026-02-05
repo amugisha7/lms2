@@ -155,7 +155,7 @@ export default function Loans() {
 
   const handleEditSuccess = (updatedRow) => {
     setLoans((prev) =>
-      prev.map((row) => (row.id === updatedRow.id ? updatedRow : row))
+      prev.map((row) => (row.id === updatedRow.id ? updatedRow : row)),
     );
     handleEditDialogClose();
   };

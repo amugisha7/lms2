@@ -4,7 +4,11 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import CreateLoan from "./CreateLoan";
 import UseLoanProduct from "./UseLoanProduct";
 import { UserContext } from "../../../App";
-import { fetchBorrowers, fetchLoanProducts } from "./createLoanHelpers";
+import {
+  fetchBorrowers,
+  fetchBorrowersByInstitution,
+  fetchLoanProducts,
+} from "./createLoanHelpers";
 import DropDownSearchable from "../../../Resources/FormComponents/DropDownSearchable";
 import { getLoanDraftById } from "../LoanDrafts/loanDraftHelpers";
 
@@ -26,7 +30,14 @@ export default function LoanCreationOptions(props) {
 
   useEffect(() => {
     const loadBorrowers = async () => {
-      if (!userDetails?.branchUsersId) {
+      const isAdmin = userDetails?.userType?.toLowerCase() === "admin";
+
+      if (!isAdmin && !userDetails?.branchUsersId) {
+        setBorrowersLoading(false);
+        return;
+      }
+
+      if (isAdmin && !userDetails?.institutionUsersId) {
         setBorrowersLoading(false);
         return;
       }
@@ -37,7 +48,15 @@ export default function LoanCreationOptions(props) {
       }
 
       try {
-        const borrowersList = await fetchBorrowers(userDetails.branchUsersId);
+        let borrowersList;
+        if (isAdmin) {
+          borrowersList = await fetchBorrowersByInstitution(
+            userDetails.institutionUsersId,
+          );
+        } else {
+          borrowersList = await fetchBorrowers(userDetails.branchUsersId);
+        }
+
         setBorrowers(borrowersList);
         borrowersFetchedRef.current = true;
         // If a borrower was passed as prop, set it as selected
@@ -52,7 +71,7 @@ export default function LoanCreationOptions(props) {
     };
 
     loadBorrowers();
-  }, [userDetails?.branchUsersId, props.borrower]);
+  }, [userDetails, props.borrower]);
 
   // Load draft if draftId is in URL
   useEffect(() => {

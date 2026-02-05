@@ -200,6 +200,19 @@ const createBorrowerForm = [
     span: 12,
   },
   {
+    label: "Borrower Status:",
+    name: "status",
+    type: "select",
+    required: false,
+    span: 6,
+    onlyVisibleInEdit: true,
+    options: [
+      { value: "pending", label: "Pending" },
+      { value: "approved", label: "Approved" },
+      { value: "suspended", label: "Suspended" },
+    ],
+  },
+  {
     label: "Working Status:",
     name: "employmentStatus", // updated
     type: "select",

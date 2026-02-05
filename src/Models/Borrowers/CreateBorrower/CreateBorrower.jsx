@@ -164,7 +164,7 @@ const CreateBorrower = forwardRef(
     const userDetails = userContext?.userDetails; // Make it optional
     const [submitError, setSubmitError] = useState("");
     const [submitSuccess, setSubmitSuccess] = useState("");
-    // Only enable edit mode if explicitly forced (popup) or not in edit mode (create)
+    // For create mode, start in edit mode (editable). For edit mode, only enable if forceEditMode is true
     const [editMode, setEditMode] = useState(forceEditMode || !isEditMode);
     const editClickedContext = useContext(EditClickedContext); // <-- get context
 
@@ -241,6 +241,7 @@ const CreateBorrower = forwardRef(
         employmentStatus: dbData.employmentStatus || "",
         employerName: dbData.employerName || "",
         creditScore: dbData.creditScore || "",
+        status: dbData.status || "",
         // Handle custom fields if they exist
         ...(dbData.customFieldsData
           ? (() => {
@@ -395,6 +396,10 @@ const CreateBorrower = forwardRef(
                 ) : null}
                 <Grid container spacing={1}>
                   {createBorrowerForm.map((field, index) => {
+                    if (field.onlyVisibleInEdit && !isEditMode) {
+                      return null;
+                    }
+
                     // Branch Logic
                     if (
                       field.name === "branchBorrowersId" &&

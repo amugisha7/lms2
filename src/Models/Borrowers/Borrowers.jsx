@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { Box, Typography, Tabs, Tab } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { generateClient } from "aws-amplify/api";
 import { UserContext } from "../../App";
 
@@ -12,6 +12,7 @@ import DeleteDialog from "../../ModelAssets/DeleteDialog";
 import NotificationBar from "../../ModelAssets/NotificationBar";
 import ClickableText from "../../ModelAssets/ClickableText";
 import PlusButtonMain from "../../ModelAssets/PlusButtonMain";
+import PlusButtonSmall from "../../ModelAssets/PlusButtonSmall";
 
 // Model-specific components
 import CreateBorrower from "./CreateBorrower/CreateBorrower";
@@ -29,6 +30,7 @@ import { useHasPermission } from "../../ModelAssets/Permissions/permissions";
 export default function Borrowers() {
   const theme = useTheme();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { userDetails } = useContext(UserContext);
   const client = React.useMemo(() => generateClient(), []);
 
@@ -41,7 +43,6 @@ export default function Borrowers() {
   });
 
   // Dialog states
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
@@ -49,9 +50,13 @@ export default function Borrowers() {
   const [selectedBorrower, setSelectedBorrower] = useState(null);
   const [borrowerToDelete, setBorrowerToDelete] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [approveLoading, setApproveLoading] = useState(false);
 
   // Tab state for filtering borrowers
   const [selectedTab, setSelectedTab] = useState("all");
+
+  // Selection for applicant approval
+  const [selectedApprovalIds, setSelectedApprovalIds] = useState([]);
 
   // Ref to track fetched branch ID
   const hasFetchedRef = React.useRef();
@@ -217,7 +222,6 @@ export default function Borrowers() {
         message: `${newBorrower.displayName} created successfully!`,
         color: "green",
       });
-      setCreateDialogOpen(false);
     } catch (error) {
       console.error("Error creating borrower:", error);
       setNotification({ message: "Error creating borrower", color: "red" });
@@ -352,11 +356,17 @@ export default function Borrowers() {
       width: 120,
       renderCell: (params) => {
         const status = params.value || "active";
+        const statusColor =
+          status === "pending"
+            ? "warning.main"
+            : status === "suspended"
+              ? "error.main"
+              : "success.main";
         return (
           <Typography
             variant="body2"
             sx={{
-              color: status === "pending" ? "warning.main" : "success.main",
+              color: statusColor,
               fontWeight: 500,
               textTransform: "capitalize",
             }}
@@ -370,20 +380,30 @@ export default function Borrowers() {
 
   // Effects
   useEffect(() => {
-    if (
-      userDetails?.branchUsersId &&
-      userDetails.branchUsersId !== hasFetchedRef.current
-    ) {
+    if (!userDetails) return;
+
+    const fetchKey =
+      userDetails.userType === "Admin"
+        ? userDetails.institution?.id || "admin"
+        : userDetails.branchUsersId;
+
+    if (fetchKey && fetchKey !== hasFetchedRef.current) {
       fetchBorrowers();
-      hasFetchedRef.current = userDetails.branchUsersId;
+      hasFetchedRef.current = fetchKey;
     }
-  }, [userDetails?.branchUsersId]);
+  }, [userDetails]);
 
   const canCreateBorrower = useHasPermission("create", "borrower");
 
   // Tab change handler
   const handleTabChange = (event, newValue) => {
     setSelectedTab(newValue);
+    setSelectedApprovalIds([]);
+  };
+
+  const isApprovedBorrower = (borrower) => {
+    const status = borrower.status;
+    return status === "approved" || status === "active" || !status;
   };
 
   // Filter borrowers based on selected tab
@@ -393,14 +413,63 @@ export default function Borrowers() {
     if (selectedTab === "pending") {
       return borrowers.filter((b) => b.status === "pending");
     }
-    // "all" tab shows approved and internal borrowers (those without pending status)
-    return borrowers.filter((b) => b.status !== "pending");
+    if (selectedTab === "approved") {
+      return borrowers.filter((b) => isApprovedBorrower(b));
+    }
+    // "all" tab shows all borrowers in scope (admin: institution, non-admin: branch)
+    return borrowers;
   }, [borrowers, selectedTab]);
 
   // Count pending borrowers for tab badge
   const pendingCount = React.useMemo(() => {
     return borrowers.filter((b) => b.status === "pending").length;
   }, [borrowers]);
+
+  const approvedCount = React.useMemo(() => {
+    return borrowers.filter((b) => isApprovedBorrower(b)).length;
+  }, [borrowers]);
+
+  const approvalSelectionModel = React.useMemo(
+    () => ({ type: "include", ids: new Set(selectedApprovalIds) }),
+    [selectedApprovalIds],
+  );
+
+  const handleApproveSelected = async () => {
+    if (!selectedApprovalIds.length) return;
+
+    setApproveLoading(true);
+    try {
+      await Promise.all(
+        selectedApprovalIds.map((id) =>
+          client.graphql({
+            query: UPDATE_BORROWER_MUTATION,
+            variables: {
+              input: {
+                id,
+                status: "approved",
+              },
+            },
+          }),
+        ),
+      );
+
+      setBorrowers((prev) =>
+        prev.map((b) =>
+          selectedApprovalIds.includes(b.id) ? { ...b, status: "approved" } : b,
+        ),
+      );
+      setSelectedApprovalIds([]);
+      setNotification({
+        message: "Selected borrowers approved successfully!",
+        color: "green",
+      });
+    } catch (error) {
+      console.error("Error approving borrowers:", error);
+      setNotification({ message: "Error approving borrowers", color: "red" });
+    } finally {
+      setApproveLoading(false);
+    }
+  };
 
   return (
     <>
@@ -425,8 +494,8 @@ export default function Borrowers() {
           </Typography>
           {canCreateBorrower && (
             <PlusButtonMain
-              onClick={() => setCreateDialogOpen(true)}
-              buttonText="Create Borrower"
+              onClick={() => navigate("/addBorrower")}
+              buttonText="CREATE BORROWER"
             />
           )}
         </Box>
@@ -486,12 +555,33 @@ export default function Borrowers() {
             >
               <Tab label="All Borrowers" value="all" />
               <Tab
-                label={`Inactive (Pending Approval)${pendingCount > 0 ? ` (${pendingCount})` : ""}`}
+                label={`Approved Borrowers${approvedCount > 0 ? ` (${approvedCount})` : ""}`}
+                value="approved"
+              />
+              <Tab
+                label={`Pending Approval${pendingCount > 0 ? ` (${pendingCount})` : ""}`}
                 value="pending"
               />
             </Tabs>
           </Box>
         </Box>
+
+        {selectedTab === "pending" && (
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "flex-end",
+              mb: 1,
+            }}
+          >
+            <PlusButtonSmall
+              label="APPROVE SELECTED"
+              // variant="contained"
+              disabled={selectedApprovalIds.length === 0 || approveLoading}
+              onClick={handleApproveSelected}
+            />
+          </Box>
+        )}
 
         {/* Data Grid */}
         <CustomDataGrid
@@ -501,22 +591,17 @@ export default function Borrowers() {
           getRowId={(row) => row.id}
           pageSize={25}
           pageSizeOptions={[25, 50, 100]}
+          checkboxSelection={selectedTab === "pending"}
+          rowSelectionModel={
+            selectedTab === "pending" ? approvalSelectionModel : undefined
+          }
+          onRowSelectionModelChange={
+            selectedTab === "pending"
+              ? (newSelection) =>
+                  setSelectedApprovalIds(Array.from(newSelection?.ids || []))
+              : undefined
+          }
         />
-
-        {/* Create Dialog */}
-        <CustomSlider
-          open={createDialogOpen}
-          onClose={() => setCreateDialogOpen(false)}
-          title="Create Borrower"
-          showEdit={false}
-          showDelete={false}
-        >
-          <CreateBorrower
-            onCreateBorrowerAPI={handleCreate}
-            onClose={() => setCreateDialogOpen(false)}
-            isEditMode={false}
-          />
-        </CustomSlider>
 
         {/* Edit Dialog */}
         <CustomSlider

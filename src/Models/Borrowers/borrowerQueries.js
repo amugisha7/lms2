@@ -66,6 +66,7 @@ export const CREATE_BORROWER_MUTATION = `
       employerName
       creditScore
       customFieldsData
+      status
       branchBorrowersId
       createdAt
       updatedAt
@@ -97,6 +98,7 @@ export const UPDATE_BORROWER_MUTATION = `
       employerName
       creditScore
       customFieldsData
+      status
       branchBorrowersId
       createdAt
       updatedAt

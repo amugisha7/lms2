@@ -21,6 +21,7 @@ import Securities from "./Screens/Securities/Securities";
 import CreateSecurities from "./Screens/Securities/CreateSecurities/CreateSecurities";
 // import Borrowers from "./Screens/Borrowers/Borrowers";
 import Borrowers from "./Models/Borrowers/Borrowers";
+import CreateBorrowerPage from "./Models/Borrowers/CreateBorrower/CreateBorrowerPage";
 import Temp from "./temp/Temp";
 import BorrowerManagement from "./Models/Borrowers/BorrowerManagement";
 import UserManagement from "./Models/Users/UserManagement";
@@ -61,6 +62,7 @@ export default function AppRoutes({ userExists }) {
 
               {/* Borrowers routes */}
               <Route path="borrowers" element={<Borrowers />} />
+              <Route path="addBorrower" element={<CreateBorrowerPage />} />
               <Route
                 path="borrowers/id/:borrowerId/view"
                 element={<BorrowerManagement />}

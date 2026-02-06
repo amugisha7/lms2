@@ -552,3 +552,49 @@ export const buildLoanInput = (values, userDetails) => ({
   institutionLoansId: userDetails?.institutionUsersId || null,
   createdByEmployeeLoansId: userDetails?.id || null,
 });
+export const fetchInstitutionAdmins = async (institutionId) => {
+  const client = generateClient();
+  let admins = [];
+  let nextToken = null;
+
+  const LIST_ADMINS_QUERY = `
+    query ListUsers($institutionId: ID!, $nextToken: String) {
+      listUsers(
+        filter: {
+          institutionUsersId: { eq: $institutionId }
+          userType: { eq: "admin" }
+        }
+        limit: 100
+        nextToken: $nextToken
+      ) {
+        items {
+          id
+          firstName
+          lastName
+          email
+        }
+        nextToken
+      }
+    }
+  `;
+
+  try {
+    do {
+      const result = await client.graphql({
+        query: LIST_ADMINS_QUERY,
+        variables: {
+          institutionId,
+          nextToken,
+        },
+      });
+      const items = result.data.listUsers.items;
+      admins = [...admins, ...items];
+      nextToken = result.data.listUsers.nextToken;
+    } while (nextToken);
+  } catch (err) {
+    console.error("Error fetching admins:", err);
+  }
+
+  return admins;
+};
+

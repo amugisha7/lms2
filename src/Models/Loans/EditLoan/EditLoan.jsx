@@ -42,7 +42,9 @@ import {
 import {
   fetchAccounts,
   fetchLoanFeesConfig,
+  fetchInstitutionAdmins,
 } from "../CreateLoan/createLoanHelpers";
+import { sendLoanApprovalRequest } from "../../../Screens/Notifications/notificationsAPI";
 
 const FormGrid = styled(Grid)(({ theme }) => ({
   display: "flex",
@@ -276,6 +278,11 @@ const EditLoan = forwardRef(
     const { userDetails } = useContext(UserContext);
     const theme = useTheme();
     const navigate = useNavigate();
+
+    const isPrivileged = React.useMemo(() => {
+      const type = userDetails?.userType;
+      return type?.toLowerCase() === "admin" || type === "branchManager";
+    }, [userDetails]);
     const [submitError, setSubmitError] = useState("");
     const [submitSuccess, setSubmitSuccess] = useState("");
     const [editMode, setEditMode] = useState(isEditMode);
@@ -481,17 +488,73 @@ const EditLoan = forwardRef(
       setSubmitSuccess("");
       try {
         if (!localDraft?.id) throw new Error("Save Draft first.");
+
+        // 1. Transition
         const updated = await transitionLoanDraftStatus({
           loanDraft: localDraft,
           userDetails,
           nextStatus: "SENT_FOR_APPROVAL",
         });
-        setLocalDraft((prev) => ({
+
+        const newLocalDraft = {
           ...updated,
-          borrower: prev?.borrower || localDraft?.borrower || null,
-          loanProduct: prev?.loanProduct || localDraft?.loanProduct || null,
-        }));
-        setSubmitSuccess("Draft sent for approval.");
+          borrower: localDraft?.borrower || null,
+          loanProduct: localDraft?.loanProduct || null,
+        };
+        setLocalDraft(newLocalDraft);
+
+        // 2. Notify Admins
+        if (userDetails?.institutionUsersId) {
+          fetchInstitutionAdmins(userDetails.institutionUsersId).then(
+            (admins) => {
+              let draftValues = {};
+              try {
+                draftValues =
+                  typeof updated.draftRecord === "string"
+                    ? JSON.parse(updated.draftRecord)
+                    : updated.draftRecord || {};
+              } catch (e) {
+                console.error("Error parsing draft record for notification", e);
+              }
+
+              const borrowerObj = localDraft?.borrower;
+
+              const bName = borrowerObj
+                ? `${borrowerObj.firstname || ""} ${
+                    borrowerObj.othername || ""
+                  } ${borrowerObj.businessName || ""}`.trim()
+                : draftValues.borrower || "Unknown";
+
+              const loanData = {
+                borrowerName: bName,
+                loanAmount: draftValues.principalAmount || 0,
+                loanProduct: draftValues.loanProduct || "Standard Loan",
+                applicationDate: new Date().toISOString(),
+                loanOfficer: `${userDetails.firstName || ""} ${
+                  userDetails.lastName || ""
+                }`.trim(),
+                loanId: updated.id,
+                borrowerId: updated.borrowerID,
+              };
+
+              admins.forEach((admin) => {
+                sendLoanApprovalRequest(
+                  loanData,
+                  admin.id,
+                  userDetails.institutionUsersId,
+                ).catch((err) =>
+                  console.error(
+                    `Failed to notify admin ${admin.firstName}:`,
+                    err,
+                  ),
+                );
+              });
+            },
+          );
+        }
+
+        setSubmitSuccess("Draft sent for approval. Admins notified.");
+        setScheduleOpen(false);
       } catch (err) {
         console.error(err);
         setSubmitError(err?.message || "Failed to send for approval.");
@@ -666,7 +729,12 @@ const EditLoan = forwardRef(
                     onSaveDraft={() => formik.submitForm()}
                     setDraftField={formik.setFieldValue}
                     onSendForApproval={handleSendForApproval}
-                    onConfirmCreateLoan={handleConvertToLoan}
+                    onConfirmCreateLoan={
+                      isPrivileged ? handleConvertToLoan : handleSendForApproval
+                    }
+                    createButtonText={
+                      isPrivileged ? "CREATE LOAN" : "SUBMIT FOR APPROVAL"
+                    }
                     totalLoanFee={totalLoanFee}
                     loanFeeSummary={loanFeeSummary}
                     isEditDraftFlow={true}

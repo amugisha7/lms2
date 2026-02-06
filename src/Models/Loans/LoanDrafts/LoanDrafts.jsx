@@ -1,5 +1,5 @@
 import React from "react";
-import { Box } from "@mui/material";
+import { Box, Tabs, Tab } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
@@ -9,6 +9,7 @@ import ClickableText from "../../../ModelAssets/ClickableText";
 import NotificationBar from "../../../ModelAssets/NotificationBar";
 import { formatMoney, formatMoneyParts } from "../../../Resources/formatting";
 import { fetchBorrowers } from "../CreateLoan/createLoanHelpers";
+import { useTheme } from "@mui/material/styles";
 import {
   listLoanDraftsByBranch,
   listLoanDraftsByInstitution,
@@ -16,11 +17,13 @@ import {
 
 export default function LoanDrafts() {
   const navigate = useNavigate();
+  const theme = useTheme();
   const { userDetails } = React.useContext(UserContext);
   const [loading, setLoading] = React.useState(true);
   const [rows, setRows] = React.useState([]);
   const [borrowers, setBorrowers] = React.useState([]);
   const [notification, setNotification] = React.useState(null);
+  const [selectedTab, setSelectedTab] = React.useState("all");
 
   const refresh = React.useCallback(async () => {
     setLoading(true);
@@ -71,6 +74,28 @@ export default function LoanDrafts() {
     refresh();
   }, [refresh]);
 
+  const handleTabChange = (event, newValue) => {
+    setSelectedTab(newValue);
+  };
+
+  const filteredRows = React.useMemo(() => {
+    if (selectedTab === "all") return rows;
+    if (selectedTab === "in_review") {
+      return rows.filter((r) => r.status === "SENT_FOR_APPROVAL");
+    }
+    if (selectedTab === "drafts") {
+      return rows.filter(
+        (r) => !r.status || r.status === "DRAFT" || r.status === "Draft",
+      );
+    }
+    if (selectedTab === "rejected") {
+      return rows.filter(
+        (r) => r.status === "REJECTED" || r.status === "Rejected",
+      );
+    }
+    return rows;
+  }, [rows, selectedTab]);
+
   const borrowerName = React.useCallback(
     (borrowerID) => {
       const b = borrowers.find((x) => x.id === borrowerID);
@@ -86,11 +111,29 @@ export default function LoanDrafts() {
     [borrowers],
   );
 
+  const isPrivileged =
+    userDetails?.role === "admin" || userDetails?.role === "branch_manager";
+
   const onEdit = React.useCallback(
-    (id) => {
+    (rowOrId) => {
+      const id = rowOrId?.id || rowOrId;
+      const row =
+        typeof rowOrId === "object"
+          ? rowOrId
+          : rows.find((r) => r.id === rowOrId);
+
+      if (!isPrivileged && row?.status === "SENT_FOR_APPROVAL") {
+        setNotification({
+          type: "warning",
+          message:
+            "This draft is currently under review and cannot be edited. Please wait for admin approval.",
+        });
+        return;
+      }
+
       navigate(`/loan-drafts/id/${id}/view`);
     },
-    [navigate],
+    [navigate, isPrivileged, rows],
   );
 
   const parseDraftRecord = React.useCallback((row) => {
@@ -227,7 +270,7 @@ export default function LoanDrafts() {
         headerName: "ID",
         width: 140,
         renderCell: (params) => (
-          <ClickableText onClick={() => onEdit(params.row.id)}>
+          <ClickableText onClick={() => onEdit(params.row)}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
               {(() => {
                 const v = params.value;
@@ -340,11 +383,25 @@ export default function LoanDrafts() {
           clearNotification={() => setNotification(null)}
         />
       )}
+
+      <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 2 }}>
+        <Tabs
+          value={selectedTab}
+          onChange={handleTabChange}
+          textColor="primary"
+          indicatorColor="primary"
+        >
+          <Tab label="All Drafts" value="all" />
+          <Tab label="In Review" value="in_review" />
+          <Tab label="Rejected" value="rejected" />
+        </Tabs>
+      </Box>
+
       <CollectionsTemplate
         title="Loan Drafts"
         createButtonText="New Loan"
         onCreateClick={() => navigate("/add-loan")}
-        items={rows}
+        items={filteredRows}
         loading={loading}
         columns={columns}
         enableSearch={false}

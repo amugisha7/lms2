@@ -19,7 +19,12 @@ import OrderedList from "../../../Resources/FormComponents/OrderedList";
 import CreateFormButtons from "../../../ModelAssets/CreateFormButtons";
 import PlusButtonMain from "../../../ModelAssets/PlusButtonMain";
 import { UserContext } from "../../../App";
-import { fetchAccounts, fetchLoanFeesConfig } from "./createLoanHelpers";
+import {
+  fetchAccounts,
+  fetchLoanFeesConfig,
+  fetchInstitutionAdmins,
+} from "./createLoanHelpers";
+import { sendLoanApprovalRequest } from "../../../Screens/Notifications/notificationsAPI";
 import {
   createLoanDraft,
   updateLoanDraft,
@@ -286,6 +291,13 @@ const CreateLoan = forwardRef(
     const [loanFeesLoading, setLoanFeesLoading] = useState(false);
     const loanFeesFetchedRef = useRef(false);
     const loanFeesInstitutionIdRef = useRef(null);
+    const formikRef = useRef(null);
+    const [isProcessing, setIsProcessing] = useState(false);
+
+    const isPrivileged = React.useMemo(() => {
+      const type = userDetails?.userType;
+      return type?.toLowerCase() === "admin" || type === "branchManager";
+    }, [userDetails]);
 
     useEffect(() => {
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -401,41 +413,52 @@ const CreateLoan = forwardRef(
       return base;
     }, [propInitialValues, propBorrower, accounts, loanDraft]);
 
+    const saveDraftInternal = async (
+      values,
+      { suppressSuccessCallback = false } = {},
+    ) => {
+      let draftValues = { ...values };
+      if (propBorrower) {
+        draftValues.borrower = propBorrower.id;
+      }
+
+      let updatedOrCreatedDraft;
+      if (loanDraft?.id) {
+        updatedOrCreatedDraft = await updateLoanDraft({
+          id: loanDraft.id,
+          expectedEditVersion: loanDraft.editVersion,
+          userDetails,
+          patch: {
+            borrowerID: draftValues.borrower,
+            loanProductID: draftValues.loanProduct || null,
+            draftRecord: JSON.stringify(draftValues),
+          },
+        });
+        if (!suppressSuccessCallback)
+          setSubmitSuccess("Draft saved successfully!");
+      } else {
+        updatedOrCreatedDraft = await createLoanDraft({
+          userDetails,
+          draftRecord: draftValues,
+          source: "BLANK",
+        });
+        if (!suppressSuccessCallback) {
+          setSubmitSuccess("Draft created successfully!");
+          if (onCreateSuccess) onCreateSuccess(updatedOrCreatedDraft);
+        }
+      }
+      setLoanDraft(updatedOrCreatedDraft);
+      if (onDraftUpdated) onDraftUpdated(updatedOrCreatedDraft);
+      return updatedOrCreatedDraft;
+    };
+
     const handleSubmit = async (values, { setSubmitting }) => {
       setSubmitError("");
       setSubmitSuccess("");
       setSubmitting(true);
 
-      if (propBorrower) {
-        values.borrower = propBorrower.id;
-      }
-
       try {
-        if (loanDraft?.id) {
-          const updated = await updateLoanDraft({
-            id: loanDraft.id,
-            expectedEditVersion: loanDraft.editVersion,
-            userDetails,
-            patch: {
-              borrowerID: values.borrower,
-              loanProductID: values.loanProduct || null,
-              draftRecord: JSON.stringify(values),
-            },
-          });
-          setLoanDraft(updated);
-          if (onDraftUpdated) onDraftUpdated(updated);
-          setSubmitSuccess("Draft saved successfully!");
-        } else {
-          const created = await createLoanDraft({
-            userDetails,
-            draftRecord: values,
-            source: "BLANK",
-          });
-          setLoanDraft(created);
-          if (onDraftUpdated) onDraftUpdated(created);
-          setSubmitSuccess("Draft created successfully!");
-          if (onCreateSuccess) onCreateSuccess(created);
-        }
+        await saveDraftInternal(values);
       } catch (err) {
         console.error("Error saving draft:", err);
         setSubmitError(
@@ -449,34 +472,132 @@ const CreateLoan = forwardRef(
     const handleSendForApproval = async () => {
       setSubmitError("");
       setSubmitSuccess("");
+      setIsProcessing(true);
       try {
-        if (!loanDraft?.id) throw new Error("Save Draft first.");
+        let currentDraft = loanDraft;
+
+        if (!currentDraft?.id) {
+          if (formikRef.current) {
+            // Validate form first? maybe not strictly needed for draft but good for "sending"
+            const errors = await formikRef.current.validateForm();
+            if (Object.keys(errors).length > 0) {
+              formikRef.current.setTouched(errors); // mark touched to show errors
+              throw new Error("Please validation errors before submitting.");
+            }
+            currentDraft = await saveDraftInternal(formikRef.current.values, {
+              suppressSuccessCallback: false, // Let navigation happen if successfully created & drafted? No wait, this sends for approval
+            });
+            // Actually for "Submit for Approval" we DO want the draft creation/update flow to complete.
+            // But we are chaining actions.
+          } else {
+            throw new Error("Save Draft first.");
+          }
+        }
+
         const updated = await transitionLoanDraftStatus({
-          loanDraft,
+          loanDraft: currentDraft,
           userDetails,
           nextStatus: "SENT_FOR_APPROVAL",
         });
         setLoanDraft(updated);
+
+        // Notify Admins
+        if (userDetails?.institutionUsersId) {
+          fetchInstitutionAdmins(userDetails.institutionUsersId).then(
+            (admins) => {
+              // Parse draft values if needed
+              let draftValues = {};
+              try {
+                draftValues =
+                  typeof updated.draftRecord === "string"
+                    ? JSON.parse(updated.draftRecord)
+                    : updated.draftRecord || {};
+              } catch (e) {
+                console.error("Error parsing draft record for notification", e);
+              }
+
+              const bName = propBorrower
+                ? `${propBorrower.firstname || ""} ${
+                    propBorrower.othername || ""
+                  } ${propBorrower.businessName || ""}`.trim()
+                : draftValues.borrower || "Unknown";
+
+              const loanData = {
+                borrowerName: bName,
+                loanAmount: draftValues.principalAmount || 0,
+                loanProduct: draftValues.loanProduct || "Standard Loan",
+                applicationDate: new Date().toISOString(),
+                loanOfficer: `${userDetails.firstName || ""} ${
+                  userDetails.lastName || ""
+                }`.trim(),
+                loanId: updated.id,
+                borrowerId: updated.borrowerID,
+              };
+
+              admins.forEach((admin) => {
+                sendLoanApprovalRequest(
+                  loanData,
+                  admin.id,
+                  userDetails.institutionUsersId,
+                ).catch((err) =>
+                  console.error(
+                    `Failed to notify admin ${admin.firstName}:`,
+                    err,
+                  ),
+                );
+              });
+            },
+          );
+        }
+
         if (onDraftUpdated) onDraftUpdated(updated);
-        setSubmitSuccess("Draft sent for approval.");
+        setSubmitSuccess("Draft sent for approval. Admins notified.");
+        setScheduleOpen(false); // Close the popup
+        setIsProcessing(false);
+        navigate("/loan-drafts");
       } catch (err) {
         console.error(err);
         setSubmitError(err?.message || "Failed to send for approval.");
+        setIsProcessing(false);
       }
     };
 
     const handleConvertToLoan = async () => {
       setSubmitError("");
       setSubmitSuccess("");
+      setIsProcessing(true);
       try {
-        if (!loanDraft?.id) throw new Error("Save Draft first.");
-        const loan = await convertDraftToLoan({ loanDraft, userDetails });
+        let currentDraft = loanDraft;
+
+        if (!currentDraft?.id) {
+          if (formikRef.current) {
+            // Validate form heavily for Create Loan
+            const errors = await formikRef.current.validateForm();
+            if (Object.keys(errors).length > 0) {
+              formikRef.current.setTouched(errors);
+              throw new Error(
+                "Please fix validation errors before creating loan.",
+              );
+            }
+            currentDraft = await saveDraftInternal(formikRef.current.values, {
+              suppressSuccessCallback: true,
+            });
+          } else {
+            throw new Error("Save Draft first.");
+          }
+        }
+
+        const loan = await convertDraftToLoan({
+          loanDraft: currentDraft,
+          userDetails,
+        });
         setSubmitSuccess("Draft converted to loan.");
         navigate("/loans");
         return loan;
       } catch (err) {
         console.error(err);
         setSubmitError(err?.message || "Failed to convert to loan.");
+        setIsProcessing(false);
       }
     };
 
@@ -518,6 +639,7 @@ const CreateLoan = forwardRef(
     return (
       <>
         <Formik
+          innerRef={formikRef}
           initialValues={formInitialValues}
           validationSchema={baseValidationSchema}
           onSubmit={handleSubmit}
@@ -661,8 +783,14 @@ const CreateLoan = forwardRef(
             return (
               <Form>
                 <WorkingOverlay
-                  open={formik.isSubmitting}
-                  message="Saving draft..."
+                  open={formik.isSubmitting || isProcessing}
+                  message={
+                    isProcessing
+                      ? isPrivileged
+                        ? "Creating Loan..."
+                        : "Submitting..."
+                      : "Saving draft..."
+                  }
                 />
 
                 <CustomPopUp
@@ -684,7 +812,12 @@ const CreateLoan = forwardRef(
                     onSaveDraft={() => formik.submitForm()}
                     setDraftField={formik.setFieldValue}
                     onSendForApproval={handleSendForApproval}
-                    onConfirmCreateLoan={handleConvertToLoan}
+                    onConfirmCreateLoan={
+                      isPrivileged ? handleConvertToLoan : handleSendForApproval
+                    }
+                    createButtonText={
+                      isPrivileged ? "CREATE LOAN" : "SUBMIT FOR APPROVAL"
+                    }
                     totalLoanFee={totalLoanFee}
                     loanFeeSummary={loanFeeSummary}
                     isEditDraftFlow={false}

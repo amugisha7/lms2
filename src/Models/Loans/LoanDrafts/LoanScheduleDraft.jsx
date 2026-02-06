@@ -86,6 +86,7 @@ export default function LoanScheduleDraft({
   totalLoanFee = 0,
   loanFeeSummary,
   isEditDraftFlow = false,
+  createButtonText = "CREATE LOAN",
 }) {
   const theme = useTheme();
   const printAreaRef = React.useRef(null);
@@ -896,7 +897,7 @@ export default function LoanScheduleDraft({
           },
           {
             key: "create",
-            text: "CREATE LOAN",
+            text: createButtonText,
             onClick: onConfirmCreateLoan,
             disabled: readOnly || !onConfirmCreateLoan,
           },

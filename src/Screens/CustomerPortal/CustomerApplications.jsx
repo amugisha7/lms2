@@ -25,7 +25,7 @@ export default function CustomerApplications() {
         let allApplications = [];
         let nextToken = null;
 
-        // Query loans with DRAFT status (not yet disbursed) for this borrower
+        // Query loans with "In review" status (not yet disbursed) for this borrower
         while (true) {
           const result = await client.graphql({
             query: `query LoansByBorrowerIDAndStartDate(
@@ -61,14 +61,15 @@ export default function CustomerApplications() {
               borrowerID: borrower.id,
               sortDirection: "DESC",
               filter: {
-                loanStatusEnum: { eq: "DRAFT" },
+                status: { eq: "In review" },
               },
               limit: 100,
               nextToken,
             },
           });
 
-          const items = result?.data?.loansByBorrowerIDAndStartDate?.items || [];
+          const items =
+            result?.data?.loansByBorrowerIDAndStartDate?.items || [];
           allApplications.push(...items);
 
           nextToken = result?.data?.loansByBorrowerIDAndStartDate?.nextToken;
@@ -196,9 +197,7 @@ export default function CustomerApplications() {
 
       {applications.length === 0 ? (
         <Paper sx={{ p: 3 }}>
-          <Typography>
-            You don't have any pending loan applications.
-          </Typography>
+          <Typography>You don't have any pending loan applications.</Typography>
         </Paper>
       ) : (
         <Paper sx={{ p: 2, height: 600 }}>

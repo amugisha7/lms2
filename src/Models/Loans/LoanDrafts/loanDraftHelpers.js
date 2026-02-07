@@ -674,6 +674,44 @@ const LOANS_BY_BRANCH_QUERY = `
   }
 `;
 
+// Simpler query for listing loans by branch without requiring startDate key condition
+const LIST_LOANS_BY_BRANCH_QUERY = `
+  query ListLoans(
+    $filter: ModelLoanFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listLoans(
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        loanNumber
+        status
+        borrowerID
+        branchID
+        loanProductID
+        principal
+        interestRate
+        startDate
+        maturityDate
+        loanComputationRecord
+        createdAt
+        updatedAt
+        borrower {
+          id
+          firstname
+          othername
+          businessName
+        }
+      }
+      nextToken
+    }
+  }
+`;
+
 const LOANS_BY_BORROWER_QUERY = `
   query LoansByBorrowerIDAndStartDate(
     $borrowerID: ID!
@@ -819,19 +857,21 @@ export const listLoanDraftsByBranch = async ({
   let nextToken = null;
   const items = [];
 
+  // Use simpler listLoans query that filters by branchID directly
+  // This avoids requiring startDate as part of the key condition
   do {
     const result = await client.graphql({
-      query: LOANS_BY_BRANCH_QUERY,
+      query: LIST_LOANS_BY_BRANCH_QUERY,
       variables: {
-        branchID,
-        sortDirection: "DESC",
-        filter: { status: { eq: "DRAFT" } },
+        filter: {
+          branchID: { eq: branchID },
+        },
         limit,
         nextToken,
       },
     });
 
-    const batch = result?.data?.loansByBranchIDAndStartDate?.items || [];
+    const batch = result?.data?.listLoans?.items || [];
     // Transform to draft-like structure
     const transformed = batch.map((loan) => {
       const computationRecord = parseAwsJson(loan?.loanComputationRecord) || {};
@@ -845,7 +885,7 @@ export const listLoanDraftsByBranch = async ({
       };
     });
     items.push(...transformed);
-    nextToken = result?.data?.loansByBranchIDAndStartDate?.nextToken || null;
+    nextToken = result?.data?.listLoans?.nextToken || null;
   } while (nextToken);
 
   return items;
@@ -860,12 +900,12 @@ export const listLoanDraftsByInstitution = async ({
   const client = generateClient();
   let allBranches = [];
 
-  // 1. Fetch the institution and its branches
+  // 1. Fetch the institution and its branches with proper pagination (nextToken looping)
   const GET_INSTITUTION_QUERY = `
-    query GetInstitution($id: ID!) {
+    query GetInstitution($id: ID!, $nextToken: String) {
       getInstitution(id: $id) {
         id
-        branches {
+        branches(limit: 100, nextToken: $nextToken) {
           items {
             id
           }
@@ -876,15 +916,20 @@ export const listLoanDraftsByInstitution = async ({
   `;
 
   try {
-    const result = await client.graphql({
-      query: GET_INSTITUTION_QUERY,
-      variables: {
-        id: institutionID,
-      },
-    });
+    let nextBranchToken = null;
+    do {
+      const result = await client.graphql({
+        query: GET_INSTITUTION_QUERY,
+        variables: {
+          id: institutionID,
+          nextToken: nextBranchToken,
+        },
+      });
 
-    const branches = result?.data?.getInstitution?.branches?.items || [];
-    allBranches = branches;
+      const branches = result?.data?.getInstitution?.branches?.items || [];
+      allBranches.push(...branches);
+      nextBranchToken = result?.data?.getInstitution?.branches?.nextToken || null;
+    } while (nextBranchToken);
   } catch (err) {
     console.error("Error fetching institution branches:", err);
     return [];
@@ -946,6 +991,7 @@ export const createLoanDraft = async ({
   status = "DRAFT",
   termsSnapshot,
   assignedToEmployeeID,
+  borrower,
 }) => {
   const client = generateClient();
 
@@ -953,6 +999,9 @@ export const createLoanDraft = async ({
   if (!scheduleResult.supported) {
     console.warn("Schedule preview generation failed:", scheduleResult.reason);
   }
+
+  // Use borrower's branchId if available, otherwise fall back to user's branchId
+  const branchId = borrower?.branchBorrowersId || userDetails?.branchUsersId || null;
 
   // Build computation record with all draft data
   const computationRecord = {
@@ -969,7 +1018,7 @@ export const createLoanDraft = async ({
     loanNumber: `LD-${Date.now()}`,
     status: status || "DRAFT",
     borrowerID: draftRecord?.borrower || null,
-    branchID: userDetails?.branchUsersId || null,
+    branchID: branchId,
     loanProductID: draftRecord?.loanProduct || null,
     createdByEmployeeID: userDetails?.id || null,
     

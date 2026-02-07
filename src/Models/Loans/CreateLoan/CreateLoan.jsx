@@ -422,6 +422,12 @@ const CreateLoan = forwardRef(
         draftValues.borrower = propBorrower.id;
       }
 
+      // Find the borrower object from the borrowers list or use propBorrower
+      let borrowerToPass = propBorrower;
+      if (!borrowerToPass && draftValues.borrower && borrowers) {
+        borrowerToPass = borrowers.find((b) => b.id === draftValues.borrower);
+      }
+
       let updatedOrCreatedDraft;
       if (loanDraft?.id) {
         updatedOrCreatedDraft = await updateLoanDraft({
@@ -441,6 +447,7 @@ const CreateLoan = forwardRef(
           userDetails,
           draftRecord: draftValues,
           source: "BLANK",
+          borrower: borrowerToPass,
         });
         if (!suppressSuccessCallback) {
           setSubmitSuccess("Draft created successfully!");

@@ -674,7 +674,7 @@ export default function CustomerLoanProductForm() {
         userDetails,
         draftRecord: formValues,
         source: "CUSTOMER_PORTAL",
-        status: "DRAFT",
+        status: "In review",
       });
 
       setSubmitSuccess(

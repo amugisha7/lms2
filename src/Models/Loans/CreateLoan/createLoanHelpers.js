@@ -52,6 +52,7 @@ const LIST_BORROWERS_QUERY = `
         othername
         businessName
         uniqueIdNumber
+        branchBorrowersId
       }
       nextToken
     }

@@ -148,6 +148,7 @@ export default function CustomerLoanDetail() {
       case "APPROVED":
         return "success";
       case "DRAFT":
+      case "IN REVIEW":
       case "PENDING":
       case "PARTIALLY_PAID":
         return "warning";

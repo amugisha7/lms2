@@ -50,6 +50,7 @@ export default function LoanDrafts() {
         drafts = await listLoanDraftsByBranch({ branchID });
       }
 
+      console.log("Fetched loan drafts:", drafts);
       setRows(Array.isArray(drafts) ? drafts : []);
     } catch (err) {
       console.error("Failed to load drafts:", err);
@@ -79,20 +80,20 @@ export default function LoanDrafts() {
     if (selectedTab === "all") return rows;
     if (selectedTab === "in_review") {
       return rows.filter((r) => {
-        const status = (r.status || "").toUpperCase();
-        return status === "SENT_FOR_APPROVAL";
+        const status = (r.status || "").toLowerCase();
+        return status === "in review" || status === "sent_for_approval";
       });
     }
     if (selectedTab === "drafts") {
       return rows.filter((r) => {
-        const status = (r.status || "").toUpperCase();
-        return !r.status || status === "DRAFT";
+        const status = (r.status || "").toLowerCase();
+        return !r.status || status === "draft";
       });
     }
     if (selectedTab === "rejected") {
       return rows.filter((r) => {
-        const status = (r.status || "").toUpperCase();
-        return status === "REJECTED";
+        const status = (r.status || "").toLowerCase();
+        return status === "rejected";
       });
     }
     return rows;

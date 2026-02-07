@@ -530,8 +530,6 @@ type Collateral @model {
 type Loan @model {
   id: ID!
   loanNumber: String @index(name: "byLoanNumber")
-  approvalStatus: String
-  approvalStatusEnum: LoanApprovalStatus
   approvedDate: AWSDate
   principal: Float
   fees: Float
@@ -544,8 +542,6 @@ type Loan @model {
   durationInterval: String
   loanType: String
   rateInterval: String
-  loanStatus: String
-  loanStatusEnum: LoanStatus
   loanCurrency: String
   loanPurpose: String
   loanComputationRecord: AWSJSON

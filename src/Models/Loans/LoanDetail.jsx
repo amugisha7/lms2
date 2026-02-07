@@ -82,9 +82,7 @@ const LoanDetail = ({ loanId, onClose, initialTab = 0 }) => {
         <Grid size={{ xs: 12, md: 4 }}>
           <Paper sx={{ p: 2 }}>
             <Typography variant="subtitle2">Status</Typography>
-            <Typography variant="h6">
-              {loan.loanStatusEnum || loan.status}
-            </Typography>
+            <Typography variant="h6">{loan.status}</Typography>
           </Paper>
         </Grid>
         <Grid size={{ xs: 12, md: 4 }}>
@@ -162,7 +160,7 @@ const LoanDetail = ({ loanId, onClose, initialTab = 0 }) => {
                   {loan.payments?.items
                     ?.sort(
                       (a, b) =>
-                        new Date(b.paymentDate) - new Date(a.paymentDate)
+                        new Date(b.paymentDate) - new Date(a.paymentDate),
                     )
                     .map((pmt) => (
                       <TableRow key={pmt.id}>

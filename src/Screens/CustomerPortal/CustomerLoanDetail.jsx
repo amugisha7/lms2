@@ -245,21 +245,9 @@ export default function CustomerLoanDetail() {
             </Typography>
             <Box sx={{ mb: 2 }}>
               <Chip
-                label={loan.loanStatusEnum || "N/A"}
-                color={getStatusColor(loan.loanStatusEnum)}
+                label={loan.status || "N/A"}
+                color={getStatusColor(loan.status)}
                 size="small"
-              />
-            </Box>
-
-            <Typography variant="body2" color="text.secondary">
-              Approval Status
-            </Typography>
-            <Box sx={{ mb: 2 }}>
-              <Chip
-                label={loan.approvalStatusEnum || "N/A"}
-                color={getStatusColor(loan.approvalStatusEnum)}
-                size="small"
-                variant="outlined"
               />
             </Box>
 

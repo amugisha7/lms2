@@ -12,8 +12,6 @@ export const listLoans = /* GraphQL */ `
         interestRate
         startDate
         maturityDate
-        loanStatus
-        loanStatusEnum
         status
         borrower {
           id
@@ -36,8 +34,6 @@ export const getLoan = /* GraphQL */ `
     getLoan(id: $id) {
       id
       loanNumber
-      approvalStatus
-      approvalStatusEnum
       approvedDate
       principal
       fees
@@ -50,8 +46,6 @@ export const getLoan = /* GraphQL */ `
       durationInterval
       loanType
       rateInterval
-      loanStatus
-      loanStatusEnum
       loanCurrency
       loanPurpose
       loanComputationRecord
@@ -146,7 +140,7 @@ export const createLoan = /* GraphQL */ `
     createLoan(input: $input, condition: $condition) {
       id
       loanNumber
-      loanStatusEnum
+      status
     }
   }
 `;
@@ -158,7 +152,6 @@ export const updateLoan = /* GraphQL */ `
   ) {
     updateLoan(input: $input, condition: $condition) {
       id
-      loanStatusEnum
       status
     }
   }

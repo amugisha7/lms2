@@ -9,7 +9,7 @@ export const exportLoanStatement = (loan) => {
   doc.text(`Loan Number: ${loan.loanNumber}`, 10, 20);
   doc.text(`Borrower: ${loan.borrower?.firstname} ${loan.borrower?.othername || ''}`, 10, 30);
   doc.text(`Principal: ${loan.principal}`, 10, 40);
-  doc.text(`Status: ${loan.loanStatusEnum || loan.status}`, 10, 50);
+  doc.text(`Status: ${loan.status}`, 10, 50);
   
   let y = 70;
   doc.text('Recent Transactions:', 10, y);

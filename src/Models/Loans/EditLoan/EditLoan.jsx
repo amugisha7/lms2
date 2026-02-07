@@ -298,12 +298,7 @@ const EditLoan = forwardRef(
     }, [loanDraft]);
 
     const normalizedStatus = (() => {
-      const raw =
-        localDraft?.status ??
-        localDraft?.approvalStatusEnum ??
-        localDraft?.loanStatusEnum ??
-        localDraft?.loanStatus ??
-        "";
+      const raw = localDraft?.status ?? "";
       return String(raw || "")
         .trim()
         .toUpperCase();

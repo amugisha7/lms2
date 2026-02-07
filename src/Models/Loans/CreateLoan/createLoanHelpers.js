@@ -440,8 +440,7 @@ export const createLoanWithSchedule = async (values, userDetails) => {
     startDate,
     maturityDate,
     paymentFrequency: repaymentFrequency,
-    loanStatusEnum: "DRAFT",
-    approvalStatusEnum: "PENDING",
+    status: "DRAFT",
     createdByEmployeeID: userDetails?.id,
   };
 

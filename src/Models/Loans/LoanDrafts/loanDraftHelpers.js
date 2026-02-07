@@ -564,8 +564,7 @@ const CREATE_LOAN_MUTATION = `
     createLoan(input: $input) {
       id
       loanNumber
-      loanStatusEnum
-      approvalStatusEnum
+      status
       borrowerID
       branchID
       loanProductID
@@ -585,8 +584,7 @@ const UPDATE_LOAN_MUTATION = `
     updateLoan(input: $input, condition: $condition) {
       id
       loanNumber
-      loanStatusEnum
-      approvalStatusEnum
+      status
       borrowerID
       loanProductID
       principal
@@ -604,8 +602,7 @@ const GET_LOAN_QUERY = `
     getLoan(id: $id) {
       id
       loanNumber
-      loanStatusEnum
-      approvalStatusEnum
+      status
       borrowerID
       branchID
       loanProductID
@@ -655,8 +652,7 @@ const LOANS_BY_BRANCH_QUERY = `
       items {
         id
         loanNumber
-        loanStatusEnum
-        approvalStatusEnum
+        status
         borrowerID
         loanProductID
         principal
@@ -666,6 +662,12 @@ const LOANS_BY_BRANCH_QUERY = `
         loanComputationRecord
         createdAt
         updatedAt
+        borrower {
+          id
+          firstname
+          othername
+          businessName
+        }
       }
       nextToken
     }
@@ -692,8 +694,7 @@ const LOANS_BY_BORROWER_QUERY = `
       items {
         id
         loanNumber
-        loanStatusEnum
-        approvalStatusEnum
+        status
         borrowerID
         branchID
         principal
@@ -798,8 +799,8 @@ export const getLoanDraftById = async (id) => {
     ...loan,
     draftNumber: loan.loanNumber,
     // This screen is about draft loans; prefer the workflow status stored in computationRecord.
-    // Fall back to loanStatusEnum (e.g., DRAFT) rather than approvalStatusEnum (e.g., PENDING).
-    status: computationRecord?.status || loan.loanStatusEnum || "DRAFT",
+    // Fall back to the status field if computationRecord doesn't have it.
+    status: computationRecord?.status || loan.status || "DRAFT",
     // Expose the actual draft values (matches CreateLoan / LoanScheduleDraft expectations)
     draftRecord: draftRecord ? safeJsonStringify(draftRecord) : null,
     editVersion: 1, // No version tracking yet
@@ -824,7 +825,7 @@ export const listLoanDraftsByBranch = async ({
       variables: {
         branchID,
         sortDirection: "DESC",
-        filter: { loanStatusEnum: { eq: "DRAFT" } },
+        filter: { status: { eq: "DRAFT" } },
         limit,
         nextToken,
       },
@@ -838,7 +839,7 @@ export const listLoanDraftsByBranch = async ({
       return {
         ...loan,
         draftNumber: loan.loanNumber,
-        status: computationRecord?.status || loan.loanStatusEnum || "DRAFT",
+        status: computationRecord?.status || loan.status || "DRAFT",
         draftRecord: draftRecord ? safeJsonStringify(draftRecord) : null,
         lastEditedAt: loan.updatedAt,
       };
@@ -855,10 +856,51 @@ export const listLoanDraftsByInstitution = async ({
   status,
   limit = 100,
 }) => {
-  // For institutions without branch context, we'll fetch from all branches
-  // This is a simplified implementation
+  // For institutions without branch context, fetch from all branches of the institution
   const client = generateClient();
-  return [];
+  let allBranches = [];
+
+  // 1. Fetch the institution and its branches
+  const GET_INSTITUTION_QUERY = `
+    query GetInstitution($id: ID!) {
+      getInstitution(id: $id) {
+        id
+        branches {
+          items {
+            id
+          }
+          nextToken
+        }
+      }
+    }
+  `;
+
+  try {
+    const result = await client.graphql({
+      query: GET_INSTITUTION_QUERY,
+      variables: {
+        id: institutionID,
+      },
+    });
+
+    const branches = result?.data?.getInstitution?.branches?.items || [];
+    allBranches = branches;
+  } catch (err) {
+    console.error("Error fetching institution branches:", err);
+    return [];
+  }
+
+  // 2. Fetch drafts from each branch (in parallel)
+  try {
+    const draftPromises = allBranches.map((branch) =>
+      listLoanDraftsByBranch({ branchID: branch.id, limit })
+    );
+    const results = await Promise.all(draftPromises);
+    return results.flat();
+  } catch (err) {
+    console.error("Error fetching drafts for institution branches:", err);
+    return [];
+  }
 };
 
 export const listLoanDraftsByBorrower = async ({ borrowerID, limit = 100 }) => {
@@ -872,7 +914,7 @@ export const listLoanDraftsByBorrower = async ({ borrowerID, limit = 100 }) => {
       variables: {
         borrowerID,
         sortDirection: "DESC",
-        filter: { loanStatusEnum: { eq: "DRAFT" } },
+        filter: { status: { eq: "DRAFT" } },
         limit,
         nextToken,
       },
@@ -885,7 +927,7 @@ export const listLoanDraftsByBorrower = async ({ borrowerID, limit = 100 }) => {
       return {
         ...loan,
         draftNumber: loan.loanNumber,
-        status: computationRecord?.status || loan.loanStatusEnum || "DRAFT",
+        status: computationRecord?.status || loan.status || "DRAFT",
         draftRecord: draftRecord ? safeJsonStringify(draftRecord) : null,
         lastEditedAt: loan.updatedAt,
       };
@@ -925,8 +967,7 @@ export const createLoanDraft = async ({
 
   const input = {
     loanNumber: `LD-${Date.now()}`,
-    loanStatusEnum: "DRAFT",
-    approvalStatusEnum: status === "APPROVED" ? "APPROVED" : "PENDING",
+    status: status || "DRAFT",
     borrowerID: draftRecord?.borrower || null,
     branchID: userDetails?.branchUsersId || null,
     loanProductID: draftRecord?.loanProduct || null,
@@ -972,7 +1013,7 @@ export const createLoanDraft = async ({
   return {
     ...created,
     draftNumber: created.loanNumber,
-    status: created.approvalStatusEnum || "DRAFT",
+    status: status || "DRAFT",
     draftRecord: safeJsonStringify(draftRecord),
     editVersion: 1,
     lastEditedAt: created.updatedAt,
@@ -1042,7 +1083,7 @@ export const updateLoanDraft = async ({
     input.loanProductID = patch.loanProductID;
   }
   if (patch?.status) {
-    input.approvalStatusEnum = patch.status;
+    input.status = patch.status;
   }
 
   const result = await client.graphql({
@@ -1067,10 +1108,13 @@ export const updateLoanDraft = async ({
   });
 
   // Transform to draft-like structure
+  // Parse the updated computation record to get the workflow status
+  const finalComputationRecord = parseAwsJson(updated.loanComputationRecord) || {};
+  
   return {
     ...updated,
     draftNumber: updated.loanNumber,
-    status: updated.approvalStatusEnum || "DRAFT",
+    status: finalComputationRecord?.status || updated.status || "DRAFT",
     draftRecord: patch?.draftRecord || existing.draftRecord,
     editVersion: (expectedEditVersion || 0) + 1,
     lastEditedAt: updated.updatedAt,
@@ -1190,8 +1234,7 @@ export const convertDraftToLoan = async ({ loanDraft, userDetails }) => {
 
   const updateInput = {
     id: loanDraft.id,
-    loanStatusEnum: "ACTIVE",
-    approvalStatusEnum: "APPROVED",
+    status: "ACTIVE",
     loanComputationRecord: safeJsonStringify(computationRecord),
   };
 

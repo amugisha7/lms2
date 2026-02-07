@@ -10,7 +10,6 @@ import {
   Button,
   Flex,
   Grid,
-  SelectField,
   TextAreaField,
   TextField,
 } from "@aws-amplify/ui-react";
@@ -31,8 +30,6 @@ export default function LoanCreateForm(props) {
   } = props;
   const initialValues = {
     loanNumber: "",
-    approvalStatus: "",
-    approvalStatusEnum: "",
     approvedDate: "",
     principal: "",
     fees: "",
@@ -45,8 +42,6 @@ export default function LoanCreateForm(props) {
     durationInterval: "",
     loanType: "",
     rateInterval: "",
-    loanStatus: "",
-    loanStatusEnum: "",
     loanCurrency: "",
     loanPurpose: "",
     loanComputationRecord: "",
@@ -59,12 +54,6 @@ export default function LoanCreateForm(props) {
     customLoanDetails: "",
   };
   const [loanNumber, setLoanNumber] = React.useState(initialValues.loanNumber);
-  const [approvalStatus, setApprovalStatus] = React.useState(
-    initialValues.approvalStatus
-  );
-  const [approvalStatusEnum, setApprovalStatusEnum] = React.useState(
-    initialValues.approvalStatusEnum
-  );
   const [approvedDate, setApprovedDate] = React.useState(
     initialValues.approvedDate
   );
@@ -88,10 +77,6 @@ export default function LoanCreateForm(props) {
   const [loanType, setLoanType] = React.useState(initialValues.loanType);
   const [rateInterval, setRateInterval] = React.useState(
     initialValues.rateInterval
-  );
-  const [loanStatus, setLoanStatus] = React.useState(initialValues.loanStatus);
-  const [loanStatusEnum, setLoanStatusEnum] = React.useState(
-    initialValues.loanStatusEnum
   );
   const [loanCurrency, setLoanCurrency] = React.useState(
     initialValues.loanCurrency
@@ -124,8 +109,6 @@ export default function LoanCreateForm(props) {
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     setLoanNumber(initialValues.loanNumber);
-    setApprovalStatus(initialValues.approvalStatus);
-    setApprovalStatusEnum(initialValues.approvalStatusEnum);
     setApprovedDate(initialValues.approvedDate);
     setPrincipal(initialValues.principal);
     setFees(initialValues.fees);
@@ -138,8 +121,6 @@ export default function LoanCreateForm(props) {
     setDurationInterval(initialValues.durationInterval);
     setLoanType(initialValues.loanType);
     setRateInterval(initialValues.rateInterval);
-    setLoanStatus(initialValues.loanStatus);
-    setLoanStatusEnum(initialValues.loanStatusEnum);
     setLoanCurrency(initialValues.loanCurrency);
     setLoanPurpose(initialValues.loanPurpose);
     setLoanComputationRecord(initialValues.loanComputationRecord);
@@ -154,8 +135,6 @@ export default function LoanCreateForm(props) {
   };
   const validations = {
     loanNumber: [],
-    approvalStatus: [],
-    approvalStatusEnum: [],
     approvedDate: [],
     principal: [],
     fees: [],
@@ -168,8 +147,6 @@ export default function LoanCreateForm(props) {
     durationInterval: [],
     loanType: [],
     rateInterval: [],
-    loanStatus: [],
-    loanStatusEnum: [],
     loanCurrency: [],
     loanPurpose: [],
     loanComputationRecord: [{ type: "JSON" }],
@@ -208,8 +185,6 @@ export default function LoanCreateForm(props) {
         event.preventDefault();
         let modelFields = {
           loanNumber,
-          approvalStatus,
-          approvalStatusEnum,
           approvedDate,
           principal,
           fees,
@@ -222,8 +197,6 @@ export default function LoanCreateForm(props) {
           durationInterval,
           loanType,
           rateInterval,
-          loanStatus,
-          loanStatusEnum,
           loanCurrency,
           loanPurpose,
           loanComputationRecord,
@@ -297,8 +270,6 @@ export default function LoanCreateForm(props) {
           if (onChange) {
             const modelFields = {
               loanNumber: value,
-              approvalStatus,
-              approvalStatusEnum,
               approvedDate,
               principal,
               fees,
@@ -311,8 +282,6 @@ export default function LoanCreateForm(props) {
               durationInterval,
               loanType,
               rateInterval,
-              loanStatus,
-              loanStatusEnum,
               loanCurrency,
               loanPurpose,
               loanComputationRecord,
@@ -338,124 +307,6 @@ export default function LoanCreateForm(props) {
         {...getOverrideProps(overrides, "loanNumber")}
       ></TextField>
       <TextField
-        label="Approval status"
-        isRequired={false}
-        isReadOnly={false}
-        value={approvalStatus}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              loanNumber,
-              approvalStatus: value,
-              approvalStatusEnum,
-              approvedDate,
-              principal,
-              fees,
-              interestRate,
-              startDate,
-              maturityDate,
-              stopDate,
-              extensionPeriod,
-              duration,
-              durationInterval,
-              loanType,
-              rateInterval,
-              loanStatus,
-              loanStatusEnum,
-              loanCurrency,
-              loanPurpose,
-              loanComputationRecord,
-              loanAttribute1,
-              loanAttribute2,
-              numberOfPayments,
-              paymentFrequency,
-              customFieldsData,
-              status,
-              customLoanDetails,
-            };
-            const result = onChange(modelFields);
-            value = result?.approvalStatus ?? value;
-          }
-          if (errors.approvalStatus?.hasError) {
-            runValidationTasks("approvalStatus", value);
-          }
-          setApprovalStatus(value);
-        }}
-        onBlur={() => runValidationTasks("approvalStatus", approvalStatus)}
-        errorMessage={errors.approvalStatus?.errorMessage}
-        hasError={errors.approvalStatus?.hasError}
-        {...getOverrideProps(overrides, "approvalStatus")}
-      ></TextField>
-      <SelectField
-        label="Approval status enum"
-        placeholder="Please select an option"
-        isDisabled={false}
-        value={approvalStatusEnum}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              loanNumber,
-              approvalStatus,
-              approvalStatusEnum: value,
-              approvedDate,
-              principal,
-              fees,
-              interestRate,
-              startDate,
-              maturityDate,
-              stopDate,
-              extensionPeriod,
-              duration,
-              durationInterval,
-              loanType,
-              rateInterval,
-              loanStatus,
-              loanStatusEnum,
-              loanCurrency,
-              loanPurpose,
-              loanComputationRecord,
-              loanAttribute1,
-              loanAttribute2,
-              numberOfPayments,
-              paymentFrequency,
-              customFieldsData,
-              status,
-              customLoanDetails,
-            };
-            const result = onChange(modelFields);
-            value = result?.approvalStatusEnum ?? value;
-          }
-          if (errors.approvalStatusEnum?.hasError) {
-            runValidationTasks("approvalStatusEnum", value);
-          }
-          setApprovalStatusEnum(value);
-        }}
-        onBlur={() =>
-          runValidationTasks("approvalStatusEnum", approvalStatusEnum)
-        }
-        errorMessage={errors.approvalStatusEnum?.errorMessage}
-        hasError={errors.approvalStatusEnum?.hasError}
-        {...getOverrideProps(overrides, "approvalStatusEnum")}
-      >
-        <option
-          children="Pending"
-          value="PENDING"
-          {...getOverrideProps(overrides, "approvalStatusEnumoption0")}
-        ></option>
-        <option
-          children="Approved"
-          value="APPROVED"
-          {...getOverrideProps(overrides, "approvalStatusEnumoption1")}
-        ></option>
-        <option
-          children="Rejected"
-          value="REJECTED"
-          {...getOverrideProps(overrides, "approvalStatusEnumoption2")}
-        ></option>
-      </SelectField>
-      <TextField
         label="Approved date"
         isRequired={false}
         isReadOnly={false}
@@ -466,8 +317,6 @@ export default function LoanCreateForm(props) {
           if (onChange) {
             const modelFields = {
               loanNumber,
-              approvalStatus,
-              approvalStatusEnum,
               approvedDate: value,
               principal,
               fees,
@@ -480,8 +329,6 @@ export default function LoanCreateForm(props) {
               durationInterval,
               loanType,
               rateInterval,
-              loanStatus,
-              loanStatusEnum,
               loanCurrency,
               loanPurpose,
               loanComputationRecord,
@@ -520,8 +367,6 @@ export default function LoanCreateForm(props) {
           if (onChange) {
             const modelFields = {
               loanNumber,
-              approvalStatus,
-              approvalStatusEnum,
               approvedDate,
               principal: value,
               fees,
@@ -534,8 +379,6 @@ export default function LoanCreateForm(props) {
               durationInterval,
               loanType,
               rateInterval,
-              loanStatus,
-              loanStatusEnum,
               loanCurrency,
               loanPurpose,
               loanComputationRecord,
@@ -574,8 +417,6 @@ export default function LoanCreateForm(props) {
           if (onChange) {
             const modelFields = {
               loanNumber,
-              approvalStatus,
-              approvalStatusEnum,
               approvedDate,
               principal,
               fees: value,
@@ -588,8 +429,6 @@ export default function LoanCreateForm(props) {
               durationInterval,
               loanType,
               rateInterval,
-              loanStatus,
-              loanStatusEnum,
               loanCurrency,
               loanPurpose,
               loanComputationRecord,
@@ -628,8 +467,6 @@ export default function LoanCreateForm(props) {
           if (onChange) {
             const modelFields = {
               loanNumber,
-              approvalStatus,
-              approvalStatusEnum,
               approvedDate,
               principal,
               fees,
@@ -642,8 +479,6 @@ export default function LoanCreateForm(props) {
               durationInterval,
               loanType,
               rateInterval,
-              loanStatus,
-              loanStatusEnum,
               loanCurrency,
               loanPurpose,
               loanComputationRecord,
@@ -679,8 +514,6 @@ export default function LoanCreateForm(props) {
           if (onChange) {
             const modelFields = {
               loanNumber,
-              approvalStatus,
-              approvalStatusEnum,
               approvedDate,
               principal,
               fees,
@@ -693,8 +526,6 @@ export default function LoanCreateForm(props) {
               durationInterval,
               loanType,
               rateInterval,
-              loanStatus,
-              loanStatusEnum,
               loanCurrency,
               loanPurpose,
               loanComputationRecord,
@@ -730,8 +561,6 @@ export default function LoanCreateForm(props) {
           if (onChange) {
             const modelFields = {
               loanNumber,
-              approvalStatus,
-              approvalStatusEnum,
               approvedDate,
               principal,
               fees,
@@ -744,8 +573,6 @@ export default function LoanCreateForm(props) {
               durationInterval,
               loanType,
               rateInterval,
-              loanStatus,
-              loanStatusEnum,
               loanCurrency,
               loanPurpose,
               loanComputationRecord,
@@ -781,8 +608,6 @@ export default function LoanCreateForm(props) {
           if (onChange) {
             const modelFields = {
               loanNumber,
-              approvalStatus,
-              approvalStatusEnum,
               approvedDate,
               principal,
               fees,
@@ -795,8 +620,6 @@ export default function LoanCreateForm(props) {
               durationInterval,
               loanType,
               rateInterval,
-              loanStatus,
-              loanStatusEnum,
               loanCurrency,
               loanPurpose,
               loanComputationRecord,
@@ -835,8 +658,6 @@ export default function LoanCreateForm(props) {
           if (onChange) {
             const modelFields = {
               loanNumber,
-              approvalStatus,
-              approvalStatusEnum,
               approvedDate,
               principal,
               fees,
@@ -849,8 +670,6 @@ export default function LoanCreateForm(props) {
               durationInterval,
               loanType,
               rateInterval,
-              loanStatus,
-              loanStatusEnum,
               loanCurrency,
               loanPurpose,
               loanComputationRecord,
@@ -889,8 +708,6 @@ export default function LoanCreateForm(props) {
           if (onChange) {
             const modelFields = {
               loanNumber,
-              approvalStatus,
-              approvalStatusEnum,
               approvedDate,
               principal,
               fees,
@@ -903,8 +720,6 @@ export default function LoanCreateForm(props) {
               durationInterval,
               loanType,
               rateInterval,
-              loanStatus,
-              loanStatusEnum,
               loanCurrency,
               loanPurpose,
               loanComputationRecord,
@@ -939,8 +754,6 @@ export default function LoanCreateForm(props) {
           if (onChange) {
             const modelFields = {
               loanNumber,
-              approvalStatus,
-              approvalStatusEnum,
               approvedDate,
               principal,
               fees,
@@ -953,8 +766,6 @@ export default function LoanCreateForm(props) {
               durationInterval: value,
               loanType,
               rateInterval,
-              loanStatus,
-              loanStatusEnum,
               loanCurrency,
               loanPurpose,
               loanComputationRecord,
@@ -989,8 +800,6 @@ export default function LoanCreateForm(props) {
           if (onChange) {
             const modelFields = {
               loanNumber,
-              approvalStatus,
-              approvalStatusEnum,
               approvedDate,
               principal,
               fees,
@@ -1003,8 +812,6 @@ export default function LoanCreateForm(props) {
               durationInterval,
               loanType: value,
               rateInterval,
-              loanStatus,
-              loanStatusEnum,
               loanCurrency,
               loanPurpose,
               loanComputationRecord,
@@ -1039,8 +846,6 @@ export default function LoanCreateForm(props) {
           if (onChange) {
             const modelFields = {
               loanNumber,
-              approvalStatus,
-              approvalStatusEnum,
               approvedDate,
               principal,
               fees,
@@ -1053,8 +858,6 @@ export default function LoanCreateForm(props) {
               durationInterval,
               loanType,
               rateInterval: value,
-              loanStatus,
-              loanStatusEnum,
               loanCurrency,
               loanPurpose,
               loanComputationRecord,
@@ -1080,137 +883,6 @@ export default function LoanCreateForm(props) {
         {...getOverrideProps(overrides, "rateInterval")}
       ></TextField>
       <TextField
-        label="Loan status"
-        isRequired={false}
-        isReadOnly={false}
-        value={loanStatus}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              loanNumber,
-              approvalStatus,
-              approvalStatusEnum,
-              approvedDate,
-              principal,
-              fees,
-              interestRate,
-              startDate,
-              maturityDate,
-              stopDate,
-              extensionPeriod,
-              duration,
-              durationInterval,
-              loanType,
-              rateInterval,
-              loanStatus: value,
-              loanStatusEnum,
-              loanCurrency,
-              loanPurpose,
-              loanComputationRecord,
-              loanAttribute1,
-              loanAttribute2,
-              numberOfPayments,
-              paymentFrequency,
-              customFieldsData,
-              status,
-              customLoanDetails,
-            };
-            const result = onChange(modelFields);
-            value = result?.loanStatus ?? value;
-          }
-          if (errors.loanStatus?.hasError) {
-            runValidationTasks("loanStatus", value);
-          }
-          setLoanStatus(value);
-        }}
-        onBlur={() => runValidationTasks("loanStatus", loanStatus)}
-        errorMessage={errors.loanStatus?.errorMessage}
-        hasError={errors.loanStatus?.hasError}
-        {...getOverrideProps(overrides, "loanStatus")}
-      ></TextField>
-      <SelectField
-        label="Loan status enum"
-        placeholder="Please select an option"
-        isDisabled={false}
-        value={loanStatusEnum}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              loanNumber,
-              approvalStatus,
-              approvalStatusEnum,
-              approvedDate,
-              principal,
-              fees,
-              interestRate,
-              startDate,
-              maturityDate,
-              stopDate,
-              extensionPeriod,
-              duration,
-              durationInterval,
-              loanType,
-              rateInterval,
-              loanStatus,
-              loanStatusEnum: value,
-              loanCurrency,
-              loanPurpose,
-              loanComputationRecord,
-              loanAttribute1,
-              loanAttribute2,
-              numberOfPayments,
-              paymentFrequency,
-              customFieldsData,
-              status,
-              customLoanDetails,
-            };
-            const result = onChange(modelFields);
-            value = result?.loanStatusEnum ?? value;
-          }
-          if (errors.loanStatusEnum?.hasError) {
-            runValidationTasks("loanStatusEnum", value);
-          }
-          setLoanStatusEnum(value);
-        }}
-        onBlur={() => runValidationTasks("loanStatusEnum", loanStatusEnum)}
-        errorMessage={errors.loanStatusEnum?.errorMessage}
-        hasError={errors.loanStatusEnum?.hasError}
-        {...getOverrideProps(overrides, "loanStatusEnum")}
-      >
-        <option
-          children="Draft"
-          value="DRAFT"
-          {...getOverrideProps(overrides, "loanStatusEnumoption0")}
-        ></option>
-        <option
-          children="Approved"
-          value="APPROVED"
-          {...getOverrideProps(overrides, "loanStatusEnumoption1")}
-        ></option>
-        <option
-          children="Active"
-          value="ACTIVE"
-          {...getOverrideProps(overrides, "loanStatusEnumoption2")}
-        ></option>
-        <option
-          children="Closed"
-          value="CLOSED"
-          {...getOverrideProps(overrides, "loanStatusEnumoption3")}
-        ></option>
-        <option
-          children="Written off"
-          value="WRITTEN_OFF"
-          {...getOverrideProps(overrides, "loanStatusEnumoption4")}
-        ></option>
-        <option
-          children="Voided"
-          value="VOIDED"
-          {...getOverrideProps(overrides, "loanStatusEnumoption5")}
-        ></option>
-      </SelectField>
-      <TextField
         label="Loan currency"
         isRequired={false}
         isReadOnly={false}
@@ -1220,8 +892,6 @@ export default function LoanCreateForm(props) {
           if (onChange) {
             const modelFields = {
               loanNumber,
-              approvalStatus,
-              approvalStatusEnum,
               approvedDate,
               principal,
               fees,
@@ -1234,8 +904,6 @@ export default function LoanCreateForm(props) {
               durationInterval,
               loanType,
               rateInterval,
-              loanStatus,
-              loanStatusEnum,
               loanCurrency: value,
               loanPurpose,
               loanComputationRecord,
@@ -1270,8 +938,6 @@ export default function LoanCreateForm(props) {
           if (onChange) {
             const modelFields = {
               loanNumber,
-              approvalStatus,
-              approvalStatusEnum,
               approvedDate,
               principal,
               fees,
@@ -1284,8 +950,6 @@ export default function LoanCreateForm(props) {
               durationInterval,
               loanType,
               rateInterval,
-              loanStatus,
-              loanStatusEnum,
               loanCurrency,
               loanPurpose: value,
               loanComputationRecord,
@@ -1319,8 +983,6 @@ export default function LoanCreateForm(props) {
           if (onChange) {
             const modelFields = {
               loanNumber,
-              approvalStatus,
-              approvalStatusEnum,
               approvedDate,
               principal,
               fees,
@@ -1333,8 +995,6 @@ export default function LoanCreateForm(props) {
               durationInterval,
               loanType,
               rateInterval,
-              loanStatus,
-              loanStatusEnum,
               loanCurrency,
               loanPurpose,
               loanComputationRecord: value,
@@ -1371,8 +1031,6 @@ export default function LoanCreateForm(props) {
           if (onChange) {
             const modelFields = {
               loanNumber,
-              approvalStatus,
-              approvalStatusEnum,
               approvedDate,
               principal,
               fees,
@@ -1385,8 +1043,6 @@ export default function LoanCreateForm(props) {
               durationInterval,
               loanType,
               rateInterval,
-              loanStatus,
-              loanStatusEnum,
               loanCurrency,
               loanPurpose,
               loanComputationRecord,
@@ -1421,8 +1077,6 @@ export default function LoanCreateForm(props) {
           if (onChange) {
             const modelFields = {
               loanNumber,
-              approvalStatus,
-              approvalStatusEnum,
               approvedDate,
               principal,
               fees,
@@ -1435,8 +1089,6 @@ export default function LoanCreateForm(props) {
               durationInterval,
               loanType,
               rateInterval,
-              loanStatus,
-              loanStatusEnum,
               loanCurrency,
               loanPurpose,
               loanComputationRecord,
@@ -1475,8 +1127,6 @@ export default function LoanCreateForm(props) {
           if (onChange) {
             const modelFields = {
               loanNumber,
-              approvalStatus,
-              approvalStatusEnum,
               approvedDate,
               principal,
               fees,
@@ -1489,8 +1139,6 @@ export default function LoanCreateForm(props) {
               durationInterval,
               loanType,
               rateInterval,
-              loanStatus,
-              loanStatusEnum,
               loanCurrency,
               loanPurpose,
               loanComputationRecord,
@@ -1525,8 +1173,6 @@ export default function LoanCreateForm(props) {
           if (onChange) {
             const modelFields = {
               loanNumber,
-              approvalStatus,
-              approvalStatusEnum,
               approvedDate,
               principal,
               fees,
@@ -1539,8 +1185,6 @@ export default function LoanCreateForm(props) {
               durationInterval,
               loanType,
               rateInterval,
-              loanStatus,
-              loanStatusEnum,
               loanCurrency,
               loanPurpose,
               loanComputationRecord,
@@ -1574,8 +1218,6 @@ export default function LoanCreateForm(props) {
           if (onChange) {
             const modelFields = {
               loanNumber,
-              approvalStatus,
-              approvalStatusEnum,
               approvedDate,
               principal,
               fees,
@@ -1588,8 +1230,6 @@ export default function LoanCreateForm(props) {
               durationInterval,
               loanType,
               rateInterval,
-              loanStatus,
-              loanStatusEnum,
               loanCurrency,
               loanPurpose,
               loanComputationRecord,
@@ -1624,8 +1264,6 @@ export default function LoanCreateForm(props) {
           if (onChange) {
             const modelFields = {
               loanNumber,
-              approvalStatus,
-              approvalStatusEnum,
               approvedDate,
               principal,
               fees,
@@ -1638,8 +1276,6 @@ export default function LoanCreateForm(props) {
               durationInterval,
               loanType,
               rateInterval,
-              loanStatus,
-              loanStatusEnum,
               loanCurrency,
               loanPurpose,
               loanComputationRecord,
@@ -1673,8 +1309,6 @@ export default function LoanCreateForm(props) {
           if (onChange) {
             const modelFields = {
               loanNumber,
-              approvalStatus,
-              approvalStatusEnum,
               approvedDate,
               principal,
               fees,
@@ -1687,8 +1321,6 @@ export default function LoanCreateForm(props) {
               durationInterval,
               loanType,
               rateInterval,
-              loanStatus,
-              loanStatusEnum,
               loanCurrency,
               loanPurpose,
               loanComputationRecord,

@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Tabs, Tab } from "@mui/material";
+import { Box, Tabs, Tab, Typography } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
@@ -7,8 +7,8 @@ import { UserContext } from "../../../App";
 import CollectionsTemplate from "../../../ModelAssets/CollectionsTemplate";
 import ClickableText from "../../../ModelAssets/ClickableText";
 import NotificationBar from "../../../ModelAssets/NotificationBar";
+import PlusButtonMain from "../../../ModelAssets/PlusButtonMain";
 import { formatMoney, formatMoneyParts } from "../../../Resources/formatting";
-import { fetchBorrowers } from "../CreateLoan/createLoanHelpers";
 import { useTheme } from "@mui/material/styles";
 import {
   listLoanDraftsByBranch,
@@ -21,7 +21,6 @@ export default function LoanDrafts() {
   const { userDetails } = React.useContext(UserContext);
   const [loading, setLoading] = React.useState(true);
   const [rows, setRows] = React.useState([]);
-  const [borrowers, setBorrowers] = React.useState([]);
   const [notification, setNotification] = React.useState(null);
   const [selectedTab, setSelectedTab] = React.useState("all");
 
@@ -30,10 +29,10 @@ export default function LoanDrafts() {
     try {
       const branchID = userDetails?.branchUsersId || null;
       const institutionID = userDetails?.institutionUsersId || null;
+      const isAdmin = userDetails?.userType === "Admin";
 
       if (!branchID && !institutionID) {
         setRows([]);
-        setBorrowers([]);
         setNotification({
           type: "error",
           message: "Missing institution/branch context for drafts.",
@@ -41,26 +40,20 @@ export default function LoanDrafts() {
         return;
       }
 
-      // Borrowers lookup is branch-scoped in this app.
-      const borrowersPromise = branchID ? fetchBorrowers(branchID) : [];
-
+      // Fetch drafts based on user type:
+      // - Admin: fetch from all branches in the institution
+      // - Non-admin: fetch from the user's branch
       let drafts = [];
-      if (branchID) {
-        drafts = await listLoanDraftsByBranch({ branchID });
-        if (drafts.length === 0 && institutionID) {
-          drafts = await listLoanDraftsByInstitution({ institutionID });
-        }
-      } else {
+      if (isAdmin && institutionID) {
         drafts = await listLoanDraftsByInstitution({ institutionID });
+      } else if (branchID) {
+        drafts = await listLoanDraftsByBranch({ branchID });
       }
 
-      const borrowersList = await borrowersPromise;
       setRows(Array.isArray(drafts) ? drafts : []);
-      setBorrowers(Array.isArray(borrowersList) ? borrowersList : []);
     } catch (err) {
       console.error("Failed to load drafts:", err);
       setRows([]);
-      setBorrowers([]);
       setNotification({
         type: "error",
         message: err?.message || "Failed to load drafts",
@@ -68,7 +61,11 @@ export default function LoanDrafts() {
     } finally {
       setLoading(false);
     }
-  }, [userDetails?.branchUsersId, userDetails?.institutionUsersId]);
+  }, [
+    userDetails?.branchUsersId,
+    userDetails?.institutionUsersId,
+    userDetails?.userType,
+  ]);
 
   React.useEffect(() => {
     refresh();
@@ -81,35 +78,35 @@ export default function LoanDrafts() {
   const filteredRows = React.useMemo(() => {
     if (selectedTab === "all") return rows;
     if (selectedTab === "in_review") {
-      return rows.filter((r) => r.status === "SENT_FOR_APPROVAL");
+      return rows.filter((r) => {
+        const status = (r.status || "").toUpperCase();
+        return status === "SENT_FOR_APPROVAL";
+      });
     }
     if (selectedTab === "drafts") {
-      return rows.filter(
-        (r) => !r.status || r.status === "DRAFT" || r.status === "Draft",
-      );
+      return rows.filter((r) => {
+        const status = (r.status || "").toUpperCase();
+        return !r.status || status === "DRAFT";
+      });
     }
     if (selectedTab === "rejected") {
-      return rows.filter(
-        (r) => r.status === "REJECTED" || r.status === "Rejected",
-      );
+      return rows.filter((r) => {
+        const status = (r.status || "").toUpperCase();
+        return status === "REJECTED";
+      });
     }
     return rows;
   }, [rows, selectedTab]);
 
-  const borrowerName = React.useCallback(
-    (borrowerID) => {
-      const b = borrowers.find((x) => x.id === borrowerID);
-      if (!b) return borrowerID || "";
-      return (
-        `${b.firstname || ""} ${b.othername || ""} ${
-          b.businessName || ""
-        }`.trim() ||
-        b.uniqueIdNumber ||
-        b.id
-      );
-    },
-    [borrowers],
-  );
+  const borrowerName = React.useCallback((borrowerID, borrower) => {
+    // If borrower object is passed directly (nested from query), use it
+    const b = borrower || null;
+    if (!b) return borrowerID || "";
+    const fullName = [b.firstname, b.othername].filter(Boolean).join(" ");
+    return fullName
+      ? `${fullName}${b.businessName ? ` (${b.businessName})` : ""}`
+      : b.businessName || "Unnamed Borrower";
+  }, []);
 
   const isPrivileged =
     userDetails?.role === "admin" || userDetails?.role === "branch_manager";
@@ -301,7 +298,8 @@ export default function LoanDrafts() {
         field: "borrowerID",
         headerName: "Borrower",
         minWidth: 160,
-        valueGetter: (value, row) => borrowerName(row?.borrowerID || value),
+        valueGetter: (value, row) =>
+          borrowerName(row?.borrowerID || value, row?.borrower),
       },
       {
         field: "principal",
@@ -376,7 +374,7 @@ export default function LoanDrafts() {
   );
 
   return (
-    <Box sx={{ width: "100%" }}>
+    <Box>
       {notification && (
         <NotificationBar
           notification={notification}
@@ -384,23 +382,83 @@ export default function LoanDrafts() {
         />
       )}
 
-      <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 2 }}>
-        <Tabs
-          value={selectedTab}
-          onChange={handleTabChange}
-          textColor="primary"
-          indicatorColor="primary"
-        >
-          <Tab label="All Drafts" value="all" />
-          <Tab label="In Review" value="in_review" />
-          <Tab label="Rejected" value="rejected" />
-        </Tabs>
+      {/* Header */}
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          mb: 2,
+        }}
+      >
+        <Typography variant="h4" sx={{ fontWeight: 600 }}>
+          Loan Drafts
+        </Typography>
+        <PlusButtonMain
+          onClick={() => navigate("/add-loan")}
+          buttonText="NEW LOAN"
+        />
       </Box>
 
+      {/* Tabs */}
+      <Box sx={{ width: "100%", mb: 2 }}>
+        <Box
+          sx={{
+            borderBottom: 1,
+            borderColor: theme.palette.divider,
+            backgroundColor: theme.palette.background.paper,
+            borderRadius: "8px 8px 0 0",
+          }}
+        >
+          <Tabs
+            value={selectedTab}
+            onChange={handleTabChange}
+            aria-label="loan drafts filter tabs"
+            variant="scrollable"
+            scrollButtons
+            allowScrollButtonsMobile
+            sx={{
+              "& .MuiTabs-indicator": {
+                backgroundColor: theme.palette.blueText.main,
+                height: 3,
+                borderRadius: "1.5px",
+              },
+              "& .MuiTab-root": {
+                fontFamily: theme.typography.fontFamily,
+                fontSize: "0.875rem",
+                fontWeight: 500,
+                textTransform: "none",
+                letterSpacing: "0.02em",
+                color: theme.palette.text.secondary,
+                minHeight: 48,
+                padding: "12px 24px",
+                transition: "all 0.2s ease-in-out",
+                "&:hover": {
+                  color: theme.palette.blueText.main,
+                },
+                "&.Mui-selected": {
+                  color: theme.palette.blueText.main,
+                  fontWeight: 600,
+                },
+                "&.Mui-focusVisible": {
+                  backgroundColor: theme.palette.action.focus,
+                },
+              },
+              "& .MuiTabs-flexContainer": {
+                gap: 1,
+              },
+            }}
+          >
+            <Tab label="All" value="all" />
+            <Tab label="Drafts" value="drafts" />
+            <Tab label="In Review" value="in_review" />
+            <Tab label="Rejected" value="rejected" />
+          </Tabs>
+        </Box>
+      </Box>
+
+      {/* Data Grid */}
       <CollectionsTemplate
-        title="Loan Drafts"
-        createButtonText="New Loan"
-        onCreateClick={() => navigate("/add-loan")}
         items={filteredRows}
         loading={loading}
         columns={columns}

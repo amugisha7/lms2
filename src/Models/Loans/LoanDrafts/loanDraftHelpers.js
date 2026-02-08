@@ -1276,14 +1276,14 @@ export const convertDraftToLoan = async ({ loanDraft, userDetails }) => {
     throw new Error("Schedule preview contains no installments");
   }
 
-  // Update the existing draft loan to ACTIVE status
+  // Update the existing draft loan to Current status
   const computationRecord = parseAwsJson(loanDraft.loanComputationRecord) || {};
   computationRecord.convertedAt = nowIso();
   computationRecord.convertedToActive = true;
 
   const updateInput = {
     id: loanDraft.id,
-    status: "ACTIVE",
+    status: "Current",
     loanComputationRecord: safeJsonStringify(computationRecord),
   };
 

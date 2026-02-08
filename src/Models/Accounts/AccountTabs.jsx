@@ -22,6 +22,9 @@ import CreateAccount from "./CreateAccounts/CreateAccount";
 import {
   GET_ACCOUNT_WITH_TRANSACTIONS_QUERY,
   UPDATE_ACCOUNT_MUTATION,
+  CREATE_ACCOUNT_BRANCH_MUTATION,
+  DELETE_ACCOUNT_BRANCH_MUTATION,
+  LIST_ACCOUNT_BRANCHES_QUERY,
 } from "./accountHelpers";
 import { useHasPermission } from "../../ModelAssets/Permissions/permissions";
 import { UserContext } from "../../App";
@@ -71,11 +74,15 @@ export default function AccountTabs() {
     async (accountId) => {
       try {
         setLoading(true);
+        console.log("[AccountTabs] Fetching account data for ID:", accountId);
         const result = await client.graphql({
           query: GET_ACCOUNT_WITH_TRANSACTIONS_QUERY,
           variables: { id: accountId },
         });
         const fetchedAccount = result.data.getAccount;
+        console.log("[AccountTabs] Fetched account data:", fetchedAccount);
+        console.log("[AccountTabs] Description:", fetchedAccount?.description);
+        console.log("[AccountTabs] Branches:", fetchedAccount?.branches);
         if (fetchedAccount) {
           setAccountData(fetchedAccount);
           processTransactions(fetchedAccount);
@@ -114,7 +121,69 @@ export default function AccountTabs() {
         variables: { input },
       });
 
-      return result.data.updateAccount;
+      const updatedAccount = result.data.updateAccount;
+
+      // Handle branch relationships if branches are provided
+      if (values.branches && Array.isArray(values.branches)) {
+        // 1. Get existing AccountBranch entries
+        let existingBranches = [];
+        try {
+          const branchesResult = await client.graphql({
+            query: LIST_ACCOUNT_BRANCHES_QUERY,
+            variables: { accountId: initialValues.id },
+          });
+          existingBranches =
+            branchesResult.data.listAccountBranches.items || [];
+        } catch (err) {
+          console.error("Error fetching existing AccountBranch entries:", err);
+        }
+
+        const existingBranchIds = existingBranches.map((ab) => ab.branchId);
+        const newBranchIds = values.branches;
+
+        // 2. Delete removed branches
+        const branchesToDelete = existingBranches.filter(
+          (ab) => !newBranchIds.includes(ab.branchId),
+        );
+        for (const accountBranch of branchesToDelete) {
+          try {
+            await client.graphql({
+              query: DELETE_ACCOUNT_BRANCH_MUTATION,
+              variables: { input: { id: accountBranch.id } },
+            });
+          } catch (err) {
+            console.error(
+              `Error deleting AccountBranch ${accountBranch.id}:`,
+              err,
+            );
+          }
+        }
+
+        // 3. Add new branches
+        const branchesToAdd = newBranchIds.filter(
+          (branchId) => !existingBranchIds.includes(branchId),
+        );
+        for (const branchId of branchesToAdd) {
+          try {
+            await client.graphql({
+              query: CREATE_ACCOUNT_BRANCH_MUTATION,
+              variables: {
+                input: {
+                  accountId: initialValues.id,
+                  branchId: branchId,
+                },
+              },
+            });
+          } catch (err) {
+            console.error(
+              `Error creating AccountBranch for branch ${branchId}:`,
+              err,
+            );
+          }
+        }
+      }
+
+      return updatedAccount;
     },
     [client, userDetails],
   );

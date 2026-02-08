@@ -21,6 +21,15 @@ const MultipleDropDownSearchable = ({
   editing = true,
   disabled = false,
   placeholder,
+  showOnlyForAdmin,
+  showOnlyInEditMode,
+  span,
+  validationType,
+  validationPattern,
+  validationMessage,
+  maxLength,
+  dependsOn,
+  dependsOnValue,
   ...props
 }) => {
   const [field, meta, helpers] = useField(name);
@@ -112,12 +121,15 @@ const MultipleDropDownSearchable = ({
                 }}
               />
             )}
-            renderOption={(props, option, { selected }) => (
-              <li {...props}>
-                <Checkbox style={{ marginRight: 8 }} checked={selected} />
-                {option.label}
-              </li>
-            )}
+            renderOption={(props, option, { selected }) => {
+              const { key, ...otherProps } = props;
+              return (
+                <li key={key} {...otherProps}>
+                  <Checkbox style={{ marginRight: 8 }} checked={selected} />
+                  {option.label}
+                </li>
+              );
+            }}
             slotProps={{
               paper: {
                 sx: {

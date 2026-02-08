@@ -10,8 +10,11 @@ import {
   TableRow,
   Typography,
   CircularProgress,
+  FormControl,
+  Alert,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
+import { generateClient } from "aws-amplify/api";
 import WorkingOverlay from "../../../ModelAssets/WorkingOverlay";
 import DraftHeader from "../../../Resources/DraftHeader";
 import { generateSchedulePreviewFromDraftValues } from "../loanComputations";
@@ -19,6 +22,7 @@ import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 import { formatMoneyParts } from "../../../Resources/formatting";
 import { getUrl } from "aws-amplify/storage";
+import DropDownSearchable from "../../../Resources/FormComponents/DropDownSearchable";
 
 const fmtDate = (d) => {
   if (!d) return "";
@@ -118,6 +122,14 @@ export default function LoanScheduleDraft({
     totalPayment: true,
     closingBalance: true,
   });
+
+  // Account selection state
+  const [principalAccountId, setPrincipalAccountId] = React.useState("");
+  const [feesAccountId, setFeesAccountId] = React.useState("");
+  const [accounts, setAccounts] = React.useState([]);
+  const [accountsLoading, setAccountsLoading] = React.useState(true);
+
+  const hasLoanFees = totalLoanFee > 0;
 
   const currencyCode = userDetails?.institution?.currencyCode;
 
@@ -225,6 +237,68 @@ export default function LoanScheduleDraft({
       revokeObjectUrl(headerImageSignedUrl);
     };
   }, [headerImageSignedUrl, revokeObjectUrl]);
+
+  // Fetch accounts for privileged users
+  React.useEffect(() => {
+    let cancelled = false;
+    const fetchAccounts = async () => {
+      if (!isPrivileged || !userDetails?.institutionUsersId) {
+        setAccountsLoading(false);
+        return;
+      }
+      setAccountsLoading(true);
+      try {
+        const client = generateClient();
+        let allAccounts = [];
+        let nextToken = null;
+
+        const LIST_ACCOUNTS_SIMPLE_QUERY = `
+          query ListAccounts($institutionId: ID!, $nextToken: String) {
+            listAccounts(
+              filter: { institutionAccountsId: { eq: $institutionId } }
+              limit: 100
+              nextToken: $nextToken
+            ) {
+              items {
+                id
+                name
+                accountType
+                currency
+                status
+              }
+              nextToken
+            }
+          }
+        `;
+
+        do {
+          const result = await client.graphql({
+            query: LIST_ACCOUNTS_SIMPLE_QUERY,
+            variables: {
+              institutionId: userDetails.institutionUsersId,
+              nextToken,
+            },
+          });
+          const items = result?.data?.listAccounts?.items || [];
+          allAccounts = [...allAccounts, ...items];
+          nextToken = result?.data?.listAccounts?.nextToken;
+        } while (nextToken);
+
+        if (!cancelled) {
+          setAccounts(allAccounts);
+        }
+      } catch (err) {
+        console.error("Error fetching accounts:", err);
+      } finally {
+        if (!cancelled) setAccountsLoading(false);
+      }
+    };
+
+    fetchAccounts();
+    return () => {
+      cancelled = true;
+    };
+  }, [isPrivileged, userDetails?.institutionUsersId]);
 
   const Money = ({ value }) => {
     const parts = formatMoneyParts(value, currency, currencyCode);
@@ -913,8 +987,27 @@ export default function LoanScheduleDraft({
           {
             key: "create",
             text: createButtonText,
-            onClick: onConfirmCreateLoan,
-            disabled: readOnly || !onConfirmCreateLoan,
+            onClick: () => {
+              if (isPrivileged && onConfirmCreateLoan) {
+                onConfirmCreateLoan({
+                  principalAccountId,
+                  feesAccountId: hasLoanFees ? feesAccountId : null,
+                  totalLoanFee,
+                });
+              } else if (onConfirmCreateLoan) {
+                onConfirmCreateLoan();
+              }
+            },
+            disabled:
+              readOnly ||
+              !onConfirmCreateLoan ||
+              (isPrivileged &&
+                (!principalAccountId || (hasLoanFees && !feesAccountId))),
+            tooltip:
+              isPrivileged &&
+              (!principalAccountId || (hasLoanFees && !feesAccountId))
+                ? "Please select accounts before creating loan"
+                : undefined,
           },
         ]}
         // Totals
@@ -927,6 +1020,85 @@ export default function LoanScheduleDraft({
         }
         readOnly={readOnly}
       />
+
+      {/* Account Selection Section for Privileged Users */}
+      {isPrivileged && (
+        <Box
+          sx={{
+            mt: 2,
+            mb: 2,
+            p: 3,
+            borderRadius: 1,
+            backgroundColor:
+              theme.palette.mode === "dark"
+                ? "rgba(118, 177, 211, 0.08)"
+                : "#f8f9ff",
+            border: `2px solid ${theme.palette.mode === "dark" ? "#76B1D3" : "#1976d2"}`,
+          }}
+        >
+          <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+            Account Selection (Required)
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+            Select the accounts for disbursement and fee collection before
+            creating the loan.
+          </Typography>
+
+          {accountsLoading ? (
+            <Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
+              <CircularProgress size={24} />
+            </Box>
+          ) : (
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              <DropDownSearchable
+                label="Principal Account"
+                name="principalAccountId"
+                options={accounts
+                  .filter(
+                    (a) => a.status !== "inactive" && a.status !== "closed",
+                  )
+                  .map((a) => ({
+                    value: a.id,
+                    label: `${a.name}${a.accountType ? ` (${a.accountType})` : ""}`,
+                  }))}
+                required={true}
+                placeholder="Search for an account..."
+                helperText="Select the account from which the loan principal will be disbursed."
+                value={principalAccountId}
+                onChange={(e) => setPrincipalAccountId(e.target.value)}
+                editing={true}
+              />
+
+              {hasLoanFees && (
+                <DropDownSearchable
+                  label="Loan Fees Account"
+                  name="feesAccountId"
+                  options={accounts
+                    .filter(
+                      (a) => a.status !== "inactive" && a.status !== "closed",
+                    )
+                    .map((a) => ({
+                      value: a.id,
+                      label: `${a.name}${a.accountType ? ` (${a.accountType})` : ""}`,
+                    }))}
+                  required={true}
+                  placeholder="Search for an account..."
+                  helperText="Select the account where the loan fees will be received."
+                  value={feesAccountId}
+                  onChange={(e) => setFeesAccountId(e.target.value)}
+                  editing={true}
+                />
+              )}
+
+              {(!principalAccountId || (hasLoanFees && !feesAccountId)) && (
+                <Alert severity="warning" sx={{ mt: 1 }}>
+                  Please select all required accounts before creating the loan.
+                </Alert>
+              )}
+            </Box>
+          )}
+        </Box>
+      )}
 
       <WorkingOverlay open={exportingPdf} message="Exporting PDF..." />
 

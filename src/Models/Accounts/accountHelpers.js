@@ -15,7 +15,7 @@ export const LIST_ACCOUNTS_QUERY = `
         description
         createdAt
         updatedAt
-        moneyTransactions {
+        moneyTransactions(limit: 1000) {
           items {
             amount
             transactionDate
@@ -24,7 +24,7 @@ export const LIST_ACCOUNTS_QUERY = `
             description
             referenceNumber
             notes
-            documents {
+            documents(limit: 100) {
               items {
                 id
                 document {
@@ -41,21 +41,21 @@ export const LIST_ACCOUNTS_QUERY = `
             }
           }
         }
-        payments {
+        payments(limit: 1000) {
           items {
             amount
             paymentDate
             id
           }
         }
-        penalties {
+        penalties(limit: 1000) {
           items {
             amount
             penaltyDate
             id
           }
         }
-        loans {
+        loans(limit: 1000) {
           items {
             loan {
               id
@@ -69,19 +69,30 @@ export const LIST_ACCOUNTS_QUERY = `
             }
           }
         }
-        loanFees {
+        loanFees(limit: 1000) {
           items {
             id
             amount
             loanFeesDescription
           }
         }
-        expenses {
+        expenses(limit: 1000) {
           items {
             amount
             id
             description
             type
+          }
+        }
+        branches(limit: 100) {
+          items {
+            id
+            branchId
+            accountId
+            branch {
+              id
+              name
+            }
           }
         }
       }
@@ -102,6 +113,17 @@ export const CREATE_ACCOUNT_MUTATION = `
       description
       createdAt
       updatedAt
+      branches(limit: 100) {
+        items {
+          id
+          branchId
+          accountId
+          branch {
+            id
+            name
+          }
+        }
+      }
     }
   }
 `;
@@ -126,6 +148,17 @@ export const UPDATE_ACCOUNT_MUTATION = `
       description
       createdAt
       updatedAt
+      branches(limit: 100) {
+        items {
+          id
+          branchId
+          accountId
+          branch {
+            id
+            name
+          }
+        }
+      }
     }
   }
 `;
@@ -142,7 +175,7 @@ export const GET_ACCOUNT_WITH_TRANSACTIONS_QUERY = `
       description
       createdAt
       updatedAt
-      moneyTransactions {
+      moneyTransactions(limit: 1000) {
         items {
           id
           amount
@@ -151,7 +184,7 @@ export const GET_ACCOUNT_WITH_TRANSACTIONS_QUERY = `
           description
           referenceNumber
           notes
-          documents {
+          documents(limit: 100) {
             items {
               id
               document {
@@ -168,21 +201,21 @@ export const GET_ACCOUNT_WITH_TRANSACTIONS_QUERY = `
           }
         }
       }
-      payments {
+      payments(limit: 1000) {
         items {
           amount
           paymentDate
           id
         }
       }
-      penalties {
+      penalties(limit: 1000) {
         items {
           amount
           penaltyDate
           id
         }
       }
-      loans {
+      loans(limit: 1000) {
         items {
           loan {
             id
@@ -196,20 +229,61 @@ export const GET_ACCOUNT_WITH_TRANSACTIONS_QUERY = `
           }
         }
       }
-      loanFees {
+      loanFees(limit: 1000) {
         items {
           id
           amount
           loanFeesDescription
         }
       }
-      expenses {
+      expenses(limit: 1000) {
         items {
           amount
           id
           description
           type
         }
+      }
+      branches(limit: 100) {
+        items {
+          id
+          branchId
+          accountId
+          branch {
+            id
+            name
+          }
+        }
+      }
+    }
+  }
+`;
+
+export const CREATE_ACCOUNT_BRANCH_MUTATION = `
+  mutation CreateAccountBranch($input: CreateAccountBranchInput!) {
+    createAccountBranch(input: $input) {
+      id
+      accountId
+      branchId
+    }
+  }
+`;
+
+export const DELETE_ACCOUNT_BRANCH_MUTATION = `
+  mutation DeleteAccountBranch($input: DeleteAccountBranchInput!) {
+    deleteAccountBranch(input: $input) {
+      id
+    }
+  }
+`;
+
+export const LIST_ACCOUNT_BRANCHES_QUERY = `
+  query ListAccountBranches($accountId: ID!) {
+    listAccountBranches(filter: { accountId: { eq: $accountId } }, limit: 100) {
+      items {
+        id
+        accountId
+        branchId
       }
     }
   }

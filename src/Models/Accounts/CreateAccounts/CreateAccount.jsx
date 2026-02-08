@@ -17,6 +17,7 @@ import TextInput from "../../../Resources/FormComponents/TextInput";
 import TextArea from "../../../Resources/FormComponents/TextArea";
 import RadioGroup from "../../../Resources/FormComponents/RadioGroup";
 import Dropdown from "../../../Resources/FormComponents/Dropdown";
+import MultipleDropDownSearchable from "../../../Resources/FormComponents/MultipleDropDownSearchable";
 import CreateFormButtons from "../../../ModelAssets/CreateFormButtons";
 import CustomEditFormButtons from "../../../ModelAssets/CustomEditFormButtons";
 import { UserContext } from "../../../App";
@@ -36,8 +37,9 @@ const baseInitialValues = createAccountForm.reduce((acc, field) => {
   return acc;
 }, {});
 
-// Add status field
+// Add status and branches fields
 baseInitialValues.status = "active";
+baseInitialValues.branches = [];
 
 // Build validation schema dynamically
 const validationShape = {};
@@ -88,6 +90,7 @@ createAccountForm.forEach((field) => {
 
 // Add status validation
 validationShape.status = Yup.string().nullable();
+validationShape.branches = Yup.array().nullable();
 
 const baseValidationSchema = Yup.object().shape(validationShape);
 
@@ -99,6 +102,8 @@ const renderFormField = (field, formik) => {
       return <RadioGroup {...field} />;
     case "select":
       return <Dropdown {...field} />;
+    case "multipleDropDownSearchable":
+      return <MultipleDropDownSearchable {...field} />;
     case "text":
     default:
       return <TextInput {...field} />;
@@ -127,20 +132,118 @@ const CreateAccountForm = forwardRef(
     const [workingOverlayMessage, setWorkingOverlayMessage] =
       useState("Working...");
     const editClickedContext = useContext(EditClickedContext);
+    const [branches, setBranches] = useState([]);
+    const [branchesLoading, setBranchesLoading] = useState(false);
+    const client = React.useMemo(() => generateClient(), []);
+
+    // Fetch branches - for admin: all active branches; for non-admin in edit mode: need branch names for display
+    useEffect(() => {
+      const fetchBranches = async () => {
+        if (!userDetails?.institutionUsersId) {
+          return;
+        }
+
+        // Only admins can select branches, but we need branch names for display in all cases
+        const isAdmin = userDetails?.userType === "Admin";
+
+        // For non-admins in edit mode or view mode, we need to fetch branches to display their names
+        // For admins, we always fetch all active branches for selection
+        if (!isAdmin && !isEditMode) {
+          // Non-admin creating a new account - no need to fetch branches
+          return;
+        }
+
+        // If we have initial branch data from the account, use it first to avoid flicker
+        if (propInitialValues?.branches?.items) {
+          const existingBranches = propInitialValues.branches.items
+            .filter((item) => item.branch)
+            .map((item) => ({
+              value: item.branch.id,
+              label: item.branch.name,
+            }));
+          setBranches(existingBranches);
+        }
+
+        setBranchesLoading(true);
+        try {
+          let allBranches = [];
+          let nextToken = null;
+
+          while (true) {
+            const result = await client.graphql({
+              query: `
+                query ListBranches($institutionId: ID!, $nextToken: String) {
+                  listBranches(
+                    filter: { institutionBranchesId: { eq: $institutionId } }
+                    limit: 100
+                    nextToken: $nextToken
+                  ) {
+                    items {
+                      id
+                      name
+                      status
+                    }
+                    nextToken
+                  }
+                }
+              `,
+              variables: {
+                institutionId: userDetails.institutionUsersId,
+                nextToken,
+              },
+            });
+
+            const listResult = result?.data?.listBranches || {};
+            const batchItems = Array.isArray(listResult.items)
+              ? listResult.items
+              : [];
+            allBranches.push(...batchItems);
+
+            nextToken = listResult.nextToken;
+            if (!nextToken) break;
+          }
+
+          // For admin: filter active branches; for non-admin: include all to show names
+          const branchOptions = (
+            isAdmin
+              ? allBranches.filter((b) => b.status === "active")
+              : allBranches
+          ).map((b) => ({ value: b.id, label: b.name }));
+
+          setBranches(branchOptions);
+        } catch (err) {
+        } finally {
+          setBranchesLoading(false);
+        }
+      };
+
+      fetchBranches();
+    }, [userDetails, client, isEditMode, propInitialValues]);
 
     // Use the form fields directly
     const accountForm = createAccountForm;
 
     // Map database field names to form field names
     const mapDbFieldsToFormFields = (dbData) => {
-      if (!dbData) return {};
+      if (!dbData) {
+        return {};
+      }
 
-      return {
+      // Extract branch IDs from the branches relationship
+      const branchIds =
+        dbData.branches?.items
+          ?.map((item) => item.branch?.id)
+          .filter(Boolean) || [];
+
+      const mappedData = {
         name: dbData.name || "",
         openingBalance: dbData.openingBalance || 0,
         description: dbData.description || "",
         status: dbData.status || "active",
+        branches: branchIds,
       };
+
+      return mappedData;
     };
 
     // Use prop initialValues if provided, otherwise use default
@@ -150,6 +253,15 @@ const CreateAccountForm = forwardRef(
           ...mapDbFieldsToFormFields(propInitialValues),
         }
       : baseInitialValues;
+
+    // If user is not admin and not editing, automatically set their branch
+    if (
+      !isEditMode &&
+      userDetails?.userType !== "Admin" &&
+      userDetails?.branchUsersId
+    ) {
+      formInitialValues.branches = [userDetails.branchUsersId];
+    }
 
     useImperativeHandle(ref, () => ({
       toggleEdit: () => {
@@ -181,6 +293,7 @@ const CreateAccountForm = forwardRef(
         if (isEditMode && propInitialValues && onUpdateAccountAPI) {
           // Update existing account using parent-provided API function
           const result = await onUpdateAccountAPI(values, propInitialValues);
+          console.log("Account update result:", result);
           setSubmitSuccess("Account updated!");
           setEditMode(false);
           setTimeout(() => setSubmitSuccess(""), 2000);
@@ -190,6 +303,7 @@ const CreateAccountForm = forwardRef(
         } else if (!isEditMode && onCreateAccountAPI) {
           // Create new account using parent-provided API function
           const result = await onCreateAccountAPI(values);
+          console.log("Account creation result:", result);
           setSubmitSuccess("Account created!");
           resetForm();
           if (onCreateSuccess) {
@@ -201,7 +315,6 @@ const CreateAccountForm = forwardRef(
           );
         }
       } catch (err) {
-        console.error("Error creating/updating account:", err);
         setSubmitError(
           err.message ||
             `Failed to ${
@@ -245,20 +358,42 @@ const CreateAccountForm = forwardRef(
                   {accountForm
                     .filter((field) => {
                       // Show field if it doesn't have showOnlyInEditMode OR if we're in edit mode
-                      return !field.showOnlyInEditMode || isEditMode;
+                      if (field.showOnlyInEditMode && !isEditMode) return false;
+
+                      // For branches field: show to admin always, show to non-admin only in view mode (isEditMode && !editMode)
+                      if (field.showOnlyForAdmin) {
+                        const isAdmin = userDetails?.userType === "Admin";
+                        // Admin can always see it
+                        if (isAdmin) return true;
+                        // Non-admin can see it only when viewing account details (isEditMode context, but editMode=false means viewing)
+                        if (isEditMode && !editMode) return true;
+                        // Otherwise hide it (e.g., when creating new account as non-admin)
+                        return false;
+                      }
+
+                      return true;
                     })
-                    .map((field) => (
-                      <FormGrid
-                        item
-                        size={{ xs: 12, md: field.span }}
-                        key={field.name}
-                      >
-                        {renderFormField(
-                          { ...field, editing: editMode },
-                          formik,
-                        )}
-                      </FormGrid>
-                    ))}
+                    .map((field) => {
+                      // Add branches options to the branches field
+                      const fieldProps = { ...field, editing: editMode };
+                      if (field.name === "branches") {
+                        fieldProps.options = branches;
+                        // Non-admins should always have this field as readOnly
+                        if (userDetails?.userType !== "Admin") {
+                          fieldProps.readOnly = true;
+                        }
+                      }
+
+                      return (
+                        <FormGrid
+                          item
+                          size={{ xs: 12, md: field.span }}
+                          key={field.name}
+                        >
+                          {renderFormField(fieldProps, formik)}
+                        </FormGrid>
+                      );
+                    })}
 
                   <Box
                     sx={{

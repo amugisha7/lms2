@@ -19,6 +19,9 @@ import {
   CREATE_ACCOUNT_MUTATION,
   DELETE_ACCOUNT_MUTATION,
   UPDATE_ACCOUNT_MUTATION,
+  CREATE_ACCOUNT_BRANCH_MUTATION,
+  DELETE_ACCOUNT_BRANCH_MUTATION,
+  LIST_ACCOUNT_BRANCHES_QUERY,
 } from "./accountHelpers";
 
 // Guard to ensure we only fetch accounts once per page load (even under React StrictMode)
@@ -176,15 +179,41 @@ export default function Accounts() {
       description: values.description?.trim() || null,
     };
 
-    console.log("API Mutation: CREATE_ACCOUNT_MUTATION", {
-      variables: { input },
-    });
     const result = await client.graphql({
       query: CREATE_ACCOUNT_MUTATION,
       variables: { input },
     });
 
-    return result.data.createAccount;
+    const createdAccount = result.data.createAccount;
+
+    // Create AccountBranch join table entries if branches are provided
+    if (
+      values.branches &&
+      Array.isArray(values.branches) &&
+      values.branches.length > 0
+    ) {
+      for (const branchId of values.branches) {
+        try {
+          await client.graphql({
+            query: CREATE_ACCOUNT_BRANCH_MUTATION,
+            variables: {
+              input: {
+                accountId: createdAccount.id,
+                branchId: branchId,
+              },
+            },
+          });
+        } catch (err) {
+          console.error(
+            `Error creating AccountBranch for branch ${branchId}:`,
+            err,
+          );
+          // Continue with other branches even if one fails
+        }
+      }
+    }
+
+    return createdAccount;
   };
 
   // API handler for updating account
@@ -199,15 +228,73 @@ export default function Accounts() {
       description: values.description?.trim() || null,
     };
 
-    console.log("API Mutation: UPDATE_ACCOUNT_MUTATION", {
-      variables: { input },
-    });
     const result = await client.graphql({
       query: UPDATE_ACCOUNT_MUTATION,
       variables: { input },
     });
 
-    return result.data.updateAccount;
+    const updatedAccount = result.data.updateAccount;
+
+    // Handle branch relationships if branches are provided
+    if (values.branches && Array.isArray(values.branches)) {
+      // 1. Get existing AccountBranch entries
+      let existingBranches = [];
+      try {
+        const branchesResult = await client.graphql({
+          query: LIST_ACCOUNT_BRANCHES_QUERY,
+          variables: { accountId: initialValues.id },
+        });
+        existingBranches = branchesResult.data.listAccountBranches.items || [];
+      } catch (err) {
+        console.error("Error fetching existing AccountBranch entries:", err);
+      }
+
+      const existingBranchIds = existingBranches.map((ab) => ab.branchId);
+      const newBranchIds = values.branches;
+
+      // 2. Delete removed branches
+      const branchesToDelete = existingBranches.filter(
+        (ab) => !newBranchIds.includes(ab.branchId),
+      );
+      for (const accountBranch of branchesToDelete) {
+        try {
+          await client.graphql({
+            query: DELETE_ACCOUNT_BRANCH_MUTATION,
+            variables: { input: { id: accountBranch.id } },
+          });
+        } catch (err) {
+          console.error(
+            `Error deleting AccountBranch ${accountBranch.id}:`,
+            err,
+          );
+        }
+      }
+
+      // 3. Add new branches
+      const branchesToAdd = newBranchIds.filter(
+        (branchId) => !existingBranchIds.includes(branchId),
+      );
+      for (const branchId of branchesToAdd) {
+        try {
+          await client.graphql({
+            query: CREATE_ACCOUNT_BRANCH_MUTATION,
+            variables: {
+              input: {
+                accountId: initialValues.id,
+                branchId: branchId,
+              },
+            },
+          });
+        } catch (err) {
+          console.error(
+            `Error creating AccountBranch for branch ${branchId}:`,
+            err,
+          );
+        }
+      }
+    }
+
+    return updatedAccount;
   };
 
   // Custom handleCreateSuccess to update allAccounts state and show notification
@@ -222,9 +309,6 @@ export default function Accounts() {
 
   // Custom handleDeleteConfirm to update allAccounts state and show notification
   const handleDeleteConfirm = async () => {
-    console.log("API Mutation: DELETE_ACCOUNT_MUTATION", {
-      variables: { input: { id: deleteDialogRow.id } },
-    });
     await originalHandleDeleteConfirm();
     if (deleteDialogRow) {
       setAllAccounts((prev) =>

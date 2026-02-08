@@ -46,6 +46,16 @@ const createAccountForm = [
     ],
     showOnlyInEditMode: true,
   },
+  {
+    label: "Branches",
+    name: "branches",
+    type: "multipleDropDownSearchable",
+    required: false,
+    span: 12,
+    placeholder: "Select branches",
+    helperText: "Select the branches this account is associated with",
+    showOnlyForAdmin: true, // This will be handled in CreateAccount component
+  },
 ];
 
 export default createAccountForm;

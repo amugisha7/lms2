@@ -44,6 +44,9 @@ import MultipleDropDown from "../../../Resources/FormComponents/MultipleDropDown
 import WorkingOverlay from "../../../ModelAssets/WorkingOverlay";
 import CustomPopUp from "../../../ModelAssets/CustomPopUp";
 import LoanScheduleDraft from "../LoanDrafts/LoanScheduleDraft";
+import { CREATE_MONEY_TRANSACTION_MUTATION } from "../../Accounts/MoneyTransactions/moneyTransactionHelpes";
+import { createLoanDisbursement, createLoanEvent } from "../loanHelpers";
+import { generateClient } from "aws-amplify/api";
 
 const FormGrid = styled(Grid)(({ theme }) => ({
   display: "flex",
@@ -289,6 +292,9 @@ const CreateLoan = forwardRef(
     const loanFeesInstitutionIdRef = useRef(null);
     const formikRef = useRef(null);
     const [isProcessing, setIsProcessing] = useState(false);
+    const [workingOverlayOpen, setWorkingOverlayOpen] = useState(false);
+    const [workingOverlayMessage, setWorkingOverlayMessage] =
+      useState("Working...");
 
     const isPrivileged = React.useMemo(() => {
       const type = userDetails?.userType;
@@ -530,16 +536,18 @@ const CreateLoan = forwardRef(
       }
     };
 
-    const handleConvertToLoan = async () => {
+    const handleConvertToLoan = async (accountSelection) => {
       setSubmitError("");
       setSubmitSuccess("");
       setIsProcessing(true);
+      setWorkingOverlayMessage("Creating loan and disbursing funds...");
+      setWorkingOverlayOpen(true);
+
       try {
         let currentDraft = loanDraft;
 
         if (!currentDraft?.id) {
           if (formikRef.current) {
-            // Validate form heavily for Create Loan
             const errors = await formikRef.current.validateForm();
             if (Object.keys(errors).length > 0) {
               formikRef.current.setTouched(errors);
@@ -550,18 +558,135 @@ const CreateLoan = forwardRef(
             currentDraft = await saveDraftInternal(formikRef.current.values, {
               suppressSuccessCallback: true,
             });
+            setLoanDraft(currentDraft);
           } else {
             throw new Error("Save Draft first.");
           }
         }
 
+        const client = generateClient();
+
+        // Step 1: Convert draft to loan
+        setWorkingOverlayMessage("Creating loan and installments...");
         const loan = await convertDraftToLoan({
           loanDraft: currentDraft,
           userDetails,
         });
-        const successMessage = "Loan created successfully.";
+
+        if (!loan?.id) {
+          throw new Error("Failed to create loan.");
+        }
+
+        // For privileged users, create disbursement transactions
+        if (isPrivileged && accountSelection) {
+          const loanId = loan.id;
+          const loanNumber = loan.loanNumber || loanId;
+          const principalAmount =
+            currentDraft.principal || parseFloat(loan.principal) || 0;
+          const totalLoanFee = accountSelection.totalLoanFee || 0;
+          const today = new Date().toISOString().split("T")[0];
+
+          // Get borrower name
+          const borrowerName = propBorrower
+            ? [
+                propBorrower.firstname,
+                propBorrower.othername,
+                propBorrower.businessName,
+              ]
+                .filter(Boolean)
+                .join(" ")
+                .trim() || "Unknown Borrower"
+            : "Unknown Borrower";
+
+          // Step 2: Create principal disbursement transaction
+          setWorkingOverlayMessage("Disbursing principal...");
+          const principalDescription = `Loan #${loanNumber} - Principal Disbursement to ${borrowerName} (Loan ID: ${loanId})`;
+
+          await client.graphql({
+            query: CREATE_MONEY_TRANSACTION_MUTATION,
+            variables: {
+              input: {
+                amount: principalAmount,
+                transactionType: "withdrawal",
+                transactionDate: today,
+                description: principalDescription,
+                referenceNumber: `DISB-${loanNumber}`,
+                status: "completed",
+                accountMoneyTransactionsId: accountSelection.principalAccountId,
+                loanID: loanId,
+                relatedEntityType: "LOAN_DISBURSEMENT",
+                category: "Loan Disbursement",
+              },
+            },
+          });
+
+          // Step 3: Create a LoanDisbursement record
+          await client.graphql({
+            query: createLoanDisbursement,
+            variables: {
+              input: {
+                loanID: loanId,
+                disbursedAt: new Date().toISOString(),
+                amount: principalAmount,
+                status: "COMPLETED",
+                method: "Account Transfer",
+                reference: `DISB-${loanNumber}`,
+                accountID: accountSelection.principalAccountId,
+              },
+            },
+          });
+
+          // Step 4: Create loan fees transaction if applicable
+          if (totalLoanFee > 0 && accountSelection.feesAccountId) {
+            setWorkingOverlayMessage("Recording loan fees...");
+            const feesDescription = `Loan #${loanNumber} - Loan Fees received from ${borrowerName} (Loan ID: ${loanId})`;
+
+            await client.graphql({
+              query: CREATE_MONEY_TRANSACTION_MUTATION,
+              variables: {
+                input: {
+                  amount: totalLoanFee,
+                  transactionType: "deposit",
+                  transactionDate: today,
+                  description: feesDescription,
+                  referenceNumber: `FEES-${loanNumber}`,
+                  status: "completed",
+                  accountMoneyTransactionsId: accountSelection.feesAccountId,
+                  loanID: loanId,
+                  relatedEntityType: "LOAN_FEES",
+                  category: "Loan Fees",
+                },
+              },
+            });
+          }
+
+          // Step 5: Create a DISBURSED loan event
+          await client.graphql({
+            query: createLoanEvent,
+            variables: {
+              input: {
+                loanID: loanId,
+                eventAt: new Date().toISOString(),
+                eventType: "DISBURSED",
+                actorEmployeeID: userDetails?.id || null,
+                summary: `Loan disbursed. Principal of ${principalAmount} withdrawn from account.${totalLoanFee > 0 ? ` Loan fees of ${totalLoanFee} deposited.` : ""}`,
+                payload: JSON.stringify({
+                  principalAccountId: accountSelection.principalAccountId,
+                  feesAccountId: accountSelection.feesAccountId || null,
+                  principalAmount,
+                  totalLoanFee: totalLoanFee > 0 ? totalLoanFee : 0,
+                  borrowerName,
+                }),
+              },
+            },
+          });
+        }
+
+        const successMessage = "Loan created and disbursed successfully!";
         setSubmitSuccess(successMessage);
         showNotification(successMessage, "green");
+        setWorkingOverlayOpen(false);
+        setScheduleOpen(false);
         navigate("/loans");
         return loan;
       } catch (err) {
@@ -569,6 +694,8 @@ const CreateLoan = forwardRef(
         const errorMessage = err?.message || "Failed to create loan.";
         setSubmitError(errorMessage);
         showNotification(errorMessage, "red");
+        setWorkingOverlayOpen(false);
+      } finally {
         setIsProcessing(false);
       }
     };
@@ -735,13 +862,17 @@ const CreateLoan = forwardRef(
             return (
               <Form>
                 <WorkingOverlay
-                  open={formik.isSubmitting || isProcessing}
+                  open={
+                    workingOverlayOpen || formik.isSubmitting || isProcessing
+                  }
                   message={
-                    isProcessing
-                      ? isPrivileged
-                        ? "Creating Loan..."
-                        : "Submitting..."
-                      : "Saving draft..."
+                    workingOverlayOpen
+                      ? workingOverlayMessage
+                      : isProcessing
+                        ? isPrivileged
+                          ? "Creating Loan..."
+                          : "Submitting..."
+                        : "Saving draft..."
                   }
                 />
 

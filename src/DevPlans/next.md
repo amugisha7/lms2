@@ -1,6 +1,6 @@
 - Create loans form. Also create from loan product.
   - Resume:
-    - work on saving and approval for loan drafts
+    - Review the create loan workflow so that create loan displays the options to select the bank account for the loan and loan fees before creating the loan.
   - ensure that all exports work, check loan product flow.
   - Move saving from loandraft to loan with status draft.
     After clicking create loan, go to contracts, collateral and gurantors, other incomes and expenses.

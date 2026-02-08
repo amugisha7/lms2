@@ -19,6 +19,7 @@ import OrderedList from "../../../Resources/FormComponents/OrderedList";
 import CreateFormButtons from "../../../ModelAssets/CreateFormButtons";
 import PlusButtonMain from "../../../ModelAssets/PlusButtonMain";
 import { UserContext } from "../../../App";
+import { useSnackbar } from "../../../ModelAssets/SnackbarContext";
 import {
   fetchAccounts,
   fetchLoanFeesConfig,
@@ -276,6 +277,7 @@ const CreateLoan = forwardRef(
     ref,
   ) => {
     const { userDetails } = useContext(UserContext);
+    const { showSnackbar } = useSnackbar();
     const navigate = useNavigate();
     const theme = useTheme();
     const [submitError, setSubmitError] = useState("");
@@ -598,12 +600,16 @@ const CreateLoan = forwardRef(
           loanDraft: currentDraft,
           userDetails,
         });
-        setSubmitSuccess("Draft converted to loan.");
+        const successMessage = "Loan created successfully.";
+        setSubmitSuccess(successMessage);
+        showSnackbar(successMessage, "green");
         navigate("/loans");
         return loan;
       } catch (err) {
         console.error(err);
-        setSubmitError(err?.message || "Failed to convert to loan.");
+        const errorMessage = err?.message || "Failed to create loan.";
+        setSubmitError(errorMessage);
+        showSnackbar(errorMessage, "red");
         setIsProcessing(false);
       }
     };

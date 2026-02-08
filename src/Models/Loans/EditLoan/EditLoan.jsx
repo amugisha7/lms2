@@ -34,6 +34,7 @@ import CustomPopUp from "../../../ModelAssets/CustomPopUp";
 import LoanScheduleDraft from "../LoanDrafts/LoanScheduleDraft";
 
 import { UserContext } from "../../../App";
+import { useSnackbar } from "../../../ModelAssets/SnackbarContext";
 import {
   updateLoanDraft,
   transitionLoanDraftStatus,
@@ -276,6 +277,7 @@ const EditLoan = forwardRef(
     ref,
   ) => {
     const { userDetails } = useContext(UserContext);
+    const { showSnackbar } = useSnackbar();
     const theme = useTheme();
     const navigate = useNavigate();
 
@@ -564,11 +566,15 @@ const EditLoan = forwardRef(
       try {
         if (!localDraft?.id) throw new Error("Save Draft first.");
         await convertDraftToLoan({ loanDraft: localDraft, userDetails });
-        setSubmitSuccess("Draft converted to loan.");
+        const successMessage = "Loan created successfully.";
+        setSubmitSuccess(successMessage);
+        showSnackbar(successMessage, "green");
         navigate("/loans");
       } catch (err) {
         console.error(err);
-        setSubmitError(err?.message || "Failed to convert to loan.");
+        const errorMessage = err?.message || "Failed to create loan.";
+        setSubmitError(errorMessage);
+        showSnackbar(errorMessage, "red");
       }
     };
 

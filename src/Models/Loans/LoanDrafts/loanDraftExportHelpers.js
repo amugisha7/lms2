@@ -149,7 +149,6 @@ export const exportLoanDraftSummaryA4 = ({
     [`Start Date`, draftRecord?.loanStartDate || draftRecord?.startDate || ""],
     [`Duration`, `${draftRecord?.loanDuration || draftRecord?.termDuration || ""} ${draftRecord?.durationPeriod || ""}`.trim()],
     [`Repayment`, `${draftRecord?.repaymentFrequencyType || ""} ${draftRecord?.repaymentFrequency || ""}`.trim()],
-    [`Source Account`, draftRecord?.accountLoansId || ""],
   ];
 
   doc.setFontSize(10);

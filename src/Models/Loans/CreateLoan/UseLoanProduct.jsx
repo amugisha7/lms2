@@ -21,7 +21,6 @@ import CreateFormButtons from "../../../ModelAssets/CreateFormButtons";
 import PlusButtonMain from "../../../ModelAssets/PlusButtonMain";
 import { UserContext } from "../../../App";
 import {
-  fetchAccounts,
   fetchLoanFeesConfig,
   fetchInstitutionAdmins,
 } from "./createLoanHelpers";
@@ -85,7 +84,6 @@ const buildValidationSchema = () => {
   const validationShape = {
     borrower: Yup.string().required("Borrower is required"),
     loanProduct: Yup.string().required("Loan Product is required"),
-    accountLoansId: Yup.string().required("Source Account is required"),
     principalAmount: Yup.number()
       .required("Principal Amount is required")
       .min(0, "Principal Amount must be at least 0"),
@@ -546,10 +544,6 @@ const UseLoanProduct = forwardRef(
     const [termsSnapshot, setTermsSnapshot] = useState(null);
 
     const [scheduleOpen, setScheduleOpen] = useState(false);
-    const [accounts, setAccounts] = useState([]);
-    const [accountsLoading, setAccountsLoading] = useState(false);
-    const accountsFetchedRef = useRef(false);
-    const accountsInstitutionIdRef = useRef(null);
     const [loanFeesConfigs, setLoanFeesConfigs] = useState([]);
     const [loanFeesLoading, setLoanFeesLoading] = useState(false);
     const loanFeesFetchedRef = useRef(false);
@@ -597,35 +591,6 @@ const UseLoanProduct = forwardRef(
       const currentInstitutionId = userDetails?.institutionUsersId;
       if (
         currentInstitutionId &&
-        currentInstitutionId !== accountsInstitutionIdRef.current
-      ) {
-        accountsFetchedRef.current = false;
-        accountsInstitutionIdRef.current = currentInstitutionId;
-      }
-      if (!accountsFetchedRef.current && currentInstitutionId) {
-        setAccountsLoading(true);
-        fetchAccounts(currentInstitutionId)
-          .then((data) => {
-            // Keep only active accounts locally
-            const activeAccounts = Array.isArray(data)
-              ? data.filter((a) => a && a.status === "active")
-              : [];
-            setAccounts(activeAccounts);
-            accountsFetchedRef.current = true;
-          })
-          .catch((err) => {
-            console.error("Error fetching accounts:", err);
-          })
-          .finally(() => {
-            setAccountsLoading(false);
-          });
-      }
-    }, [userDetails?.institutionUsersId]);
-
-    useEffect(() => {
-      const currentInstitutionId = userDetails?.institutionUsersId;
-      if (
-        currentInstitutionId &&
         currentInstitutionId !== loanFeesInstitutionIdRef.current
       ) {
         loanFeesFetchedRef.current = false;
@@ -661,15 +626,8 @@ const UseLoanProduct = forwardRef(
             propBorrower.businessName || ""
           }`.trim() || propBorrower.uniqueIdNumber;
       }
-      // Set default accounts if available
-      if (accounts.length > 0 && !base.accountLoansId) {
-        base.accountLoansId = accounts[0].id;
-      }
-      if (accounts.length > 0 && !base.loanFeesAccountId) {
-        base.loanFeesAccountId = accounts[0].id;
-      }
       return base;
-    }, [propInitialValues, propBorrower, accounts]);
+    }, [propInitialValues, propBorrower]);
 
     const saveDraftInternal = async (
       values,
@@ -901,8 +859,8 @@ const UseLoanProduct = forwardRef(
       );
     }
 
-    // Show loading state if we still need account/fee configs for dropdown options
-    if (accountsLoading || loanFeesLoading) {
+    // Show loading state if we still need fee configs for dropdown options
+    if (loanFeesLoading) {
       return (
         <Box
           sx={{
@@ -1013,17 +971,6 @@ const UseLoanProduct = forwardRef(
                         return;
                       }
 
-                      if (field.name === "accountLoansId") {
-                        formFields.push({
-                          ...field,
-                          options: (accounts || []).map((account) => ({
-                            value: account.id,
-                            label: account.name,
-                          })),
-                        });
-                        return;
-                      }
-
                       if (field.name === "loanFees") {
                         const currency =
                           userDetails?.institution?.currencyCode || "$";
@@ -1061,17 +1008,6 @@ const UseLoanProduct = forwardRef(
                               loanFee,
                               currency,
                             )}`,
-                          })),
-                        });
-                        return;
-                      }
-
-                      if (field.name === "loanFeesAccountId") {
-                        formFields.push({
-                          ...field,
-                          options: (accounts || []).map((account) => ({
-                            value: account.id,
-                            label: account.name,
                           })),
                         });
                         return;

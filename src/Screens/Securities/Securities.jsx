@@ -71,6 +71,7 @@ export default function Securities() {
     handleCreateDialogOpen,
     handleCreateDialogClose,
     handleCreateSuccess,
+    workingOverlay,
   } = useCrudOperations(
     "Security",
     LIST_SECURITIES_QUERY,
@@ -148,48 +149,51 @@ export default function Securities() {
   ];
 
   return (
-    <CollectionsTemplate
-      title="Securities"
-      createButtonText="Create Security"
-      onCreateClick={handleCreateDialogOpen}
-      // Data props
-      items={securities}
-      loading={loading}
-      columns={columns}
-      searchFields={["name", "type", "description"]}
-      noDataMessage="No securities found. Please create a security to get started."
-      // Create dialog props
-      createDialogOpen={createDialogOpen}
-      onCreateDialogClose={handleCreateDialogClose}
-      createDialogTitle="Create Security"
-      CreateFormComponent={CreateSecurities}
-      createFormProps={{
-        onClose: handleCreateDialogClose,
-        onCreateSuccess: handleCreateSuccess,
-      }}
-      // Edit dialog props
-      editDialogOpen={editDialogOpen}
-      editDialogRow={editDialogRow}
-      onEditDialogClose={handleEditDialogClose}
-      EditFormComponent={CreateSecurities}
-      editFormProps={{
-        onClose: handleEditDialogClose,
-        onEditSuccess: handleEditSuccess,
-        isEditMode: true,
-      }}
-      onEditClick={handleEditClick}
-      onPopupDeleteClick={handlePopupDeleteClick}
-      editMode={editMode}
-      // Delete dialog props
-      deleteDialogOpen={deleteDialogOpen}
-      onDeleteDialogClose={handleDeleteDialogClose}
-      onDeleteConfirm={handleDeleteConfirm}
-      deleteLoading={deleteLoading}
-      deleteError={deleteError}
-      deleteDialogRow={deleteDialogRow}
-      // Search props
-      enableSearch={true}
-      searchPlaceholder="Search securities..."
-    />
+    <>
+      {workingOverlay}
+      <CollectionsTemplate
+        title="Securities"
+        createButtonText="Create Security"
+        onCreateClick={handleCreateDialogOpen}
+        // Data props
+        items={securities}
+        loading={loading}
+        columns={columns}
+        searchFields={["name", "type", "description"]}
+        noDataMessage="No securities found. Please create a security to get started."
+        // Create dialog props
+        createDialogOpen={createDialogOpen}
+        onCreateDialogClose={handleCreateDialogClose}
+        createDialogTitle="Create Security"
+        CreateFormComponent={CreateSecurities}
+        createFormProps={{
+          onClose: handleCreateDialogClose,
+          onCreateSuccess: handleCreateSuccess,
+        }}
+        // Edit dialog props
+        editDialogOpen={editDialogOpen}
+        editDialogRow={editDialogRow}
+        onEditDialogClose={handleEditDialogClose}
+        EditFormComponent={CreateSecurities}
+        editFormProps={{
+          onClose: handleEditDialogClose,
+          onEditSuccess: handleEditSuccess,
+          isEditMode: true,
+        }}
+        onEditClick={handleEditClick}
+        onPopupDeleteClick={handlePopupDeleteClick}
+        editMode={editMode}
+        // Delete dialog props
+        deleteDialogOpen={deleteDialogOpen}
+        onDeleteDialogClose={handleDeleteDialogClose}
+        onDeleteConfirm={handleDeleteConfirm}
+        deleteLoading={deleteLoading}
+        deleteError={deleteError}
+        deleteDialogRow={deleteDialogRow}
+        // Search props
+        enableSearch={true}
+        searchPlaceholder="Search securities..."
+      />
+    </>
   );
 }

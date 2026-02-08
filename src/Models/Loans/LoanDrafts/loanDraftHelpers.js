@@ -1295,23 +1295,6 @@ export const convertDraftToLoan = async ({ loanDraft, userDetails }) => {
   const loan = updateResult?.data?.updateLoan;
   if (!loan?.id) throw new Error("Failed to convert draft loan to active");
 
-  // Link intended routing account (minimum continuity)
-  if (draftRecord?.accountLoansId) {
-    try {
-      await client.graphql({
-        query: CREATE_LOAN_ACCOUNT_MUTATION,
-        variables: {
-          input: {
-            loanId: loan.id,
-            accountId: draftRecord.accountLoansId,
-          },
-        },
-      });
-    } catch (err) {
-      console.warn("Failed to link Loan to source account:", err);
-    }
-  }
-
   // Create Installments
   const INSTALLMENT_CONCURRENCY = 6;
   await runWithConcurrency(installments, INSTALLMENT_CONCURRENCY, (inst) =>

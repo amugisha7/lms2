@@ -18,21 +18,11 @@ const createLoanForm = [
     span: 12,
   },
   {
-    label: "Source Account",
-    name: "accountLoansId",
-    type: "select",
-    required: true,
-    span: 6,
-    options: [], // Will be populated dynamically
-    dynamicoptions: "true",
-    helperText: "The account from which the principal will be deducted."
-  },
-  {
     label: "Principal Amount",
     name: "principalAmount",
     type: "number",
     required: true,
-    span: 6,
+    span: 12,
     validationType: "number",
     min: 0,
     helperText: "The amount of money being lent."
@@ -390,17 +380,6 @@ const createLoanForm = [
     dependsOn: "loanFeesType",
     dependsOnValue: "custom",
     helperText: "Enter the custom fee amount.",
-  },
-  {
-    label: "Loan Fees Account",
-    name: "loanFeesAccountId",
-    type: "select",
-    span: 6,
-    options: [], // Will be populated dynamically
-    dynamicoptions: "true",
-    helperText: "Select the account to receive the loan fees.",
-    dependsOn: "loanFeesType",
-    dependsOnValue: ["pre-defined", "custom"],
   },
   {
     label: "Loan Fees",

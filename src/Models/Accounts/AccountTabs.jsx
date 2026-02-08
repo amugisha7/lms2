@@ -86,7 +86,7 @@ export default function AccountTabs() {
         setLoading(false);
       }
     },
-    [client]
+    [client],
   );
 
   // Handler for when a transaction is created/updated
@@ -104,7 +104,7 @@ export default function AccountTabs() {
         name: values.name?.trim() || null,
         openingBalance: parseFloat(values.openingBalance) || 0,
         status: values.status || "active",
-        currency: values.currency || userDetails?.institution?.currencyCode,
+        currency: userDetails?.institution?.currencyCode,
         accountType: "user",
         description: values.description?.trim() || null,
       };
@@ -116,7 +116,7 @@ export default function AccountTabs() {
 
       return result.data.updateAccount;
     },
-    [client, userDetails]
+    [client, userDetails],
   );
 
   // Handler for when account is successfully edited
@@ -133,7 +133,7 @@ export default function AccountTabs() {
         fetchAccountData(id);
       }
     },
-    [id, fetchAccountData]
+    [id, fetchAccountData],
   );
 
   useEffect(() => {

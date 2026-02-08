@@ -41,7 +41,6 @@ import {
   convertDraftToLoan,
 } from "../LoanDrafts/loanDraftHelpers";
 import {
-  fetchAccounts,
   fetchLoanFeesConfig,
   fetchInstitutionAdmins,
 } from "../CreateLoan/createLoanHelpers";
@@ -84,7 +83,6 @@ baseInitialValues.loanProductName = "";
 const buildValidationSchema = () => {
   // Match CreateLoan validation behavior
   return Yup.object().shape({
-    accountLoansId: Yup.string().required("Source Account is required"),
     principalAmount: Yup.number()
       .required("Principal Amount is required")
       .min(0, "Principal Amount must be at least 0"),
@@ -289,8 +287,7 @@ const EditLoan = forwardRef(
     const [submitSuccess, setSubmitSuccess] = useState("");
     const [editMode, setEditMode] = useState(isEditMode);
     const [scheduleOpen, setScheduleOpen] = useState(false);
-    const [accounts, setAccounts] = useState([]);
-    const [accountsLoading, setAccountsLoading] = useState(false);
+
     const [loanFeesConfigs, setLoanFeesConfigs] = useState([]);
     const [loanFeesLoading, setLoanFeesLoading] = useState(false);
     const [localDraft, setLocalDraft] = useState(loanDraft || null);
@@ -321,26 +318,6 @@ const EditLoan = forwardRef(
       const currentInstitutionId = userDetails?.institutionUsersId;
       if (!currentInstitutionId) return;
 
-      setAccountsLoading(true);
-      fetchAccounts(currentInstitutionId)
-        .then((data) => {
-          const activeAccounts = Array.isArray(data)
-            ? data.filter((a) => a && a.status === "active")
-            : [];
-          setAccounts(activeAccounts);
-        })
-        .catch((err) => {
-          console.error("Error fetching accounts:", err);
-        })
-        .finally(() => {
-          setAccountsLoading(false);
-        });
-    }, [userDetails?.institutionUsersId]);
-
-    useEffect(() => {
-      const currentInstitutionId = userDetails?.institutionUsersId;
-      if (!currentInstitutionId) return;
-
       setLoanFeesLoading(true);
       fetchLoanFeesConfig(currentInstitutionId)
         .then((data) => {
@@ -360,14 +337,6 @@ const EditLoan = forwardRef(
           ...propInitialValues,
         }
       : { ...baseInitialValues };
-
-    // Ensure accounts defaults are set (CreateLoan behavior)
-    if (accounts.length > 0 && !formInitialValues.accountLoansId) {
-      formInitialValues.accountLoansId = accounts[0].id;
-    }
-    if (accounts.length > 0 && !formInitialValues.loanFeesAccountId) {
-      formInitialValues.loanFeesAccountId = accounts[0].id;
-    }
 
     useImperativeHandle(ref, () => ({
       toggleEdit: () => {
@@ -406,16 +375,6 @@ const EditLoan = forwardRef(
       return editLoanForm
         .filter((field) => field?.name !== "loanProduct")
         .map((field) => {
-          if (field.name === "accountLoansId") {
-            return {
-              ...field,
-              options: (accounts || []).map((account) => ({
-                value: account.id,
-                label: account.name,
-              })),
-            };
-          }
-
           if (field.name === "loanFees") {
             return {
               ...field,
@@ -429,19 +388,9 @@ const EditLoan = forwardRef(
             };
           }
 
-          if (field.name === "loanFeesAccountId") {
-            return {
-              ...field,
-              options: (accounts || []).map((account) => ({
-                value: account.id,
-                label: account.name,
-              })),
-            };
-          }
-
           return field;
         });
-    }, [accounts, loanFeesConfigs, userDetails?.institution]);
+    }, [loanFeesConfigs, userDetails?.institution]);
 
     const handleSubmit = async (values, { setSubmitting }) => {
       setSubmitError("");
@@ -583,7 +532,7 @@ const EditLoan = forwardRef(
       setScheduleOpen(true);
     };
 
-    if (accountsLoading || loanFeesLoading) {
+    if (loanFeesLoading) {
       return (
         <Box
           sx={{

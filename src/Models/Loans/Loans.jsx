@@ -10,6 +10,7 @@ import { UserContext } from "../../App";
 import CustomDataGrid from "../../ModelAssets/CustomDataGrid";
 import CustomSlider from "../../ModelAssets/CustomSlider";
 import DeleteDialog from "../../ModelAssets/DeleteDialog";
+import WorkingOverlay from "../../ModelAssets/WorkingOverlay";
 import { useTheme } from "@mui/material/styles";
 import CollectionsTemplate from "../../ModelAssets/CollectionsTemplate";
 import LoanDetail from "./LoanDetail";
@@ -66,6 +67,9 @@ export default function Loans() {
   const [deleteLoading, setDeleteLoading] = React.useState(false);
   const [deleteError, setDeleteError] = React.useState("");
   const [editMode, setEditMode] = React.useState(false);
+  const [workingOverlayOpen, setWorkingOverlayOpen] = React.useState(false);
+  const [workingOverlayMessage, setWorkingOverlayMessage] =
+    React.useState("Working...");
   const formRef = React.useRef();
   const hasFetchedRef = React.useRef();
   const { userDetails } = React.useContext(UserContext);
@@ -84,6 +88,8 @@ export default function Loans() {
     if (!userDetails?.branchUsersId) return;
 
     setLoading(true);
+    setWorkingOverlayOpen(true);
+    setWorkingOverlayMessage("Loading Loans...");
     try {
       const client = generateClient();
 
@@ -137,6 +143,7 @@ export default function Loans() {
       setBorrowers([]);
     } finally {
       setLoading(false);
+      setWorkingOverlayOpen(false);
     }
   };
 
@@ -223,6 +230,8 @@ export default function Loans() {
   const handleDeleteConfirm = async () => {
     setDeleteLoading(true);
     setDeleteError("");
+    setWorkingOverlayOpen(true);
+    setWorkingOverlayMessage("Deleting Loan...");
     try {
       const client = generateClient();
 
@@ -280,6 +289,7 @@ export default function Loans() {
       setDeleteError("Failed to delete. Please try again.");
     } finally {
       setDeleteLoading(false);
+      setWorkingOverlayOpen(false);
     }
   };
 
@@ -449,6 +459,14 @@ export default function Loans() {
 
   return (
     <>
+      <NotificationBar
+        message={notification?.message}
+        color={notification?.color}
+      />
+      <WorkingOverlay
+        open={workingOverlayOpen}
+        message={workingOverlayMessage}
+      />
       <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 2 }}>
         <Tabs
           value={selectedTab}

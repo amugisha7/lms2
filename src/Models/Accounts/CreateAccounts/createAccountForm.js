@@ -22,16 +22,6 @@ const createAccountForm = [
     defaultValue: 0,
   },
   {
-    label: "Currency",
-    name: "currency",
-    type: "select",
-    required: true,
-    span: 6,
-    placeholder: "Select Currency",
-    validationType: "string",
-    helperText: "Currency cannot be changed after account creation",
-  },
-  {
     label: "Description",
     name: "description",
     type: "textarea",

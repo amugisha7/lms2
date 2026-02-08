@@ -21,7 +21,6 @@ import PlusButtonMain from "../../../ModelAssets/PlusButtonMain";
 import { UserContext } from "../../../App";
 import { useNotification } from "../../../ModelAssets/NotificationContext";
 import {
-  fetchAccounts,
   fetchLoanFeesConfig,
   fetchInstitutionAdmins,
 } from "./createLoanHelpers";
@@ -84,7 +83,6 @@ baseInitialValues.loanProduct = "";
 const buildValidationSchema = () => {
   const validationShape = {
     borrower: Yup.string().required("Borrower is required"),
-    accountLoansId: Yup.string().required("Source Account is required"),
     principalAmount: Yup.number()
       .required("Principal Amount is required")
       .min(0, "Principal Amount must be at least 0"),
@@ -285,10 +283,6 @@ const CreateLoan = forwardRef(
     const [loanDraft, setLoanDraft] = useState(null);
 
     const [scheduleOpen, setScheduleOpen] = useState(false);
-    const [accounts, setAccounts] = useState([]);
-    const [accountsLoading, setAccountsLoading] = useState(false);
-    const accountsFetchedRef = useRef(false);
-    const accountsInstitutionIdRef = useRef(null);
     const [loanFeesConfigs, setLoanFeesConfigs] = useState([]);
     const [loanFeesLoading, setLoanFeesLoading] = useState(false);
     const loanFeesFetchedRef = useRef(false);
@@ -323,34 +317,6 @@ const CreateLoan = forwardRef(
         cancelled = true;
       };
     }, [draftId]);
-
-    useEffect(() => {
-      const currentInstitutionId = userDetails?.institutionUsersId;
-      if (
-        currentInstitutionId &&
-        currentInstitutionId !== accountsInstitutionIdRef.current
-      ) {
-        accountsFetchedRef.current = false;
-        accountsInstitutionIdRef.current = currentInstitutionId;
-      }
-      if (!accountsFetchedRef.current && currentInstitutionId) {
-        setAccountsLoading(true);
-        fetchAccounts(currentInstitutionId)
-          .then((data) => {
-            const activeAccounts = Array.isArray(data)
-              ? data.filter((a) => a && a.status === "active")
-              : [];
-            setAccounts(activeAccounts);
-            accountsFetchedRef.current = true;
-          })
-          .catch((err) => {
-            console.error("Error fetching accounts:", err);
-          })
-          .finally(() => {
-            setAccountsLoading(false);
-          });
-      }
-    }, [userDetails?.institutionUsersId]);
 
     useEffect(() => {
       const currentInstitutionId = userDetails?.institutionUsersId;
@@ -405,15 +371,8 @@ const CreateLoan = forwardRef(
           }`.trim() || propBorrower.uniqueIdNumber;
       }
 
-      if (accounts.length > 0 && !base.accountLoansId) {
-        base.accountLoansId = accounts[0].id;
-      }
-      if (accounts.length > 0 && !base.loanFeesAccountId) {
-        base.loanFeesAccountId = accounts[0].id;
-      }
-
       return base;
-    }, [propInitialValues, propBorrower, accounts, loanDraft]);
+    }, [propInitialValues, propBorrower, loanDraft]);
 
     const saveDraftInternal = async (
       values,
@@ -634,7 +593,7 @@ const CreateLoan = forwardRef(
       }
     };
 
-    if (borrowersLoading || accountsLoading || loanFeesLoading) {
+    if (borrowersLoading || loanFeesLoading) {
       return (
         <Box
           sx={{
@@ -693,16 +652,6 @@ const CreateLoan = forwardRef(
                 if (field.name === "loanProduct") {
                   return;
                 }
-                if (field.name === "accountLoansId") {
-                  formFields.push({
-                    ...field,
-                    options: (accounts || []).map((account) => ({
-                      value: account.id,
-                      label: account.name,
-                    })),
-                  });
-                  return;
-                }
                 if (field.name === "loanFees") {
                   formFields.push({
                     ...field,
@@ -712,16 +661,6 @@ const CreateLoan = forwardRef(
                         loanFee,
                         currency,
                       )}`,
-                    })),
-                  });
-                  return;
-                }
-                if (field.name === "loanFeesAccountId") {
-                  formFields.push({
-                    ...field,
-                    options: (accounts || []).map((account) => ({
-                      value: account.id,
-                      label: account.name,
                     })),
                   });
                   return;

@@ -120,13 +120,14 @@ export default function Branches() {
     handleCreateDialogOpen,
     handleCreateDialogClose,
     handleCreateSuccess: originalHandleCreateSuccess,
+    workingOverlay,
   } = useCrudOperations(
     "Branch",
     LIST_BRANCHES_QUERY,
     null,
     UPDATE_BRANCH_MUTATION,
     DELETE_BRANCH_MUTATION,
-    "listBranches"
+    "listBranches",
   );
 
   // Custom fetch function with pagination support
@@ -146,7 +147,7 @@ export default function Branches() {
           console.log(
             `Fetching batch ${iteration + 1} with nextToken: ${
               nextToken || "null"
-            }`
+            }`,
           );
           console.log("API Query: LIST_BRANCHES_QUERY", {
             variables: queryVariables,
@@ -163,7 +164,7 @@ export default function Branches() {
           allBranchesList.push(...batchItems);
           const newNextToken = listResult.nextToken || null;
           console.log(
-            `Fetched ${batchItems.length} branches in this batch. Total: ${allBranchesList.length}. NextToken: ${newNextToken}`
+            `Fetched ${batchItems.length} branches in this batch. Total: ${allBranchesList.length}. NextToken: ${newNextToken}`,
           );
           // Break conditions
           if (!newNextToken) {
@@ -172,20 +173,20 @@ export default function Branches() {
           }
           if (newNextToken === nextToken) {
             console.warn(
-              "Next token did not advance. Stopping to prevent infinite loop."
+              "Next token did not advance. Stopping to prevent infinite loop.",
             );
             break;
           }
           if (++iteration > 50) {
             console.warn(
-              "Safety cap (50 iterations) reached. Stopping pagination."
+              "Safety cap (50 iterations) reached. Stopping pagination.",
             );
             break;
           }
           nextToken = newNextToken;
         }
         console.log(
-          `Finished fetching all branches. Total count: ${allBranchesList.length}`
+          `Finished fetching all branches. Total count: ${allBranchesList.length}`,
         );
         setAllBranches(allBranchesList);
         return allBranchesList;
@@ -197,7 +198,7 @@ export default function Branches() {
         setBranchesLoading(false);
       }
     },
-    [client]
+    [client],
   );
 
   // API handler for creating branch
@@ -262,7 +263,7 @@ export default function Branches() {
       // First, clear relationships with loan products
       console.log(
         "Clearing BranchLoanProducts for branch:",
-        deleteDialogRow.id
+        deleteDialogRow.id,
       );
       const branchLoanProductsResult = await client.graphql({
         query: LIST_BRANCH_LOAN_PRODUCTS_QUERY,
@@ -285,7 +286,7 @@ export default function Branches() {
       await originalHandleDeleteConfirm();
       if (deleteDialogRow) {
         setAllBranches((prev) =>
-          prev.filter((branch) => branch.id !== deleteDialogRow.id)
+          prev.filter((branch) => branch.id !== deleteDialogRow.id),
         );
         setNotification({
           message: `${deleteDialogRow.name} deleted successfully!`,
@@ -307,8 +308,8 @@ export default function Branches() {
   const handleEditSuccess = (updatedBranch) => {
     setAllBranches((prev) =>
       prev.map((branch) =>
-        branch.id === updatedBranch.id ? updatedBranch : branch
-      )
+        branch.id === updatedBranch.id ? updatedBranch : branch,
+      ),
     );
     setNotification({
       message: `${updatedBranch.name} updated successfully!`,
@@ -330,7 +331,7 @@ export default function Branches() {
       processed.sort((a, b) =>
         a.name.localeCompare(b.name, undefined, {
           sensitivity: "base",
-        })
+        }),
       );
       setProcessedBranches(processed);
     }
@@ -391,6 +392,7 @@ export default function Branches() {
         message={notification.message}
         color={notification.color}
       />
+      {workingOverlay}
       <CollectionsTemplate
         title="Branches"
         createButtonText="Create Branch"

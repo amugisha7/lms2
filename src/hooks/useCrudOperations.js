@@ -1,5 +1,6 @@
 import React from "react";
 import { generateClient } from "aws-amplify/api";
+import WorkingOverlay from "../ModelAssets/WorkingOverlay";
 
 export function useCrudOperations(entityName, listQuery, createMutation, updateMutation, deleteMutation, listQueryKey) {
   const [items, setItems] = React.useState([]);
@@ -11,9 +12,13 @@ export function useCrudOperations(entityName, listQuery, createMutation, updateM
   const [deleteDialogRow, setDeleteDialogRow] = React.useState(null);
   const [deleteLoading, setDeleteLoading] = React.useState(false);
   const [deleteError, setDeleteError] = React.useState("");
+  const [workingOverlayOpen, setWorkingOverlayOpen] = React.useState(false);
+  const [workingOverlayMessage, setWorkingOverlayMessage] = React.useState("Working...");
 
   const fetchItems = React.useCallback(async (variables = {}) => {
     setLoading(true);
+    setWorkingOverlayOpen(true);
+    setWorkingOverlayMessage(`Loading ${entityName}s...`);
     try {
       const client = generateClient();
       const result = await client.graphql({
@@ -28,6 +33,7 @@ export function useCrudOperations(entityName, listQuery, createMutation, updateM
       setItems([]);
     } finally {
       setLoading(false);
+      setWorkingOverlayOpen(false);
     }
   }, [listQuery, entityName, listQueryKey]);
 
@@ -65,6 +71,8 @@ export function useCrudOperations(entityName, listQuery, createMutation, updateM
   const handleDeleteConfirm = async () => {
     setDeleteLoading(true);
     setDeleteError("");
+    setWorkingOverlayOpen(true);
+    setWorkingOverlayMessage(`Deleting ${entityName}...`);
     try {
       const client = generateClient();
       await client.graphql({
@@ -82,6 +90,7 @@ export function useCrudOperations(entityName, listQuery, createMutation, updateM
       setDeleteError("Failed to delete. Please try again.");
     } finally {
       setDeleteLoading(false);
+      setWorkingOverlayOpen(false);
     }
   };
 
@@ -119,5 +128,10 @@ export function useCrudOperations(entityName, listQuery, createMutation, updateM
     handleCreateDialogOpen,
     handleCreateDialogClose,
     handleCreateSuccess,
+    workingOverlay: (
+      <WorkingOverlay open={workingOverlayOpen} message={workingOverlayMessage} />
+    ),
+    setWorkingOverlayOpen,
+    setWorkingOverlayMessage,
   };
 }

@@ -79,13 +79,14 @@ export default function Accounts() {
     handleCreateDialogOpen,
     handleCreateDialogClose,
     handleCreateSuccess: originalHandleCreateSuccess,
+    workingOverlay,
   } = useCrudOperations(
     "Account",
     LIST_ACCOUNTS_QUERY,
     null,
     UPDATE_ACCOUNT_MUTATION,
     DELETE_ACCOUNT_MUTATION,
-    "listAccounts"
+    "listAccounts",
   );
 
   // Custom fetch function with pagination support
@@ -105,7 +106,7 @@ export default function Accounts() {
           console.log(
             `Fetching batch ${iteration + 1} with nextToken: ${
               nextToken || "null"
-            }`
+            }`,
           );
           console.log("API Query: LIST_ACCOUNTS_QUERY", {
             variables: queryVariables,
@@ -122,7 +123,7 @@ export default function Accounts() {
           allAccountsList.push(...batchItems);
           const newNextToken = listResult.nextToken || null;
           console.log(
-            `Fetched ${batchItems.length} accounts in this batch. Total: ${allAccountsList.length}. NextToken: ${newNextToken}`
+            `Fetched ${batchItems.length} accounts in this batch. Total: ${allAccountsList.length}. NextToken: ${newNextToken}`,
           );
           // Break conditions
           if (!newNextToken) {
@@ -131,20 +132,20 @@ export default function Accounts() {
           }
           if (newNextToken === nextToken) {
             console.warn(
-              "Next token did not advance. Stopping to prevent infinite loop."
+              "Next token did not advance. Stopping to prevent infinite loop.",
             );
             break;
           }
           if (++iteration > 50) {
             console.warn(
-              "Safety cap (50 iterations) reached. Stopping pagination."
+              "Safety cap (50 iterations) reached. Stopping pagination.",
             );
             break;
           }
           nextToken = newNextToken;
         }
         console.log(
-          `Finished fetching all accounts. Total count: ${allAccountsList.length}`
+          `Finished fetching all accounts. Total count: ${allAccountsList.length}`,
         );
         setAllAccounts(allAccountsList);
         return allAccountsList;
@@ -156,7 +157,7 @@ export default function Accounts() {
         setAccountsLoading(false);
       }
     },
-    [client]
+    [client],
   );
 
   // API handler for creating account
@@ -170,7 +171,7 @@ export default function Accounts() {
       name: values.name?.trim() || null,
       openingBalance: parseFloat(values.openingBalance) || 0,
       status: "active",
-      currency: values.currency || userDetails.institution.currencyCode,
+      currency: userDetails.institution.currencyCode,
       accountType: "user",
       description: values.description?.trim() || null,
     };
@@ -193,7 +194,7 @@ export default function Accounts() {
       name: values.name?.trim() || null,
       openingBalance: parseFloat(values.openingBalance) || 0,
       status: values.status || "active",
-      currency: values.currency || userDetails.institution.currencyCode,
+      currency: userDetails.institution.currencyCode,
       accountType: "user",
       description: values.description?.trim() || null,
     };
@@ -227,7 +228,7 @@ export default function Accounts() {
     await originalHandleDeleteConfirm();
     if (deleteDialogRow) {
       setAllAccounts((prev) =>
-        prev.filter((account) => account.id !== deleteDialogRow.id)
+        prev.filter((account) => account.id !== deleteDialogRow.id),
       );
       setNotification({
         message: `${deleteDialogRow.name} deleted successfully!`,
@@ -240,8 +241,8 @@ export default function Accounts() {
   const handleEditSuccess = (updatedAccount) => {
     setAllAccounts((prev) =>
       prev.map((account) =>
-        account.id === updatedAccount.id ? updatedAccount : account
-      )
+        account.id === updatedAccount.id ? updatedAccount : account,
+      ),
     );
     setNotification({
       message: `${updatedAccount.name} updated successfully!`,
@@ -348,7 +349,7 @@ export default function Accounts() {
       processed.sort((a, b) =>
         a.name.localeCompare(b.name, undefined, {
           sensitivity: "base",
-        })
+        }),
       );
       setProcessedAccounts(processed);
     }
@@ -399,11 +400,6 @@ export default function Accounts() {
       },
     },
     {
-      field: "currency",
-      headerName: "Currency",
-      width: 100,
-    },
-    {
       field: "status",
       headerName: "Status",
       width: 100,
@@ -446,6 +442,7 @@ export default function Accounts() {
         message={notification.message}
         color={notification.color}
       />
+      {workingOverlay}
       <CollectionsTemplate
         title="Accounts"
         createButtonText="Create Account"
@@ -454,7 +451,7 @@ export default function Accounts() {
         items={processedAccounts}
         loading={accountsLoading}
         columns={columns}
-        searchFields={["name", "currency", "description"]}
+        searchFields={["name", "description"]}
         noDataMessage="No accounts found. Please create an account to get started."
         // Create dialog props
         createDialogOpen={createDialogOpen}

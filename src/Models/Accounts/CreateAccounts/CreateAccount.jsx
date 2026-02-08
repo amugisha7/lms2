@@ -10,6 +10,7 @@ import * as Yup from "yup";
 import { Box, Grid, Typography } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { generateClient } from "aws-amplify/api";
+import WorkingOverlay from "../../../ModelAssets/WorkingOverlay";
 
 import createAccountForm from "./createAccountForm";
 import TextInput from "../../../Resources/FormComponents/TextInput";
@@ -20,7 +21,6 @@ import CreateFormButtons from "../../../ModelAssets/CreateFormButtons";
 import CustomEditFormButtons from "../../../ModelAssets/CustomEditFormButtons";
 import { UserContext } from "../../../App";
 import { EditClickedContext } from "../../../ModelAssets/CollectionsTemplate";
-import { currenciesObj } from "../../../Resources/currenciesObj";
 
 const FormGrid = styled(Grid)(({ theme }) => ({
   display: "flex",
@@ -52,7 +52,7 @@ createAccountForm.forEach((field) => {
         function (value) {
           if (!value || value.trim() === "") return true;
           return field.validationPattern.test(value);
-        }
+        },
       );
     }
     if (field.maxLength) {
@@ -62,7 +62,7 @@ createAccountForm.forEach((field) => {
         function (value) {
           if (!value || value.trim() === "") return true;
           return value.length <= field.maxLength;
-        }
+        },
       );
     }
   } else if (field.validationType === "number") {
@@ -76,7 +76,7 @@ createAccountForm.forEach((field) => {
         function (value) {
           if (!value || value.trim() === "") return true;
           return field.validationPattern.test(value);
-        }
+        },
       );
     }
   }
@@ -117,29 +117,19 @@ const CreateAccountForm = forwardRef(
       isEditMode = false,
       hideCancel,
     },
-    ref
+    ref,
   ) => {
     const { userDetails } = React.useContext(UserContext);
     const [submitError, setSubmitError] = useState("");
     const [submitSuccess, setSubmitSuccess] = useState("");
     const [editMode, setEditMode] = useState(!isEditMode);
+    const [workingOverlayOpen, setWorkingOverlayOpen] = useState(false);
+    const [workingOverlayMessage, setWorkingOverlayMessage] =
+      useState("Working...");
     const editClickedContext = useContext(EditClickedContext);
 
-    // Populate currency options
-    const accountForm = createAccountForm.map((field) => {
-      if (field.name === "currency") {
-        return {
-          ...field,
-          options: Object.keys(currenciesObj).map((code) => ({
-            value: code,
-            label: `${code} - ${currenciesObj[code].name}`,
-          })),
-          // Disable currency field in edit mode - currency is set at creation only
-          disabled: isEditMode,
-        };
-      }
-      return field;
-    });
+    // Use the form fields directly
+    const accountForm = createAccountForm;
 
     // Map database field names to form field names
     const mapDbFieldsToFormFields = (dbData) => {
@@ -148,7 +138,6 @@ const CreateAccountForm = forwardRef(
       return {
         name: dbData.name || "",
         openingBalance: dbData.openingBalance || 0,
-        currency: dbData.currency || "",
         description: dbData.description || "",
         status: dbData.status || "active",
       };
@@ -161,11 +150,6 @@ const CreateAccountForm = forwardRef(
           ...mapDbFieldsToFormFields(propInitialValues),
         }
       : baseInitialValues;
-
-    // Set default currency for create mode
-    if (!isEditMode && userDetails?.institution?.currencyCode) {
-      formInitialValues.currency = userDetails.institution.currencyCode;
-    }
 
     useImperativeHandle(ref, () => ({
       toggleEdit: () => {
@@ -185,14 +169,13 @@ const CreateAccountForm = forwardRef(
       setSubmitError("");
       setSubmitSuccess("");
       setSubmitting(true);
+      setWorkingOverlayOpen(true);
+      setWorkingOverlayMessage(
+        isEditMode ? "Updating Account..." : "Saving Account...",
+      );
 
       // Ensure opening balance defaults to 0 if not provided
       values.openingBalance = values.openingBalance || 0;
-
-      // Ensure currency defaults to institution's currency if not provided
-      if (!values.currency) {
-        values.currency = userDetails?.institution?.currencyCode || "";
-      }
 
       try {
         if (isEditMode && propInitialValues && onUpdateAccountAPI) {
@@ -214,7 +197,7 @@ const CreateAccountForm = forwardRef(
           }
         } else {
           setSubmitError(
-            "API handler function not available. Please try again."
+            "API handler function not available. Please try again.",
           );
         }
       } catch (err) {
@@ -223,92 +206,102 @@ const CreateAccountForm = forwardRef(
           err.message ||
             `Failed to ${
               isEditMode ? "update" : "create"
-            } account. Please try again.`
+            } account. Please try again.`,
         );
       } finally {
         setSubmitting(false);
+        setWorkingOverlayOpen(false);
       }
     };
 
     return (
-      <Formik
-        initialValues={formInitialValues}
-        validationSchema={baseValidationSchema}
-        onSubmit={handleSubmit}
-        enableReinitialize={true}
-      >
-        {(formik) => (
-          <Form>
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                width: "100%",
-                flex: 1,
-              }}
-            >
-              {isEditMode && editMode ? (
-                <CustomEditFormButtons
-                  formik={formik}
-                  setEditMode={setEditMode}
-                  setSubmitError={setSubmitError}
-                  setSubmitSuccess={setSubmitSuccess}
-                />
-              ) : null}
+      <>
+        <Formik
+          initialValues={formInitialValues}
+          validationSchema={baseValidationSchema}
+          onSubmit={handleSubmit}
+          enableReinitialize={true}
+        >
+          {(formik) => (
+            <Form>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  width: "100%",
+                  flex: 1,
+                }}
+              >
+                {isEditMode && editMode ? (
+                  <CustomEditFormButtons
+                    formik={formik}
+                    setEditMode={setEditMode}
+                    setSubmitError={setSubmitError}
+                    setSubmitSuccess={setSubmitSuccess}
+                  />
+                ) : null}
 
-              <Grid container spacing={1}>
-                {accountForm
-                  .filter((field) => {
-                    // Show field if it doesn't have showOnlyInEditMode OR if we're in edit mode
-                    return !field.showOnlyInEditMode || isEditMode;
-                  })
-                  .map((field) => (
-                    <FormGrid
-                      item
-                      size={{ xs: 12, md: field.span }}
-                      key={field.name}
-                    >
-                      {renderFormField({ ...field, editing: editMode }, formik)}
-                    </FormGrid>
-                  ))}
+                <Grid container spacing={1}>
+                  {accountForm
+                    .filter((field) => {
+                      // Show field if it doesn't have showOnlyInEditMode OR if we're in edit mode
+                      return !field.showOnlyInEditMode || isEditMode;
+                    })
+                    .map((field) => (
+                      <FormGrid
+                        item
+                        size={{ xs: 12, md: field.span }}
+                        key={field.name}
+                      >
+                        {renderFormField(
+                          { ...field, editing: editMode },
+                          formik,
+                        )}
+                      </FormGrid>
+                    ))}
 
-                <Box
-                  sx={{
-                    display: "flex",
-                    pr: 2,
-                    justifyContent: { xs: "center", md: "flex-end" },
-                    width: "100%",
-                  }}
-                >
-                  {!isEditMode ? (
-                    <CreateFormButtons
-                      formik={formik}
-                      setEditMode={setEditMode}
-                      setSubmitError={setSubmitError}
-                      setSubmitSuccess={setSubmitSuccess}
-                      onClose={onClose}
-                      hideCancel={hideCancel}
-                    />
-                  ) : null}
-                </Box>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      pr: 2,
+                      justifyContent: { xs: "center", md: "flex-end" },
+                      width: "100%",
+                    }}
+                  >
+                    {!isEditMode ? (
+                      <CreateFormButtons
+                        formik={formik}
+                        setEditMode={setEditMode}
+                        setSubmitError={setSubmitError}
+                        setSubmitSuccess={setSubmitSuccess}
+                        onClose={onClose}
+                        hideCancel={hideCancel}
+                      />
+                    ) : null}
+                  </Box>
 
-                {submitError && (
-                  <Typography color="error" sx={{ mt: 2 }}>
-                    {submitError}
-                  </Typography>
-                )}
-                {submitSuccess && (
-                  <Typography color="primary" sx={{ mt: 2 }}>
-                    {submitSuccess}
-                  </Typography>
-                )}
-              </Grid>
-            </Box>
-          </Form>
-        )}
-      </Formik>
+                  {submitError && (
+                    <Typography color="error" sx={{ mt: 2 }}>
+                      {submitError}
+                    </Typography>
+                  )}
+                  {submitSuccess && (
+                    <Typography color="primary" sx={{ mt: 2 }}>
+                      {submitSuccess}
+                    </Typography>
+                  )}
+                </Grid>
+              </Box>
+            </Form>
+          )}
+        </Formik>
+        <WorkingOverlay
+          open={workingOverlayOpen}
+          message={workingOverlayMessage}
+        />
+      </>
     );
-  }
+  },
 );
 
 CreateAccountForm.displayName = "CreateAccountForm";

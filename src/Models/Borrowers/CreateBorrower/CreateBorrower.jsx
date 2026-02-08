@@ -23,6 +23,7 @@ import CustomEditFormButtons from "../../../ModelAssets/CustomEditFormButtons";
 // import CustomFields from "../../AdminScreens/CustomFields/CustomFields";
 import { UserContext } from "../../../App";
 import { EditClickedContext } from "../../../ModelAssets/CollectionsTemplate"; // <-- import context
+import WorkingOverlay from "../../../ModelAssets/WorkingOverlay";
 
 import { generateClient } from "aws-amplify/api";
 import { listBranches } from "../../../graphql/queries";
@@ -167,6 +168,9 @@ const CreateBorrower = forwardRef(
     // For create mode, start in edit mode (editable). For edit mode, only enable if forceEditMode is true
     const [editMode, setEditMode] = useState(forceEditMode || !isEditMode);
     const editClickedContext = useContext(EditClickedContext); // <-- get context
+    const [workingOverlayOpen, setWorkingOverlayOpen] = useState(false);
+    const [workingOverlayMessage, setWorkingOverlayMessage] =
+      useState("Working...");
 
     const [branches, setBranches] = useState([]);
 
@@ -302,6 +306,10 @@ const CreateBorrower = forwardRef(
       setSubmitError("");
       setSubmitSuccess("");
       setSubmitting(true);
+      setWorkingOverlayOpen(true);
+      setWorkingOverlayMessage(
+        isEditMode ? "Updating Borrower..." : "Saving Borrower...",
+      );
 
       console.log("CreateBorrower Form Values:", values); // <-- Add this log
 
@@ -347,6 +355,7 @@ const CreateBorrower = forwardRef(
         );
       } finally {
         setSubmitting(false);
+        setWorkingOverlayOpen(false);
       }
     };
 
@@ -494,6 +503,10 @@ const CreateBorrower = forwardRef(
             </Form>
           )}
         </Formik>
+        <WorkingOverlay
+          open={workingOverlayOpen}
+          message={workingOverlayMessage}
+        />
       </>
     );
   },

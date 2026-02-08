@@ -13,6 +13,7 @@ import NotificationBar from "../../ModelAssets/NotificationBar";
 import ClickableText from "../../ModelAssets/ClickableText";
 import PlusButtonMain from "../../ModelAssets/PlusButtonMain";
 import PlusButtonSmall from "../../ModelAssets/PlusButtonSmall";
+import WorkingOverlay from "../../ModelAssets/WorkingOverlay";
 
 // Model-specific components
 import CreateBorrower from "./CreateBorrower/CreateBorrower";
@@ -41,6 +42,9 @@ export default function Borrowers() {
     message: "",
     color: "green",
   });
+  const [workingOverlayOpen, setWorkingOverlayOpen] = useState(false);
+  const [workingOverlayMessage, setWorkingOverlayMessage] =
+    useState("Working...");
 
   // Dialog states
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -66,6 +70,8 @@ export default function Borrowers() {
     // if (!userDetails?.branchUsersId) return; // COMMENTED OUT limitation
 
     setLoading(true);
+    setWorkingOverlayOpen(true);
+    setWorkingOverlayMessage("Loading Borrowers...");
     try {
       let allBorrowers = [];
       let nextToken = null;
@@ -122,6 +128,7 @@ export default function Borrowers() {
       setNotification({ message: "Error loading borrowers", color: "red" });
     } finally {
       setLoading(false);
+      setWorkingOverlayOpen(false);
     }
   };
 
@@ -289,6 +296,8 @@ export default function Borrowers() {
 
   const handleDelete = async () => {
     setDeleteLoading(true);
+    setWorkingOverlayOpen(true);
+    setWorkingOverlayMessage("Deleting Borrower...");
     try {
       console.log("API Call: Deleting borrower"); // <-- Added
       await client.graphql({
@@ -307,6 +316,7 @@ export default function Borrowers() {
       setNotification({ message: "Error deleting borrower", color: "red" });
     } finally {
       setDeleteLoading(false);
+      setWorkingOverlayOpen(false);
     }
   };
 
@@ -438,6 +448,10 @@ export default function Borrowers() {
     if (!selectedApprovalIds.length) return;
 
     setApproveLoading(true);
+    setWorkingOverlayOpen(true);
+    setWorkingOverlayMessage(
+      `Approving Borrower${selectedApprovalIds.length > 1 ? "s" : ""}...`,
+    );
     try {
       await Promise.all(
         selectedApprovalIds.map((id) =>
@@ -468,6 +482,7 @@ export default function Borrowers() {
       setNotification({ message: "Error approving borrowers", color: "red" });
     } finally {
       setApproveLoading(false);
+      setWorkingOverlayOpen(false);
     }
   };
 
@@ -476,6 +491,10 @@ export default function Borrowers() {
       <NotificationBar
         message={notification.message}
         color={notification.color}
+      />
+      <WorkingOverlay
+        open={workingOverlayOpen}
+        message={workingOverlayMessage}
       />
 
       <Box>

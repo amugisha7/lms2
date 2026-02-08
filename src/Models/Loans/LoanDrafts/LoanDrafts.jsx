@@ -81,7 +81,12 @@ export default function LoanDrafts() {
     if (selectedTab === "in_review") {
       return rows.filter((r) => {
         const status = (r.status || "").toLowerCase();
-        return status === "in review" || status === "sent_for_approval";
+        return (
+          status === "in review" ||
+          status === "in_review" ||
+          status === "sent_for_approval" ||
+          status === "in review" // Alternative spelling
+        );
       });
     }
     if (selectedTab === "drafts") {
@@ -115,23 +120,11 @@ export default function LoanDrafts() {
   const onEdit = React.useCallback(
     (rowOrId) => {
       const id = rowOrId?.id || rowOrId;
-      const row =
-        typeof rowOrId === "object"
-          ? rowOrId
-          : rows.find((r) => r.id === rowOrId);
-
-      if (!isPrivileged && row?.status === "SENT_FOR_APPROVAL") {
-        setNotification({
-          type: "warning",
-          message:
-            "This draft is currently under review and cannot be edited. Please wait for admin approval.",
-        });
-        return;
-      }
-
+      // Always allow viewing the draft - the edit button will be hidden in LoanScheduleDraft
+      // for non-privileged users when status is IN_REVIEW
       navigate(`/loan-drafts/id/${id}/view`);
     },
-    [navigate, isPrivileged, rows],
+    [navigate],
   );
 
   const parseDraftRecord = React.useCallback((row) => {

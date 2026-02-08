@@ -1179,7 +1179,7 @@ export const transitionLoanDraftStatus = async ({
   rejectionReason,
 }) => {
   // Safety gates for externalizing the schedule.
-  if (nextStatus === "SENT_FOR_APPROVAL") {
+  if (nextStatus === "SENT_FOR_APPROVAL" || nextStatus === "IN_REVIEW") {
     if (!loanDraft?.schedulePreview || !loanDraft?.scheduleHash) {
       throw new Error(
         "Schedule preview is missing. Save Draft to generate a schedule before sending for approval."
@@ -1216,7 +1216,7 @@ export const transitionLoanDraftStatus = async ({
       input: {
         loanID: loanDraft.id,
         eventAt: nowIso(),
-        eventType: nextStatus,
+        eventType: "SUBMITTED",
         actorEmployeeID: userDetails?.id || null,
         summary: `Status changed to ${nextStatus}`,
         payload: safeJsonStringify({ nextStatus, rejectionReason }),

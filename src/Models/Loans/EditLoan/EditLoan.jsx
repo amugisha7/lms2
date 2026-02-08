@@ -305,7 +305,9 @@ const EditLoan = forwardRef(
     })();
 
     const canEditDraft =
-      normalizedStatus === "DRAFT" || normalizedStatus === "REJECTED";
+      normalizedStatus === "DRAFT" ||
+      normalizedStatus === "REJECTED" ||
+      (isPrivileged && normalizedStatus.includes("REVIEW"));
 
     const readOnly = Boolean(localDraft) && !canEditDraft;
 
@@ -488,7 +490,7 @@ const EditLoan = forwardRef(
         const updated = await transitionLoanDraftStatus({
           loanDraft: localDraft,
           userDetails,
-          nextStatus: "SENT_FOR_APPROVAL",
+          nextStatus: "IN_REVIEW",
         });
 
         const newLocalDraft = {

@@ -89,6 +89,13 @@ export default function LoanScheduleDraft({
   createButtonText = "CREATE LOAN",
 }) {
   const theme = useTheme();
+
+  // Check if user is privileged (admin or branch manager)
+  const isPrivileged = React.useMemo(() => {
+    const type = userDetails?.userType;
+    return type?.toLowerCase() === "admin" || type === "branchManager";
+  }, [userDetails]);
+
   const printAreaRef = React.useRef(null);
   const [exportingPdf, setExportingPdf] = React.useState(false);
   const [showLoanFees, setShowLoanFees] = React.useState(true);
@@ -875,12 +882,20 @@ export default function LoanScheduleDraft({
         ]}
         // Actions
         actions={[
-          {
-            key: "edit",
-            text: isEditDraftFlow ? "BACK" : "EDIT",
-            onClick: onEdit,
-            disabled: !onEdit,
-          },
+          // Show edit button UNLESS user is not privileged AND status contains "review"
+          // Privileged users (admin/branch manager) can always see the edit button
+          // Use case-insensitive includes check for status
+          ...(isPrivileged ||
+          !(loanDraft?.status || "").toLowerCase().includes("review")
+            ? [
+                {
+                  key: "edit",
+                  text: isEditDraftFlow ? "BACK" : "EDIT",
+                  onClick: onEdit,
+                  disabled: !onEdit,
+                },
+              ]
+            : []),
           {
             key: "save",
             text: "SAVE DRAFT",

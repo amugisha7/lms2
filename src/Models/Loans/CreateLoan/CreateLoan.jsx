@@ -504,7 +504,7 @@ const CreateLoan = forwardRef(
         const updated = await transitionLoanDraftStatus({
           loanDraft: currentDraft,
           userDetails,
-          nextStatus: "SENT_FOR_APPROVAL",
+          nextStatus: "IN_REVIEW",
         });
         setLoanDraft(updated);
 

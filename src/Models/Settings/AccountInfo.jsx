@@ -23,7 +23,7 @@ import DateInput from "../../Resources/FormComponents/DateInput";
 import FormLabel from "../../Resources/FormComponents/FormLabel";
 import { accountInfoForm } from "./accountInfoForm";
 import PlusButtonMain from "../../ModelAssets/PlusButtonMain";
-import { useSnackbar } from "../../ModelAssets/SnackbarContext";
+import { useNotification } from "../../ModelAssets/NotificationContext";
 import { updateUser } from "./helpers/updateUser";
 import CustomEditFormButtons from "../../ModelAssets/CustomEditFormButtons";
 
@@ -46,7 +46,7 @@ const validationSchema = Yup.object().shape({
 
 const AccountInfo = () => {
   const { user, userDetails, setUserDetails } = useContext(UserContext);
-  const { showSnackbar } = useSnackbar();
+  const { showNotification } = useNotification();
   const [isEditMode, setIsEditMode] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -156,7 +156,7 @@ const AccountInfo = () => {
       });
 
       setSubmitSuccess("Account information updated successfully!");
-      showSnackbar("Account information updated successfully!", "success");
+      showNotification("Account information updated successfully!", "green");
       setIsEditMode(false);
     } catch (err) {
       console.error("Error updating account info:", err);
@@ -164,7 +164,7 @@ const AccountInfo = () => {
         err.message ||
         "Failed to update account information. Please try again.";
       setSubmitError(errorMsg);
-      showSnackbar(errorMsg, "error");
+      showNotification(errorMsg, "red");
     } finally {
       setLoading(false);
       setSubmitting(false);

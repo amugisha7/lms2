@@ -19,7 +19,7 @@ import OrderedList from "../../../Resources/FormComponents/OrderedList";
 import CreateFormButtons from "../../../ModelAssets/CreateFormButtons";
 import PlusButtonMain from "../../../ModelAssets/PlusButtonMain";
 import { UserContext } from "../../../App";
-import { useSnackbar } from "../../../ModelAssets/SnackbarContext";
+import { useNotification } from "../../../ModelAssets/NotificationContext";
 import {
   fetchAccounts,
   fetchLoanFeesConfig,
@@ -277,7 +277,7 @@ const CreateLoan = forwardRef(
     ref,
   ) => {
     const { userDetails } = useContext(UserContext);
-    const { showSnackbar } = useSnackbar();
+    const { showNotification } = useNotification();
     const navigate = useNavigate();
     const theme = useTheme();
     const [submitError, setSubmitError] = useState("");
@@ -602,14 +602,14 @@ const CreateLoan = forwardRef(
         });
         const successMessage = "Loan created successfully.";
         setSubmitSuccess(successMessage);
-        showSnackbar(successMessage, "green");
+        showNotification(successMessage, "green");
         navigate("/loans");
         return loan;
       } catch (err) {
         console.error(err);
         const errorMessage = err?.message || "Failed to create loan.";
         setSubmitError(errorMessage);
-        showSnackbar(errorMessage, "red");
+        showNotification(errorMessage, "red");
         setIsProcessing(false);
       }
     };

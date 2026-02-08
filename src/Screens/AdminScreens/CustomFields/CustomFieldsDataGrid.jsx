@@ -9,7 +9,7 @@ import { useTheme } from "@mui/material/styles";
 import EditIcon from "@mui/icons-material/Edit";
 import SaveIcon from "@mui/icons-material/Save";
 import CancelIcon from "@mui/icons-material/Cancel";
-import { useSnackbar } from "../../../ModelAssets/SnackbarContext"; // <-- Import useSnackbar
+import { useNotification } from "../../../ModelAssets/NotificationContext"; // <-- Import useNotification
 
 // Move this outside the component
 function EditableLabelTextField({ value, onChange, autoFocus }) {
@@ -34,7 +34,7 @@ export default function CustomFieldsDataGrid({
   onRowDelete,
 }) {
   const theme = useTheme();
-  const { showSnackbar } = useSnackbar(); // <-- Use the snackbar context
+  const { showNotification } = useNotification(); // <-- Use the notification context
   const [editRowId, setEditRowId] = React.useState(null);
   const [editedRowData, setEditedRowData] = React.useState({});
 
@@ -46,16 +46,16 @@ export default function CustomFieldsDataGrid({
   const handleCancelEdit = () => {
     setEditRowId(null);
     setEditedRowData({});
-    showSnackbar("Edit cancelled", "blue");
+    showNotification("Edit cancelled", "blue");
   };
 
   const handleSaveClick = async () => {
     if (onRowUpdate) {
       try {
         await onRowUpdate(editedRowData);
-        showSnackbar("Field updated successfully", "green");
+        showNotification("Field updated successfully", "green");
       } catch (e) {
-        showSnackbar("Failed to update field", "red");
+        showNotification("Failed to update field", "red");
       }
     }
     setEditRowId(null);
@@ -169,9 +169,9 @@ export default function CustomFieldsDataGrid({
               if (onRowDelete) {
                 try {
                   await onRowDelete(params.id);
-                  showSnackbar("Field deleted", "green");
+                  showNotification("Field deleted", "green");
                 } catch (e) {
-                  showSnackbar("Failed to delete field", "red");
+                  showNotification("Failed to delete field", "red");
                 }
               }
             }}

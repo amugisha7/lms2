@@ -14,14 +14,14 @@ import {
 import { useTheme } from "@mui/material/styles";
 import { CloudUpload } from "@mui/icons-material";
 import { UserContext } from "../../App";
-import { useSnackbar } from "../../ModelAssets/SnackbarContext";
+import { useNotification } from "../../ModelAssets/NotificationContext";
 import { uploadData as amplifyUploadData, getUrl } from "aws-amplify/storage";
 import { updateInstitution } from "./helpers/updateInstitution";
 
 const DocumentHeaderSettings = () => {
   const theme = useTheme();
   const { userDetails, setUserDetails } = useContext(UserContext);
-  const { showSnackbar } = useSnackbar();
+  const { showNotification } = useNotification();
 
   const maxFileSize = 2 * 1024 * 1024; // 2MB
 
@@ -104,22 +104,22 @@ const DocumentHeaderSettings = () => {
     if (uploadingRef.current) return;
 
     if (!uploadFileData.file) {
-      showSnackbar("Please select a file", "error");
+      showNotification("Please select a file", "red");
       return;
     }
 
     const allowedTypes = ["image/jpeg", "image/png", "image/jpg"];
 
     if (!allowedTypes.includes(uploadFileData.file.type)) {
-      showSnackbar(
+      showNotification(
         "File type not allowed. Please select an image file.",
-        "error",
+        "red",
       );
       return;
     }
 
     if (uploadFileData.file.size > maxFileSize) {
-      showSnackbar("File size exceeds 2MB limit.", "error");
+      showNotification("File size exceeds 2MB limit.", "red");
       return;
     }
 
@@ -182,7 +182,7 @@ const DocumentHeaderSettings = () => {
       });
 
       setSuccess("Header image uploaded successfully!");
-      showSnackbar("Header image uploaded successfully!", "success");
+      showNotification("Header image uploaded successfully!", "green");
       setUploadDialogOpen(false);
       setUploadFileData({ file: null, preview: null });
     } catch (error) {
@@ -190,7 +190,7 @@ const DocumentHeaderSettings = () => {
       const errorMsg =
         error.message || "Error uploading file. Please try again.";
       setError(errorMsg);
-      showSnackbar(errorMsg, "error");
+      showNotification(errorMsg, "red");
     } finally {
       setLoading(false);
       uploadingRef.current = false;
@@ -210,7 +210,7 @@ const DocumentHeaderSettings = () => {
       window.open(signedURL.url, "_blank");
     } catch (error) {
       console.error("Error previewing image:", error);
-      showSnackbar("Error previewing image. Please try again.", "error");
+      showNotification("Error previewing image. Please try again.", "red");
     } finally {
       setLoading(false);
     }

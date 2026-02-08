@@ -904,6 +904,14 @@ const CreateLoan = forwardRef(
                     totalLoanFee={totalLoanFee}
                     loanFeeSummary={loanFeeSummary}
                     isEditDraftFlow={false}
+                    branchAccounts={
+                      propBorrower?.branchBorrowersId &&
+                      loanDraft?.borrower?.branch?.accounts?.items
+                        ? loanDraft.borrower.branch.accounts.items
+                            .map((item) => item.account)
+                            .filter((account) => account?.id && account?.name)
+                        : []
+                    }
                   />
                 </CustomPopUp>
 

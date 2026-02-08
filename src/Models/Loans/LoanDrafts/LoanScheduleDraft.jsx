@@ -10,11 +10,10 @@ import {
   TableRow,
   Typography,
   CircularProgress,
-  FormControl,
   Alert,
+  Button,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import { generateClient } from "aws-amplify/api";
 import WorkingOverlay from "../../../ModelAssets/WorkingOverlay";
 import DraftHeader from "../../../Resources/DraftHeader";
 import { generateSchedulePreviewFromDraftValues } from "../loanComputations";
@@ -91,6 +90,7 @@ export default function LoanScheduleDraft({
   loanFeeSummary,
   isEditDraftFlow = false,
   createButtonText = "CREATE LOAN",
+  branchAccounts = [],
 }) {
   const theme = useTheme();
 
@@ -106,7 +106,6 @@ export default function LoanScheduleDraft({
   const [showInterestRate, setShowInterestRate] = React.useState(true);
   const [showInterestMethod, setShowInterestMethod] = React.useState(false);
   const [showTotals, setShowTotals] = React.useState(false);
-  const [showColumnOptions, setShowColumnOptions] = React.useState(false);
   const [showCustomHeader, setShowCustomHeader] = React.useState(false);
   const [showCustomHeaderFirstPageOnly, setShowCustomHeaderFirstPageOnly] =
     React.useState(true);
@@ -126,8 +125,7 @@ export default function LoanScheduleDraft({
   // Account selection state
   const [principalAccountId, setPrincipalAccountId] = React.useState("");
   const [feesAccountId, setFeesAccountId] = React.useState("");
-  const [accounts, setAccounts] = React.useState([]);
-  const [accountsLoading, setAccountsLoading] = React.useState(true);
+  const [showAccountSelection, setShowAccountSelection] = React.useState(false);
 
   const hasLoanFees = totalLoanFee > 0;
 
@@ -237,68 +235,6 @@ export default function LoanScheduleDraft({
       revokeObjectUrl(headerImageSignedUrl);
     };
   }, [headerImageSignedUrl, revokeObjectUrl]);
-
-  // Fetch accounts for privileged users
-  React.useEffect(() => {
-    let cancelled = false;
-    const fetchAccounts = async () => {
-      if (!isPrivileged || !userDetails?.institutionUsersId) {
-        setAccountsLoading(false);
-        return;
-      }
-      setAccountsLoading(true);
-      try {
-        const client = generateClient();
-        let allAccounts = [];
-        let nextToken = null;
-
-        const LIST_ACCOUNTS_SIMPLE_QUERY = `
-          query ListAccounts($institutionId: ID!, $nextToken: String) {
-            listAccounts(
-              filter: { institutionAccountsId: { eq: $institutionId } }
-              limit: 100
-              nextToken: $nextToken
-            ) {
-              items {
-                id
-                name
-                accountType
-                currency
-                status
-              }
-              nextToken
-            }
-          }
-        `;
-
-        do {
-          const result = await client.graphql({
-            query: LIST_ACCOUNTS_SIMPLE_QUERY,
-            variables: {
-              institutionId: userDetails.institutionUsersId,
-              nextToken,
-            },
-          });
-          const items = result?.data?.listAccounts?.items || [];
-          allAccounts = [...allAccounts, ...items];
-          nextToken = result?.data?.listAccounts?.nextToken;
-        } while (nextToken);
-
-        if (!cancelled) {
-          setAccounts(allAccounts);
-        }
-      } catch (err) {
-        console.error("Error fetching accounts:", err);
-      } finally {
-        if (!cancelled) setAccountsLoading(false);
-      }
-    };
-
-    fetchAccounts();
-    return () => {
-      cancelled = true;
-    };
-  }, [isPrivileged, userDetails?.institutionUsersId]);
 
   const Money = ({ value }) => {
     const parts = formatMoneyParts(value, currency, currencyCode);
@@ -988,26 +924,14 @@ export default function LoanScheduleDraft({
             key: "create",
             text: createButtonText,
             onClick: () => {
-              if (isPrivileged && onConfirmCreateLoan) {
-                onConfirmCreateLoan({
-                  principalAccountId,
-                  feesAccountId: hasLoanFees ? feesAccountId : null,
-                  totalLoanFee,
-                });
+              if (isPrivileged) {
+                setShowAccountSelection(true);
               } else if (onConfirmCreateLoan) {
                 onConfirmCreateLoan();
               }
             },
-            disabled:
-              readOnly ||
-              !onConfirmCreateLoan ||
-              (isPrivileged &&
-                (!principalAccountId || (hasLoanFees && !feesAccountId))),
-            tooltip:
-              isPrivileged &&
-              (!principalAccountId || (hasLoanFees && !feesAccountId))
-                ? "Please select accounts before creating loan"
-                : undefined,
+            disabled: readOnly || !onConfirmCreateLoan,
+            tooltip: undefined,
           },
         ]}
         // Totals
@@ -1022,7 +946,7 @@ export default function LoanScheduleDraft({
       />
 
       {/* Account Selection Section for Privileged Users */}
-      {isPrivileged && (
+      {isPrivileged && showAccountSelection && (
         <Box
           sx={{
             mt: 2,
@@ -1044,59 +968,71 @@ export default function LoanScheduleDraft({
             creating the loan.
           </Typography>
 
-          {accountsLoading ? (
-            <Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
-              <CircularProgress size={24} />
-            </Box>
-          ) : (
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            <DropDownSearchable
+              label="Principal Account"
+              name="principalAccountId"
+              options={branchAccounts.map((a) => ({
+                value: a.id,
+                label: a.name,
+              }))}
+              required={true}
+              placeholder="Search for an account..."
+              helperText="Select the account from which the loan principal will be disbursed."
+              value={principalAccountId}
+              onChange={(e) => setPrincipalAccountId(e.target.value)}
+              editing={true}
+            />
+
+            {hasLoanFees && (
               <DropDownSearchable
-                label="Principal Account"
-                name="principalAccountId"
-                options={accounts
-                  .filter(
-                    (a) => a.status !== "inactive" && a.status !== "closed",
-                  )
-                  .map((a) => ({
-                    value: a.id,
-                    label: `${a.name}${a.accountType ? ` (${a.accountType})` : ""}`,
-                  }))}
+                label="Loan Fees Account"
+                name="feesAccountId"
+                options={branchAccounts.map((a) => ({
+                  value: a.id,
+                  label: a.name,
+                }))}
                 required={true}
                 placeholder="Search for an account..."
-                helperText="Select the account from which the loan principal will be disbursed."
-                value={principalAccountId}
-                onChange={(e) => setPrincipalAccountId(e.target.value)}
+                helperText="Select the account where the loan fees will be received."
+                value={feesAccountId}
+                onChange={(e) => setFeesAccountId(e.target.value)}
                 editing={true}
               />
+            )}
 
-              {hasLoanFees && (
-                <DropDownSearchable
-                  label="Loan Fees Account"
-                  name="feesAccountId"
-                  options={accounts
-                    .filter(
-                      (a) => a.status !== "inactive" && a.status !== "closed",
-                    )
-                    .map((a) => ({
-                      value: a.id,
-                      label: `${a.name}${a.accountType ? ` (${a.accountType})` : ""}`,
-                    }))}
-                  required={true}
-                  placeholder="Search for an account..."
-                  helperText="Select the account where the loan fees will be received."
-                  value={feesAccountId}
-                  onChange={(e) => setFeesAccountId(e.target.value)}
-                  editing={true}
-                />
-              )}
+            {(!principalAccountId || (hasLoanFees && !feesAccountId)) && (
+              <Alert severity="warning" sx={{ mt: 1 }}>
+                Please select all required accounts before creating the loan.
+              </Alert>
+            )}
 
-              {(!principalAccountId || (hasLoanFees && !feesAccountId)) && (
-                <Alert severity="warning" sx={{ mt: 1 }}>
-                  Please select all required accounts before creating the loan.
-                </Alert>
-              )}
+            <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() =>
+                  onConfirmCreateLoan({
+                    principalAccountId,
+                    feesAccountId: hasLoanFees ? feesAccountId : null,
+                    totalLoanFee,
+                  })
+                }
+                disabled={
+                  !principalAccountId || (hasLoanFees && !feesAccountId)
+                }
+              >
+                CONFIRM LOAN
+              </Button>
+              <Button
+                variant="outlined"
+                color="primary"
+                onClick={() => setShowAccountSelection(false)}
+              >
+                CANCEL
+              </Button>
             </Box>
-          )}
+          </Box>
         </Box>
       )}
 

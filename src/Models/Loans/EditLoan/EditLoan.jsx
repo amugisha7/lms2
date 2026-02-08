@@ -690,6 +690,13 @@ const EditLoan = forwardRef(
                     totalLoanFee={totalLoanFee}
                     loanFeeSummary={loanFeeSummary}
                     isEditDraftFlow={true}
+                    branchAccounts={
+                      localDraft?.borrower?.branch?.accounts?.items
+                        ? localDraft.borrower.branch.accounts.items
+                            .map((item) => item.account)
+                            .filter((account) => account?.id && account?.name)
+                        : []
+                    }
                   />
                 </CustomPopUp>
 

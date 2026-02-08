@@ -623,6 +623,17 @@ const GET_LOAN_QUERY = `
         othername
         businessName
         uniqueIdNumber
+        branchBorrowersId
+        branch {
+          accounts(limit: 1000) {
+            items {
+              account {
+                id
+                name
+              }
+            }
+          }
+        }
       }
       loanProduct {
         id
@@ -1216,7 +1227,7 @@ export const transitionLoanDraftStatus = async ({
       input: {
         loanID: loanDraft.id,
         eventAt: nowIso(),
-        eventType: "SUBMITTED",
+        eventType: "STATUS_CHANGED",
         actorEmployeeID: userDetails?.id || null,
         summary: `Status changed to ${nextStatus}`,
         payload: safeJsonStringify({ nextStatus, rejectionReason }),

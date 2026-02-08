@@ -2,6 +2,8 @@ import React from "react";
 import { generateClient } from "aws-amplify/api";
 import { listLoans } from "./loanHelpers";
 import Box from "@mui/material/Box";
+import Tabs from "@mui/material/Tabs";
+import Tab from "@mui/material/Tab";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import { UserContext } from "../../App";
@@ -72,6 +74,11 @@ export default function Loans() {
   const [detailLoanRow, setDetailLoanRow] = React.useState(null);
   const [detailInitialTab, setDetailInitialTab] = React.useState(0);
   const [notification, setNotification] = React.useState(null);
+  const [selectedTab, setSelectedTab] = React.useState("all");
+
+  const handleTabChange = (event, newValue) => {
+    setSelectedTab(newValue);
+  };
 
   const fetchLoans = async () => {
     if (!userDetails?.branchUsersId) return;
@@ -142,6 +149,47 @@ export default function Loans() {
       hasFetchedRef.current = userDetails.branchUsersId;
     }
   }, [userDetails?.branchUsersId]);
+
+  const filteredRows = React.useMemo(() => {
+    if (selectedTab === "all") {
+      // All Loans: current (ACTIVE), payment due, past due (OVERDUE), cleared (CLOSED)
+      return loans.filter((loan) => {
+        const status = (loan.loanStatusEnum || loan.status || "").toUpperCase();
+        return (
+          [
+            "ACTIVE",
+            "CLOSED",
+            // Include installment-based statuses if they're stored in the loan status field
+          ].includes(status) || !status
+        );
+      });
+    }
+    if (selectedTab === "active") {
+      return loans.filter((loan) => {
+        const status = (loan.loanStatusEnum || loan.status || "").toUpperCase();
+        return status === "ACTIVE";
+      });
+    }
+    if (selectedTab === "closed") {
+      return loans.filter((loan) => {
+        const status = (loan.loanStatusEnum || loan.status || "").toUpperCase();
+        return status === "CLOSED";
+      });
+    }
+    if (selectedTab === "written_off") {
+      return loans.filter((loan) => {
+        const status = (loan.loanStatusEnum || loan.status || "").toUpperCase();
+        return status === "WRITTEN_OFF";
+      });
+    }
+    if (selectedTab === "voided") {
+      return loans.filter((loan) => {
+        const status = (loan.loanStatusEnum || loan.status || "").toUpperCase();
+        return status === "VOIDED";
+      });
+    }
+    return loans;
+  }, [loans, selectedTab]);
 
   const handleEditDialogOpen = (row) => {
     setEditDialogRow(row);
@@ -401,10 +449,25 @@ export default function Loans() {
 
   return (
     <>
+      <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 2 }}>
+        <Tabs
+          value={selectedTab}
+          onChange={handleTabChange}
+          aria-label="loan status tabs"
+          variant="scrollable"
+          scrollButtons="auto"
+        >
+          <Tab label="All Loans" value="all" />
+          <Tab label="Active" value="active" />
+          <Tab label="Closed" value="closed" />
+          <Tab label="Written Off" value="written_off" />
+          <Tab label="Voided" value="voided" />
+        </Tabs>
+      </Box>
       <CollectionsTemplate
         title="Loans"
         createButtonText="Add Loan"
-        items={loans}
+        items={filteredRows}
         loading={loading}
         columns={columns}
         searchFields={[

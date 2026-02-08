@@ -25,7 +25,7 @@ import Dropdown from "../../Resources/FormComponents/Dropdown";
 import DateInput from "../../Resources/FormComponents/DateInput";
 import FormLabel from "../../Resources/FormComponents/FormLabel";
 import PlusButtonMain from "../../ModelAssets/PlusButtonMain";
-import { useSnackbar } from "../../ModelAssets/SnackbarContext";
+import { useNotification } from "../../ModelAssets/NotificationContext";
 import { updateInstitution } from "./helpers/updateInstitution";
 import CustomEditFormButtons from "../../ModelAssets/CustomEditFormButtons";
 import { useNavigate } from "react-router-dom";
@@ -120,7 +120,7 @@ const Settings = () => {
   const { userDetails, setUserDetails, signOut } = useContext(UserContext);
   const theme = useTheme();
   const navigate = useNavigate();
-  const { showSnackbar } = useSnackbar();
+  const { showNotification } = useNotification();
   const [isEditMode, setIsEditMode] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -196,14 +196,14 @@ const Settings = () => {
       });
 
       setSubmitSuccess("Settings updated successfully!");
-      showSnackbar("Settings updated successfully!", "success");
+      showNotification("Settings updated successfully!", "green");
       setIsEditMode(false);
     } catch (err) {
       console.error("Error updating settings:", err);
       const errorMsg =
         err.message || "Failed to update settings. Please try again.";
       setSubmitError(errorMsg);
-      showSnackbar(errorMsg, "error");
+      showNotification(errorMsg, "red");
     } finally {
       setLoading(false);
       setSubmitting(false);

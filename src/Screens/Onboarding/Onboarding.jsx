@@ -33,7 +33,6 @@ import myLogo from "../../Resources/loantabs_logo.png";
 import { generateClient } from "aws-amplify/api";
 import { useNotification } from "../../ModelAssets/NotificationContext";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useSnackbar } from "../../ModelAssets/SnackbarContext";
 import {
   CREATE_INSTITUTION_MUTATION,
   CREATE_BRANCH_MUTATION,
@@ -79,7 +78,6 @@ const AccountSettingsForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { showNotification } = useNotification();
-  const { showSnackbar } = useSnackbar();
   const { user, setUserDetails, signOut } = useContext(UserContext); // <-- add signOut here
   const [formData, setFormData] = React.useState({
     businessName: "",

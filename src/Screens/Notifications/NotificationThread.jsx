@@ -20,7 +20,7 @@ import {
   UPDATE_USER_MUTATION,
 } from "./notificationQueries";
 import { getUserDisplayName, formatFullDate } from "./notificationUtils";
-import { useSnackbar } from "../../ModelAssets/SnackbarContext";
+import { useNotification } from "../../ModelAssets/NotificationContext";
 import CustomPopUp from "../../ModelAssets/CustomPopUp";
 import CreateUser from "../../Models/Users/CreateUser/CreateUser";
 
@@ -28,7 +28,7 @@ const client = loggedClient;
 
 const NotificationThread = ({ notification, onBack, onNotificationAction }) => {
   const { user } = useContext(UserContext);
-  const { showSnackbar } = useSnackbar();
+  const { showNotification } = useNotification();
   const [isProcessing, setIsProcessing] = useState(false);
   const [reviewPopupOpen, setReviewPopupOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -100,11 +100,11 @@ const NotificationThread = ({ notification, onBack, onNotificationAction }) => {
         setSelectedUser(result.data.getUser);
         setReviewPopupOpen(true);
       } else {
-        showSnackbar("Unable to load user data", "error");
+        showNotification("Unable to load user data", "red");
       }
     } catch (error) {
       console.error("Error fetching user data:", error);
-      showSnackbar("Error loading user data", "error");
+      showNotification("Error loading user data", "red");
     }
   };
 
@@ -161,13 +161,13 @@ const NotificationThread = ({ notification, onBack, onNotificationAction }) => {
         },
       });
 
-      showSnackbar(`User request has been ${newStatus}.`, "success");
+      showNotification(`User request has been ${newStatus}.`, "green");
       if (onNotificationAction) {
         onNotificationAction();
       }
     } catch (error) {
       console.error(`Error processing ${action}:`, error);
-      showSnackbar(`Failed to process the request.`, "error");
+      showNotification(`Failed to process the request.`, "red");
     } finally {
       setIsProcessing(false);
     }
@@ -321,7 +321,7 @@ const NotificationThread = ({ notification, onBack, onNotificationAction }) => {
                 setReviewPopupOpen(false);
               } catch (error) {
                 console.error("Error updating user:", error);
-                showSnackbar("Failed to update user", "error");
+                showNotification("Failed to update user", "red");
                 throw error; // Re-throw to let CreateUser handle the error display
               }
             }}

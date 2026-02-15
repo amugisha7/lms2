@@ -7,13 +7,17 @@ import { useTheme } from "@mui/material/styles";
 import CollectionsTemplate from "../../ModelAssets/CollectionsTemplate";
 import { useCrudOperations } from "../../hooks/useCrudOperations";
 import { generateClient } from "aws-amplify/api";
+import { Formik, Form, useField } from "formik";
 import NotificationBar from "../../ModelAssets/NotificationBar";
 import PlusButtonSmall from "../../ModelAssets/PlusButtonSmall";
+import PlusButtonMain from "../../ModelAssets/PlusButtonMain";
 import CustomPopUp from "../../ModelAssets/CustomPopUp";
 import MoneyTransactions from "./MoneyTransactions/MoneyTransactions";
-import { Box } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import Remove from "@mui/icons-material/Remove";
 import Add from "@mui/icons-material/Add";
+import { listBranches } from "../../graphql/queries";
+import MultipleDropDownSearchable from "../../Resources/FormComponents/MultipleDropDownSearchable";
 import {
   LIST_ACCOUNTS_QUERY,
   LIST_ACCOUNTS_BY_BRANCH_QUERY,
@@ -27,6 +31,47 @@ import {
 
 // Guard to ensure we only fetch accounts once per page load (even under React StrictMode)
 let __accountsFetchedOnce = false;
+
+function FormikEffect({ onChange, fieldName }) {
+  const [field] = useField(fieldName);
+  const prevValueRef = React.useRef(field.value);
+
+  React.useEffect(() => {
+    if (JSON.stringify(field.value) !== JSON.stringify(prevValueRef.current)) {
+      prevValueRef.current = field.value;
+      onChange(field.value);
+    }
+  }, [field.value, onChange]);
+
+  return null;
+}
+
+function BranchFilterWrapper({ branches, onFilterChange, selectedCount }) {
+  return (
+    <Box sx={{ mb: 3, width: "100%" }}>
+      <Formik initialValues={{ branchFilter: [] }} enableReinitialize>
+        <Form>
+          <FormikEffect onChange={onFilterChange} fieldName="branchFilter" />
+          <MultipleDropDownSearchable
+            label="Filter by Branch"
+            name="branchFilter"
+            options={branches.map((branch) => ({
+              value: branch.id,
+              label: branch.name,
+            }))}
+            placeholder={selectedCount === 0 ? "All Branches" : ""}
+            editing={true}
+            helperText={
+              selectedCount === 0
+                ? "Showing all branches"
+                : `Showing ${selectedCount} branch(es)`
+            }
+          />
+        </Form>
+      </Formik>
+    </Box>
+  );
+}
 
 export default function Accounts() {
   const navigate = useNavigate();
@@ -47,6 +92,8 @@ export default function Accounts() {
   const [transactionDialogOpen, setTransactionDialogOpen] = useState(false);
   const [transactionType, setTransactionType] = useState("deposit");
   const [selectedAccount, setSelectedAccount] = useState(null);
+  const [branches, setBranches] = React.useState([]);
+  const [selectedBranchFilter, setSelectedBranchFilter] = React.useState([]);
 
   const handleTransactionClick = (account, type) => {
     setSelectedAccount(account);
@@ -61,9 +108,11 @@ export default function Accounts() {
 
   const handleTransactionSuccess = () => {
     const isAdmin = userDetails?.userType === "Admin";
+    const institutionId =
+      userDetails?.institutionUsersId || userDetails?.institution?.id;
 
-    if (isAdmin && userDetails?.institutionUsersId) {
-      fetchAccounts({ institutionId: userDetails.institutionUsersId });
+    if (isAdmin && institutionId) {
+      fetchAccounts({ institutionId });
     } else if (!isAdmin && userDetails?.branchUsersId) {
       fetchAccounts({ branchId: userDetails.branchUsersId });
     }
@@ -458,11 +507,13 @@ export default function Accounts() {
 
   React.useEffect(() => {
     const isAdmin = userDetails?.userType === "Admin";
+    const institutionId =
+      userDetails?.institutionUsersId || userDetails?.institution?.id;
 
-    if (isAdmin && userDetails?.institutionUsersId && !hasFetchedRef.current) {
+    if (isAdmin && institutionId && !hasFetchedRef.current) {
       // Admin: fetch all accounts in the institution
       hasFetchedRef.current = true;
-      fetchAccounts({ institutionId: userDetails.institutionUsersId });
+      fetchAccounts({ institutionId });
     } else if (
       !isAdmin &&
       userDetails?.branchUsersId &&
@@ -474,17 +525,67 @@ export default function Accounts() {
     }
   }, [
     userDetails?.institutionUsersId,
+    userDetails?.institution?.id,
     userDetails?.branchUsersId,
     userDetails?.userType,
     fetchAccounts,
   ]);
 
   React.useEffect(() => {
+    const fetchBranchesForAdmin = async () => {
+      const isAdmin = userDetails?.userType === "Admin";
+      const institutionId =
+        userDetails?.institution?.id || userDetails?.institutionUsersId;
+
+      if (!isAdmin || !institutionId) {
+        setBranches([]);
+        setSelectedBranchFilter([]);
+        return;
+      }
+
+      try {
+        const branchData = await client.graphql({
+          query: listBranches,
+          variables: {
+            limit: 1000,
+            filter: {
+              institutionBranchesId: { eq: institutionId },
+            },
+          },
+        });
+        const items = branchData?.data?.listBranches?.items || [];
+        setBranches(items);
+        setSelectedBranchFilter([]);
+      } catch (error) {
+        console.error("Error fetching branches:", error);
+        setBranches([]);
+      }
+    };
+
+    if (userDetails) {
+      fetchBranchesForAdmin();
+    }
+  }, [userDetails, client]);
+
+  React.useEffect(() => {
     if (allAccounts && Array.isArray(allAccounts)) {
-      const processed = allAccounts.map((account) => ({
+      let processed = allAccounts.map((account) => ({
         ...account,
         currentBalance: calculateCurrentBalance(account),
       }));
+
+      if (
+        userDetails?.userType === "Admin" &&
+        selectedBranchFilter.length > 0
+      ) {
+        processed = processed.filter((account) => {
+          const accountBranches = account?.branches?.items || [];
+          return accountBranches.some((item) =>
+            selectedBranchFilter.includes(item?.branchId),
+          );
+        });
+      }
+
       processed.sort((a, b) =>
         a.name.localeCompare(b.name, undefined, {
           sensitivity: "base",
@@ -492,7 +593,7 @@ export default function Accounts() {
       );
       setProcessedAccounts(processed);
     }
-  }, [allAccounts]);
+  }, [allAccounts, selectedBranchFilter, userDetails?.userType]);
 
   const handleEditClick = (form) => {
     if (form) {
@@ -582,10 +683,34 @@ export default function Accounts() {
         color={notification.color}
       />
       {workingOverlay}
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          mb: 2,
+        }}
+      >
+        <Typography variant="h4" sx={{ fontWeight: 600 }}>
+          Accounts
+        </Typography>
+        <PlusButtonMain
+          onClick={handleCreateDialogOpen}
+          buttonText="CREATE ACCOUNT"
+        />
+      </Box>
+
+      {userDetails?.userType === "Admin" && branches.length > 0 && (
+        <BranchFilterWrapper
+          branches={branches}
+          onFilterChange={setSelectedBranchFilter}
+          selectedCount={selectedBranchFilter.length}
+        />
+      )}
       <CollectionsTemplate
         title="Accounts"
         createButtonText="Create Account"
-        onCreateClick={handleCreateDialogOpen}
+        hideHeader={true}
         // Data props
         items={processedAccounts}
         loading={accountsLoading}

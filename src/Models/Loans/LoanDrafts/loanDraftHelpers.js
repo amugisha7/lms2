@@ -1011,14 +1011,20 @@ export const createLoanDraft = async ({
     console.warn("Schedule preview generation failed:", scheduleResult.reason);
   }
 
-  // Use borrower's branchId if available, otherwise fall back to user's branchId
-  const branchId = borrower?.branchBorrowersId || userDetails?.branchUsersId || null;
+  const borrowerId = draftRecord?.borrower || null;
+  const borrowerBranchId =
+    borrower?.branchBorrowersId || draftRecord?.borrowerBranchID || null;
+  const branchId = borrowerBranchId || userDetails?.branchUsersId || null;
+  const persistedDraftRecord = {
+    ...(draftRecord || {}),
+    borrowerBranchID: borrowerBranchId || null,
+  };
 
   // Build computation record with all draft data
   const computationRecord = {
     source,
     status,
-    draftRecord,
+    draftRecord: persistedDraftRecord,
     termsSnapshot,
     schedulePreview: scheduleResult?.schedulePreview,
     scheduleHash: scheduleResult?.scheduleHash,
@@ -1028,20 +1034,20 @@ export const createLoanDraft = async ({
   const input = {
     loanNumber: `LD-${Date.now()}`,
     status: status || "DRAFT",
-    borrowerID: draftRecord?.borrower || null,
+    borrowerID: persistedDraftRecord?.borrower || null,
     branchID: branchId,
-    loanProductID: draftRecord?.loanProduct || null,
+    loanProductID: persistedDraftRecord?.loanProduct || null,
     createdByEmployeeID: userDetails?.id || null,
     
     // Core loan fields from draft
-    principal: Number(draftRecord?.principalAmount) || null,
-    interestRate: Number(draftRecord?.interestRate) || null,
-    startDate: draftRecord?.loanStartDate || draftRecord?.disbursementDate || null,
+    principal: Number(persistedDraftRecord?.principalAmount) || null,
+    interestRate: Number(persistedDraftRecord?.interestRate) || null,
+    startDate: persistedDraftRecord?.loanStartDate || persistedDraftRecord?.disbursementDate || null,
     maturityDate: scheduleResult?.schedulePreview?.maturityDate || null,
-    duration: Number(draftRecord?.termDuration ?? draftRecord?.loanDuration ?? draftRecord?.duration ?? 0) || null,
-    durationInterval: draftRecord?.durationPeriod ?? draftRecord?.durationInterval ?? null,
+    duration: Number(persistedDraftRecord?.termDuration ?? persistedDraftRecord?.loanDuration ?? persistedDraftRecord?.duration ?? 0) || null,
+    durationInterval: persistedDraftRecord?.durationPeriod ?? persistedDraftRecord?.durationInterval ?? null,
     paymentFrequency: scheduleResult?.schedulePreview?.repaymentFrequency || null,
-    loanCurrency: draftRecord?.loanCurrency || null,
+    loanCurrency: persistedDraftRecord?.loanCurrency || null,
     
     // Store all draft data in loanComputationRecord
     loanComputationRecord: safeJsonStringify(computationRecord),
@@ -1074,7 +1080,7 @@ export const createLoanDraft = async ({
     ...created,
     draftNumber: created.loanNumber,
     status: status || "DRAFT",
-    draftRecord: safeJsonStringify(draftRecord),
+    draftRecord: safeJsonStringify(persistedDraftRecord),
     editVersion: 1,
     lastEditedAt: created.updatedAt,
     schedulePreview: scheduleResult?.schedulePreview ? safeJsonStringify(scheduleResult.schedulePreview) : null,
@@ -1095,7 +1101,21 @@ export const updateLoanDraft = async ({
   if (!existing) throw new Error("Draft loan not found");
   
   const existingComputationRecord = parseAwsJson(existing.loanComputationRecord) || {};
-  const existingDraftRecord = parseAwsJson(patch?.draftRecord) || parseAwsJson(existingComputationRecord.draftRecord) || patch?.draftRecord;
+  const existingDraftRecord =
+    parseAwsJson(patch?.draftRecord) ||
+    parseAwsJson(existingComputationRecord.draftRecord) ||
+    patch?.draftRecord ||
+    {};
+
+  if (patch?.borrowerID) {
+    existingDraftRecord.borrower = patch.borrowerID;
+  }
+
+  existingDraftRecord.borrowerBranchID =
+    existingDraftRecord.borrowerBranchID ||
+    existing?.borrower?.branchBorrowersId ||
+    existing?.branchID ||
+    null;
   
   const scheduleResult = existingDraftRecord
     ? await generateSchedulePreviewFromDraftRecord(existingDraftRecord)
@@ -1139,6 +1159,15 @@ export const updateLoanDraft = async ({
   if (patch?.borrowerID) {
     input.borrowerID = patch.borrowerID;
   }
+
+  if (!existing?.branchID) {
+    const resolvedBranchId =
+      existingDraftRecord.borrowerBranchID || userDetails?.branchUsersId || null;
+    if (resolvedBranchId) {
+      input.branchID = resolvedBranchId;
+    }
+  }
+
   if (patch?.loanProductID) {
     input.loanProductID = patch.loanProductID;
   }

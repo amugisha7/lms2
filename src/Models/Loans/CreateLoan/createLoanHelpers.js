@@ -427,12 +427,15 @@ export const createLoanWithSchedule = async (values, userDetails) => {
     values?.repaymentFrequency ?? values?.paymentFrequency
   );
   const interestMethod = mapInterestMethod(values?.interestMethod);
+  const borrowerId = values?.borrower;
+  const borrowerBranchId =
+    values?.borrowerBranchID || values?.borrowerObj?.branchBorrowersId || null;
   
   // 1. Prepare Loan Input
   const loanInput = {
     loanNumber: `LN-${Date.now()}`,
-    borrowerID: values?.borrower,
-    branchID: userDetails?.branchUsersId,
+    borrowerID: borrowerId,
+    branchID: borrowerBranchId || userDetails?.branchUsersId || null,
     ...(values?.loanProduct ? { loanProductID: values.loanProduct } : {}),
     principal: Number(values?.principalAmount),
     interestRate: Number(values?.interestRate),

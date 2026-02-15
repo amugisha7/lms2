@@ -10,8 +10,6 @@ import {
   TableRow,
   Typography,
   CircularProgress,
-  Alert,
-  Button,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import WorkingOverlay from "../../../ModelAssets/WorkingOverlay";
@@ -21,7 +19,7 @@ import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 import { formatMoneyParts } from "../../../Resources/formatting";
 import { getUrl } from "aws-amplify/storage";
-import DropDownSearchable from "../../../Resources/FormComponents/DropDownSearchable";
+import { BranchLinkedAccountSelection } from "../SelectAccounts/SelectAccounts";
 
 const fmtDate = (d) => {
   if (!d) return "";
@@ -90,7 +88,6 @@ export default function LoanScheduleDraft({
   loanFeeSummary,
   isEditDraftFlow = false,
   createButtonText = "CREATE LOAN",
-  branchAccounts = [],
 }) {
   const theme = useTheme();
 
@@ -122,9 +119,6 @@ export default function LoanScheduleDraft({
     closingBalance: true,
   });
 
-  // Account selection state
-  const [principalAccountId, setPrincipalAccountId] = React.useState("");
-  const [feesAccountId, setFeesAccountId] = React.useState("");
   const [showAccountSelection, setShowAccountSelection] = React.useState(false);
 
   const hasLoanFees = totalLoanFee > 0;
@@ -947,93 +941,12 @@ export default function LoanScheduleDraft({
 
       {/* Account Selection Section for Privileged Users */}
       {isPrivileged && showAccountSelection && (
-        <Box
-          sx={{
-            mt: 2,
-            mb: 2,
-            p: 3,
-            borderRadius: 1,
-            backgroundColor:
-              theme.palette.mode === "dark"
-                ? "rgba(118, 177, 211, 0.08)"
-                : "#f8f9ff",
-            border: `2px solid ${theme.palette.mode === "dark" ? "#76B1D3" : "#1976d2"}`,
-          }}
-        >
-          <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-            Account Selection (Required)
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-            Select the accounts for disbursement and fee collection before
-            creating the loan.
-          </Typography>
-
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <DropDownSearchable
-              label="Principal Account"
-              name="principalAccountId"
-              options={branchAccounts.map((a) => ({
-                value: a.id,
-                label: a.name,
-              }))}
-              required={true}
-              placeholder="Search for an account..."
-              helperText="Select the account from which the loan principal will be disbursed."
-              value={principalAccountId}
-              onChange={(e) => setPrincipalAccountId(e.target.value)}
-              editing={true}
-            />
-
-            {hasLoanFees && (
-              <DropDownSearchable
-                label="Loan Fees Account"
-                name="feesAccountId"
-                options={branchAccounts.map((a) => ({
-                  value: a.id,
-                  label: a.name,
-                }))}
-                required={true}
-                placeholder="Search for an account..."
-                helperText="Select the account where the loan fees will be received."
-                value={feesAccountId}
-                onChange={(e) => setFeesAccountId(e.target.value)}
-                editing={true}
-              />
-            )}
-
-            {(!principalAccountId || (hasLoanFees && !feesAccountId)) && (
-              <Alert severity="warning" sx={{ mt: 1 }}>
-                Please select all required accounts before creating the loan.
-              </Alert>
-            )}
-
-            <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={() =>
-                  onConfirmCreateLoan({
-                    principalAccountId,
-                    feesAccountId: hasLoanFees ? feesAccountId : null,
-                    totalLoanFee,
-                  })
-                }
-                disabled={
-                  !principalAccountId || (hasLoanFees && !feesAccountId)
-                }
-              >
-                CONFIRM LOAN
-              </Button>
-              <Button
-                variant="outlined"
-                color="primary"
-                onClick={() => setShowAccountSelection(false)}
-              >
-                CANCEL
-              </Button>
-            </Box>
-          </Box>
-        </Box>
+        <BranchLinkedAccountSelection
+          borrower={borrower}
+          totalLoanFee={totalLoanFee}
+          onConfirm={onConfirmCreateLoan}
+          onCancel={() => setShowAccountSelection(false)}
+        />
       )}
 
       <WorkingOverlay open={exportingPdf} message="Exporting PDF..." />

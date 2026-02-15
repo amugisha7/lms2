@@ -6,6 +6,7 @@ import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
+import { Formik, Form, useField } from "formik";
 import { UserContext } from "../../App";
 import CustomDataGrid from "../../ModelAssets/CustomDataGrid";
 import CustomSlider from "../../ModelAssets/CustomSlider";
@@ -18,6 +19,9 @@ import ListBorrowers from "./CreateLoan/ListBorrowers";
 import CreateLoan from "./CreateLoan/CreateLoan";
 import LoanCreationOptions from "./CreateLoan/LoanCreationOptions";
 import NotificationBar from "../../ModelAssets/NotificationBar";
+import PlusButtonMain from "../../ModelAssets/PlusButtonMain";
+import { listBranches } from "../../graphql/queries";
+import MultipleDropDownSearchable from "../../Resources/FormComponents/MultipleDropDownSearchable";
 
 const LIST_LOAN_LOAN_FEES_QUERY = `
   query ListLoanLoanFees($filter: ModelLoanLoanFeesFilterInput) {
@@ -53,6 +57,47 @@ const DELETE_LOAN_PENALTY_MUTATION = `
   }
 `;
 
+function FormikEffect({ onChange, fieldName }) {
+  const [field] = useField(fieldName);
+  const prevValueRef = React.useRef(field.value);
+
+  React.useEffect(() => {
+    if (JSON.stringify(field.value) !== JSON.stringify(prevValueRef.current)) {
+      prevValueRef.current = field.value;
+      onChange(field.value);
+    }
+  }, [field.value, onChange]);
+
+  return null;
+}
+
+function BranchFilterWrapper({ branches, onFilterChange, selectedCount }) {
+  return (
+    <Box sx={{ mb: 3, width: "100%" }}>
+      <Formik initialValues={{ branchFilter: [] }} enableReinitialize>
+        <Form>
+          <FormikEffect onChange={onFilterChange} fieldName="branchFilter" />
+          <MultipleDropDownSearchable
+            label="Filter by Branch"
+            name="branchFilter"
+            options={branches.map((branch) => ({
+              value: branch.id,
+              label: branch.name,
+            }))}
+            placeholder={selectedCount === 0 ? "All Branches" : ""}
+            editing={true}
+            helperText={
+              selectedCount === 0
+                ? "Showing all branches"
+                : `Showing ${selectedCount} branch(es)`
+            }
+          />
+        </Form>
+      </Formik>
+    </Box>
+  );
+}
+
 export default function Loans() {
   const [loans, setLoans] = React.useState([]);
   const [borrowers, setBorrowers] = React.useState([]);
@@ -79,13 +124,20 @@ export default function Loans() {
   const [detailInitialTab, setDetailInitialTab] = React.useState(0);
   const [notification, setNotification] = React.useState(null);
   const [selectedTab, setSelectedTab] = React.useState("all");
+  const [branches, setBranches] = React.useState([]);
+  const [selectedBranchFilter, setSelectedBranchFilter] = React.useState([]);
 
   const handleTabChange = (event, newValue) => {
     setSelectedTab(newValue);
   };
 
   const fetchLoans = async () => {
-    if (!userDetails?.branchUsersId) return;
+    const isAdmin = userDetails?.userType === "Admin";
+    const branchId = userDetails?.branchUsersId;
+    const institutionId =
+      userDetails?.institution?.id || userDetails?.institutionUsersId;
+
+    if ((!isAdmin && !branchId) || (isAdmin && !institutionId)) return;
 
     setLoading(true);
     setWorkingOverlayOpen(true);
@@ -93,50 +145,141 @@ export default function Loans() {
     try {
       const client = generateClient();
 
+      let institutionBranchIds = [];
+      if (isAdmin) {
+        let branchesNextToken = null;
+        do {
+          const branchData = await client.graphql({
+            query: listBranches,
+            variables: {
+              limit: 1000,
+              nextToken: branchesNextToken,
+              filter: {
+                institutionBranchesId: { eq: institutionId },
+              },
+            },
+          });
+
+          const branchItems = branchData?.data?.listBranches?.items || [];
+          institutionBranchIds.push(...branchItems.map((branch) => branch.id));
+          branchesNextToken = branchData?.data?.listBranches?.nextToken;
+        } while (branchesNextToken);
+
+        institutionBranchIds = Array.from(new Set(institutionBranchIds));
+      }
+
       // Fetch borrowers
-      const resultBorrowers = await client.graphql({
-        query: `
-          query ListBorrowers($branchId: ID!) {
-            listBorrowers(
-              filter: { branchBorrowersId: { eq: $branchId } }
-              limit: 1000
-            ) {
-              items {
-                id
-                firstname
-                othername
-                businessName
-                uniqueIdNumber
+      let allBorrowers = [];
+      const loadBorrowersForBranch = async (targetBranchId) => {
+        let borrowersNextToken = null;
+        do {
+          const resultBorrowers = await client.graphql({
+            query: `
+              query ListBorrowersForLoans(
+                $filter: ModelBorrowerFilterInput
+                $limit: Int
+                $nextToken: String
+              ) {
+                listBorrowers(filter: $filter, limit: $limit, nextToken: $nextToken) {
+                  items {
+                    id
+                    firstname
+                    othername
+                    businessName
+                    uniqueIdNumber
+                    branchBorrowersId
+                  }
+                  nextToken
+                }
               }
-            }
-          }
-        `,
-        variables: {
-          branchId: userDetails.branchUsersId,
-        },
-      });
-      setBorrowers(resultBorrowers.data.listBorrowers.items || []);
+            `,
+            variables: {
+              limit: 100,
+              nextToken: borrowersNextToken,
+              filter: {
+                branchBorrowersId: { eq: targetBranchId },
+              },
+            },
+          });
+
+          const borrowerBatch =
+            resultBorrowers?.data?.listBorrowers?.items || [];
+          allBorrowers.push(...borrowerBatch);
+          borrowersNextToken = resultBorrowers?.data?.listBorrowers?.nextToken;
+        } while (borrowersNextToken);
+      };
+
+      if (isAdmin) {
+        for (const currentBranchId of institutionBranchIds) {
+          await loadBorrowersForBranch(currentBranchId);
+        }
+      } else {
+        await loadBorrowersForBranch(branchId);
+      }
+
+      setBorrowers(
+        Array.from(
+          new Map(
+            allBorrowers.map((borrower) => [borrower.id, borrower]),
+          ).values(),
+        ),
+      );
 
       // Fetch loans
       let allLoans = [];
-      let nextToken = null;
-      do {
-        const resultLoans = await client.graphql({
-          query: listLoans,
-          variables: {
-            filter: {
-              branchID: { eq: userDetails.branchUsersId },
+      const loadLoansForBranch = async (targetBranchId) => {
+        let nextToken = null;
+        do {
+          const resultLoans = await client.graphql({
+            query: listLoans,
+            variables: {
+              limit: 100,
+              nextToken,
+              filter: {
+                branchID: { eq: targetBranchId },
+              },
             },
-            limit: 100,
-            nextToken,
-          },
-        });
-        const loansBatch = resultLoans.data.listLoans.items;
-        allLoans.push(...loansBatch);
-        nextToken = resultLoans.data.listLoans.nextToken;
-      } while (nextToken);
+          });
 
-      setLoans(allLoans);
+          const loansBatch = resultLoans?.data?.listLoans?.items || [];
+          allLoans.push(...loansBatch);
+          nextToken = resultLoans?.data?.listLoans?.nextToken;
+        } while (nextToken);
+      };
+
+      if (isAdmin) {
+        for (const currentBranchId of institutionBranchIds) {
+          await loadLoansForBranch(currentBranchId);
+        }
+      } else {
+        await loadLoansForBranch(branchId);
+      }
+
+      setLoans(
+        Array.from(
+          new Map(allLoans.map((loan) => [loan.id, loan])).values(),
+        ).filter((loan) => {
+          const status = (loan.status || "").toLowerCase();
+          return (
+            !status.includes("draft") &&
+            !status.includes("review") &&
+            !status.includes("rejected")
+          );
+        }),
+      );
+      console.log(
+        "Retrieved loans:",
+        Array.from(
+          new Map(allLoans.map((loan) => [loan.id, loan])).values(),
+        ).filter((loan) => {
+          const status = (loan.status || "").toLowerCase();
+          return (
+            !status.includes("draft") &&
+            !status.includes("review") &&
+            !status.includes("rejected")
+          );
+        }),
+      );
     } catch (err) {
       console.error("Error fetching loans or borrowers:", err);
       setLoans([]);
@@ -148,55 +291,111 @@ export default function Loans() {
   };
 
   React.useEffect(() => {
-    if (
-      userDetails?.branchUsersId &&
-      userDetails.branchUsersId !== hasFetchedRef.current
-    ) {
+    if (!userDetails) return;
+
+    const fetchKey =
+      userDetails.userType === "Admin"
+        ? userDetails.institution?.id ||
+          userDetails.institutionUsersId ||
+          "admin"
+        : userDetails.branchUsersId;
+
+    if (fetchKey && fetchKey !== hasFetchedRef.current) {
       fetchLoans();
-      hasFetchedRef.current = userDetails.branchUsersId;
+      hasFetchedRef.current = fetchKey;
     }
-  }, [userDetails?.branchUsersId]);
+  }, [userDetails]);
+
+  React.useEffect(() => {
+    const fetchBranchesForAdmin = async () => {
+      const isAdmin = userDetails?.userType === "Admin";
+      const institutionId =
+        userDetails?.institution?.id || userDetails?.institutionUsersId;
+
+      if (!isAdmin || !institutionId) {
+        setBranches([]);
+        setSelectedBranchFilter([]);
+        return;
+      }
+
+      try {
+        const client = generateClient();
+        const branchData = await client.graphql({
+          query: listBranches,
+          variables: {
+            limit: 1000,
+            filter: {
+              institutionBranchesId: { eq: institutionId },
+            },
+          },
+        });
+        const items = branchData?.data?.listBranches?.items || [];
+        setBranches(items);
+        setSelectedBranchFilter([]);
+      } catch (error) {
+        console.error("Error fetching branches", error);
+        setBranches([]);
+      }
+    };
+
+    if (userDetails) {
+      fetchBranchesForAdmin();
+    }
+  }, [userDetails]);
 
   const filteredRows = React.useMemo(() => {
-    if (selectedTab === "all") {
-      // All Loans: current (ACTIVE), payment due, past due (OVERDUE), cleared (CLOSED)
-      return loans.filter((loan) => {
-        const status = (loan.loanStatusEnum || loan.status || "").toUpperCase();
-        return (
-          [
-            "ACTIVE",
-            "CLOSED",
-            // Include installment-based statuses if they're stored in the loan status field
-          ].includes(status) || !status
+    let filteredLoans = loans;
+
+    if (userDetails?.userType === "Admin") {
+      const institutionBranchIds = branches.map((branch) => branch.id);
+      if (institutionBranchIds.length > 0) {
+        filteredLoans = filteredLoans.filter((loan) =>
+          institutionBranchIds.includes(loan.branchID),
         );
-      });
+      }
+
+      if (selectedBranchFilter.length > 0) {
+        filteredLoans = filteredLoans.filter((loan) =>
+          selectedBranchFilter.includes(loan.branchID),
+        );
+      }
+    }
+
+    if (selectedTab === "all") {
+      return filteredLoans;
     }
     if (selectedTab === "active") {
-      return loans.filter((loan) => {
+      return filteredLoans.filter((loan) => {
         const status = (loan.loanStatusEnum || loan.status || "").toUpperCase();
-        return status === "ACTIVE";
+        return [
+          "ACTIVE",
+          "CURRENT",
+          "PAYMENT_DUE",
+          "PAST_DUE",
+          "OVERDUE",
+        ].includes(status);
       });
     }
     if (selectedTab === "closed") {
-      return loans.filter((loan) => {
+      return filteredLoans.filter((loan) => {
         const status = (loan.loanStatusEnum || loan.status || "").toUpperCase();
-        return status === "CLOSED";
+        return ["CLOSED", "CLEARED", "PAID"].includes(status);
       });
     }
     if (selectedTab === "written_off") {
-      return loans.filter((loan) => {
+      return filteredLoans.filter((loan) => {
         const status = (loan.loanStatusEnum || loan.status || "").toUpperCase();
         return status === "WRITTEN_OFF";
       });
     }
     if (selectedTab === "voided") {
-      return loans.filter((loan) => {
+      return filteredLoans.filter((loan) => {
         const status = (loan.loanStatusEnum || loan.status || "").toUpperCase();
         return status === "VOIDED";
       });
     }
-    return loans;
-  }, [loans, selectedTab]);
+    return filteredLoans;
+  }, [loans, selectedTab, branches, selectedBranchFilter, userDetails]);
 
   const handleEditDialogOpen = (row) => {
     setEditDialogRow(row);
@@ -468,6 +667,31 @@ export default function Loans() {
         message={workingOverlayMessage}
       />
 
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          mb: 2,
+        }}
+      >
+        <Typography variant="h4" sx={{ fontWeight: 600 }}>
+          Loans
+        </Typography>
+        <PlusButtonMain
+          onClick={handleCreateDialogOpen}
+          buttonText="ADD LOAN"
+        />
+      </Box>
+
+      {userDetails?.userType === "Admin" && branches.length > 0 && (
+        <BranchFilterWrapper
+          branches={branches}
+          onFilterChange={setSelectedBranchFilter}
+          selectedCount={selectedBranchFilter.length}
+        />
+      )}
+
       {/* Tabs Section */}
       <Box sx={{ width: "100%", mb: 2 }}>
         <Box
@@ -529,6 +753,7 @@ export default function Loans() {
       <CollectionsTemplate
         title="Loans"
         createButtonText="Add Loan"
+        hideHeader={true}
         items={filteredRows}
         loading={loading}
         columns={columns}
@@ -539,7 +764,6 @@ export default function Loans() {
         ]}
         noDataMessage="No loans found. Please create a loan to get started."
         // Create
-        onCreateClick={handleCreateDialogOpen}
         createDialogOpen={createDialogOpen}
         onCreateDialogClose={handleCreateDialogClose}
         createDialogTitle="Create Loan"

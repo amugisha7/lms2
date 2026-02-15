@@ -401,6 +401,11 @@ const EditLoan = forwardRef(
         if (!localDraft?.id) throw new Error("Missing draft context");
 
         const { borrowerName, loanProductName, ...draftRecord } = values;
+        draftRecord.borrowerBranchID =
+          draftRecord.borrowerBranchID ||
+          localDraft?.borrower?.branchBorrowersId ||
+          localDraft?.branchID ||
+          null;
 
         const updated = await updateLoanDraft({
           id: localDraft.id,

@@ -18,6 +18,7 @@ export default function CollectionsTemplate({
   title,
   createButtonText = "Create",
   onCreateClick,
+  hideHeader = false,
   children,
   // Data props
   items = [],
@@ -61,8 +62,8 @@ export default function CollectionsTemplate({
 
     return items.filter((item) =>
       searchFields.some((field) =>
-        item[field]?.toLowerCase().includes(search.toLowerCase())
-      )
+        item[field]?.toLowerCase().includes(search.toLowerCase()),
+      ),
     );
   }, [items, search, searchFields, enableSearch]);
 
@@ -83,24 +84,26 @@ export default function CollectionsTemplate({
   return (
     <EditClickedContext.Provider value={{ editClicked, setEditClicked }}>
       <Box>
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            mb: 2,
-          }}
-        >
-          <Typography variant="h4" sx={{ fontWeight: 600 }}>
-            {title}
-          </Typography>
-          {onCreateClick && (
-            <PlusButtonMain
-              onClick={onCreateClick}
-              buttonText={createButtonText}
-            />
-          )}
-        </Box>
+        {!hideHeader && (
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              mb: 2,
+            }}
+          >
+            <Typography variant="h4" sx={{ fontWeight: 600 }}>
+              {title}
+            </Typography>
+            {onCreateClick && (
+              <PlusButtonMain
+                onClick={onCreateClick}
+                buttonText={createButtonText}
+              />
+            )}
+          </Box>
+        )}
 
         {/* Default data grid if no children provided */}
         {!children && (

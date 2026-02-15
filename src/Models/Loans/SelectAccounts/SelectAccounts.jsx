@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext, useMemo } from "react";
 import { Formik, Form } from "formik";
 import * as Yup from "yup";
-import { Box, Grid, Typography, Button } from "@mui/material";
+import { Box, Grid, Typography, Button, Alert } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { useTheme } from "@mui/material/styles";
 import { useNavigate } from "react-router-dom";
@@ -60,46 +60,20 @@ const validationSchemaWithoutFees = Yup.object().shape({
   ),
 });
 
-export default function SelectAccounts({
-  loanDraft,
-  userDetails,
-  borrower,
-  totalLoanFee = 0,
-  onClose,
-  onSuccess,
-}) {
-  const theme = useTheme();
-  const navigate = useNavigate();
-  const { showNotification } = useNotification();
+const useBranchLinkedAccounts = (branchId) => {
   const [accounts, setAccounts] = useState([]);
   const [accountsLoading, setAccountsLoading] = useState(true);
-  const [overlayOpen, setOverlayOpen] = useState(false);
-  const [overlayMessage, setOverlayMessage] = useState("Working...");
-  const [notification, setNotification] = useState(null);
 
-  const hasLoanFees = totalLoanFee > 0;
-
-  // Build borrower display name
-  const borrowerName = useMemo(() => {
-    if (!borrower) return "Unknown Borrower";
-    const parts = [
-      borrower.firstname,
-      borrower.othername,
-      borrower.businessName,
-    ].filter(Boolean);
-    return parts.join(" ").trim() || "Unknown Borrower";
-  }, [borrower]);
-
-  // Fetch accounts linked to the borrower's branch
   useEffect(() => {
     let cancelled = false;
+
     const fetchAccounts = async () => {
-      const branchId = borrower?.branchBorrowersId;
       if (!branchId) {
-        console.warn("No branch ID found for borrower");
+        setAccounts([]);
         setAccountsLoading(false);
         return;
       }
+
       setAccountsLoading(true);
       try {
         const client = generateClient();
@@ -114,12 +88,13 @@ export default function SelectAccounts({
               nextToken,
             },
           });
+
           const items = result?.data?.listAccountBranches?.items || [];
-          // Extract accounts from the nested structure
-          const accounts = items
+          const accountsBatch = items
             .map((item) => item.account)
             .filter((account) => account != null);
-          allAccounts = [...allAccounts, ...accounts];
+
+          allAccounts = [...allAccounts, ...accountsBatch];
           nextToken = result?.data?.listAccountBranches?.nextToken;
         } while (nextToken);
 
@@ -128,6 +103,9 @@ export default function SelectAccounts({
         }
       } catch (err) {
         console.error("Error fetching accounts for branch:", err);
+        if (!cancelled) {
+          setAccounts([]);
+        }
       } finally {
         if (!cancelled) setAccountsLoading(false);
       }
@@ -137,7 +115,155 @@ export default function SelectAccounts({
     return () => {
       cancelled = true;
     };
-  }, [borrower?.branchBorrowersId]);
+  }, [branchId]);
+
+  return { accounts, accountsLoading };
+};
+
+export function BranchLinkedAccountSelection({
+  borrower,
+  totalLoanFee = 0,
+  onConfirm,
+  onCancel,
+}) {
+  const theme = useTheme();
+  const hasLoanFees = totalLoanFee > 0;
+  const [principalAccountId, setPrincipalAccountId] = useState("");
+  const [feesAccountId, setFeesAccountId] = useState("");
+  const branchId = borrower?.branchBorrowersId || null;
+  const { accounts, accountsLoading } = useBranchLinkedAccounts(branchId);
+
+  const accountOptions = useMemo(() => {
+    return accounts
+      .filter(
+        (account) => account.status === "active" || account.status === "system",
+      )
+      .map((account) => ({
+        value: account.id,
+        label: account.name,
+      }));
+  }, [accounts]);
+
+  return (
+    <Box
+      sx={{
+        mt: 2,
+        mb: 2,
+        p: 3,
+        borderRadius: 1,
+        backgroundColor:
+          theme.palette.mode === "dark"
+            ? "rgba(118, 177, 211, 0.08)"
+            : "#f8f9ff",
+        border: `2px solid ${theme.palette.mode === "dark" ? "#76B1D3" : "#1976d2"}`,
+      }}
+    >
+      <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+        Account Selection (Required)
+      </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+        Select the accounts for disbursement and fee collection before creating
+        the loan.
+      </Typography>
+
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+        <DropDownSearchable
+          label="Principal Account"
+          name="principalAccountId"
+          options={accountOptions}
+          required={true}
+          placeholder={
+            accountsLoading ? "Loading accounts..." : "Search for an account..."
+          }
+          helperText="Select the account from which the loan principal will be disbursed."
+          value={principalAccountId}
+          onChange={(e) => setPrincipalAccountId(e.target.value)}
+          editing={true}
+          disabled={accountsLoading}
+        />
+
+        {hasLoanFees && (
+          <DropDownSearchable
+            label="Loan Fees Account"
+            name="feesAccountId"
+            options={accountOptions}
+            required={true}
+            placeholder={
+              accountsLoading
+                ? "Loading accounts..."
+                : "Search for an account..."
+            }
+            helperText="Select the account where the loan fees will be received."
+            value={feesAccountId}
+            onChange={(e) => setFeesAccountId(e.target.value)}
+            editing={true}
+            disabled={accountsLoading}
+          />
+        )}
+
+        {(!principalAccountId || (hasLoanFees && !feesAccountId)) && (
+          <Alert severity="warning" sx={{ mt: 1 }}>
+            Please select all required accounts before creating the loan.
+          </Alert>
+        )}
+
+        <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() =>
+              onConfirm?.({
+                principalAccountId,
+                feesAccountId: hasLoanFees ? feesAccountId : null,
+                totalLoanFee,
+              })
+            }
+            disabled={
+              accountsLoading ||
+              !principalAccountId ||
+              (hasLoanFees && !feesAccountId)
+            }
+          >
+            CONFIRM LOAN
+          </Button>
+          <Button variant="outlined" color="primary" onClick={onCancel}>
+            CANCEL
+          </Button>
+        </Box>
+      </Box>
+    </Box>
+  );
+}
+
+export default function SelectAccounts({
+  loanDraft,
+  userDetails,
+  borrower,
+  totalLoanFee = 0,
+  onClose,
+  onSuccess,
+}) {
+  const theme = useTheme();
+  const navigate = useNavigate();
+  const { showNotification } = useNotification();
+  const [overlayOpen, setOverlayOpen] = useState(false);
+  const [overlayMessage, setOverlayMessage] = useState("Working...");
+  const [notification, setNotification] = useState(null);
+
+  const hasLoanFees = totalLoanFee > 0;
+  const branchId = borrower?.branchBorrowersId || null;
+  const { accounts, accountsLoading } = useBranchLinkedAccounts(branchId);
+
+  // Build borrower display name
+  const borrowerName = useMemo(() => {
+    if (!borrower) return "Unknown Borrower";
+    const parts = [
+      borrower.firstname,
+      borrower.othername,
+      borrower.businessName,
+    ].filter(Boolean);
+    return parts.join(" ").trim() || "Unknown Borrower";
+  }, [borrower]);
 
   // Build dropdown options from accounts
   const accountOptions = useMemo(() => {

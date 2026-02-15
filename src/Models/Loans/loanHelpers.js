@@ -8,6 +8,7 @@ export const listLoans = /* GraphQL */ `
       items {
         id
         loanNumber
+        branchID
         principal
         interestRate
         startDate

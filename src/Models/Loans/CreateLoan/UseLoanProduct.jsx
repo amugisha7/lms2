@@ -644,6 +644,12 @@ const UseLoanProduct = forwardRef(
         borrowerToPass = borrowers.find((b) => b.id === draftValues.borrower);
       }
 
+      draftValues.borrowerBranchID =
+        borrowerToPass?.branchBorrowersId ||
+        draftValues.borrowerBranchID ||
+        loanDraft?.branchID ||
+        null;
+
       let updatedOrCreatedDraft;
       if (loanDraft?.id) {
         updatedOrCreatedDraft = await updateLoanDraft({
@@ -1129,20 +1135,6 @@ const UseLoanProduct = forwardRef(
                         }
                         totalLoanFee={totalLoanFee}
                         loanFeeSummary={loanFeeSummary}
-                        branchAccounts={
-                          propBorrower?.branchBorrowersId &&
-                          loanDraft?.borrower?.branch?.accounts?.items
-                            ? loanDraft.borrower.branch.accounts.items
-                                .map((item) => item.account)
-                                .filter(
-                                  (account) =>
-                                    account?.id &&
-                                    account?.name &&
-                                    (account.status === "active" ||
-                                      account.status === "system"),
-                                )
-                            : []
-                        }
                       />
                     </CustomPopUp>
 

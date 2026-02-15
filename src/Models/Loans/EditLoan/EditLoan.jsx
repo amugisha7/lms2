@@ -694,7 +694,13 @@ const EditLoan = forwardRef(
                       localDraft?.borrower?.branch?.accounts?.items
                         ? localDraft.borrower.branch.accounts.items
                             .map((item) => item.account)
-                            .filter((account) => account?.id && account?.name)
+                            .filter(
+                              (account) =>
+                                account?.id &&
+                                account?.name &&
+                                (account.status === "active" ||
+                                  account.status === "system"),
+                            )
                         : []
                     }
                   />

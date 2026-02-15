@@ -42,13 +42,18 @@ const PaymentForm = ({ loanId, onClose, onPaymentSuccess }) => {
                 items {
                   id
                   name
+                  status
                 }
               }
             }
           `,
           variables: { institutionId: userDetails?.institutionUsersId },
         });
-        setAccounts(accountsResult.data.listAccounts.items);
+        // Filter to only show active and system accounts
+        const filteredAccounts = accountsResult.data.listAccounts.items.filter(
+          (a) => a.status === "active" || a.status === "system",
+        );
+        setAccounts(filteredAccounts);
       } catch (err) {
         console.error("Error fetching data:", err);
       } finally {
@@ -70,8 +75,8 @@ const PaymentForm = ({ loanId, onClose, onPaymentSuccess }) => {
       const { updatedInstallments, allocation } = allocatePayment(
         Number(values.amount),
         loan.installments.items.sort(
-          (a, b) => new Date(a.dueDate) - new Date(b.dueDate)
-        )
+          (a, b) => new Date(a.dueDate) - new Date(b.dueDate),
+        ),
       );
 
       // 2. Create Payment Record

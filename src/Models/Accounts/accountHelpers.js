@@ -288,3 +288,108 @@ export const LIST_ACCOUNT_BRANCHES_QUERY = `
     }
   }
 `;
+
+export const LIST_ACCOUNTS_BY_BRANCH_QUERY = `
+  query ListAccountBranches($branchId: ID!, $nextToken: String) {
+    listAccountBranches(
+      filter: { branchId: { eq: $branchId } }
+      limit: 100
+      nextToken: $nextToken
+    ) {
+      items {
+        account {
+          id
+          name
+          openingBalance
+          status
+          currency
+          accountType
+          description
+          createdAt
+          updatedAt
+          moneyTransactions(limit: 1000) {
+            items {
+              amount
+              transactionDate
+              transactionType
+              id
+              description
+              referenceNumber
+              notes
+              documents(limit: 100) {
+                items {
+                  id
+                  document {
+                    id
+                    documentName
+                    documentDescription
+                    s3Key
+                    fileName
+                    contentType
+                    status
+                    createdAt
+                  }
+                }
+              }
+            }
+          }
+          payments(limit: 1000) {
+            items {
+              amount
+              paymentDate
+              id
+            }
+          }
+          penalties(limit: 1000) {
+            items {
+              amount
+              penaltyDate
+              id
+            }
+          }
+          loans(limit: 1000) {
+            items {
+              loan {
+                id
+                principal
+                createdAt
+                borrower {
+                  businessName
+                  firstname
+                  othername
+                }
+              }
+            }
+          }
+          loanFees(limit: 1000) {
+            items {
+              id
+              amount
+              loanFeesDescription
+            }
+          }
+          expenses(limit: 1000) {
+            items {
+              amount
+              id
+              description
+              type
+            }
+          }
+          branches(limit: 100) {
+            items {
+              id
+              branchId
+              accountId
+              branch {
+                id
+                name
+              }
+            }
+          }
+        }
+      }
+      nextToken
+    }
+  }
+`;

@@ -203,10 +203,12 @@ const CreateAccountForm = forwardRef(
             if (!nextToken) break;
           }
 
-          // For admin: filter active branches; for non-admin: include all to show names
+          // For admin: filter active and system branches; for non-admin: include all to show names
           const branchOptions = (
             isAdmin
-              ? allBranches.filter((b) => b.status === "active")
+              ? allBranches.filter(
+                  (b) => b.status === "active" || b.status === "system",
+                )
               : allBranches
           ).map((b) => ({ value: b.id, label: b.name }));
 

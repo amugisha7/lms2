@@ -142,7 +142,7 @@ export default function SelectAccounts({
   // Build dropdown options from accounts
   const accountOptions = useMemo(() => {
     return accounts
-      .filter((a) => a.status !== "inactive" && a.status !== "closed")
+      .filter((a) => a.status === "active" || a.status === "system")
       .map((a) => ({
         value: a.id,
         label: `${a.name}${a.accountType ? ` (${a.accountType})` : ""}`,

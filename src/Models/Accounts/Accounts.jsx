@@ -16,6 +16,7 @@ import Remove from "@mui/icons-material/Remove";
 import Add from "@mui/icons-material/Add";
 import {
   LIST_ACCOUNTS_QUERY,
+  LIST_ACCOUNTS_BY_BRANCH_QUERY,
   CREATE_ACCOUNT_MUTATION,
   DELETE_ACCOUNT_MUTATION,
   UPDATE_ACCOUNT_MUTATION,
@@ -59,7 +60,13 @@ export default function Accounts() {
   };
 
   const handleTransactionSuccess = () => {
-    fetchAccounts({ institutionId: userDetails.institutionUsersId });
+    const isAdmin = userDetails?.userType === "Admin";
+
+    if (isAdmin && userDetails?.institutionUsersId) {
+      fetchAccounts({ institutionId: userDetails.institutionUsersId });
+    } else if (!isAdmin && userDetails?.branchUsersId) {
+      fetchAccounts({ branchId: userDetails.branchUsersId });
+    }
   };
 
   const {
@@ -101,6 +108,21 @@ export default function Accounts() {
         let allAccountsList = [];
         let nextToken = null;
         let iteration = 0;
+
+        // Determine query based on whether user is admin or fetching by branch
+        const isAdmin = userDetails?.userType === "Admin";
+        const useAccountBranchQuery = variables.branchId && !isAdmin;
+        const query = useAccountBranchQuery
+          ? LIST_ACCOUNTS_BY_BRANCH_QUERY
+          : LIST_ACCOUNTS_QUERY;
+        const queryName = useAccountBranchQuery
+          ? "listAccountBranches"
+          : "listAccounts";
+
+        console.log(
+          `User type: ${isAdmin ? "Admin" : "Non-Admin"}, Using query: ${queryName}`,
+        );
+
         while (true) {
           const queryVariables = {
             ...variables,
@@ -111,29 +133,47 @@ export default function Accounts() {
               nextToken || "null"
             }`,
           );
-          console.log("API Query: LIST_ACCOUNTS_QUERY", {
+          console.log(`API Query: ${queryName}`, {
             variables: queryVariables,
           });
           const result = await client.graphql({
-            query: LIST_ACCOUNTS_QUERY,
+            query: query,
             variables: queryVariables,
           });
+
           // Defensive: handle unexpected shapes
-          const listResult = result?.data?.listAccounts || {};
-          const batchItems = Array.isArray(listResult.items)
-            ? listResult.items
-            : [];
+          let batchItems = [];
+          if (useAccountBranchQuery) {
+            // Extract accounts from AccountBranch join table
+            const listResult = result?.data?.listAccountBranches || {};
+            const items = Array.isArray(listResult.items)
+              ? listResult.items
+              : [];
+            // Extract accounts from the nested structure
+            batchItems = items
+              .map((item) => item.account)
+              .filter((account) => account != null);
+            nextToken = listResult.nextToken || null;
+          } else {
+            // Direct account query
+            const listResult = result?.data?.listAccounts || {};
+            batchItems = Array.isArray(listResult.items)
+              ? listResult.items
+              : [];
+            nextToken = listResult.nextToken || null;
+          }
+
           allAccountsList.push(...batchItems);
-          const newNextToken = listResult.nextToken || null;
           console.log(
-            `Fetched ${batchItems.length} accounts in this batch. Total: ${allAccountsList.length}. NextToken: ${newNextToken}`,
+            `Fetched ${batchItems.length} accounts in this batch. Total: ${allAccountsList.length}. NextToken: ${nextToken}`,
           );
+
           // Break conditions
-          if (!newNextToken) {
+          if (!nextToken) {
             console.log("No nextToken returned. Pagination complete.");
             break;
           }
-          if (newNextToken === nextToken) {
+          if (nextToken === queryVariables.nextToken) {
             console.warn(
               "Next token did not advance. Stopping to prevent infinite loop.",
             );
@@ -145,7 +185,6 @@ export default function Accounts() {
             );
             break;
           }
-          nextToken = newNextToken;
         }
         console.log(
           `Finished fetching all accounts. Total count: ${allAccountsList.length}`,
@@ -160,7 +199,7 @@ export default function Accounts() {
         setAccountsLoading(false);
       }
     },
-    [client],
+    [client, userDetails?.userType],
   );
 
   // API handler for creating account
@@ -418,11 +457,27 @@ export default function Accounts() {
   };
 
   React.useEffect(() => {
-    if (userDetails?.institutionUsersId && !hasFetchedRef.current) {
+    const isAdmin = userDetails?.userType === "Admin";
+
+    if (isAdmin && userDetails?.institutionUsersId && !hasFetchedRef.current) {
+      // Admin: fetch all accounts in the institution
       hasFetchedRef.current = true;
       fetchAccounts({ institutionId: userDetails.institutionUsersId });
+    } else if (
+      !isAdmin &&
+      userDetails?.branchUsersId &&
+      !hasFetchedRef.current
+    ) {
+      // Non-admin: fetch accounts linked to their branch
+      hasFetchedRef.current = true;
+      fetchAccounts({ branchId: userDetails.branchUsersId });
     }
-  }, [userDetails?.institutionUsersId, fetchAccounts]);
+  }, [
+    userDetails?.institutionUsersId,
+    userDetails?.branchUsersId,
+    userDetails?.userType,
+    fetchAccounts,
+  ]);
 
   React.useEffect(() => {
     if (allAccounts && Array.isArray(allAccounts)) {

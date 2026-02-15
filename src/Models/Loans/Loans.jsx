@@ -467,21 +467,65 @@ export default function Loans() {
         open={workingOverlayOpen}
         message={workingOverlayMessage}
       />
-      <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 2 }}>
-        <Tabs
-          value={selectedTab}
-          onChange={handleTabChange}
-          aria-label="loan status tabs"
-          variant="scrollable"
-          scrollButtons="auto"
+
+      {/* Tabs Section */}
+      <Box sx={{ width: "100%", mb: 2 }}>
+        <Box
+          sx={{
+            borderBottom: 1,
+            borderColor: theme.palette.divider,
+            backgroundColor: theme.palette.background.paper,
+            borderRadius: "8px 8px 0 0",
+          }}
         >
-          <Tab label="All Loans" value="all" />
-          <Tab label="Active" value="active" />
-          <Tab label="Closed" value="closed" />
-          <Tab label="Written Off" value="written_off" />
-          <Tab label="Voided" value="voided" />
-        </Tabs>
+          <Tabs
+            value={selectedTab}
+            onChange={handleTabChange}
+            aria-label="loan status tabs"
+            variant="scrollable"
+            scrollButtons
+            allowScrollButtonsMobile
+            sx={{
+              "& .MuiTabs-indicator": {
+                backgroundColor: theme.palette.blueText.main,
+                height: 3,
+                borderRadius: "1.5px",
+              },
+              "& .MuiTab-root": {
+                fontFamily: theme.typography.fontFamily,
+                fontSize: "0.875rem",
+                fontWeight: 500,
+                textTransform: "none",
+                letterSpacing: "0.02em",
+                color: theme.palette.text.secondary,
+                minHeight: 48,
+                padding: "12px 24px",
+                transition: "all 0.2s ease-in-out",
+                "&:hover": {
+                  color: theme.palette.blueText.main,
+                },
+                "&.Mui-selected": {
+                  color: theme.palette.blueText.main,
+                  fontWeight: 600,
+                },
+                "&.Mui-focusVisible": {
+                  backgroundColor: theme.palette.action.focus,
+                },
+              },
+              "& .MuiTabs-flexContainer": {
+                gap: 1,
+              },
+            }}
+          >
+            <Tab label="All Loans" value="all" />
+            <Tab label="Active" value="active" />
+            <Tab label="Closed" value="closed" />
+            <Tab label="Written Off" value="written_off" />
+            <Tab label="Voided" value="voided" />
+          </Tabs>
+        </Box>
       </Box>
+
       <CollectionsTemplate
         title="Loans"
         createButtonText="Add Loan"

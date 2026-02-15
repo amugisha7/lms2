@@ -18,19 +18,21 @@ import { convertDraftToLoan } from "../LoanDrafts/loanDraftHelpers";
 import { CREATE_MONEY_TRANSACTION_MUTATION } from "../../Accounts/MoneyTransactions/moneyTransactionHelpes";
 import { createLoanDisbursement, createLoanEvent } from "../loanHelpers";
 
-const LIST_ACCOUNTS_SIMPLE_QUERY = `
-  query ListAccounts($institutionId: ID!, $nextToken: String) {
-    listAccounts(
-      filter: { institutionAccountsId: { eq: $institutionId } }
+const LIST_ACCOUNT_BRANCHES_QUERY = `
+  query ListAccountBranches($branchId: ID!, $nextToken: String) {
+    listAccountBranches(
+      filter: { branchId: { eq: $branchId } }
       limit: 100
       nextToken: $nextToken
     ) {
       items {
-        id
-        name
-        accountType
-        currency
-        status
+        account {
+          id
+          name
+          accountType
+          currency
+          status
+        }
       }
       nextToken
     }
@@ -88,11 +90,16 @@ export default function SelectAccounts({
     return parts.join(" ").trim() || "Unknown Borrower";
   }, [borrower]);
 
-  // Fetch accounts for the institution
+  // Fetch accounts linked to the borrower's branch
   useEffect(() => {
     let cancelled = false;
     const fetchAccounts = async () => {
-      if (!userDetails?.institutionUsersId) return;
+      const branchId = borrower?.branchBorrowersId;
+      if (!branchId) {
+        console.warn("No branch ID found for borrower");
+        setAccountsLoading(false);
+        return;
+      }
       setAccountsLoading(true);
       try {
         const client = generateClient();
@@ -101,22 +108,26 @@ export default function SelectAccounts({
 
         do {
           const result = await client.graphql({
-            query: LIST_ACCOUNTS_SIMPLE_QUERY,
+            query: LIST_ACCOUNT_BRANCHES_QUERY,
             variables: {
-              institutionId: userDetails.institutionUsersId,
+              branchId,
               nextToken,
             },
           });
-          const items = result?.data?.listAccounts?.items || [];
-          allAccounts = [...allAccounts, ...items];
-          nextToken = result?.data?.listAccounts?.nextToken;
+          const items = result?.data?.listAccountBranches?.items || [];
+          // Extract accounts from the nested structure
+          const accounts = items
+            .map((item) => item.account)
+            .filter((account) => account != null);
+          allAccounts = [...allAccounts, ...accounts];
+          nextToken = result?.data?.listAccountBranches?.nextToken;
         } while (nextToken);
 
         if (!cancelled) {
           setAccounts(allAccounts);
         }
       } catch (err) {
-        console.error("Error fetching accounts:", err);
+        console.error("Error fetching accounts for branch:", err);
       } finally {
         if (!cancelled) setAccountsLoading(false);
       }
@@ -126,7 +137,7 @@ export default function SelectAccounts({
     return () => {
       cancelled = true;
     };
-  }, [userDetails?.institutionUsersId]);
+  }, [borrower?.branchBorrowersId]);
 
   // Build dropdown options from accounts
   const accountOptions = useMemo(() => {
@@ -336,6 +347,48 @@ export default function SelectAccounts({
             <strong>Loan Number:</strong> {loanDraft?.loanNumber || "Pending"}
           </Typography>
         </Box>
+
+        {!accountsLoading &&
+          accounts.length === 0 &&
+          borrower?.branchBorrowersId && (
+            <Box
+              sx={{
+                p: 2,
+                borderRadius: 1,
+                backgroundColor:
+                  theme.palette.mode === "dark"
+                    ? "rgba(255, 152, 0, 0.1)"
+                    : "#fff3e0",
+                border: `1px solid ${theme.palette.mode === "dark" ? "rgba(255, 152, 0, 0.3)" : "#ffb74d"}`,
+                mb: 2,
+              }}
+            >
+              <Typography variant="body2" color="text.secondary">
+                No accounts found for this borrower's branch. Please ensure
+                accounts are linked to the borrower's branch before disbursing
+                the loan.
+              </Typography>
+            </Box>
+          )}
+
+        {!accountsLoading && accounts.length > 0 && (
+          <Box
+            sx={{
+              p: 1.5,
+              borderRadius: 1,
+              backgroundColor:
+                theme.palette.mode === "dark"
+                  ? "rgba(33, 150, 243, 0.1)"
+                  : "#e3f2fd",
+              border: `1px solid ${theme.palette.mode === "dark" ? "rgba(33, 150, 243, 0.3)" : "#90caf9"}`,
+              mb: 2,
+            }}
+          >
+            <Typography variant="body2" color="text.secondary">
+              Showing accounts linked to this borrower's branch only.
+            </Typography>
+          </Box>
+        )}
       </Box>
 
       <Formik
@@ -422,7 +475,11 @@ export default function SelectAccounts({
               <Button
                 variant="contained"
                 type="submit"
-                disabled={formik.isSubmitting || accountsLoading}
+                disabled={
+                  formik.isSubmitting ||
+                  accountsLoading ||
+                  accounts.length === 0
+                }
                 sx={{
                   backgroundColor:
                     theme.palette.mode === "dark" ? "#76B1D3" : "#1976d2",

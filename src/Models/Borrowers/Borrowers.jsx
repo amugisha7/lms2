@@ -3,7 +3,10 @@ import { Box, Typography, Tabs, Tab } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { generateClient } from "aws-amplify/api";
+import { Formik, Form, useField } from "formik";
 import { UserContext } from "../../App";
+import { listBranches } from "../../graphql/queries";
+import MultipleDropDownSearchable from "../../Resources/FormComponents/MultipleDropDownSearchable";
 
 // Reusable components
 import CustomDataGrid from "../../ModelAssets/CustomDataGrid";
@@ -27,6 +30,46 @@ import {
 } from "./borrowerQueries";
 
 import { useHasPermission } from "../../ModelAssets/Permissions/permissions";
+
+// Effect component that can be used inside Formik to sync values
+function FormikEffect({ onChange, fieldName }) {
+  const [field] = useField(fieldName);
+  const prevValueRef = React.useRef(field.value);
+
+  React.useEffect(() => {
+    if (JSON.stringify(field.value) !== JSON.stringify(prevValueRef.current)) {
+      prevValueRef.current = field.value;
+      onChange(field.value);
+    }
+  }, [field.value, onChange]);
+
+  return null;
+}
+
+// Wrapper component for branch filter
+function BranchFilterWrapper({ branches, onFilterChange, selectedCount }) {
+  return (
+    <Box sx={{ mb: 3, width: "100%" }}>
+      <Formik initialValues={{ branchFilter: [] }} enableReinitialize>
+        <Form>
+          <FormikEffect onChange={onFilterChange} fieldName="branchFilter" />
+          <MultipleDropDownSearchable
+            label="Filter by Branch"
+            name="branchFilter"
+            options={branches.map((b) => ({ value: b.id, label: b.name }))}
+            placeholder={selectedCount === 0 ? "All Branches" : ""}
+            editing={true}
+            helperText={
+              selectedCount === 0
+                ? "Showing all branches"
+                : `Showing ${selectedCount} branch(es)`
+            }
+          />
+        </Form>
+      </Formik>
+    </Box>
+  );
+}
 
 export default function Borrowers() {
   const theme = useTheme();
@@ -62,6 +105,10 @@ export default function Borrowers() {
   // Selection for applicant approval
   const [selectedApprovalIds, setSelectedApprovalIds] = useState([]);
 
+  // Branch filter state (for Admin users)
+  const [branches, setBranches] = useState([]);
+  const [selectedBranchFilter, setSelectedBranchFilter] = useState([]); // Array for multi-select
+
   // Ref to track fetched branch ID
   const hasFetchedRef = React.useRef();
 
@@ -81,11 +128,14 @@ export default function Borrowers() {
         ...(nextToken && { nextToken }),
       };
 
+      // For Admin: fetch all borrowers (will be filtered by institution client-side)
+      // For non-Admin: always filter by their branch
       if (userDetails.userType !== "Admin") {
         variables.filter = {
           branchBorrowersId: { eq: userDetails.branchUsersId },
         };
       }
+      // Admin users: no branch filter in API call, fetch all and filter client-side
       // Note: For Admin, we are currently fetching all borrowers.
       // Ideally we would filter by institution, but Borrower model might not have direct institution link
       // except through branch. If DynamoDB scan is issue, we might need a GSI.
@@ -388,7 +438,35 @@ export default function Borrowers() {
     },
   ];
 
-  // Effects
+  // Fetch branches for Admin users
+  useEffect(() => {
+    const fetchBranchesForAdmin = async () => {
+      if (userDetails?.userType === "Admin" && userDetails?.institution?.id) {
+        try {
+          const branchData = await client.graphql({
+            query: listBranches,
+            variables: {
+              limit: 1000,
+              filter: {
+                institutionBranchesId: { eq: userDetails.institution.id },
+              },
+            },
+          });
+          const items = branchData.data.listBranches.items || [];
+          setBranches(items);
+          // Default to empty array for "All Branches"
+          setSelectedBranchFilter([]);
+        } catch (e) {
+          console.error("Error fetching branches", e);
+        }
+      }
+    };
+    if (userDetails) {
+      fetchBranchesForAdmin();
+    }
+  }, [userDetails, client]);
+
+  // Effects - fetch data once, filter client-side
   useEffect(() => {
     if (!userDetails) return;
 
@@ -416,19 +494,29 @@ export default function Borrowers() {
     return status === "approved" || status === "active" || !status;
   };
 
-  // Filter borrowers based on selected tab
+  // Filter borrowers based on selected tab and branch filter (client-side)
   // "pending" tab shows borrowers with status "pending" (applicant approval)
   // "all" tab shows borrowers with status "active" or no status (approved + internally created)
   const filteredBorrowers = React.useMemo(() => {
+    let filtered = borrowers;
+
+    // Apply branch filter for Admin users (client-side)
+    if (userDetails?.userType === "Admin" && selectedBranchFilter.length > 0) {
+      filtered = filtered.filter((b) =>
+        selectedBranchFilter.includes(b.branchBorrowersId),
+      );
+    }
+
+    // Apply tab filter
     if (selectedTab === "pending") {
-      return borrowers.filter((b) => b.status === "pending");
+      return filtered.filter((b) => b.status === "pending");
     }
     if (selectedTab === "approved") {
-      return borrowers.filter((b) => isApprovedBorrower(b));
+      return filtered.filter((b) => isApprovedBorrower(b));
     }
-    // "all" tab shows all borrowers in scope (admin: institution, non-admin: branch)
-    return borrowers;
-  }, [borrowers, selectedTab]);
+    // "all" tab shows all borrowers in scope
+    return filtered;
+  }, [borrowers, selectedTab, selectedBranchFilter, userDetails]);
 
   // Count pending borrowers for tab badge
   const pendingCount = React.useMemo(() => {
@@ -522,6 +610,15 @@ export default function Borrowers() {
           Click on a Borrower to view or edit their details, add files and
           custom fields.
         </Typography>
+
+        {/* Branch Filter - Admin Only */}
+        {userDetails?.userType === "Admin" && branches.length > 0 && (
+          <BranchFilterWrapper
+            branches={branches}
+            onFilterChange={setSelectedBranchFilter}
+            selectedCount={selectedBranchFilter.length}
+          />
+        )}
 
         {/* Tabs */}
         <Box sx={{ width: "100%", mb: 2 }}>

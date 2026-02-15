@@ -135,7 +135,16 @@ const MultipleDropDownSearchable = ({
                 sx: {
                   "& .MuiAutocomplete-option": {
                     "&:hover": {
-                      color: "white",
+                      color: (theme) =>
+                        theme.palette.mode === "dark" ? "white" : "white",
+                      "& .MuiCheckbox-root": {
+                        color: (theme) =>
+                          theme.palette.mode === "dark" ? "white" : "white",
+                      },
+                      "& .MuiSvgIcon-root": {
+                        color: (theme) =>
+                          theme.palette.mode === "dark" ? "white" : "white",
+                      },
                     },
                   },
                 },
@@ -151,6 +160,18 @@ const MultipleDropDownSearchable = ({
                           ? tokens("dark").grey[200]
                           : tokens("light").grey[200]
                       }`,
+              },
+              "& .MuiChip-root": {
+                color: (theme) =>
+                  theme.palette.mode === "dark" ? "#e8e6e3" : "white",
+                "& .MuiChip-deleteIcon": {
+                  color: (theme) =>
+                    theme.palette.mode === "dark" ? "#c2c2c2" : "white",
+                  "&:hover": {
+                    color: (theme) =>
+                      theme.palette.mode === "dark" ? "#e0e0e0" : "#f0f0f0",
+                  },
+                },
               },
             }}
           />

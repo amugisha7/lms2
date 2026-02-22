@@ -43,6 +43,7 @@ import LoanDrafts from "./Models/Loans/LoanDrafts/LoanDrafts";
 import LoanDraftDetail from "./Models/Loans/LoanDrafts/LoanDraftDetail";
 import EditLoanDraft from "./Models/Loans/LoanDrafts/EditLoanDraft";
 import LoanCalculator from "./Models/Loans/LoanCalculator/LoanCalculator";
+import LoansDisplay from "./Models/Loans/LoansDisplay/LoansDisplay";
 
 export default function AppRoutes({ userExists }) {
   return (
@@ -89,6 +90,7 @@ export default function AppRoutes({ userExists }) {
               {/* Loans routes */}
               <Route path="add-loan" element={<LoanCreationOptions />} />
               <Route path="loans" element={<Loans />} />
+              <Route path="loans-display" element={<LoansDisplay />} />
               <Route path="loan-drafts" element={<LoanDrafts />} />
               <Route path="loan-calculator" element={<LoanCalculator />} />
               <Route

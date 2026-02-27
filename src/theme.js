@@ -1,6 +1,100 @@
 import { createContext, useState, useMemo, useCallback } from "react";
 import { createTheme } from "@mui/material/styles";
 
+// ─── Salesforce Lightning Design System (SLDS) tokens ───
+// Prefixed with "sf_" for easy identification. Both light & dark variants.
+export const sfTokens = (mode) => {
+  const isDark = mode === "dark";
+  return {
+    // ── Brand colors ──
+    sf_brandPrimary:    isDark ? "#1B96FF" : "#0176D3",  // primary action / links
+    sf_brandDark:       isDark ? "#0D47A1" : "#032D60",  // page header bg
+    sf_brandLight:      isDark ? "#1B96FF" : "#1B96FF",  // highlights
+    sf_brandHover:      isDark ? "#0B5CAB" : "#014486",  // hover on brand items
+
+    // ── Backgrounds ──
+    sf_pageBg:          isDark ? "#1B1B1B" : "#F3F3F3",  // page / canvas
+    sf_cardBg:          isDark ? "#242424" : "#FFFFFF",  // card / paper
+    sf_headerBg:        isDark ? "#2A2A2A" : "#FAFAF9",  // table header row
+    sf_rowHover:        isDark ? "#333333" : "#F3F2F2",  // row hover
+    sf_rowStripeBg:     isDark ? "#2E2E2E" : "#F8F8F8",  // alternating stripe
+    sf_selectedRow:     isDark ? "#0D3B66" : "#EBF5FE",  // selected row
+
+    // ── Text ──
+    sf_textPrimary:     isDark ? "#E5E5E5" : "#181818",  // heading / primary text
+    sf_textSecondary:   isDark ? "#B0B0B0" : "#444444",  // secondary / labels
+    sf_textTertiary:    isDark ? "#8C8C8C" : "#706E6B",  // meta / captions
+    sf_textLink:        isDark ? "#1B96FF" : "#0176D3",  // links & clickable text
+    sf_textLinkHover:   isDark ? "#45B0FF" : "#014486",  // link hover
+    sf_textOnBrand:     "#FFFFFF",                        // text on brand bg
+    sf_textInverse:     isDark ? "#181818" : "#FFFFFF",  // inverted text
+
+    // ── Borders ──
+    sf_borderLight:     isDark ? "#3C3C3C" : "#E5E5E5",  // subtle border
+    sf_borderMedium:    isDark ? "#4A4A4A" : "#C9C9C9",  // standard border
+    sf_borderFocus:     isDark ? "#1B96FF" : "#0176D3",  // focus ring
+
+    // ── Status / Semantic ──
+    sf_success:         isDark ? "#45C65A" : "#2E844A",
+    sf_successBg:       isDark ? "#1C3829" : "#EBF7E6",
+    sf_error:           isDark ? "#F26B6B" : "#BA0517",
+    sf_errorBg:         isDark ? "#3D1F1F" : "#FEF1EE",
+    sf_warning:         isDark ? "#FE9339" : "#DD7A01",
+    sf_warningBg:       isDark ? "#3D2E1A" : "#FFF8E6",
+    sf_info:            isDark ? "#1B96FF" : "#0176D3",
+    sf_infoBg:          isDark ? "#1A2E45" : "#EBF5FE",
+
+    // ── Shadows ──
+    sf_shadowSm:        isDark
+      ? "0 2px 4px rgba(0,0,0,0.50)"
+      : "0 2px 4px rgba(0,0,0,0.10)",
+    sf_shadowMd:        isDark
+      ? "0 4px 12px rgba(0,0,0,0.55)"
+      : "0 4px 12px rgba(0,0,0,0.10)",
+    sf_shadowLg:        isDark
+      ? "0 8px 24px rgba(0,0,0,0.60)"
+      : "0 8px 24px rgba(0,0,0,0.12)",
+
+    // ── Radii ──
+    sf_radiusSm:   "4px",
+    sf_radiusMd:   "8px",
+    sf_radiusLg:   "12px",
+    sf_radiusPill:  "999px",
+
+    // ── Spacing helpers (px) ──
+    sf_spacingXs:  "4px",
+    sf_spacingSm:  "8px",
+    sf_spacingMd:  "12px",
+    sf_spacingLg:  "16px",
+    sf_spacingXl:  "24px",
+    sf_spacingXxl: "32px",
+
+    // ── Table-specific ──
+    sf_tableHeaderBg:   isDark ? "#2A2A2A" : "#FAFAF9",
+    sf_tableHeaderText: isDark ? "#B0B0B0" : "#444444",
+    sf_tableBorder:     isDark ? "#3C3C3C" : "#E5E5E5",
+    sf_tableCellPadX:   "16px",
+    sf_tableCellPadY:   "8px",
+
+    // ── Pill / Badge ──
+    sf_pillSuccessBg:   isDark ? "#1C3829" : "#EBF7E6",
+    sf_pillSuccessText: isDark ? "#45C65A" : "#2E844A",
+    sf_pillErrorBg:     isDark ? "#3D1F1F" : "#FEF1EE",
+    sf_pillErrorText:   isDark ? "#F26B6B" : "#BA0517",
+    sf_pillWarningBg:   isDark ? "#3D2E1A" : "#FFF8E6",
+    sf_pillWarningText: isDark ? "#FE9339" : "#DD7A01",
+    sf_pillInfoBg:      isDark ? "#1A2E45" : "#EBF5FE",
+    sf_pillInfoText:    isDark ? "#1B96FF" : "#0176D3",
+    sf_pillNeutralBg:   isDark ? "#3C3C3C" : "#ECEBEA",
+    sf_pillNeutralText: isDark ? "#B0B0B0" : "#706E6B",
+
+    // ── Action button / chip ──
+    sf_actionBg:        isDark ? "#1A2E45" : "#EBF5FE",
+    sf_actionText:      isDark ? "#1B96FF" : "#0176D3",
+    sf_actionHoverBg:   isDark ? "#0D3B66" : "#D8EDFE",
+  };
+};
+
 // Enhanced color design tokens with consistent structure
 export const tokens = (mode) => ({
   ...(mode === "dark"
@@ -160,10 +254,13 @@ export const tokens = (mode) => ({
 // Enhanced MUI theme settings with modern responsive design
 export const themeSettings = (mode) => {
   const colors = tokens(mode);
+  const sf = sfTokens(mode);
   const isDark = mode === "dark";
   return {
     palette: {
       mode,
+      // Expose all sf_ tokens via theme.palette.sf.*
+      sf,
       primary: {
         main: isDark ? colors.primary[500] : colors.primary[100],
         light: isDark ? colors.primary[400] : colors.primary[200],

@@ -1,5 +1,7 @@
 - Create loans form. Also create from loan product.
-  - Resume: - Check how loans are being displayed in the datagrid. - Work on loan statements, payments and loan status
+  - Resume:
+    - add search to loans display.
+    - Check how loans are being displayed in the datagrid. - Work on loan statements, payments and loan status
 
     Put the contracts, collateral and gurantors, other incomes and expenses as tabs on loan drafts and loans.
     i Enable loan contracts

@@ -92,6 +92,33 @@ export const sfTokens = (mode) => {
     sf_actionBg:        isDark ? "#1A2E45" : "#EBF5FE",
     sf_actionText:      isDark ? "#1B96FF" : "#0176D3",
     sf_actionHoverBg:   isDark ? "#0D3B66" : "#D8EDFE",
+
+    // ── Progress bar ──
+    sf_progressTrack:   isDark ? "#3C3C3C" : "#E5E5E5",
+    sf_progressFill:    isDark ? "#1B96FF" : "#0176D3",
+    sf_progressSuccess: isDark ? "#45C65A" : "#2E844A",
+
+    // ── KPI / stat cards ──
+    sf_kpiCardBg:       isDark ? "#2A2A2A" : "#FFFFFF",
+    sf_kpiIconBg:       isDark ? "#1A2E45" : "#EBF5FE",
+    sf_kpiIconColor:    isDark ? "#1B96FF" : "#0176D3",
+
+    // ── Search input ──
+    sf_searchBg:        isDark ? "#2E2E2E" : "#FFFFFF",
+    sf_searchBorder:    isDark ? "#4A4A4A" : "#C9C9C9",
+    sf_searchFocusBorder: isDark ? "#1B96FF" : "#0176D3",
+    sf_searchPlaceholder: isDark ? "#8C8C8C" : "#706E6B",
+
+    // ── Tab / filter pill ──
+    sf_tabActiveBg:     isDark ? "#1B96FF" : "#0176D3",
+    sf_tabActiveText:   "#FFFFFF",
+    sf_tabInactiveBg:   isDark ? "#2E2E2E" : "#ECEBEA",
+    sf_tabInactiveText: isDark ? "#B0B0B0" : "#706E6B",
+    sf_tabHoverBg:      isDark ? "#3C3C3C" : "#E5E5E5",
+
+    // ── Footer ──
+    sf_footerBg:        isDark ? "#2A2A2A" : "#FAFAF9",
+    sf_footerText:      isDark ? "#8C8C8C" : "#706E6B",
   };
 };
 

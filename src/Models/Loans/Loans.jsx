@@ -575,53 +575,131 @@ export default function Loans() {
     openLoanDetail(row, 1);
   };
 
-  // Updated columns to show relevant loan information
+  // Helper to format currency values
+  const fmt = (val) => {
+    if (val === null || val === undefined || isNaN(val)) return "N/A";
+    return Number(val).toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  };
+
   const columns = [
     {
-      field: "borrowerName",
-      headerName: "Borrower",
-      width: 200,
-      renderCell: (params) => {
-        const borrower = params.row.borrower;
-        const name = borrower
-          ? `${borrower.firstname || ""} ${borrower.othername || ""} ${
-              borrower.businessName || ""
-            }`.trim()
-          : "Unknown";
-        return <>{name}</>;
-      },
-    },
-    {
-      field: "loanProduct",
-      headerName: "Loan Product",
-      width: 200,
-      renderCell: (params) => {
-        return params.row.loanProduct?.name || "N/A";
-      },
-    },
-    {
-      field: "principal",
-      headerName: "Principal Amount",
-      width: 150,
-      renderCell: (params) => {
-        return params.value ? `$${params.value.toLocaleString()}` : "N/A";
-      },
+      field: "loanNumber",
+      headerName: "Loan ID",
+      width: 130,
+      renderCell: (params) => params.value || params.row.id || "N/A",
     },
     {
       field: "status",
       headerName: "Status",
       width: 120,
+      renderCell: (params) => params.row.status || "N/A",
+    },
+    {
+      field: "borrowerName",
+      headerName: "Borrower",
+      width: 200,
       renderCell: (params) => {
-        const status = params.row.status || "Active";
-        return status;
+        const b = params.row.borrower;
+        if (!b) return "Unknown";
+        return (
+          `${b.firstname || ""} ${b.othername || ""} ${b.businessName || ""}`.trim() ||
+          "Unknown"
+        );
       },
+    },
+    {
+      field: "principal",
+      headerName: "Principal Released",
+      width: 160,
+      renderCell: (params) => fmt(params.value),
+    },
+    {
+      field: "startDate",
+      headerName: "Date Taken",
+      width: 120,
+      renderCell: (params) => params.value || "N/A",
     },
     {
       field: "maturityDate",
       headerName: "Maturity Date",
       width: 120,
+      renderCell: (params) => params.value || "N/A",
+    },
+    {
+      field: "duration",
+      headerName: "Duration",
+      width: 110,
       renderCell: (params) => {
-        return params.value || "N/A";
+        const dur = params.row.duration;
+        const interval = params.row.durationInterval;
+        if (!dur) return "N/A";
+        return interval ? `${dur} ${interval}` : `${dur}`;
+      },
+    },
+    {
+      field: "interestRate",
+      headerName: "Interest Rate",
+      width: 120,
+      renderCell: (params) =>
+        params.value !== null && params.value !== undefined
+          ? `${params.value}%`
+          : "N/A",
+    },
+    {
+      field: "amountDue",
+      headerName: "Amount Due",
+      width: 140,
+      renderCell: (params) => {
+        const items = params.row.installments?.items || [];
+        if (items.length === 0) return "N/A";
+        const total = items.reduce((sum, i) => sum + (i.totalDue || 0), 0);
+        return fmt(total);
+      },
+    },
+    {
+      field: "totalPaid",
+      headerName: "Total Paid",
+      width: 130,
+      renderCell: (params) => {
+        const payments = params.row.payments?.items || [];
+        const completed = payments.filter(
+          (p) =>
+            (p.paymentStatusEnum || "").toUpperCase() === "COMPLETED" ||
+            (p.status || "").toLowerCase() === "completed",
+        );
+        if (completed.length === 0 && payments.length === 0) return "N/A";
+        const total = (completed.length > 0 ? completed : payments).reduce(
+          (sum, p) => sum + (p.amount || 0),
+          0,
+        );
+        return fmt(total);
+      },
+    },
+    {
+      field: "loanBalance",
+      headerName: "Loan Balance",
+      width: 140,
+      renderCell: (params) => {
+        const snapshots = params.row.balanceSnapshots?.items || [];
+        if (
+          snapshots.length > 0 &&
+          snapshots[0].totalOutstanding !== undefined
+        ) {
+          return fmt(snapshots[0].totalOutstanding);
+        }
+        // Fallback: amountDue - totalPaid
+        const installments = params.row.installments?.items || [];
+        const payments = params.row.payments?.items || [];
+        if (installments.length === 0) return "N/A";
+        const amountDue = installments.reduce(
+          (s, i) => s + (i.totalDue || 0),
+          0,
+        );
+        const paid = payments.reduce((s, p) => s + (p.amount || 0), 0);
+        return fmt(amountDue - paid);
       },
     },
     {
@@ -630,13 +708,7 @@ export default function Loans() {
       width: 220,
       sortable: false,
       renderCell: (params) => (
-        <Box
-          sx={{
-            display: "flex",
-            gap: 1,
-            flexWrap: "wrap",
-          }}
-        >
+        <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
           <Button
             size="small"
             variant="outlined"

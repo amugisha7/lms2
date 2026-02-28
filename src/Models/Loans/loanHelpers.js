@@ -13,6 +13,8 @@ export const listLoans = /* GraphQL */ `
         interestRate
         startDate
         maturityDate
+        duration
+        durationInterval
         status
         borrower {
           id
@@ -23,6 +25,24 @@ export const listLoans = /* GraphQL */ `
         loanProduct {
           id
           name
+        }
+        installments(limit: 1000) {
+          items {
+            totalDue
+            totalPaid
+          }
+        }
+        payments(limit: 1000) {
+          items {
+            amount
+            status
+            paymentStatusEnum
+          }
+        }
+        balanceSnapshots(limit: 1, sortDirection: DESC) {
+          items {
+            totalOutstanding
+          }
         }
       }
       nextToken

@@ -4,19 +4,14 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import IconButton from "@mui/material/IconButton";
 import Chip from "@mui/material/Chip";
-import Skeleton from "@mui/material/Skeleton";
 import Tooltip from "@mui/material/Tooltip";
 import InputBase from "@mui/material/InputBase";
-import LinearProgress from "@mui/material/LinearProgress";
 import { useTheme } from "@mui/material/styles";
 import CommentOutlinedIcon from "@mui/icons-material/CommentOutlined";
 import PhoneOutlinedIcon from "@mui/icons-material/PhoneOutlined";
 import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
-import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
-import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import SearchIcon from "@mui/icons-material/Search";
 import RefreshIcon from "@mui/icons-material/Refresh";
-import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import ReceiptLongOutlinedIcon from "@mui/icons-material/ReceiptLongOutlined";
 import PaymentOutlinedIcon from "@mui/icons-material/PaymentOutlined";
 import AccountBalanceWalletOutlinedIcon from "@mui/icons-material/AccountBalanceWalletOutlined";
@@ -25,11 +20,15 @@ import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeft";
+import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import { Formik, Form, useField } from "formik";
 import { UserContext } from "../../../App";
 import { listBranches } from "../../../graphql/queries";
 import WorkingOverlay from "../../../ModelAssets/WorkingOverlay";
+import CustomDataGrid from "../../../ModelAssets/CustomDataGrid";
 import MultipleDropDownSearchable from "../../../Resources/FormComponents/MultipleDropDownSearchable";
+import { Button } from "@mui/material";
 
 //  Enhanced query that fetches all the fields we need for the display
 const LIST_LOANS_DISPLAY_QUERY = `
@@ -237,9 +236,7 @@ const STATUS_TABS = [
   { key: "written_off", label: "Written Off", match: ["WRITTEN_OFF"] },
 ];
 
-//  Grid column template
-const SF_GRID_COLS =
-  "minmax(140px,1.2fr) minmax(125px,1fr) minmax(88px,0.65fr) minmax(100px,0.75fr) minmax(100px,0.75fr) minmax(92px,0.65fr) minmax(115px,0.85fr) minmax(115px,0.85fr) minmax(120px,0.9fr)";
+// (Grid column template removed – using MUI DataGrid columns instead)
 
 //  KPI Card
 function KpiCard({ icon: Icon, label, value, subValue, accent, sf }) {
@@ -318,91 +315,13 @@ function KpiCard({ icon: Icon, label, value, subValue, accent, sf }) {
   );
 }
 
-//  LabelValue: reusable inline label + value
-function LabelValue({ label, value, valueSx: valueSxOverride, sx }) {
-  const theme = useTheme();
-  const sf = theme.palette.sf;
-  return (
-    <Box sx={{ display: "flex", alignItems: "baseline", gap: 0.75, ...sx }}>
-      <Typography
-        sx={{
-          fontSize: "0.68rem",
-          color: sf.sf_textTertiary,
-          fontWeight: 500,
-          letterSpacing: "0.03em",
-          textTransform: "uppercase",
-          lineHeight: 1.2,
-          flexShrink: 0,
-        }}
-      >
-        {label}
-      </Typography>
-      <Typography
-        sx={{
-          fontSize: "0.82rem",
-          color: sf.sf_textPrimary,
-          fontWeight: 500,
-          lineHeight: 1.35,
-          ...valueSxOverride,
-        }}
-      >
-        {value}
-      </Typography>
-    </Box>
-  );
-}
-
-//  Repayment progress mini bar
-function RepaymentBar({ principal, totalPaid, sf }) {
-  const pct = principal > 0 ? Math.min((totalPaid / principal) * 100, 100) : 0;
-  const isComplete = pct >= 100;
-  return (
-    <Box sx={{ mt: 0.5 }}>
-      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 0.2 }}>
-        <Typography
-          sx={{
-            fontSize: "0.62rem",
-            color: sf.sf_textTertiary,
-            fontWeight: 500,
-          }}
-        >
-          Repayment
-        </Typography>
-        <Typography
-          sx={{
-            fontSize: "0.62rem",
-            fontWeight: 700,
-            color: isComplete ? sf.sf_progressSuccess : sf.sf_textSecondary,
-          }}
-        >
-          {pct.toFixed(0)}%
-        </Typography>
-      </Box>
-      <LinearProgress
-        variant="determinate"
-        value={pct}
-        sx={{
-          height: 5,
-          borderRadius: 0,
-          bgcolor: sf.sf_progressTrack,
-          "& .MuiLinearProgress-bar": {
-            borderRadius: 0,
-            bgcolor: isComplete ? sf.sf_progressSuccess : sf.sf_progressFill,
-            transition: "width 0.4s ease",
-          },
-        }}
-      />
-    </Box>
-  );
-}
-
 //  Action button
 function ActionBtn({ icon: Icon, label, primary, sf, onClick }) {
   return (
     <Box
       onClick={onClick}
       sx={{
-        display: "flex",
+        display: "inline-flex",
         alignItems: "center",
         gap: 0.5,
         px: 1,
@@ -415,6 +334,7 @@ function ActionBtn({ icon: Icon, label, primary, sf, onClick }) {
         bgcolor: primary ? sf.sf_brandPrimary : "transparent",
         border: primary ? "none" : `1px solid ${sf.sf_borderLight}`,
         transition: "all 0.12s ease",
+        mt: 0.5,
         "&:hover": {
           bgcolor: primary ? sf.sf_brandHover : sf.sf_actionHoverBg,
           color: primary ? sf.sf_textOnBrand : sf.sf_textLinkHover,
@@ -424,383 +344,6 @@ function ActionBtn({ icon: Icon, label, primary, sf, onClick }) {
       <Icon sx={{ fontSize: 14 }} />
       <Typography sx={{ fontSize: "0.7rem", fontWeight: 500, lineHeight: 1 }}>
         {label}
-      </Typography>
-    </Box>
-  );
-}
-
-// --- Single Loan Row ---
-function LoanRow({ loan, theme, index }) {
-  const sf = theme.palette.sf;
-  const borrower = loan.borrower || {};
-  const borrowerName =
-    [borrower.firstname, borrower.othername, borrower.businessName]
-      .filter(Boolean)
-      .join(" ")
-      .trim() || "Unknown";
-
-  const loanId = loan.loanNumber || loan.id || "\u2014";
-  const status = loan.status || "N/A";
-  const statusColors = getStatusColor(status, sf);
-  const principal = loan.principal || 0;
-  const totalPaid = computeTotalPaid(loan.payments);
-  const balance = getBalance(loan);
-  const principalBal = getPrincipalBalance(loan);
-
-  const rateDisplay =
-    loan.interestRate != null
-      ? `${loan.interestRate}% / ${formatRateInterval(loan.rateInterval)}`
-      : "N/A";
-  const interestMethod =
-    loan.loanProduct?.interestCalculationMethod || loan.loanType || "N/A";
-
-  const startDate = fmtDate(loan.startDate);
-  const maturityDate = fmtDate(loan.maturityDate);
-
-  const loanOfficer = loan.createdByEmployee
-    ? [loan.createdByEmployee.firstName, loan.createdByEmployee.lastName]
-        .filter(Boolean)
-        .join(" ")
-    : "N/A";
-
-  const maturityUrgency = getMaturityUrgency(loan.maturityDate, status, sf);
-  const rowBg = index % 2 === 0 ? "transparent" : sf.sf_rowStripeBg;
-
-  const cellSx = {
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "flex-start",
-    px: "10px",
-    py: "5px",
-    borderRight: `1px solid ${sf.sf_tableBorder}`,
-  };
-
-  return (
-    <Box
-      sx={{
-        display: "grid",
-        gridTemplateColumns: SF_GRID_COLS,
-        bgcolor: rowBg,
-        borderBottom: `1px solid ${sf.sf_tableBorder}`,
-        transition: "background-color 0.12s ease",
-        "&:hover": { bgcolor: sf.sf_rowHover },
-        minHeight: 52,
-      }}
-    >
-      {/* Col 1: Borrower */}
-      <Box sx={cellSx}>
-        <Typography
-          sx={{
-            fontSize: "0.82rem",
-            fontWeight: 600,
-            color: sf.sf_textLink,
-            cursor: "pointer",
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            "&:hover": {
-              textDecoration: "underline",
-              color: sf.sf_textLinkHover,
-            },
-          }}
-        >
-          {borrowerName}
-        </Typography>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 0.3, mt: 0.3 }}>
-          <Tooltip
-            title={borrower.phoneNumber || "No phone"}
-            placement="top"
-            arrow
-          >
-            <IconButton
-              size="small"
-              sx={{
-                p: 0.2,
-                color: sf.sf_textTertiary,
-                "&:hover": { color: sf.sf_brandPrimary },
-              }}
-            >
-              <PhoneOutlinedIcon sx={{ fontSize: 14 }} />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title={borrower.email || "No email"} placement="top" arrow>
-            <IconButton
-              size="small"
-              sx={{
-                p: 0.2,
-                color: sf.sf_textTertiary,
-                "&:hover": { color: sf.sf_brandPrimary },
-              }}
-            >
-              <EmailOutlinedIcon sx={{ fontSize: 14 }} />
-            </IconButton>
-          </Tooltip>
-        </Box>
-      </Box>
-
-      {/* Col 2: Principal */}
-      <Box sx={cellSx}>
-        <Typography
-          sx={{
-            fontSize: "0.82rem",
-            fontWeight: 600,
-            color: sf.sf_textPrimary,
-          }}
-        >
-          {fmtCurrency(principal)}
-        </Typography>
-        <Typography
-          sx={{
-            fontSize: "0.7rem",
-            color: sf.sf_textLink,
-            cursor: "pointer",
-            mt: 0.2,
-            "&:hover": {
-              textDecoration: "underline",
-              color: sf.sf_textLinkHover,
-            },
-          }}
-        >
-          {loanId}
-        </Typography>
-        <Chip
-          label={status}
-          size="small"
-          sx={{
-            alignSelf: "flex-start",
-            mt: 0.3,
-            height: 18,
-            fontSize: "0.62rem",
-            fontWeight: 700,
-            bgcolor: statusColors.bg,
-            color: statusColors.text,
-            borderRadius: 0,
-            "& .MuiChip-label": { px: 0.7 },
-          }}
-        />
-      </Box>
-
-      {/* Col 3: Date Taken */}
-      <Box sx={cellSx}>
-        <Typography
-          sx={{
-            fontSize: "0.8rem",
-            color: sf.sf_textPrimary,
-            fontWeight: 500,
-          }}
-        >
-          {startDate}
-        </Typography>
-      </Box>
-
-      {/* Col 4: Maturity Date */}
-      <Box sx={cellSx}>
-        <Typography
-          sx={{
-            fontSize: "0.8rem",
-            color: sf.sf_textPrimary,
-            fontWeight: 500,
-          }}
-        >
-          {maturityDate}
-        </Typography>
-        {maturityUrgency && (
-          <Chip
-            label={maturityUrgency.label}
-            size="small"
-            sx={{
-              alignSelf: "flex-start",
-              mt: 0.3,
-              height: 17,
-              fontSize: "0.58rem",
-              fontWeight: 700,
-              bgcolor: maturityUrgency.bg,
-              color: maturityUrgency.color,
-              borderRadius: 0,
-              "& .MuiChip-label": { px: 0.5 },
-            }}
-          />
-        )}
-      </Box>
-
-      {/* Col 5: Interest */}
-      <Box sx={cellSx}>
-        <Typography
-          sx={{
-            fontSize: "0.8rem",
-            color: sf.sf_textPrimary,
-            fontWeight: 500,
-          }}
-        >
-          {rateDisplay}
-        </Typography>
-        <Tooltip title={`Method: ${interestMethod}`} placement="top" arrow>
-          <Box
-            sx={{
-              display: "inline-flex",
-              alignItems: "center",
-              alignSelf: "flex-start",
-              gap: 0.3,
-              mt: 0.3,
-              cursor: "help",
-              color: sf.sf_textTertiary,
-              "&:hover": { color: sf.sf_brandPrimary },
-            }}
-          >
-            <InfoOutlinedIcon sx={{ fontSize: 14 }} />
-            <Typography sx={{ fontSize: "0.62rem", fontWeight: 500 }}>
-              Info
-            </Typography>
-          </Box>
-        </Tooltip>
-      </Box>
-
-      {/* Col 6: Amount Due */}
-      <Box sx={cellSx}>
-        <Typography
-          sx={{
-            fontSize: "0.82rem",
-            fontWeight: 600,
-            color: balance > 0 ? sf.sf_textPrimary : sf.sf_success,
-          }}
-        >
-          {fmtCurrency(balance)}
-        </Typography>
-      </Box>
-
-      {/* Col 7: Total Paid */}
-      <Box sx={cellSx}>
-        <Typography
-          sx={{
-            fontSize: "0.82rem",
-            fontWeight: 500,
-            color: sf.sf_success,
-          }}
-        >
-          {fmtCurrency(totalPaid)}
-        </Typography>
-        <ActionBtn icon={PaymentOutlinedIcon} label="Add Payment" sf={sf} />
-      </Box>
-
-      {/* Col 8: Loan Balance */}
-      <Box sx={cellSx}>
-        <Typography
-          sx={{
-            fontSize: "0.82rem",
-            fontWeight: 600,
-            color: principalBal > 0 ? sf.sf_error : sf.sf_success,
-          }}
-        >
-          {fmtCurrency(principalBal)}
-        </Typography>
-        <ActionBtn icon={ReceiptLongOutlinedIcon} label="Statement" sf={sf} />
-      </Box>
-
-      {/* Col 9: Loan Officer */}
-      <Box sx={{ ...cellSx, borderRight: "none" }}>
-        <Typography
-          sx={{
-            fontSize: "0.8rem",
-            color: sf.sf_textPrimary,
-            fontWeight: 500,
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-          }}
-        >
-          {loanOfficer}
-        </Typography>
-        <Tooltip title="View Comments" placement="top">
-          <Box
-            sx={{
-              display: "inline-flex",
-              alignItems: "center",
-              alignSelf: "flex-start",
-              gap: 0.3,
-              mt: 0.3,
-              cursor: "pointer",
-              color: sf.sf_textLink,
-              fontSize: "0.66rem",
-              fontWeight: 500,
-              "&:hover": { color: sf.sf_textLinkHover },
-            }}
-          >
-            <CommentOutlinedIcon sx={{ fontSize: 13 }} />
-            <span>Comments</span>
-          </Box>
-        </Tooltip>
-      </Box>
-    </Box>
-  );
-}
-//  Loading skeleton
-function LoadingSkeleton({ theme }) {
-  const sf = theme.palette.sf;
-  return Array.from({ length: 6 }).map((_, i) => (
-    <Box
-      key={i}
-      sx={{
-        display: "grid",
-        gridTemplateColumns: SF_GRID_COLS,
-        py: 1.5,
-        borderBottom: `1px solid ${sf.sf_tableBorder}`,
-        bgcolor: i % 2 === 0 ? "transparent" : sf.sf_rowStripeBg,
-      }}
-    >
-      {Array.from({ length: 9 }).map((_, c) => (
-        <Box key={c} sx={{ px: "10px" }}>
-          <Skeleton
-            variant="text"
-            width="70%"
-            height={16}
-            sx={{ borderRadius: 0 }}
-          />
-          <Skeleton
-            variant="text"
-            width="50%"
-            height={12}
-            sx={{ borderRadius: 0 }}
-          />
-        </Box>
-      ))}
-    </Box>
-  ));
-}
-
-//  Empty state
-function EmptyState({ sf, searchTerm, statusFilter }) {
-  const hasFilters = searchTerm || statusFilter !== "all";
-  return (
-    <Box sx={{ textAlign: "center", py: 8, px: 3 }}>
-      <AssignmentOutlinedIcon
-        sx={{
-          fontSize: 48,
-          color: sf.sf_textTertiary,
-          mb: 1.5,
-          opacity: 0.5,
-        }}
-      />
-      <Typography
-        sx={{
-          color: sf.sf_textSecondary,
-          fontSize: "0.95rem",
-          fontWeight: 600,
-          mb: 0.5,
-        }}
-      >
-        {hasFilters ? "No matching loans" : "No loans found"}
-      </Typography>
-      <Typography
-        sx={{
-          color: sf.sf_textTertiary,
-          fontSize: "0.8rem",
-          maxWidth: 320,
-          mx: "auto",
-        }}
-      >
-        {hasFilters
-          ? "Try adjusting your search or changing the status filter."
-          : "Loans will appear here once they are created and approved."}
       </Typography>
     </Box>
   );
@@ -856,25 +399,606 @@ export default function LoansDisplay() {
   const [workingOverlayOpen, setWorkingOverlayOpen] = React.useState(false);
   const [workingOverlayMessage, setWorkingOverlayMessage] =
     React.useState("Working...");
-  const [sortField, setSortField] = React.useState(null);
-  const [sortDirection, setSortDirection] = React.useState("asc");
   const [searchTerm, setSearchTerm] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState("all");
   const [branches, setBranches] = React.useState([]);
   const [selectedBranchFilter, setSelectedBranchFilter] = React.useState([]);
   const hasFetchedRef = React.useRef();
+  const gridDragContainerRef = React.useRef(null);
+  const topScrollRef = React.useRef(null);
+  const topScrollInnerRef = React.useRef(null);
   const { userDetails } = React.useContext(UserContext);
   const theme = useTheme();
+  const sf = theme.palette.sf;
 
-  //  Sort handler
-  const handleSort = (field) => {
-    if (sortField === field) {
-      setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
-    } else {
-      setSortField(field);
-      setSortDirection("asc");
-    }
-  };
+  const renderTwoLineHeader = React.useCallback(
+    (line1, line2) => () => (
+      <Typography
+        component="span"
+        sx={{
+          fontSize: "0.74rem",
+          fontWeight: 600,
+          lineHeight: 1.05,
+          textAlign: "center",
+          width: "100%",
+        }}
+      >
+        {line1}
+        <br />
+        {line2}
+      </Typography>
+    ),
+    [],
+  );
+
+  React.useEffect(() => {
+    const el = gridDragContainerRef.current;
+    if (!el) return;
+
+    let isDown = false;
+    let startX = 0;
+    let scrollLeft = 0;
+
+    const getScroller = () =>
+      el.querySelector(".MuiDataGrid-virtualScroller") || el;
+
+    const onMouseDown = (e) => {
+      if (e.target.closest("button, a, input, [role='button'], .MuiChip-root"))
+        return;
+      const scroller = getScroller();
+      isDown = true;
+      el.style.cursor = "grabbing";
+      startX = e.pageX - scroller.offsetLeft;
+      scrollLeft = scroller.scrollLeft;
+    };
+
+    const onMouseLeave = () => {
+      isDown = false;
+      el.style.cursor = "";
+    };
+
+    const onMouseUp = () => {
+      isDown = false;
+      el.style.cursor = "";
+    };
+
+    const onMouseMove = (e) => {
+      if (!isDown) return;
+      e.preventDefault();
+      const scroller = getScroller();
+      const x = e.pageX - scroller.offsetLeft;
+      scroller.scrollLeft = scrollLeft - (x - startX);
+    };
+
+    el.addEventListener("mousedown", onMouseDown);
+    el.addEventListener("mouseleave", onMouseLeave);
+    el.addEventListener("mouseup", onMouseUp);
+    el.addEventListener("mousemove", onMouseMove);
+
+    return () => {
+      el.removeEventListener("mousedown", onMouseDown);
+      el.removeEventListener("mouseleave", onMouseLeave);
+      el.removeEventListener("mouseup", onMouseUp);
+      el.removeEventListener("mousemove", onMouseMove);
+    };
+  }, []);
+
+  // Sync top scrollbar width and scroll position with DataGrid's virtual scroller
+  React.useEffect(() => {
+    if (loading) return;
+    const frame = requestAnimationFrame(() => {
+      const gridEl = gridDragContainerRef.current;
+      const topEl = topScrollRef.current;
+      const innerEl = topScrollInnerRef.current;
+      if (!gridEl || !topEl || !innerEl) return;
+      const scroller = gridEl.querySelector(".MuiDataGrid-virtualScroller");
+      if (!scroller) return;
+
+      innerEl.style.width = scroller.scrollWidth + "px";
+
+      const onTopScroll = () => {
+        scroller.scrollLeft = topEl.scrollLeft;
+      };
+      const onGridScroll = () => {
+        topEl.scrollLeft = scroller.scrollLeft;
+      };
+
+      topEl.addEventListener("scroll", onTopScroll);
+      scroller.addEventListener("scroll", onGridScroll);
+
+      return () => {
+        topEl.removeEventListener("scroll", onTopScroll);
+        scroller.removeEventListener("scroll", onGridScroll);
+      };
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [loading, loans]);
+
+  const scrollTopBarBy = React.useCallback((delta) => {
+    const topEl = topScrollRef.current;
+    if (!topEl) return;
+    topEl.scrollBy({ left: delta, behavior: "smooth" });
+  }, []);
+
+  //  DataGrid column definitions
+  const columns = React.useMemo(
+    () => [
+      {
+        field: "borrower",
+        headerName: "Borrower",
+        disableColumnMenu: false,
+        flex: 1,
+        minWidth: 160,
+        valueGetter: (value, row) => {
+          const b = row.borrower || {};
+          return (
+            [b.firstname, b.othername, b.businessName]
+              .filter(Boolean)
+              .join(" ")
+              .trim() || "Unknown"
+          );
+        },
+        renderCell: (params) => {
+          const b = params.row.borrower || {};
+          const name = params.value;
+          return (
+            <Box>
+              <Typography
+                sx={{
+                  fontSize: "0.82rem",
+                  fontWeight: 600,
+                  color: sf.sf_textLink,
+                  cursor: "pointer",
+                  whiteSpace: "normal",
+                  wordBreak: "break-word",
+                  lineHeight: 1.2,
+                  textDecoration: "underline",
+                  "&:hover": {
+                    color: sf.sf_textLinkHover,
+                  },
+                }}
+              >
+                {name}
+              </Typography>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 0.3,
+                  mt: 0.3,
+                }}
+              >
+                <Tooltip
+                  title={b.phoneNumber || "No phone"}
+                  placement="top"
+                  arrow
+                >
+                  <IconButton
+                    size="small"
+                    sx={{
+                      p: 0.2,
+                      color: sf.sf_textTertiary,
+                      "&:hover": { color: sf.sf_brandPrimary },
+                    }}
+                  >
+                    <PhoneOutlinedIcon sx={{ fontSize: 14 }} />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title={b.email || "No email"} placement="top" arrow>
+                  <IconButton
+                    size="small"
+                    sx={{
+                      p: 0.2,
+                      color: sf.sf_textTertiary,
+                      "&:hover": { color: sf.sf_brandPrimary },
+                    }}
+                  >
+                    <EmailOutlinedIcon sx={{ fontSize: 14 }} />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+            </Box>
+          );
+        },
+      },
+      {
+        field: "principal",
+        headerName: "Principal",
+        disableColumnMenu: true,
+        headerAlign: "center",
+        flex: 1,
+        minWidth: 140,
+        type: "number",
+        valueGetter: (value, row) => row.principal || 0,
+        renderCell: (params) => {
+          const loan = params.row;
+          const loanId = loan.loanNumber || loan.id || "\u2014";
+          return (
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-start",
+              }}
+            >
+              <Typography
+                sx={{
+                  fontSize: "0.82rem",
+                  fontWeight: 600,
+                  color: sf.sf_textPrimary,
+                }}
+              >
+                {fmtCurrency(params.value)}
+              </Typography>
+              <Box
+                sx={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                }}
+              >
+                <Typography
+                  sx={{
+                    fontSize: "0.6rem",
+                    mt: 0.2,
+                    color: sf.sf_textTertiary,
+                  }}
+                >
+                  LOAN ID:
+                </Typography>
+                <Typography
+                  sx={{
+                    fontSize: "0.7rem",
+                    color: sf.sf_textLink,
+                    cursor: "pointer",
+                    mt: 0.2,
+                    ml: 0.4,
+                    textDecoration: "underline",
+                    "&:hover": {
+                      color: sf.sf_textLinkHover,
+                    },
+                  }}
+                >
+                  {loanId}
+                </Typography>
+              </Box>
+            </Box>
+          );
+        },
+      },
+      {
+        field: "startDate",
+        headerName: "Date Taken",
+        disableColumnMenu: true,
+        headerAlign: "center",
+        renderHeader: renderTwoLineHeader("Date", "Taken"),
+        flex: 0.65,
+        minWidth: 95,
+        valueGetter: (value, row) =>
+          row.startDate ? new Date(row.startDate).getTime() : 0,
+        renderCell: (params) => (
+          <Typography
+            sx={{
+              fontSize: "0.8rem",
+              color: sf.sf_textPrimary,
+              fontWeight: 500,
+            }}
+          >
+            {fmtDate(params.row.startDate)}
+          </Typography>
+        ),
+      },
+      {
+        field: "maturityDate",
+        headerName: "Maturity Date",
+        disableColumnMenu: true,
+        headerAlign: "center",
+        renderHeader: renderTwoLineHeader("Maturity", "Date"),
+        flex: 0.75,
+        minWidth: 110,
+        valueGetter: (value, row) =>
+          row.maturityDate ? new Date(row.maturityDate).getTime() : 0,
+        renderCell: (params) => {
+          const loan = params.row;
+          const maturityUrgency = getMaturityUrgency(
+            loan.maturityDate,
+            loan.status,
+            sf,
+          );
+          return (
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-start",
+              }}
+            >
+              <Typography
+                sx={{
+                  fontSize: "0.8rem",
+                  color: sf.sf_textPrimary,
+                  fontWeight: 500,
+                }}
+              >
+                {fmtDate(loan.maturityDate)}
+              </Typography>
+              {maturityUrgency && (
+                <Chip
+                  label={maturityUrgency.label}
+                  size="small"
+                  sx={{
+                    alignSelf: "flex-start",
+                    mt: 0.3,
+                    height: 17,
+                    fontSize: "0.58rem",
+                    fontWeight: 700,
+                    bgcolor: maturityUrgency.bg,
+                    color: maturityUrgency.color,
+                    borderRadius: 0,
+                    "& .MuiChip-label": { px: 0.5 },
+                  }}
+                />
+              )}
+            </Box>
+          );
+        },
+      },
+      {
+        field: "interestRate",
+        headerName: "Interest",
+        disableColumnMenu: true,
+        headerAlign: "center",
+        flex: 0.75,
+        minWidth: 110,
+        type: "number",
+        valueGetter: (value, row) => row.interestRate ?? 0,
+        renderCell: (params) => {
+          const loan = params.row;
+          const rateDisplay =
+            loan.interestRate != null
+              ? `${loan.interestRate}% / ${formatRateInterval(loan.rateInterval)}`
+              : "N/A";
+          const interestMethod =
+            loan.loanProduct?.interestCalculationMethod ||
+            loan.loanType ||
+            "N/A";
+          return (
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-start",
+              }}
+            >
+              <Typography
+                sx={{
+                  fontSize: "0.8rem",
+                  color: sf.sf_textPrimary,
+                  fontWeight: 500,
+                }}
+              >
+                {rateDisplay}
+              </Typography>
+              <Tooltip
+                title={`Method: ${interestMethod}`}
+                placement="top"
+                arrow
+              >
+                <Box
+                  sx={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 0.3,
+                    mt: 0.3,
+                    cursor: "help",
+                    color: sf.sf_textTertiary,
+                    "&:hover": { color: sf.sf_brandPrimary },
+                  }}
+                >
+                  <InfoOutlinedIcon sx={{ fontSize: 14 }} />
+                  <Typography
+                    sx={{
+                      color: sf.sf_textTertiary,
+                      fontSize: "0.62rem",
+                      fontWeight: 500,
+                    }}
+                  >
+                    Method
+                  </Typography>
+                </Box>
+              </Tooltip>
+            </Box>
+          );
+        },
+      },
+      {
+        field: "amountDue",
+        headerName: "Amount Due",
+        disableColumnMenu: true,
+        headerAlign: "center",
+        renderHeader: renderTwoLineHeader("Amount", "Due"),
+        flex: 0.65,
+        minWidth: 100,
+        type: "number",
+        valueGetter: (value, row) => getBalance(row),
+        renderCell: (params) => {
+          const status = params.row.status || "N/A";
+          const statusColors = getStatusColor(status, sf);
+          const balance = params.value;
+          return (
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-start",
+              }}
+            >
+              <Typography
+                sx={{
+                  fontSize: "0.82rem",
+                  fontWeight: 600,
+                  color: balance > 0 ? sf.sf_textPrimary : sf.sf_success,
+                }}
+              >
+                {fmtCurrency(balance)}
+              </Typography>
+              <Chip
+                label={status}
+                size="small"
+                sx={{
+                  alignSelf: "flex-start",
+                  mt: 0.3,
+                  height: 18,
+                  fontSize: "0.62rem",
+                  fontWeight: 700,
+                  bgcolor: statusColors.bg,
+                  color: statusColors.text,
+                  borderRadius: 0,
+                  "& .MuiChip-label": { px: 0.7 },
+                }}
+              />
+            </Box>
+          );
+        },
+      },
+      {
+        field: "totalPaid",
+        headerName: "Total Paid",
+        disableColumnMenu: true,
+        headerAlign: "center",
+        renderHeader: renderTwoLineHeader("Total", "Paid"),
+        flex: 0.85,
+        minWidth: 120,
+        type: "number",
+        valueGetter: (value, row) => computeTotalPaid(row.payments),
+        renderCell: (params) => (
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-start",
+            }}
+          >
+            <Typography
+              sx={{
+                fontSize: "0.82rem",
+                fontWeight: 500,
+                color: sf.sf_success,
+              }}
+            >
+              {fmtCurrency(params.value)}
+            </Typography>
+            <ActionBtn icon={PaymentOutlinedIcon} label="Add Payment" sf={sf} />
+          </Box>
+        ),
+      },
+      {
+        field: "loanBalance",
+        headerName: "Loan Balance",
+        disableColumnMenu: true,
+        headerAlign: "center",
+        renderHeader: renderTwoLineHeader("Loan", "Balance"),
+        flex: 0.85,
+        minWidth: 120,
+        type: "number",
+        valueGetter: (value, row) => getPrincipalBalance(row),
+        renderCell: (params) => {
+          const principalBal = params.value;
+          return (
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-start",
+              }}
+            >
+              <Typography
+                sx={{
+                  fontSize: "0.82rem",
+                  fontWeight: 600,
+                  color: principalBal > 0 ? sf.sf_error : sf.sf_success,
+                }}
+              >
+                {fmtCurrency(principalBal)}
+              </Typography>
+              <ActionBtn
+                icon={ReceiptLongOutlinedIcon}
+                label="Statement"
+                sf={sf}
+              />
+            </Box>
+          );
+        },
+      },
+      {
+        field: "loanOfficer",
+        headerName: "Loan Officer",
+        disableColumnMenu: true,
+        headerAlign: "center",
+        renderHeader: renderTwoLineHeader("Loan", "Officer"),
+        flex: 0.9,
+        minWidth: 130,
+        sortable: false,
+        valueGetter: (value, row) => {
+          const emp = row.createdByEmployee;
+          return emp
+            ? [emp.firstName, emp.lastName].filter(Boolean).join(" ")
+            : "N/A";
+        },
+        renderCell: (params) => (
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-start",
+            }}
+          >
+            <Typography
+              sx={{
+                fontSize: "0.8rem",
+                color: sf.sf_textPrimary,
+                fontWeight: 500,
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              {params.value}
+            </Typography>
+            <Tooltip title="View Comments" placement="top">
+              <Box
+                sx={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 0.3,
+                  mt: 0.3,
+                  cursor: "pointer",
+                  color: sf.sf_textLink,
+                  "&:hover": { color: sf.sf_textLinkHover },
+                }}
+              >
+                <CommentOutlinedIcon sx={{ fontSize: 13 }} />
+                <Typography
+                  sx={{
+                    fontSize: "0.7rem",
+                    color: sf.sf_textLink,
+                    cursor: "pointer",
+                    mt: 0.2,
+                    textDecoration: "underline",
+                    "&:hover": {
+                      color: sf.sf_textLinkHover,
+                    },
+                  }}
+                >
+                  Comments
+                </Typography>
+              </Box>
+            </Tooltip>
+          </Box>
+        ),
+      },
+    ],
+    [sf, renderTwoLineHeader],
+  );
 
   //  Filtered + sorted loans
   const filteredLoans = React.useMemo(() => {
@@ -925,50 +1049,6 @@ export default function LoansDisplay() {
 
     return result;
   }, [loans, statusFilter, searchTerm, selectedBranchFilter, userDetails]);
-
-  const sortedLoans = React.useMemo(() => {
-    if (!sortField) return filteredLoans;
-    const dir = sortDirection === "asc" ? 1 : -1;
-
-    const getValue = (loan, field) => {
-      switch (field) {
-        case "borrower": {
-          const b = loan.borrower || {};
-          return [b.firstname, b.othername, b.businessName]
-            .filter(Boolean)
-            .join(" ")
-            .toLowerCase();
-        }
-        case "taken":
-          return loan.principal ?? 0;
-        case "rate":
-          return loan.interestRate ?? 0;
-        case "paid":
-          return computeTotalPaid(loan.payments);
-        case "balance":
-          return getBalance(loan);
-        case "principalBal":
-          return getPrincipalBalance(loan);
-        case "start":
-          return loan.startDate ? new Date(loan.startDate).getTime() : 0;
-        case "duration":
-          return loan.duration ?? 0;
-        case "maturity":
-          return loan.maturityDate ? new Date(loan.maturityDate).getTime() : 0;
-        default:
-          return 0;
-      }
-    };
-
-    return [...filteredLoans].sort((a, b) => {
-      const va = getValue(a, sortField);
-      const vb = getValue(b, sortField);
-      if (typeof va === "string") return va.localeCompare(vb) * dir;
-      if (va < vb) return -1 * dir;
-      if (va > vb) return 1 * dir;
-      return 0;
-    });
-  }, [filteredLoans, sortField, sortDirection]);
 
   //  KPI computations
   const kpis = React.useMemo(() => {
@@ -1139,44 +1219,6 @@ export default function LoansDisplay() {
     };
     if (userDetails) fetchBranchesForAdmin();
   }, [userDetails]);
-
-  const sf = theme.palette.sf;
-
-  //  Sort chip builder
-  const renderSortChips = (items) =>
-    items.map((s) => {
-      const isActive = sortField === s.key;
-      return (
-        <Chip
-          key={s.key}
-          label={
-            <Box sx={{ display: "flex", alignItems: "center", gap: 0.3 }}>
-              {s.label}
-              {isActive &&
-                (sortDirection === "asc" ? (
-                  <ArrowUpwardIcon sx={{ fontSize: 10 }} />
-                ) : (
-                  <ArrowDownwardIcon sx={{ fontSize: 10 }} />
-                ))}
-            </Box>
-          }
-          size="small"
-          onClick={() => handleSort(s.key)}
-          sx={{
-            height: 19,
-            fontSize: "0.6rem",
-            fontWeight: isActive ? 700 : 500,
-            cursor: "pointer",
-            bgcolor: isActive ? sf.sf_actionBg : "transparent",
-            color: isActive ? sf.sf_actionText : sf.sf_textTertiary,
-            border: `1px solid ${isActive ? sf.sf_borderFocus : sf.sf_borderLight}`,
-            borderRadius: 0,
-            "&:hover": { bgcolor: sf.sf_actionHoverBg },
-            "& .MuiChip-label": { px: 0.5 },
-          }}
-        />
-      );
-    });
 
   return (
     <>
@@ -1378,142 +1420,115 @@ export default function LoansDisplay() {
         </Box>
       </Box>
 
-      {/*  Table Card  */}
-      {/* Outer wrapper flipped so scrollbar appears at top */}
+      {/*  DataGrid with click-and-drag horizontal scroll  */}
       <Box
         sx={{
-          transform: "rotateX(180deg)",
-          border: `1px solid ${sf.sf_borderLight}`,
-          overflowX: "auto",
-          overflowY: "hidden",
-          bgcolor: sf.sf_cardBg,
-          boxShadow: sf.sf_shadowMd,
+          boxShadow: sf.sf_shadowSm,
+          transition: "box-shadow 0.15s, transform 0.15s",
+          "&:hover": {
+            boxShadow: sf.sf_shadowMd,
+            transform: "translateY(-1px)",
+          },
         }}
       >
-        {/* Inner content flipped back upright */}
-        <Box sx={{ transform: "rotateX(180deg)", minWidth: 1000 }}>
-          {/* --- Header Row --- */}
-          {/* Column definitions: label + optional sortKey */}
-          {(() => {
-            const COLS = [
-              { label: "Borrower", key: "borrower" },
-              { label: "Principal", key: "taken" },
-              { label: "Date Taken", key: "start" },
-              { label: "Maturity Date", key: "maturity" },
-              { label: "Interest", key: "rate" },
-              { label: "Amount Due", key: "balance" },
-              { label: "Total Paid", key: "paid" },
-              { label: "Loan Balance", key: "principalBal" },
-              { label: "Loan Officer", key: null },
-            ];
-            return (
-              <Box
-                sx={{
-                  display: "grid",
-                  gridTemplateColumns: SF_GRID_COLS,
-                  bgcolor: sf.sf_tableHeaderBg,
-                  borderBottom: `1px solid ${sf.sf_tableBorder}`,
-                }}
-              >
-                {COLS.map(({ label, key }, i) => {
-                  const isActive = sortField === key;
-                  return (
-                    <Box
-                      key={label}
-                      onClick={key ? () => handleSort(key) : undefined}
-                      sx={{
-                        px: "10px",
-                        py: "8px",
-                        borderRight:
-                          i < COLS.length - 1
-                            ? `1px solid ${sf.sf_tableBorder}`
-                            : "none",
-                        cursor: key ? "pointer" : "default",
-                        userSelect: "none",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 0.4,
-                        "&:hover": key ? { bgcolor: sf.sf_rowHover } : {},
-                      }}
-                    >
-                      <Typography
-                        sx={{
-                          fontSize: "0.7rem",
-                          fontWeight: isActive ? 800 : 700,
-                          color: isActive
-                            ? sf.sf_brandPrimary
-                            : sf.sf_tableHeaderText,
-                          letterSpacing: "0.05em",
-                          textTransform: "uppercase",
-                        }}
-                      >
-                        {label}
-                      </Typography>
-                      {key &&
-                        (isActive ? (
-                          sortDirection === "asc" ? (
-                            <ArrowUpwardIcon
-                              sx={{ fontSize: 11, color: sf.sf_brandPrimary }}
-                            />
-                          ) : (
-                            <ArrowDownwardIcon
-                              sx={{ fontSize: 11, color: sf.sf_brandPrimary }}
-                            />
-                          )
-                        ) : (
-                          <ArrowUpwardIcon
-                            sx={{ fontSize: 11, color: sf.sf_tableHeaderText }}
-                          />
-                        ))}
-                    </Box>
-                  );
-                })}
-              </Box>
-            );
-          })()}
-          {/*  Body  */}
-          {loading ? (
-            <LoadingSkeleton theme={theme} />
-          ) : sortedLoans.length === 0 ? (
-            <EmptyState
-              sf={sf}
-              searchTerm={searchTerm}
-              statusFilter={statusFilter}
-            />
-          ) : (
-            sortedLoans.map((loan, idx) => (
-              <LoanRow key={loan.id} loan={loan} theme={theme} index={idx} />
-            ))
-          )}
-
-          {/*  Footer  */}
-          {!loading && sortedLoans.length > 0 && (
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                px: "10px",
-                py: "8px",
-                bgcolor: sf.sf_footerBg,
-                borderTop: `1px solid ${sf.sf_tableBorder}`,
-              }}
-            >
-              <Typography sx={{ fontSize: "0.72rem", color: sf.sf_footerText }}>
-                Showing {sortedLoans.length} of {filteredLoans.length} loans
-                {statusFilter !== "all" &&
-                  ` (${STATUS_TABS.find((t) => t.key === statusFilter)?.label})`}
-              </Typography>
-              <Typography sx={{ fontSize: "0.72rem", color: sf.sf_footerText }}>
-                Total Outstanding:{" "}
-                {fmtCurrency(
-                  sortedLoans.reduce((s, l) => s + getBalance(l), 0),
-                )}
-              </Typography>
-            </Box>
-          )}
+        {/* Synchronized top scrollbar */}
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 0.5,
+            px: 0.5,
+            py: 0,
+            minHeight: 24,
+            bgcolor: sf.sf_tableHeaderBg,
+            borderBottom: `1px solid ${sf.sf_borderLight}`,
+          }}
+        >
+          <Button
+            onClick={() => scrollTopBarBy(-220)}
+            variant="outlined"
+            sx={{
+              minWidth: 22,
+              width: 22,
+              height: 18,
+              p: 0,
+              bgcolor: sf.sf_actionHoverBg,
+              borderRadius: 0,
+              "&:hover": { bgcolor: sf.sf_brandPrimary },
+              mt: 0.5,
+            }}
+          >
+            <KeyboardArrowLeftIcon sx={{ fontSize: 16 }} />
+          </Button>
+          <Box
+            ref={topScrollRef}
+            sx={{
+              overflowX: "auto",
+              overflowY: "hidden",
+              flex: 1,
+              height: 14,
+              "&::-webkit-scrollbar": { height: 10 },
+              "&::-webkit-scrollbar-track": {
+                bgcolor: sf.sf_borderLight,
+                borderRadius: 0,
+              },
+              "&::-webkit-scrollbar-thumb": {
+                bgcolor: sf.sf_textTertiary,
+                borderRadius: 0,
+                "&:hover": { bgcolor: sf.sf_brandPrimary },
+              },
+            }}
+          >
+            <Box ref={topScrollInnerRef} sx={{ height: 1, minWidth: "100%" }} />
+          </Box>
+          <Button
+            onClick={() => scrollTopBarBy(220)}
+            variant="outlined"
+            sx={{
+              minWidth: 22,
+              width: 22,
+              height: 18,
+              p: 0,
+              bgcolor: sf.sf_actionHoverBg,
+              borderRadius: 0,
+              "&:hover": { bgcolor: sf.sf_brandPrimary },
+              mt: 0.5,
+            }}
+          >
+            <KeyboardArrowRightIcon sx={{ fontSize: 16 }} />
+          </Button>
         </Box>
-        {/* end scroll container */}
+        <Box ref={gridDragContainerRef} sx={{ cursor: "grab" }}>
+          <CustomDataGrid
+            rows={filteredLoans}
+            columns={columns}
+            loading={loading}
+            getRowId={(row) => row.id}
+            pageSize={50}
+            pageSizeOptions={[25, 50, 100]}
+            rowHeight={91}
+            showToolbar={false}
+            sx={{
+              borderRadius: 0,
+              "& .MuiDataGrid-columnHeaderTitle": {
+                fontSize: "0.74rem",
+              },
+              "& .MuiDataGrid-cell": {
+                pt: 0.5,
+                pb: 0,
+                display: "flex",
+                alignItems: "flex-start",
+                justifyContent: "center",
+                textAlign: "center",
+              },
+              "& .MuiDataGrid-cell[data-field='borrower']": {
+                justifyContent: "flex-start",
+                textAlign: "left",
+              },
+            }}
+          />
+        </Box>
       </Box>
     </>
   );

@@ -125,6 +125,7 @@ const CustomDataGrid = ({
   allowSorting = true,
   onRowClick,
   showToolbar = true,
+  sx: dataGridSx,
   ...otherProps
 }) => {
   const theme = useTheme();
@@ -277,13 +278,16 @@ const CustomDataGrid = ({
         pageSizeOptions={pageSizeOptions}
         onRowClick={onRowClick}
         {...otherProps}
-        sx={{
-          border: "none",
-          height: "100%",
-          "& .MuiDataGrid-main": {
-            borderRadius: 0,
+        sx={[
+          {
+            border: "none",
+            height: "100%",
+            "& .MuiDataGrid-main": {
+              borderRadius: 0,
+            },
           },
-        }}
+          dataGridSx,
+        ]}
         slots={{ toolbar: CustomToolbar }}
         showToolbar={showToolbar}
       />

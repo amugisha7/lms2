@@ -7,13 +7,10 @@ import Chip from "@mui/material/Chip";
 import Tooltip from "@mui/material/Tooltip";
 import InputBase from "@mui/material/InputBase";
 import { useTheme } from "@mui/material/styles";
-import CommentOutlinedIcon from "@mui/icons-material/CommentOutlined";
 import PhoneOutlinedIcon from "@mui/icons-material/PhoneOutlined";
 import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import SearchIcon from "@mui/icons-material/Search";
 import RefreshIcon from "@mui/icons-material/Refresh";
-import ReceiptLongOutlinedIcon from "@mui/icons-material/ReceiptLongOutlined";
-import PaymentOutlinedIcon from "@mui/icons-material/PaymentOutlined";
 import AccountBalanceWalletOutlinedIcon from "@mui/icons-material/AccountBalanceWalletOutlined";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
@@ -22,6 +19,7 @@ import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeft";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
+import { useNavigate } from "react-router-dom";
 import { Formik, Form, useField } from "formik";
 import { UserContext } from "../../../App";
 import { listBranches } from "../../../graphql/queries";
@@ -349,6 +347,12 @@ function ActionBtn({ icon: Icon, label, primary, sf, onClick }) {
   );
 }
 
+// --- Helpers ---
+const truncateWithEllipsis = (text, limit = 36) => {
+  if (!text) return text;
+  return text.length > limit ? `${text.slice(0, limit)}...` : text;
+};
+
 // --- FormikEffect: sync formik field value changes to a callback ---
 function FormikEffect({ onChange, fieldName }) {
   const [field] = useField(fieldName);
@@ -410,6 +414,7 @@ export default function LoansDisplay() {
   const { userDetails } = React.useContext(UserContext);
   const theme = useTheme();
   const sf = theme.palette.sf;
+  const navigate = useNavigate();
 
   const renderTwoLineHeader = React.useCallback(
     (line1, line2) => () => (
@@ -541,9 +546,11 @@ export default function LoansDisplay() {
         renderCell: (params) => {
           const b = params.row.borrower || {};
           const name = params.value;
+          const displayName = truncateWithEllipsis(name, 36);
           return (
             <Box>
               <Typography
+                onClick={() => b.id && navigate(`/borrowers/id/${b.id}/view`)}
                 sx={{
                   fontSize: "0.82rem",
                   fontWeight: 600,
@@ -558,7 +565,7 @@ export default function LoansDisplay() {
                   },
                 }}
               >
-                {name}
+                {displayName}
               </Typography>
               <Box
                 sx={{
@@ -613,6 +620,10 @@ export default function LoansDisplay() {
         renderCell: (params) => {
           const loan = params.row;
           const loanId = loan.loanNumber || loan.id || "\u2014";
+          const loanIdDisplay =
+            typeof loanId === "string" && loanId.length > 3
+              ? loanId.slice(3)
+              : loanId;
           return (
             <Box
               sx={{
@@ -658,7 +669,7 @@ export default function LoansDisplay() {
                     },
                   }}
                 >
-                  {loanId}
+                  {loanIdDisplay}
                 </Typography>
               </Box>
             </Box>
@@ -887,7 +898,18 @@ export default function LoansDisplay() {
             >
               {fmtCurrency(params.value)}
             </Typography>
-            <ActionBtn icon={PaymentOutlinedIcon} label="Add Payment" sf={sf} />
+            <Typography
+              sx={{
+                fontSize: "0.7rem",
+                color: sf.sf_textLink,
+                cursor: "pointer",
+                mt: 0.2,
+                textDecoration: "underline",
+                "&:hover": { color: sf.sf_textLinkHover },
+              }}
+            >
+              Manage Payments
+            </Typography>
           </Box>
         ),
       },
@@ -920,11 +942,18 @@ export default function LoansDisplay() {
               >
                 {fmtCurrency(principalBal)}
               </Typography>
-              <ActionBtn
-                icon={ReceiptLongOutlinedIcon}
-                label="Statement"
-                sf={sf}
-              />
+              <Typography
+                sx={{
+                  fontSize: "0.7rem",
+                  color: sf.sf_textLink,
+                  cursor: "pointer",
+                  mt: 0.2,
+                  textDecoration: "underline",
+                  "&:hover": { color: sf.sf_textLinkHover },
+                }}
+              >
+                View Statement
+              </Typography>
             </Box>
           );
         },
@@ -944,60 +973,43 @@ export default function LoansDisplay() {
             ? [emp.firstName, emp.lastName].filter(Boolean).join(" ")
             : "N/A";
         },
-        renderCell: (params) => (
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "flex-start",
-            }}
-          >
-            <Typography
+        renderCell: (params) => {
+          const officerName = truncateWithEllipsis(params.value, 36);
+          return (
+            <Box
               sx={{
-                fontSize: "0.8rem",
-                color: sf.sf_textPrimary,
-                fontWeight: 500,
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-start",
               }}
             >
-              {params.value}
-            </Typography>
-            <Tooltip title="View Comments" placement="top">
-              <Box
+              <Typography
                 sx={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 0.3,
-                  mt: 0.3,
-                  cursor: "pointer",
+                  fontSize: "0.82rem",
+                  fontWeight: 600,
+                  color: sf.sf_textPrimary,
+                }}
+              >
+                {officerName}
+              </Typography>
+              <Typography
+                sx={{
+                  fontSize: "0.7rem",
                   color: sf.sf_textLink,
+                  cursor: "pointer",
+                  mt: 0.2,
+                  textDecoration: "underline",
                   "&:hover": { color: sf.sf_textLinkHover },
                 }}
               >
-                <CommentOutlinedIcon sx={{ fontSize: 13 }} />
-                <Typography
-                  sx={{
-                    fontSize: "0.7rem",
-                    color: sf.sf_textLink,
-                    cursor: "pointer",
-                    mt: 0.2,
-                    textDecoration: "underline",
-                    "&:hover": {
-                      color: sf.sf_textLinkHover,
-                    },
-                  }}
-                >
-                  Comments
-                </Typography>
-              </Box>
-            </Tooltip>
-          </Box>
-        ),
+                Loan Comments
+              </Typography>
+            </Box>
+          );
+        },
       },
     ],
-    [sf, renderTwoLineHeader],
+    [sf, renderTwoLineHeader, navigate],
   );
 
   //  Filtered + sorted loans

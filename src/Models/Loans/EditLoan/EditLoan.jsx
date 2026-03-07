@@ -135,6 +135,8 @@ const buildValidationSchema = () => {
 
 const baseValidationSchema = buildValidationSchema();
 
+const NON_EDITABLE_FIELD_NAMES = ["principalAmount", "loanStartDate"];
+
 const renderFormField = (field, formikValues) => {
   const { dynamicHelperText, dynamicLabelMap, ...fieldProps } = field;
 
@@ -271,6 +273,8 @@ const EditLoan = forwardRef(
       onCancel,
       readOnlyFields = [],
       loanDraft,
+      allowEditingOverride = false,
+      entityLabel = "Draft",
     },
     ref,
   ) => {
@@ -308,7 +312,9 @@ const EditLoan = forwardRef(
       normalizedStatus === "REJECTED" ||
       (isPrivileged && normalizedStatus.includes("REVIEW"));
 
-    const readOnly = Boolean(localDraft) && !canEditDraft;
+    const canEditRecord = allowEditingOverride || canEditDraft;
+
+    const readOnly = Boolean(localDraft) && !canEditRecord;
 
     useEffect(() => {
       if (readOnly) setEditMode(false);
@@ -423,7 +429,7 @@ const EditLoan = forwardRef(
           borrower: prev?.borrower || localDraft?.borrower || null,
           loanProduct: prev?.loanProduct || localDraft?.loanProduct || null,
         }));
-        setSubmitSuccess("Draft saved successfully!");
+        setSubmitSuccess(`${entityLabel} saved successfully!`);
         setEditMode(false);
         if (onEditSuccess) onEditSuccess(updated);
       } catch (err) {
@@ -664,13 +670,13 @@ const EditLoan = forwardRef(
 
                 <WorkingOverlay
                   open={formik.isSubmitting}
-                  message="Saving draft..."
+                  message={`Saving ${entityLabel.toLowerCase()}...`}
                 />
 
                 <CustomPopUp
                   open={scheduleOpen}
                   onClose={() => setScheduleOpen(false)}
-                  title="Loan Draft"
+                  title={entityLabel}
                   showEdit={false}
                   showDelete={false}
                   maxWidth="lg"
@@ -760,7 +766,9 @@ const EditLoan = forwardRef(
                       }
 
                       const isFieldReadOnly =
-                        readOnly || readOnlyFields.includes(field.name);
+                        readOnly ||
+                        readOnlyFields.includes(field.name) ||
+                        NON_EDITABLE_FIELD_NAMES.includes(field.name);
                       const fieldEditing = editMode && !isFieldReadOnly;
 
                       const fieldRenderProps = {

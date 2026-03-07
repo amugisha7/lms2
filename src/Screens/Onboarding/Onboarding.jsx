@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from "react";
+import React, { useContext } from "react";
 import { UserContext } from "../../App";
 import {
   Box,
@@ -27,7 +27,10 @@ import * as Yup from "yup";
 
 import { currenciesObj } from "../../Resources/currenciesObj";
 import { countries } from "../../Resources/listOfCountries";
-import { getGMTOffset, timezonesList } from "../../Resources/timezones";
+import {
+  getCountryDefaults,
+  onboardingTimezoneOptions,
+} from "../../Resources/countryDefaults";
 import TwoRadialButtons from "../../ModelAssets/TwoRadialButtons";
 import myLogo from "../../Resources/loantabs_logo.png";
 import { generateClient } from "aws-amplify/api";
@@ -38,6 +41,7 @@ import {
   CREATE_BRANCH_MUTATION,
   CREATE_USER_MUTATION,
   CREATE_ACCOUNT_MUTATION,
+  CREATE_ACCOUNT_BRANCH_MUTATION,
   GET_INSTITUTION_QUERY,
   LIST_USERS_QUERY,
 } from "./onboardingQueries";
@@ -74,6 +78,9 @@ const customTheme = createTheme({
   },
 });
 
+const defaultCountry = "Kenya";
+const defaultCountrySettings = getCountryDefaults(defaultCountry);
+
 const AccountSettingsForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -81,9 +88,9 @@ const AccountSettingsForm = () => {
   const { user, setUserDetails, signOut } = useContext(UserContext); // <-- add signOut here
   const [formData, setFormData] = React.useState({
     businessName: "",
-    country: "Kenya",
-    timezone: "Africa/Nairobi",
-    currency: "KES",
+    country: defaultCountry,
+    timezone: defaultCountrySettings.timezone || "Africa/Nairobi",
+    currency: defaultCountrySettings.currency || "KES",
   });
   const [decimalPoints, setDecimalPoints] = React.useState(0);
   const [companyOption, setCompanyOption] = React.useState(
@@ -110,6 +117,18 @@ const AccountSettingsForm = () => {
     setFormData((prev) => ({
       ...prev,
       [field]: event.target.value,
+    }));
+  };
+
+  const handleCountryChange = (event) => {
+    const country = event.target.value;
+    const { timezone, currency } = getCountryDefaults(country);
+
+    setFormData((prev) => ({
+      ...prev,
+      country,
+      timezone: timezone || prev.timezone,
+      currency: currency || prev.currency,
     }));
   };
 
@@ -201,9 +220,19 @@ const AccountSettingsForm = () => {
         description: "Default system account",
       };
 
-      await client.graphql({
+      const accountRes = await client.graphql({
         query: CREATE_ACCOUNT_MUTATION,
         variables: { input: accountInput },
+      });
+
+      await client.graphql({
+        query: CREATE_ACCOUNT_BRANCH_MUTATION,
+        variables: {
+          input: {
+            accountId: accountRes.data.createAccount.id,
+            branchId,
+          },
+        },
       });
 
       // 5. Create User with more details
@@ -421,7 +450,7 @@ const AccountSettingsForm = () => {
               <Select
                 value={formData.country}
                 label="Country"
-                onChange={handleChange("country")}
+                onChange={handleCountryChange}
                 startAdornment={
                   <LocationOn sx={{ mr: 1, color: "action.active" }} />
                 }
@@ -443,7 +472,7 @@ const AccountSettingsForm = () => {
                   <Schedule sx={{ mr: 1, color: "action.active" }} />
                 }
               >
-                {timezonesList.map((item, idx) => (
+                {onboardingTimezoneOptions.map((item, idx) => (
                   <MenuItem key={idx} value={item}>
                     {item}
                   </MenuItem>

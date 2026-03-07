@@ -1,5 +1,13 @@
 import React, { useState, useContext, useEffect, useRef } from "react";
-import { Box, Tabs, Tab, Typography, useTheme, Grid } from "@mui/material";
+import {
+  Box,
+  Tabs,
+  Tab,
+  Typography,
+  useTheme,
+  Grid,
+  Link,
+} from "@mui/material";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import CreateLoan from "./CreateLoan";
 import UseLoanProduct from "./UseLoanProduct";
@@ -168,18 +176,22 @@ export default function LoanCreationOptions(props) {
         >
           <Typography variant="body1" sx={{ color: "#856404" }}>
             No borrowers found in the system.{" "}
-            <a
-              href="/borrowers"
-              style={{
+            <Link
+              component="button"
+              type="button"
+              onClick={() => navigate("/addBorrower")}
+              sx={{
                 color: "#0056b3",
                 fontWeight: 600,
                 textDecoration: "underline",
+                verticalAlign: "baseline",
+                "&:hover": {
+                  color: "#003d82",
+                },
               }}
-              onMouseEnter={(e) => (e.target.style.color = "#003d82")}
-              onMouseLeave={(e) => (e.target.style.color = "#0056b3")}
             >
               Add a borrower
-            </a>{" "}
+            </Link>{" "}
             before creating a loan.
           </Typography>
         </Box>

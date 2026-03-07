@@ -1,3 +1,5 @@
+import { generateClient } from "aws-amplify/api";
+
 export const listLoans = /* GraphQL */ `
   query ListLoans(
     $filter: ModelLoanFilterInput
@@ -84,6 +86,11 @@ export const getLoan = /* GraphQL */ `
       branch {
         id
         name
+      }
+      createdByEmployee {
+        id
+        firstName
+        lastName
       }
       installments(limit: 1000) {
         items {
@@ -221,3 +228,13 @@ export const createLoanBalanceSnapshot = /* GraphQL */ `
     }
   }
 `;
+
+export const getLoanById = async (id) => {
+  const client = generateClient();
+  const result = await client.graphql({
+    query: getLoan,
+    variables: { id },
+  });
+
+  return result?.data?.getLoan || null;
+};

@@ -46,6 +46,32 @@ const CREATE_BRANCH_MUTATION = `
   }
 `;
 
+const CREATE_ACCOUNT_MUTATION = `
+  mutation CreateAccount($input: CreateAccountInput!) {
+    createAccount(input: $input) {
+      id
+      name
+      openingBalance
+      status
+      currency
+      accountType
+      description
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+const CREATE_ACCOUNT_BRANCH_MUTATION = `
+  mutation CreateAccountBranch($input: CreateAccountBranchInput!) {
+    createAccountBranch(input: $input) {
+      id
+      accountId
+      branchId
+    }
+  }
+`;
+
 const DELETE_BRANCH_MUTATION = `
   mutation DeleteBranch($input: DeleteBranchInput!) {
     deleteBranch(input: $input) {
@@ -99,6 +125,14 @@ export default function Branches() {
     color: "green",
   });
   const client = React.useMemo(() => generateClient(), []); // stabilize client so effect does not re-trigger infinitely
+
+  const buildDefaultBranchAccountName = React.useCallback((branchName) => {
+    const normalizedBranchName = (branchName || "Branch")
+      .trim()
+      .replace(/\s+/g, "_");
+
+    return `Cash_${normalizedBranchName}_Default`;
+  }, []);
 
   const {
     items: branches,
@@ -223,7 +257,36 @@ export default function Branches() {
       variables: { input },
     });
 
-    return result.data.createBranch;
+    const createdBranch = result.data.createBranch;
+    const currencyCode =
+      userDetails?.institution?.currencyCode || userDetails?.currencyCode;
+
+    const accountResult = await client.graphql({
+      query: CREATE_ACCOUNT_MUTATION,
+      variables: {
+        input: {
+          institutionAccountsId: userDetails.institutionUsersId,
+          name: buildDefaultBranchAccountName(createdBranch.name),
+          openingBalance: 0,
+          status: "active",
+          currency: currencyCode,
+          accountType: "system",
+          description: `Default cash account for ${createdBranch.name}`,
+        },
+      },
+    });
+
+    await client.graphql({
+      query: CREATE_ACCOUNT_BRANCH_MUTATION,
+      variables: {
+        input: {
+          accountId: accountResult.data.createAccount.id,
+          branchId: createdBranch.id,
+        },
+      },
+    });
+
+    return createdBranch;
   };
 
   // API handler for updating branch

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Formik, Form } from "formik";
 import * as Yup from "yup";
 import { Box, Grid, Typography, Button, Alert } from "@mui/material";
@@ -12,7 +12,6 @@ import DropDownSearchable from "../../../Resources/FormComponents/DropDownSearch
 import FormLabel from "../../../Resources/FormComponents/FormLabel";
 import WorkingOverlay from "../../../ModelAssets/WorkingOverlay";
 import NotificationBar from "../../../ModelAssets/NotificationBar";
-import { UserContext } from "../../../App";
 import { useNotification } from "../../../ModelAssets/NotificationContext";
 import { convertDraftToLoan } from "../LoanDrafts/loanDraftHelpers";
 import { CREATE_MONEY_TRANSACTION_MUTATION } from "../../Accounts/MoneyTransactions/moneyTransactionHelpes";
@@ -490,9 +489,9 @@ export default function SelectAccounts({
               }}
             >
               <Typography variant="body2" color="text.secondary">
-                No accounts found for this borrower's branch. Please ensure
-                accounts are linked to the borrower's branch before disbursing
-                the loan.
+                No accounts found for this borrower&apos;s branch. Please ensure
+                accounts are linked to the borrower&apos;s branch before
+                disbursing the loan.
               </Typography>
             </Box>
           )}
@@ -511,7 +510,7 @@ export default function SelectAccounts({
             }}
           >
             <Typography variant="body2" color="text.secondary">
-              Showing accounts linked to this borrower's branch only.
+              Showing accounts linked to this borrower&apos;s branch only.
             </Typography>
           </Box>
         )}

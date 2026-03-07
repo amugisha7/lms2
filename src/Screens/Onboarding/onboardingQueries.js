@@ -20,6 +20,10 @@ export const CREATE_ACCOUNT_MUTATION = `mutation CreateAccount($input: CreateAcc
   createAccount(input: $input) { id }
 }`;
 
+export const CREATE_ACCOUNT_BRANCH_MUTATION = `mutation CreateAccountBranch($input: CreateAccountBranchInput!) {
+  createAccountBranch(input: $input) { id }
+}`;
+
 export const GET_INSTITUTION_QUERY = `query GetInstitution($id: ID!) {
   getInstitution(id: $id) { id }
 }`;

@@ -171,6 +171,22 @@ const formatRateInterval = (interval) => {
   return interval.toLowerCase();
 };
 
+const formatDurationCompact = (duration, durationInterval) => {
+  const numericDuration = Number(duration);
+  if (!Number.isFinite(numericDuration)) return "N/A";
+
+  const interval = String(durationInterval || "").toLowerCase();
+
+  if (interval.includes("day")) return `${numericDuration}D`;
+  if (interval.includes("week")) return `${numericDuration}WK`;
+  if (interval.includes("quarter")) return `${numericDuration * 3}MO`;
+  if (interval.includes("year") || interval.includes("annual")) {
+    return `${numericDuration}YR`;
+  }
+
+  return `${numericDuration}MO`;
+};
+
 //  Status pill color mapping
 const getStatusColor = (status, sf) => {
   const s = (status || "").toUpperCase();
@@ -196,30 +212,6 @@ const daysUntil = (dateStr) => {
   now.setHours(0, 0, 0, 0);
   target.setHours(0, 0, 0, 0);
   return Math.round((target - now) / 86400000);
-};
-
-//  Maturity urgency badge
-const getMaturityUrgency = (dateStr, status, sf) => {
-  const s = (status || "").toUpperCase();
-  if (["CLOSED", "CLEARED", "PAID", "VOIDED", "WRITTEN_OFF"].includes(s))
-    return null;
-  const days = daysUntil(dateStr);
-  if (days === null) return null;
-  if (days < 0)
-    return {
-      label: `${Math.abs(days)}d overdue`,
-      color: sf.sf_error,
-      bg: sf.sf_errorBg,
-    };
-  if (days <= 7)
-    return {
-      label: `${days}d left`,
-      color: sf.sf_warning,
-      bg: sf.sf_warningBg,
-    };
-  if (days <= 30)
-    return { label: `${days}d left`, color: sf.sf_info, bg: sf.sf_infoBg };
-  return null;
 };
 
 //  Status filter tabs config
@@ -657,7 +649,15 @@ export default function LoansDisplay() {
                 >
                   LOAN ID:
                 </Typography>
-                <SF_ClickableText sx={{ ml: 0.4 }}>
+                <SF_ClickableText
+                  sx={{ ml: 0.4 }}
+                  onClick={() =>
+                    loan.id &&
+                    navigate(`/loans/id/${loan.id}/view`, {
+                      state: { from: "/loans-display" },
+                    })
+                  }
+                >
                   {loanIdDisplay}
                 </SF_ClickableText>
               </Box>
@@ -675,17 +675,53 @@ export default function LoansDisplay() {
         minWidth: 95,
         valueGetter: (value, row) =>
           row.startDate ? new Date(row.startDate).getTime() : 0,
-        renderCell: (params) => (
-          <Typography
-            sx={{
-              fontSize: "0.8rem",
-              color: sf.sf_textPrimary,
-              fontWeight: 500,
-            }}
-          >
-            {fmtDate(params.row.startDate)}
-          </Typography>
-        ),
+        renderCell: (params) => {
+          const loan = params.row;
+          return (
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-start",
+              }}
+            >
+              <Typography
+                sx={{
+                  fontSize: "0.8rem",
+                  color: sf.sf_textPrimary,
+                  fontWeight: 500,
+                }}
+              >
+                {fmtDate(loan.startDate)}
+              </Typography>
+              <Box
+                sx={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                }}
+              >
+                <Typography
+                  sx={{
+                    fontSize: "0.6rem",
+                    mt: 0.2,
+                    color: sf.sf_textTertiary,
+                  }}
+                >
+                  DURATION:
+                </Typography>
+                <Typography
+                  sx={{
+                    fontSize: "0.6rem",
+                    ml: 0.4,
+                    color: sf.sf_textTertiary,
+                  }}
+                >
+                  {formatDurationCompact(loan.duration, loan.durationInterval)}
+                </Typography>
+              </Box>
+            </Box>
+          );
+        },
       },
       {
         field: "maturityDate",
@@ -699,11 +735,7 @@ export default function LoansDisplay() {
           row.maturityDate ? new Date(row.maturityDate).getTime() : 0,
         renderCell: (params) => {
           const loan = params.row;
-          const maturityUrgency = getMaturityUrgency(
-            loan.maturityDate,
-            loan.status,
-            sf,
-          );
+          const daysLeft = daysUntil(loan.maturityDate);
           return (
             <Box
               sx={{
@@ -721,23 +753,31 @@ export default function LoansDisplay() {
               >
                 {fmtDate(loan.maturityDate)}
               </Typography>
-              {maturityUrgency && (
-                <Chip
-                  label={maturityUrgency.label}
-                  size="small"
+              <Box
+                sx={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                }}
+              >
+                <Typography
                   sx={{
-                    alignSelf: "flex-start",
-                    mt: 0.3,
-                    height: 17,
-                    fontSize: "0.58rem",
-                    fontWeight: 700,
-                    bgcolor: maturityUrgency.bg,
-                    color: maturityUrgency.color,
-                    borderRadius: 0,
-                    "& .MuiChip-label": { px: 0.5 },
+                    fontSize: "0.6rem",
+                    mt: 0.2,
+                    color: sf.sf_textTertiary,
                   }}
-                />
-              )}
+                >
+                  DAYS LEFT:
+                </Typography>
+                <Typography
+                  sx={{
+                    fontSize: "0.6rem",
+                    ml: 0.4,
+                    color: sf.sf_textTertiary,
+                  }}
+                >
+                  {daysLeft ?? "N/A"}
+                </Typography>
+              </Box>
             </Box>
           );
         },

@@ -7,8 +7,6 @@ import Chip from "@mui/material/Chip";
 import Tooltip from "@mui/material/Tooltip";
 import InputBase from "@mui/material/InputBase";
 import { useTheme } from "@mui/material/styles";
-import PhoneOutlinedIcon from "@mui/icons-material/PhoneOutlined";
-import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import SearchIcon from "@mui/icons-material/Search";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import AccountBalanceWalletOutlinedIcon from "@mui/icons-material/AccountBalanceWalletOutlined";
@@ -27,7 +25,9 @@ import WorkingOverlay from "../../../ModelAssets/WorkingOverlay";
 import CustomDataGrid from "../../../ModelAssets/CustomDataGrid";
 import SF_ClickableText from "../../../ModelAssets/SF_ClickableText";
 import MultipleDropDownSearchable from "../../../Resources/FormComponents/MultipleDropDownSearchable";
+import { formatMoneyParts } from "../../../Resources/formatting";
 import { Button } from "@mui/material";
+import BorrowerInfoPopup from "./BorrowerInfoPopup";
 
 //  Enhanced query that fetches all the fields we need for the display
 const LIST_LOANS_DISPLAY_QUERY = `
@@ -92,13 +92,16 @@ const LIST_LOANS_DISPLAY_QUERY = `
   }
 `;
 
-//  Helper: format currency
-const fmtCurrency = (value, currency = "$") => {
-  if (value == null || isNaN(value)) return "N/A";
-  return `${currency}${Number(value).toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
+const getCurrencyParts = (value, currency = "$", currencyCode) => {
+  if (value == null || isNaN(value)) {
+    return { prefix: "", number: "N/A" };
+  }
+
+  const parts = formatMoneyParts(value, currency, currencyCode);
+  return {
+    prefix: parts.prefix || "",
+    number: parts.number || "N/A",
+  };
 };
 
 //  Helper: format date to DD-MMM-YYYY
@@ -227,6 +230,34 @@ const STATUS_TABS = [
   { key: "written_off", label: "Written Off", match: ["WRITTEN_OFF"] },
 ];
 
+const STACKED_CELL_SX = {
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "flex-start",
+};
+
+const INLINE_META_ROW_SX = {
+  display: "inline-flex",
+  alignItems: "center",
+};
+
+const KPI_MONEY_SX = {
+  fontSize: "1.15rem",
+  fontWeight: 700,
+  lineHeight: 1.3,
+};
+
+const KPI_MONEY_PREFIX_SX = {
+  fontSize: "0.62em",
+};
+
+const getMoneyTextSx = (color, fontWeight = 600) => ({
+  fontSize: "0.82rem",
+  fontWeight,
+  color,
+  lineHeight: 1.2,
+});
+
 // (Grid column template removed – using MUI DataGrid columns instead)
 
 //  KPI Card
@@ -306,37 +337,64 @@ function KpiCard({ icon: Icon, label, value, subValue, accent, sf }) {
   );
 }
 
-//  Action button
-function ActionBtn({ icon: Icon, label, primary, sf, onClick }) {
+function CurrencyText({
+  value,
+  currency,
+  currencyCode,
+  numberSx = {},
+  prefixSx = {},
+}) {
+  const parts = getCurrencyParts(value, currency, currencyCode);
+
+  if (parts.number === "N/A") {
+    return (
+      <Typography
+        component="span"
+        sx={{
+          ...numberSx,
+        }}
+      >
+        N/A
+      </Typography>
+    );
+  }
+
   return (
-    <Box
-      onClick={onClick}
+    <Typography
+      component="span"
       sx={{
         display: "inline-flex",
-        alignItems: "center",
-        gap: 0.5,
-        px: 1,
-        py: 0.4,
-        borderRadius: 0,
-        cursor: "pointer",
-        fontSize: "0.7rem",
-        fontWeight: 500,
-        color: primary ? sf.sf_textOnBrand : sf.sf_textLink,
-        bgcolor: primary ? sf.sf_brandPrimary : "transparent",
-        border: primary ? "none" : `1px solid ${sf.sf_borderLight}`,
-        transition: "all 0.12s ease",
-        mt: 0.5,
-        "&:hover": {
-          bgcolor: primary ? sf.sf_brandHover : sf.sf_actionHoverBg,
-          color: primary ? sf.sf_textOnBrand : sf.sf_textLinkHover,
-        },
+        alignItems: "baseline",
+        gap: 0.35,
+        ...numberSx,
       }}
     >
-      <Icon sx={{ fontSize: 14 }} />
-      <Typography sx={{ fontSize: "0.7rem", fontWeight: 500, lineHeight: 1 }}>
-        {label}
+      {parts.prefix ? (
+        <Typography
+          component="span"
+          sx={{
+            fontSize: "0.72em",
+            fontWeight: 600,
+            color: "inherit",
+            lineHeight: 1,
+            ...prefixSx,
+          }}
+        >
+          {parts.prefix}
+        </Typography>
+      ) : null}
+      <Typography
+        component="span"
+        sx={{
+          fontSize: "1em",
+          fontWeight: "inherit",
+          color: "inherit",
+          lineHeight: "inherit",
+        }}
+      >
+        {parts.number}
       </Typography>
-    </Box>
+    </Typography>
   );
 }
 
@@ -408,6 +466,21 @@ export default function LoansDisplay() {
   const theme = useTheme();
   const sf = theme.palette.sf;
   const navigate = useNavigate();
+  const currencyCode =
+    userDetails?.institution?.currencyCode || userDetails?.currencyCode;
+  const currency = currencyCode || "$";
+  const MoneyText = React.useCallback(
+    ({ value, numberSx = {}, prefixSx = {} }) => (
+      <CurrencyText
+        value={value}
+        currency={currency}
+        currencyCode={currencyCode}
+        numberSx={numberSx}
+        prefixSx={prefixSx}
+      />
+    ),
+    [currency, currencyCode],
+  );
 
   const renderTwoLineHeader = React.useCallback(
     (line1, line2) => () => (
@@ -541,62 +614,14 @@ export default function LoansDisplay() {
           const name = params.value;
           const displayName = truncateWithEllipsis(name, 36);
           return (
-            <Box>
-              <Typography
-                onClick={() => b.id && navigate(`/borrowers/id/${b.id}/view`)}
-                sx={{
-                  fontSize: "0.82rem",
-                  fontWeight: 600,
-                  color: sf.sf_textLink,
-                  cursor: "pointer",
-                  whiteSpace: "normal",
-                  wordBreak: "break-word",
-                  lineHeight: 1.2,
-                  textDecoration: "underline",
-                  "&:hover": {
-                    color: sf.sf_textLinkHover,
-                  },
-                }}
-              >
-                {displayName}
-              </Typography>
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 0.3,
-                  mt: 0.3,
-                }}
-              >
-                <Tooltip
-                  title={b.phoneNumber || "No phone"}
-                  placement="top"
-                  arrow
-                >
-                  <IconButton
-                    size="small"
-                    sx={{
-                      p: 0.2,
-                      color: sf.sf_textTertiary,
-                      "&:hover": { color: sf.sf_brandPrimary },
-                    }}
-                  >
-                    <PhoneOutlinedIcon sx={{ fontSize: 14 }} />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title={b.email || "No email"} placement="top" arrow>
-                  <IconButton
-                    size="small"
-                    sx={{
-                      p: 0.2,
-                      color: sf.sf_textTertiary,
-                      "&:hover": { color: sf.sf_brandPrimary },
-                    }}
-                  >
-                    <EmailOutlinedIcon sx={{ fontSize: 14 }} />
-                  </IconButton>
-                </Tooltip>
-              </Box>
+            <Box sx={STACKED_CELL_SX}>
+              <BorrowerInfoPopup
+                borrower={b}
+                displayName={displayName}
+                onNavigate={() =>
+                  b.id && navigate(`/borrowers/id/${b.id}/view`)
+                }
+              />
             </Box>
           );
         },
@@ -618,28 +643,12 @@ export default function LoansDisplay() {
               ? loanId.slice(3)
               : loanId;
           return (
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "flex-start",
-              }}
-            >
-              <Typography
-                sx={{
-                  fontSize: "0.82rem",
-                  fontWeight: 600,
-                  color: sf.sf_textPrimary,
-                }}
-              >
-                {fmtCurrency(params.value)}
-              </Typography>
-              <Box
-                sx={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                }}
-              >
+            <Box sx={STACKED_CELL_SX}>
+              <MoneyText
+                value={params.value}
+                numberSx={getMoneyTextSx(sf.sf_textPrimary)}
+              />
+              <Box sx={INLINE_META_ROW_SX}>
                 <Typography
                   sx={{
                     fontSize: "0.6rem",
@@ -678,32 +687,22 @@ export default function LoansDisplay() {
         renderCell: (params) => {
           const loan = params.row;
           return (
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "flex-start",
-              }}
-            >
+            <Box sx={STACKED_CELL_SX}>
               <Typography
                 sx={{
-                  fontSize: "0.8rem",
+                  fontSize: "0.82rem",
                   color: sf.sf_textPrimary,
-                  fontWeight: 500,
+                  fontWeight: 600,
+                  lineHeight: 1.2,
                 }}
               >
                 {fmtDate(loan.startDate)}
               </Typography>
-              <Box
-                sx={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                }}
-              >
+              <Box sx={INLINE_META_ROW_SX}>
                 <Typography
                   sx={{
                     fontSize: "0.6rem",
-                    mt: 0.2,
+                    mt: 0.4,
                     color: sf.sf_textTertiary,
                   }}
                 >
@@ -712,6 +711,8 @@ export default function LoansDisplay() {
                 <Typography
                   sx={{
                     fontSize: "0.6rem",
+                    mt: 0.4,
+
                     ml: 0.4,
                     color: sf.sf_textTertiary,
                   }}
@@ -737,32 +738,22 @@ export default function LoansDisplay() {
           const loan = params.row;
           const daysLeft = daysUntil(loan.maturityDate);
           return (
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "flex-start",
-              }}
-            >
+            <Box sx={STACKED_CELL_SX}>
               <Typography
                 sx={{
-                  fontSize: "0.8rem",
+                  fontSize: "0.82rem",
                   color: sf.sf_textPrimary,
-                  fontWeight: 500,
+                  fontWeight: 600,
+                  lineHeight: 1.2,
                 }}
               >
                 {fmtDate(loan.maturityDate)}
               </Typography>
-              <Box
-                sx={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                }}
-              >
+              <Box sx={INLINE_META_ROW_SX}>
                 <Typography
                   sx={{
                     fontSize: "0.6rem",
-                    mt: 0.2,
+                    mt: 0.4,
                     color: sf.sf_textTertiary,
                   }}
                 >
@@ -771,6 +762,8 @@ export default function LoansDisplay() {
                 <Typography
                   sx={{
                     fontSize: "0.6rem",
+                    mt: 0.4,
+
                     ml: 0.4,
                     color: sf.sf_textTertiary,
                   }}
@@ -811,9 +804,10 @@ export default function LoansDisplay() {
             >
               <Typography
                 sx={{
-                  fontSize: "0.8rem",
+                  fontSize: "0.82rem",
                   color: sf.sf_textPrimary,
-                  fontWeight: 500,
+                  fontWeight: 600,
+                  lineHeight: 1.2,
                 }}
               >
                 {rateDisplay}
@@ -865,22 +859,13 @@ export default function LoansDisplay() {
           const statusColors = getStatusColor(status, sf);
           const balance = params.value;
           return (
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "flex-start",
-              }}
-            >
-              <Typography
-                sx={{
-                  fontSize: "0.82rem",
-                  fontWeight: 600,
-                  color: balance > 0 ? sf.sf_textPrimary : sf.sf_success,
-                }}
-              >
-                {fmtCurrency(balance)}
-              </Typography>
+            <Box sx={STACKED_CELL_SX}>
+              <MoneyText
+                value={balance}
+                numberSx={getMoneyTextSx(
+                  balance > 0 ? sf.sf_textPrimary : sf.sf_success,
+                )}
+              />
               <Chip
                 label={status}
                 size="small"
@@ -911,22 +896,11 @@ export default function LoansDisplay() {
         type: "number",
         valueGetter: (value, row) => computeTotalPaid(row.payments),
         renderCell: (params) => (
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "flex-start",
-            }}
-          >
-            <Typography
-              sx={{
-                fontSize: "0.82rem",
-                fontWeight: 500,
-                color: sf.sf_success,
-              }}
-            >
-              {fmtCurrency(params.value)}
-            </Typography>
+          <Box sx={STACKED_CELL_SX}>
+            <MoneyText
+              value={params.value}
+              numberSx={getMoneyTextSx(sf.sf_success, 500)}
+            />
             <SF_ClickableText>Manage Payments</SF_ClickableText>
           </Box>
         ),
@@ -944,22 +918,13 @@ export default function LoansDisplay() {
         renderCell: (params) => {
           const principalBal = params.value;
           return (
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "flex-start",
-              }}
-            >
-              <Typography
-                sx={{
-                  fontSize: "0.82rem",
-                  fontWeight: 600,
-                  color: principalBal > 0 ? sf.sf_error : sf.sf_success,
-                }}
-              >
-                {fmtCurrency(principalBal)}
-              </Typography>
+            <Box sx={STACKED_CELL_SX}>
+              <MoneyText
+                value={principalBal}
+                numberSx={getMoneyTextSx(
+                  principalBal > 0 ? sf.sf_error : sf.sf_success,
+                )}
+              />
               <SF_ClickableText>View Statement</SF_ClickableText>
             </Box>
           );
@@ -983,18 +948,13 @@ export default function LoansDisplay() {
         renderCell: (params) => {
           const officerName = truncateWithEllipsis(params.value, 36);
           return (
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "flex-start",
-              }}
-            >
+            <Box sx={STACKED_CELL_SX}>
               <Typography
                 sx={{
                   fontSize: "0.82rem",
                   fontWeight: 600,
                   color: sf.sf_textPrimary,
+                  lineHeight: 1.2,
                 }}
               >
                 {officerName}
@@ -1005,7 +965,7 @@ export default function LoansDisplay() {
         },
       },
     ],
-    [sf, renderTwoLineHeader, navigate],
+    [sf, renderTwoLineHeader, navigate, MoneyText],
   );
 
   //  Filtered + sorted loans
@@ -1332,13 +1292,25 @@ export default function LoansDisplay() {
           <KpiCard
             icon={AccountBalanceWalletOutlinedIcon}
             label="Portfolio"
-            value={fmtCurrency(kpis.totalPrincipal)}
+            value={
+              <MoneyText
+                value={kpis.totalPrincipal}
+                numberSx={{ ...KPI_MONEY_SX, color: sf.sf_textPrimary }}
+                prefixSx={KPI_MONEY_PREFIX_SX}
+              />
+            }
             sf={sf}
           />
           <KpiCard
             icon={TrendingUpIcon}
             label="Outstanding"
-            value={fmtCurrency(kpis.totalOutstanding)}
+            value={
+              <MoneyText
+                value={kpis.totalOutstanding}
+                numberSx={{ ...KPI_MONEY_SX, color: sf.sf_textPrimary }}
+                prefixSx={KPI_MONEY_PREFIX_SX}
+              />
+            }
             subValue={
               kpis.totalPrincipal > 0
                 ? `${((kpis.totalOutstanding / kpis.totalPrincipal) * 100).toFixed(1)}% of portfolio`
@@ -1515,7 +1487,7 @@ export default function LoansDisplay() {
             getRowId={(row) => row.id}
             pageSize={50}
             pageSizeOptions={[25, 50, 100]}
-            rowHeight={91}
+            rowHeight={70}
             showToolbar={false}
             sx={{
               borderRadius: 0,

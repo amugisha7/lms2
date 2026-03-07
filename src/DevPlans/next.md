@@ -1,6 +1,5 @@
 - Create loans form. Also create from loan product.
   - Resume:
-    - move the clickable text to its own component.
     - add payment functionality
     - add loan statements
     - Check how loans are being displayed in the datagrid. - Work on loan statements, payments and loan status

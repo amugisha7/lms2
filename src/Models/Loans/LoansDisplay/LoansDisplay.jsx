@@ -25,6 +25,7 @@ import { UserContext } from "../../../App";
 import { listBranches } from "../../../graphql/queries";
 import WorkingOverlay from "../../../ModelAssets/WorkingOverlay";
 import CustomDataGrid from "../../../ModelAssets/CustomDataGrid";
+import SF_ClickableText from "../../../ModelAssets/SF_ClickableText";
 import MultipleDropDownSearchable from "../../../Resources/FormComponents/MultipleDropDownSearchable";
 import { Button } from "@mui/material";
 
@@ -656,21 +657,9 @@ export default function LoansDisplay() {
                 >
                   LOAN ID:
                 </Typography>
-                <Typography
-                  sx={{
-                    fontSize: "0.7rem",
-                    color: sf.sf_textLink,
-                    cursor: "pointer",
-                    mt: 0.2,
-                    ml: 0.4,
-                    textDecoration: "underline",
-                    "&:hover": {
-                      color: sf.sf_textLinkHover,
-                    },
-                  }}
-                >
+                <SF_ClickableText sx={{ ml: 0.4 }}>
                   {loanIdDisplay}
-                </Typography>
+                </SF_ClickableText>
               </Box>
             </Box>
           );
@@ -898,18 +887,7 @@ export default function LoansDisplay() {
             >
               {fmtCurrency(params.value)}
             </Typography>
-            <Typography
-              sx={{
-                fontSize: "0.7rem",
-                color: sf.sf_textLink,
-                cursor: "pointer",
-                mt: 0.2,
-                textDecoration: "underline",
-                "&:hover": { color: sf.sf_textLinkHover },
-              }}
-            >
-              Manage Payments
-            </Typography>
+            <SF_ClickableText>Manage Payments</SF_ClickableText>
           </Box>
         ),
       },
@@ -942,18 +920,7 @@ export default function LoansDisplay() {
               >
                 {fmtCurrency(principalBal)}
               </Typography>
-              <Typography
-                sx={{
-                  fontSize: "0.7rem",
-                  color: sf.sf_textLink,
-                  cursor: "pointer",
-                  mt: 0.2,
-                  textDecoration: "underline",
-                  "&:hover": { color: sf.sf_textLinkHover },
-                }}
-              >
-                View Statement
-              </Typography>
+              <SF_ClickableText>View Statement</SF_ClickableText>
             </Box>
           );
         },
@@ -992,18 +959,7 @@ export default function LoansDisplay() {
               >
                 {officerName}
               </Typography>
-              <Typography
-                sx={{
-                  fontSize: "0.7rem",
-                  color: sf.sf_textLink,
-                  cursor: "pointer",
-                  mt: 0.2,
-                  textDecoration: "underline",
-                  "&:hover": { color: sf.sf_textLinkHover },
-                }}
-              >
-                Loan Comments
-              </Typography>
+              <SF_ClickableText>Loan Comments</SF_ClickableText>
             </Box>
           );
         },

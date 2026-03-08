@@ -24,10 +24,12 @@ import { listBranches } from "../../../graphql/queries";
 import WorkingOverlay from "../../../ModelAssets/WorkingOverlay";
 import CustomDataGrid from "../../../ModelAssets/CustomDataGrid";
 import SF_ClickableText from "../../../ModelAssets/SF_ClickableText";
+import { useSnackbar } from "../../../ModelAssets/SnackbarContext";
 import MultipleDropDownSearchable from "../../../Resources/FormComponents/MultipleDropDownSearchable";
 import { formatMoneyParts } from "../../../Resources/formatting";
 import { Button } from "@mui/material";
 import BorrowerInfoPopup from "./BorrowerInfoPopup";
+import ManagePaymentsPopup from "../../Payments/ManagePaymentsPopup";
 
 //  Enhanced query that fetches all the fields we need for the display
 const LIST_LOANS_DISPLAY_QUERY = `
@@ -48,6 +50,7 @@ const LIST_LOANS_DISPLAY_QUERY = `
         duration
         durationInterval
         loanType
+        loanComputationRecord
         rateInterval
         paymentFrequency
         status
@@ -86,6 +89,25 @@ const LIST_LOANS_DISPLAY_QUERY = `
             paymentStatusEnum
           }
         }
+      }
+      nextToken
+    }
+  }
+`;
+
+const LIST_PAYMENTS_BY_LOAN_QUERY = `
+  query ListPaymentsByLoan($loanID: ID!, $limit: Int, $nextToken: String) {
+    listPayments(
+      filter: { loanID: { eq: $loanID } }
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        amount
+        status
+        paymentStatusEnum
+        paymentDate
       }
       nextToken
     }
@@ -404,6 +426,38 @@ const truncateWithEllipsis = (text, limit = 30) => {
   return text.length > limit ? `${text.slice(0, limit)}...` : text;
 };
 
+const parseLoanRecord = (loan) => {
+  const record = loan?.draftRecord ?? loan?.loanComputationRecord;
+  if (!record) return {};
+
+  try {
+    const parsed =
+      typeof record === "string" && record.trim() ? JSON.parse(record) : record;
+    if (!parsed || typeof parsed !== "object") return {};
+
+    const nested = parsed.draftRecord;
+    if (nested) {
+      if (typeof nested === "string" && nested.trim()) {
+        try {
+          const nestedParsed = JSON.parse(nested);
+          return nestedParsed && typeof nestedParsed === "object"
+            ? nestedParsed
+            : {};
+        } catch {
+          return {};
+        }
+      }
+
+      if (typeof nested === "object") return nested;
+    }
+
+    return parsed;
+  } catch (err) {
+    console.error("Failed to parse loan record:", err);
+    return {};
+  }
+};
+
 // --- FormikEffect: sync formik field value changes to a callback ---
 function FormikEffect({ onChange, fieldName }) {
   const [field] = useField(fieldName);
@@ -458,11 +512,14 @@ export default function LoansDisplay() {
   const [statusFilter, setStatusFilter] = React.useState("all");
   const [branches, setBranches] = React.useState([]);
   const [selectedBranchFilter, setSelectedBranchFilter] = React.useState([]);
+  const [paymentPopupOpen, setPaymentPopupOpen] = React.useState(false);
+  const [paymentLoanRow, setPaymentLoanRow] = React.useState(null);
   const hasFetchedRef = React.useRef();
   const gridDragContainerRef = React.useRef(null);
   const topScrollRef = React.useRef(null);
   const topScrollInnerRef = React.useRef(null);
   const { userDetails } = React.useContext(UserContext);
+  const { showSnackbar } = useSnackbar();
   const theme = useTheme();
   const sf = theme.palette.sf;
   const navigate = useNavigate();
@@ -786,11 +843,14 @@ export default function LoansDisplay() {
         valueGetter: (value, row) => row.interestRate ?? 0,
         renderCell: (params) => {
           const loan = params.row;
+          const computationRecord = parseLoanRecord(loan);
           const rateDisplay =
             loan.interestRate != null
               ? `${loan.interestRate}% / ${formatRateInterval(loan.rateInterval)}`
               : "N/A";
           const interestMethod =
+            computationRecord?.interestMethod ||
+            computationRecord?.interestCalculationMethod ||
             loan.loanProduct?.interestCalculationMethod ||
             loan.loanType ||
             "N/A";
@@ -901,7 +961,19 @@ export default function LoansDisplay() {
               value={params.value}
               numberSx={getMoneyTextSx(sf.sf_success, 500)}
             />
-            <SF_ClickableText>Manage Payments</SF_ClickableText>
+            <SF_ClickableText
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!params.row?.id) {
+                  showSnackbar("Loan details unavailable.", "red");
+                  return;
+                }
+                setPaymentLoanRow(params.row);
+                setPaymentPopupOpen(true);
+              }}
+            >
+              Manage Payments
+            </SF_ClickableText>
           </Box>
         ),
       },
@@ -1124,7 +1196,45 @@ export default function LoansDisplay() {
         );
       });
 
-      setLoans(processed);
+      const loansWithPayments = await Promise.all(
+        processed.map(async (loan) => {
+          let nextToken = null;
+          let allPayments = [];
+
+          try {
+            do {
+              const paymentResult = await client.graphql({
+                query: LIST_PAYMENTS_BY_LOAN_QUERY,
+                variables: {
+                  loanID: loan.id,
+                  limit: 1000,
+                  nextToken,
+                },
+              });
+
+              const paymentBatch =
+                paymentResult?.data?.listPayments?.items || [];
+              allPayments.push(...paymentBatch.filter(Boolean));
+              nextToken = paymentResult?.data?.listPayments?.nextToken || null;
+            } while (nextToken);
+          } catch (paymentErr) {
+            console.error(
+              `[LoansDisplay] Error fetching payments for loan ${loan.id}:`,
+              paymentErr,
+            );
+          }
+
+          return {
+            ...loan,
+            payments: {
+              ...(loan.payments || {}),
+              items: allPayments,
+            },
+          };
+        }),
+      );
+
+      setLoans(loansWithPayments);
     } catch (err) {
       console.error("LoansDisplay \u2013 Error fetching loans:", err);
       setLoans([]);
@@ -1510,6 +1620,21 @@ export default function LoansDisplay() {
           />
         </Box>
       </Box>
+
+      {paymentPopupOpen && paymentLoanRow && (
+        <ManagePaymentsPopup
+          open={paymentPopupOpen}
+          onClose={() => {
+            setPaymentPopupOpen(false);
+            setPaymentLoanRow(null);
+          }}
+          loan={paymentLoanRow}
+          onPaymentSuccess={() => {
+            hasFetchedRef.current = null;
+            fetchLoans();
+          }}
+        />
+      )}
     </>
   );
 }

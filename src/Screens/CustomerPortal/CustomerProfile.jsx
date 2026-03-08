@@ -255,8 +255,8 @@ export default function CustomerProfile() {
       )}
 
       {!borrower && (
-        <Paper sx={{ p: 2, mb: 3, bgcolor: "info.light" }}>
-          <Typography color="black">
+        <Paper sx={{ p: 2, mb: 3, bgcolor: "sf.sf_infoBg" }}>
+          <Typography sx={{ color: "sf.sf_info" }}>
             Please select your branch and complete your profile to access loan
             application and management features.
           </Typography>
@@ -264,16 +264,16 @@ export default function CustomerProfile() {
       )}
 
       {error && (
-        <Paper sx={{ p: 2, mb: 3, bgcolor: "error.light" }}>
-          <Typography variant="body2" color="error">
+        <Paper sx={{ p: 2, mb: 3, bgcolor: "sf.sf_errorBg" }}>
+          <Typography variant="body2" sx={{ color: "sf.sf_error" }}>
             {error}
           </Typography>
         </Paper>
       )}
 
       {saveSuccess && (
-        <Paper sx={{ p: 2, mb: 3, bgcolor: "success.light" }}>
-          <Typography variant="body2" sx={{ color: "success.dark" }}>
+        <Paper sx={{ p: 2, mb: 3, bgcolor: "sf.sf_successBg" }}>
+          <Typography variant="body2" sx={{ color: "sf.sf_success" }}>
             Profile saved successfully!
           </Typography>
         </Paper>
@@ -281,14 +281,14 @@ export default function CustomerProfile() {
 
       {/* Status-based messages */}
       {borrower?.status === "pending" && (
-        <Paper sx={{ p: 2, mb: 3, bgcolor: "warning.light" }}>
+        <Paper sx={{ p: 2, mb: 3, bgcolor: "sf.sf_warningBg" }}>
           <Typography
             variant="body1"
-            sx={{ fontWeight: 600, mb: 1, color: "#000" }}
+            sx={{ fontWeight: 600, mb: 1, color: "sf.sf_warning" }}
           >
             📋 Profile Under Review
           </Typography>
-          <Typography variant="body2" sx={{ color: "#000" }}>
+          <Typography variant="body2" sx={{ color: "sf.sf_warning" }}>
             Your profile has been submitted and is awaiting approval from{" "}
             {institution?.name || "the institution"}. You can still edit your
             profile while it's pending approval. Once approved, you will NOT be
@@ -298,14 +298,14 @@ export default function CustomerProfile() {
       )}
 
       {borrower?.status === "active" && (
-        <Paper sx={{ p: 2, mb: 3, bgcolor: "success.light" }}>
+        <Paper sx={{ p: 2, mb: 3, bgcolor: "sf.sf_successBg" }}>
           <Typography
             variant="body1"
-            sx={{ fontWeight: 600, mb: 1, color: "success.dark" }}
+            sx={{ fontWeight: 600, mb: 1, color: "sf.sf_success" }}
           >
             ✅ Profile Approved
           </Typography>
-          <Typography variant="body2" sx={{ color: "success.dark" }}>
+          <Typography variant="body2" sx={{ color: "sf.sf_success" }}>
             Your profile has been approved by{" "}
             {institution?.name || "the institution"}. For security reasons,
             profile editing is locked after approval. If you need to update your
@@ -376,8 +376,8 @@ export default function CustomerProfile() {
 
       {/* Message when no branch selected */}
       {!borrower && !selectedBranchId && branches.length > 0 && (
-        <Paper sx={{ p: 3, textAlign: "center", bgcolor: "grey.100" }}>
-          <Typography variant="body1" color="text.secondary">
+        <Paper sx={{ p: 3, textAlign: "center", bgcolor: "sf.sf_pageBg" }}>
+          <Typography variant="body1" sx={{ color: "sf.sf_textSecondary" }}>
             Please select a branch above to continue with your profile.
           </Typography>
         </Paper>

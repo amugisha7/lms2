@@ -770,7 +770,7 @@ export default function CustomerLoanProductForm() {
             currency={institution?.currencyCode || "$"}
             onBack={handleBackToForm}
             onSubmit={handleFinalSubmit}
-            submitLabel="Submit Loan Application"
+            submitLabel="SUBMIT LOAN APPLICATION"
             submitting={submitting}
           />
         </Paper>

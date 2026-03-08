@@ -24,6 +24,7 @@ import { listBranches } from "../../../graphql/queries";
 import WorkingOverlay from "../../../ModelAssets/WorkingOverlay";
 import CustomDataGrid from "../../../ModelAssets/CustomDataGrid";
 import SF_ClickableText from "../../../ModelAssets/SF_ClickableText";
+import PlusButtonMain from "../../../ModelAssets/PlusButtonMain";
 import { useSnackbar } from "../../../ModelAssets/SnackbarContext";
 import MultipleDropDownSearchable from "../../../Resources/FormComponents/MultipleDropDownSearchable";
 import { formatMoneyParts } from "../../../Resources/formatting";
@@ -720,7 +721,7 @@ export default function LoansDisplay() {
                   onClick={() =>
                     loan.id &&
                     navigate(`/loans/id/${loan.id}/view`, {
-                      state: { from: "/loans-display" },
+                      state: { from: "/loans" },
                     })
                   }
                 >
@@ -1339,24 +1340,30 @@ export default function LoansDisplay() {
               : `${loans.length} total \u00B7 ${filteredLoans.length} shown`}
           </Typography>
         </Box>
-        <Tooltip title="Refresh data" placement="top">
-          <IconButton
-            onClick={() => {
-              hasFetchedRef.current = null;
-              fetchLoans();
-            }}
-            disabled={loading}
-            sx={{
-              color: sf.sf_brandPrimary,
-              border: `1px solid ${sf.sf_borderLight}`,
-              borderRadius: 0,
-              p: 0.7,
-              "&:hover": { bgcolor: sf.sf_actionHoverBg },
-            }}
-          >
-            <RefreshIcon sx={{ fontSize: 18 }} />
-          </IconButton>
-        </Tooltip>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <PlusButtonMain
+            onClick={() => navigate("/add-loan")}
+            buttonText="NEW LOAN"
+          />
+          <Tooltip title="Refresh data" placement="top">
+            <IconButton
+              onClick={() => {
+                hasFetchedRef.current = null;
+                fetchLoans();
+              }}
+              disabled={loading}
+              sx={{
+                color: sf.sf_brandPrimary,
+                border: `1px solid ${sf.sf_borderLight}`,
+                borderRadius: 0,
+                p: 0.7,
+                "&:hover": { bgcolor: sf.sf_actionHoverBg },
+              }}
+            >
+              <RefreshIcon sx={{ fontSize: 18 }} />
+            </IconButton>
+          </Tooltip>
+        </Box>
       </Box>
 
       {/* Branch Filter (Admin only) */}

@@ -36,8 +36,6 @@ import CreateAccounts from "./Models/Accounts/CreateAccounts/CreateAccount";
 import AccountTabs from "./Models/Accounts/AccountTabs";
 
 // Loans imports
-import Loans from "./Models/Loans/Loans";
-import CreateLoan from "./Models/Loans/CreateLoan/CreateLoan";
 import LoanCreationOptions from "./Models/Loans/CreateLoan/LoanCreationOptions";
 import LoanDrafts from "./Models/Loans/LoanDrafts/LoanDrafts";
 import LoanDraftDetail from "./Models/Loans/LoanDrafts/LoanDraftDetail";
@@ -90,8 +88,11 @@ export default function AppRoutes({ userExists }) {
 
               {/* Loans routes */}
               <Route path="add-loan" element={<LoanCreationOptions />} />
-              <Route path="loans" element={<Loans />} />
-              <Route path="loans-display" element={<LoansDisplay />} />
+              <Route path="loans" element={<LoansDisplay />} />
+              <Route
+                path="loans-display"
+                element={<Navigate to="/loans" replace />}
+              />
               <Route
                 path="loans/id/:loanId/view"
                 element={<LoanDetailPage />}

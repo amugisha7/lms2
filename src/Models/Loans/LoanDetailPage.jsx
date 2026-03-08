@@ -67,7 +67,7 @@ export default function LoanDetailPage() {
   const [initialValues, setInitialValues] = React.useState(null);
   const [notification, setNotification] = React.useState(null);
 
-  const backPath = location.state?.from || "/loans-display";
+  const backPath = location.state?.from || "/loans";
 
   const load = React.useCallback(async () => {
     if (!loanId) return;

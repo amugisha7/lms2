@@ -399,7 +399,7 @@ function CurrencyText({
 }
 
 // --- Helpers ---
-const truncateWithEllipsis = (text, limit = 36) => {
+const truncateWithEllipsis = (text, limit = 30) => {
   if (!text) return text;
   return text.length > limit ? `${text.slice(0, limit)}...` : text;
 };
@@ -612,7 +612,7 @@ export default function LoansDisplay() {
         renderCell: (params) => {
           const b = params.row.borrower || {};
           const name = params.value;
-          const displayName = truncateWithEllipsis(name, 36);
+          const displayName = truncateWithEllipsis(name, 30);
           return (
             <Box sx={STACKED_CELL_SX}>
               <BorrowerInfoPopup
@@ -946,7 +946,7 @@ export default function LoansDisplay() {
             : "N/A";
         },
         renderCell: (params) => {
-          const officerName = truncateWithEllipsis(params.value, 36);
+          const officerName = truncateWithEllipsis(params.value, 17);
           return (
             <Box sx={STACKED_CELL_SX}>
               <Typography

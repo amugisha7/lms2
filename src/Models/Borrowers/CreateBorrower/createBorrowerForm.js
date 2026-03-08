@@ -207,9 +207,11 @@ const createBorrowerForm = [
     span: 6,
     onlyVisibleInEdit: true,
     options: [
+      { value: "active", label: "Active" },
       { value: "pending", label: "Pending" },
-      { value: "approved", label: "Approved" },
       { value: "suspended", label: "Suspended" },
+      { value: "rejected", label: "Rejected" },
+      { value: "blacklisted", label: "Blacklisted" },
     ],
   },
   {

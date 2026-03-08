@@ -419,7 +419,9 @@ export default function Borrowers() {
         const statusColor =
           status === "pending"
             ? "warning.main"
-            : status === "suspended"
+            : status === "suspended" ||
+                status === "rejected" ||
+                status === "blacklisted"
               ? "error.main"
               : "success.main";
         return (

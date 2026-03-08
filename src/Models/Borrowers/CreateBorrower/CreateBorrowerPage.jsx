@@ -82,6 +82,11 @@ export default function CreateBorrowerPage() {
         ...filteredData,
       };
 
+      // Default status to "active" for internally-created borrowers
+      if (!input.status) {
+        input.status = "active";
+      }
+
       // Ensure branchBorrowersId is set for non-Admin users
       if (userDetails.userType !== "Admin" && !input.branchBorrowersId) {
         input.branchBorrowersId = userDetails.branchUsersId;

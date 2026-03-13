@@ -1,8 +1,6 @@
 - Create loans form. Also create from loan product.
   - Resume:
-    - check if the borrower status functionality has been fixed.
-    - Create the payments prompt in antigravity.
-    - add payment functionality
+    - work on the user - employee relationship for allocation of loans
     - add loan statements
     - Check how loans are being displayed in the datagrid. - Work on loan statements, payments and loan status
 

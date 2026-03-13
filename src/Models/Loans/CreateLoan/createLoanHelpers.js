@@ -2,6 +2,7 @@ import { generateClient } from "aws-amplify/api";
 import { createLoan as createLoanMutation, createLoanInstallment as createLoanInstallmentMutation } from "../loanHelpers";
 import { calculateSchedule } from "../../Payments/servicingEngine";
 import dayjs from 'dayjs';
+import { resolveEmployeeIdForUser } from "../../Employees/employeeHelpers";
 
 const runWithConcurrency = async (items, limit, worker) => {
   const list = Array.isArray(items) ? items : [];
@@ -430,6 +431,15 @@ export const createLoanWithSchedule = async (values, userDetails) => {
   const borrowerId = values?.borrower;
   const borrowerBranchId =
     values?.borrowerBranchID || values?.borrowerObj?.branchBorrowersId || null;
+  const actorEmployeeId = await resolveEmployeeIdForUser({
+    userDetails,
+    branchId: borrowerBranchId || userDetails?.branchUsersId || null,
+  });
+  const loanOfficerEmployeeId = await resolveEmployeeIdForUser({
+    userDetails,
+    preferredEmployeeId: values?.employeeId || values?.assignedToEmployeeID,
+    branchId: borrowerBranchId || userDetails?.branchUsersId || null,
+  });
   
   // 1. Prepare Loan Input
   const loanInput = {
@@ -445,7 +455,9 @@ export const createLoanWithSchedule = async (values, userDetails) => {
     maturityDate,
     paymentFrequency: repaymentFrequency,
     status: "DRAFT",
-    createdByEmployeeID: userDetails?.id,
+    createdByEmployeeID: actorEmployeeId,
+    assignedToEmployeeID: loanOfficerEmployeeId,
+    lastEditedByEmployeeID: actorEmployeeId,
   };
 
   // 2. Calculate Schedule
@@ -553,7 +565,7 @@ export const buildLoanInput = (values, userDetails) => ({
   totalAmountPaid: 0,
   outstandingBalance: values.principalAmount ? Number(values.principalAmount) : null,
   institutionLoansId: userDetails?.institutionUsersId || null,
-  createdByEmployeeLoansId: userDetails?.id || null,
+  createdByEmployeeLoansId: values.employeeId || null,
 });
 export const fetchInstitutionAdmins = async (institutionId) => {
   const client = generateClient();

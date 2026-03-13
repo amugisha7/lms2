@@ -91,6 +91,13 @@ export const getLoan = /* GraphQL */ `
         id
         firstName
         lastName
+        email
+      }
+      assignedToEmployee {
+        id
+        firstName
+        lastName
+        email
       }
       installments(limit: 1000) {
         items {

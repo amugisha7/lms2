@@ -99,7 +99,7 @@ export const menuItems = [
       {
         name: "Employee Management",
         icon: <WorkIcon sx={{ color: "white" }} />,
-        route: "/employees/manage",
+        route: "/employees",
       },
     ],
   },

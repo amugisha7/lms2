@@ -22,6 +22,12 @@ import {
   LIST_ACCOUNT_BRANCHES_QUERY,
   createMoneyTransaction,
 } from "./paymentHelpers";
+import {
+  getDefaultEmployeeForUserContext,
+  getEmployeeOptionLabel,
+  listEmployeesByBranch,
+  resolveEmployeeIdForUser,
+} from "../Employees/employeeHelpers";
 
 const client = generateClient();
 
@@ -85,6 +91,56 @@ const useBranchLinkedAccounts = (branchId) => {
   return { accounts, accountsLoading };
 };
 
+const useBranchEmployees = (branchId, userDetails) => {
+  const [employees, setEmployees] = useState([]);
+  const [employeesLoading, setEmployeesLoading] = useState(true);
+  const [defaultEmployeeId, setDefaultEmployeeId] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchEmployees = async () => {
+      if (!branchId) {
+        setEmployees([]);
+        setDefaultEmployeeId("");
+        setEmployeesLoading(false);
+        return;
+      }
+
+      setEmployeesLoading(true);
+      try {
+        const [items, defaultEmployee] = await Promise.all([
+          listEmployeesByBranch(branchId),
+          getDefaultEmployeeForUserContext({
+            ...userDetails,
+            branchUsersId: branchId,
+          }),
+        ]);
+
+        if (cancelled) return;
+
+        setEmployees(items);
+        setDefaultEmployeeId(defaultEmployee?.id || items[0]?.id || "");
+      } catch (error) {
+        console.error("Error fetching employees for payment form:", error);
+        if (!cancelled) {
+          setEmployees([]);
+          setDefaultEmployeeId("");
+        }
+      } finally {
+        if (!cancelled) setEmployeesLoading(false);
+      }
+    };
+
+    fetchEmployees();
+    return () => {
+      cancelled = true;
+    };
+  }, [branchId, userDetails]);
+
+  return { employees, employeesLoading, defaultEmployeeId };
+};
+
 export default function PaymentForm({ loanId, onClose, onPaymentSuccess }) {
   const { userDetails } = useContext(UserContext);
   const { showSnackbar } = useSnackbar();
@@ -119,6 +175,10 @@ export default function PaymentForm({ loanId, onClose, onPaymentSuccess }) {
 
   const branchId = loan?.branch?.id || loan?.branchID || null;
   const { accounts, accountsLoading } = useBranchLinkedAccounts(branchId);
+  const { employees, employeesLoading, defaultEmployeeId } = useBranchEmployees(
+    branchId,
+    userDetails,
+  );
 
   const activeAccounts = useMemo(
     () =>
@@ -149,6 +209,14 @@ export default function PaymentForm({ loanId, onClose, onPaymentSuccess }) {
 
   const currencyLabel =
     userDetails?.institution?.currencyCode || userDetails?.currencyCode || "";
+  const employeeOptions = useMemo(
+    () =>
+      employees.map((employee) => ({
+        value: employee.id,
+        label: getEmployeeOptionLabel(employee),
+      })),
+    [employees],
+  );
 
   if (loanLoading) {
     return (
@@ -181,6 +249,7 @@ export default function PaymentForm({ loanId, onClose, onPaymentSuccess }) {
       enableReinitialize
       initialValues={{
         accountID: defaultAccountId,
+        receivingEmployeeID: defaultEmployeeId,
         amount: "",
         paymentDate: new Date().toISOString().split("T")[0],
         collectedBy: "",
@@ -189,6 +258,10 @@ export default function PaymentForm({ loanId, onClose, onPaymentSuccess }) {
       validationSchema={validationSchema}
       onSubmit={async (values, formikHelpers) => {
         try {
+          const actorEmployeeId = await resolveEmployeeIdForUser({
+            userDetails,
+            branchId,
+          });
           const numericAmount = Number(String(values.amount).replace(/,/g, ""));
           const paymentResult = await client.graphql({
             query: createPayment,
@@ -204,7 +277,8 @@ export default function PaymentForm({ loanId, onClose, onPaymentSuccess }) {
                   : null,
                 status: "COMPLETED",
                 paymentStatusEnum: "COMPLETED",
-                receivingEmployeeID: userDetails?.id || null,
+                receivingEmployeeID:
+                  values.receivingEmployeeID || defaultEmployeeId || null,
               },
             },
           });
@@ -225,7 +299,7 @@ export default function PaymentForm({ loanId, onClose, onPaymentSuccess }) {
                 paymentID: newPaymentId,
                 relatedEntityType: "LOAN_PAYMENT",
                 category: "Loan Payment",
-                createdByEmployeeID: userDetails?.id || null,
+                createdByEmployeeID: actorEmployeeId,
               },
             },
           });
@@ -268,6 +342,24 @@ export default function PaymentForm({ loanId, onClose, onPaymentSuccess }) {
                 accountsLoading
                   ? "Loading accounts..."
                   : "Search for an account..."
+              }
+            />
+
+            <DropDownSearchable
+              label="Receiving Employee"
+              name="receivingEmployeeID"
+              options={employeeOptions}
+              value={formik.values.receivingEmployeeID}
+              onChange={(e) =>
+                formik.setFieldValue("receivingEmployeeID", e.target.value)
+              }
+              editing={true}
+              disabled={employeesLoading}
+              helperText="Employee receiving this payment. Defaults to the branch's default employee."
+              placeholder={
+                employeesLoading
+                  ? "Loading employees..."
+                  : "Search for an employee..."
               }
             />
 
@@ -323,6 +415,7 @@ export default function PaymentForm({ loanId, onClose, onPaymentSuccess }) {
                 disabled={
                   formik.isSubmitting ||
                   accountsLoading ||
+                  employeesLoading ||
                   !accountOptions.length
                 }
               >

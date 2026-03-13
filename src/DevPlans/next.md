@@ -1,8 +1,9 @@
 - Create loans form. Also create from loan product.
   - Resume:
-    - work on the user - employee relationship for allocation of loans
+    - check employee creation, modification, loan allocation etc.
+    - employee relationship for allocation of loans
     - add loan statements
-    - Check how loans are being displayed in the datagrid. - Work on loan statements, payments and loan status
+    - Implement loan status
 
     Put the contracts, collateral and gurantors, other incomes and expenses as tabs on loan drafts and loans.
     i Enable loan contracts

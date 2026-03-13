@@ -73,6 +73,13 @@ const LIST_LOANS_DISPLAY_QUERY = `
           id
           firstName
           lastName
+          email
+        }
+        assignedToEmployee {
+          id
+          firstName
+          lastName
+          email
         }
         balanceSnapshots(limit: 1, sortDirection: DESC) {
           items {
@@ -1013,9 +1020,10 @@ export default function LoansDisplay() {
         minWidth: 130,
         sortable: false,
         valueGetter: (value, row) => {
-          const emp = row.createdByEmployee;
+          const emp = row.assignedToEmployee || row.createdByEmployee;
           return emp
-            ? [emp.firstName, emp.lastName].filter(Boolean).join(" ")
+            ? [emp.firstName, emp.lastName].filter(Boolean).join(" ") ||
+                emp.email
             : "N/A";
         },
         renderCell: (params) => {
@@ -1078,8 +1086,12 @@ export default function LoansDisplay() {
           loan.id,
           loan.status,
           loan.loanProduct?.name,
+          loan.assignedToEmployee?.firstName,
+          loan.assignedToEmployee?.lastName,
+          loan.assignedToEmployee?.email,
           loan.createdByEmployee?.firstName,
           loan.createdByEmployee?.lastName,
+          loan.createdByEmployee?.email,
         ]
           .filter(Boolean)
           .join(" ")

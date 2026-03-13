@@ -53,6 +53,7 @@ const formatOfficerName = (employee) => {
   if (!employee) return "N/A";
   return (
     [employee.firstName, employee.lastName].filter(Boolean).join(" ") ||
+    employee.email ||
     employee.id ||
     "N/A"
   );
@@ -163,7 +164,9 @@ export default function LoanDetailPage() {
           </Typography>
           <Typography variant="body2" sx={{ opacity: 0.8 }}>
             Status: {loan.status}
-            {` • Loan Officer: ${formatOfficerName(loan.createdByEmployee)}`}
+            {` • Loan Officer: ${formatOfficerName(
+              loan.assignedToEmployee || loan.createdByEmployee,
+            )}`}
             {` • Branch: ${loan.branch?.name || "N/A"}`}
           </Typography>
         </Box>

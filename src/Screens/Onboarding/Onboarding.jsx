@@ -33,9 +33,9 @@ import {
 } from "../../Resources/countryDefaults";
 import TwoRadialButtons from "../../ModelAssets/TwoRadialButtons";
 import myLogo from "../../Resources/loantabs_logo.png";
-import { generateClient } from "aws-amplify/api";
 import { useNotification } from "../../ModelAssets/NotificationContext";
 import { useNavigate, useLocation } from "react-router-dom";
+import loggedClient from "../../loggedClient";
 import {
   CREATE_INSTITUTION_MUTATION,
   CREATE_BRANCH_MUTATION,
@@ -46,8 +46,9 @@ import {
   LIST_USERS_QUERY,
 } from "./onboardingQueries";
 import { CREATE_NOTIFICATION_MUTATION } from "../Notifications/notificationQueries";
+import { ensureDefaultEmployeeForUser } from "../../Models/Employees/employeeHelpers";
 
-const client = generateClient();
+const client = loggedClient;
 
 const currencies = Object.keys(currenciesObj);
 
@@ -104,14 +105,25 @@ const AccountSettingsForm = () => {
   const [touchedFields, setTouchedFields] = React.useState({});
   const [businessNameErrorText, setBusinessNameErrorText] = React.useState("");
 
+  const authenticatedUserId =
+    user?.userId || user?.username || user?.attributes?.sub || "";
+  const authenticatedUserEmail =
+    user?.signInDetails?.loginId ||
+    user?.attributes?.email ||
+    user?.username ||
+    "";
+
   React.useEffect(() => {
     setDecimalPoints(currenciesObj[formData.currency]?.decimal_digits || 0);
-    console.log("user::: ", user.signInDetails.loginId);
+    console.log("Authenticated onboarding user:", {
+      authenticatedUserId,
+      authenticatedUserEmail,
+    });
     console.log(
       "new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()::: ",
       new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
     );
-  }, [formData.currency]);
+  }, [authenticatedUserEmail, authenticatedUserId, formData.currency]);
 
   const handleChange = (field) => (event) => {
     setFormData((prev) => ({
@@ -169,6 +181,10 @@ const AccountSettingsForm = () => {
     }
 
     try {
+      if (!authenticatedUserId || !authenticatedUserEmail) {
+        throw new Error("Authenticated user identity is incomplete.");
+      }
+
       // 1. Create Institution
       const institutionInput = {
         name: formData.businessName,
@@ -237,10 +253,10 @@ const AccountSettingsForm = () => {
 
       // 5. Create User with more details
       const userInput = {
-        id: user.userId,
+        id: authenticatedUserId,
         branchUsersId: branchId,
         institutionUsersId: institutionId,
-        email: user.signInDetails.loginId,
+        email: authenticatedUserEmail,
         userType: "Admin",
         status: "active",
       };
@@ -249,6 +265,18 @@ const AccountSettingsForm = () => {
         query: CREATE_USER_MUTATION,
         variables: { input: userInput },
       });
+
+      const defaultEmployeeResult = await ensureDefaultEmployeeForUser({
+        userId: authenticatedUserId,
+        branchId,
+        email: authenticatedUserEmail,
+      });
+
+      if (!defaultEmployeeResult?.employee?.id) {
+        throw new Error("Default employee record could not be verified.");
+      }
+
+      console.log("Onboarding default employee result:", defaultEmployeeResult);
 
       // Update user context with new details
       if (setUserDetails) {
@@ -271,6 +299,10 @@ const AccountSettingsForm = () => {
     setTouchedFields((prev) => ({ ...prev, businessID: true }));
     setIsJoining(true);
     try {
+      if (!authenticatedUserId || !authenticatedUserEmail) {
+        throw new Error("Authenticated user identity is incomplete.");
+      }
+
       // 1. Check if Institution exists
       const checkRes = await client.graphql({
         query: GET_INSTITUTION_QUERY,
@@ -284,10 +316,10 @@ const AccountSettingsForm = () => {
 
       // 2. Create User if Institution exists
       const userInput = {
-        id: user.userId,
+        id: authenticatedUserId,
         institutionUsersId: businessID,
         // userType intentionally left blank - admin must select during review
-        email: user.signInDetails.loginId,
+        email: authenticatedUserEmail,
         status: "pending",
       };
 
@@ -320,12 +352,12 @@ const AccountSettingsForm = () => {
             variables: {
               input: {
                 subject: "New User Join Request",
-                body: `A new user, ${user.signInDetails.loginId}, has requested to join your institution. Please review and approve or reject the request.`,
+                body: `A new user, ${authenticatedUserEmail}, has requested to join your institution. Please review and approve or reject the request.`,
                 notificationType: "USER_JOIN_REQUEST",
                 approvalStatus: "PENDING",
                 referenceId: userRes.data.createUser.id,
                 status: "unread",
-                senderUserId: user.userId,
+                senderUserId: authenticatedUserId,
                 recipientUserId: admin.id,
                 institutionMessagesId: businessID,
               },

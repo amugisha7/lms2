@@ -6,6 +6,10 @@ import { UserContext } from "../../../App";
 import CreateBorrower from "./CreateBorrower";
 import NotificationBar from "../../../ModelAssets/NotificationBar";
 import { CREATE_BORROWER_MUTATION } from "../borrowerQueries";
+import {
+  resolveEmployeeIdForUser,
+  syncBorrowerEmployeeAssignment,
+} from "../../Employees/employeeHelpers";
 
 export default function CreateBorrowerPage() {
   const navigate = useNavigate();
@@ -64,16 +68,18 @@ export default function CreateBorrowerPage() {
 
   const handleCreate = async (formData) => {
     try {
+      const { employeeId, ...borrowerFormData } = formData;
+
       // Filter to only include valid GraphQL fields
-      const filteredData = Object.keys(formData)
+      const filteredData = Object.keys(borrowerFormData)
         .filter((key) => validBorrowerFields.includes(key))
         .reduce((obj, key) => {
           if (
-            formData[key] !== "" &&
-            formData[key] !== null &&
-            formData[key] !== undefined
+            borrowerFormData[key] !== "" &&
+            borrowerFormData[key] !== null &&
+            borrowerFormData[key] !== undefined
           ) {
-            obj[key] = formData[key];
+            obj[key] = borrowerFormData[key];
           }
           return obj;
         }, {});
@@ -100,6 +106,15 @@ export default function CreateBorrowerPage() {
       });
 
       const newBorrower = result.data.createBorrower;
+      const resolvedEmployeeId = await resolveEmployeeIdForUser({
+        userDetails,
+        preferredEmployeeId: employeeId,
+        branchId: input.branchBorrowersId,
+      });
+      await syncBorrowerEmployeeAssignment({
+        borrowerId: newBorrower.id,
+        employeeId: resolvedEmployeeId,
+      });
       const displayName = getBorrowerDisplayName(newBorrower);
 
       setNotification({

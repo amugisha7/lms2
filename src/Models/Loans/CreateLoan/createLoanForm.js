@@ -2,6 +2,14 @@ import { Settings } from "@mui/icons-material";
 
 const createLoanForm = [
   {
+    label: "Loan Officer",
+    name: "employeeId",
+    type: "select",
+    span: 12,
+    options: [],
+    helperText: "Defaults to the branch's default employee if you do not select one.",
+  },
+  {
     label: "Loan Product",
     name: "loanProduct",
     type: "select",

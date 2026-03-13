@@ -1,5 +1,9 @@
 import { generateClient } from "aws-amplify/api";
 import { remove } from "aws-amplify/storage";
+import {
+  getBorrowerAssignedEmployeeId,
+  syncBorrowerEmployeeAssignment,
+} from "../../Employees/employeeHelpers";
 
 // Fetch borrower by ID
 export const fetchBorrowerById = async (borrowerId) => {
@@ -61,6 +65,7 @@ export const fetchBorrowerById = async (borrowerId) => {
     } else {
       borrower.borrowerDocuments = [];
     }
+    borrower.employeeId = await getBorrowerAssignedEmployeeId(borrowerId);
     return borrower;
   } else {
     throw new Error("Borrower not found");
@@ -154,6 +159,11 @@ export const updateBorrowerById = async (values, initialValues) => {
   const result = await client.graphql({
     query: UPDATE_BORROWER_MUTATION,
     variables: { input },
+  });
+
+  await syncBorrowerEmployeeAssignment({
+    borrowerId: initialValues.id,
+    employeeId: values.employeeId || null,
   });
 
   return result.data.updateBorrower;

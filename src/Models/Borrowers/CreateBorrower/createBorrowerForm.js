@@ -15,6 +15,15 @@ const createBorrowerForm = [
     options: [], // populated dynamically
   },
   {
+    label: "Assigned Employee:",
+    name: "employeeId",
+    type: "select",
+    required: false,
+    span: 12,
+    options: [],
+    helperText: "Defaults to the branch's default employee if you do not select one.",
+  },
+  {
     label: "First Name:",
     name: "firstname",
     type: "text",

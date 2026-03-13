@@ -20,6 +20,11 @@ import WorkingOverlay from "../../ModelAssets/WorkingOverlay";
 
 // Model-specific components
 import CreateBorrower from "./CreateBorrower/CreateBorrower";
+import { fetchBorrowerById } from "./CreateBorrower/createBorrowerHelpers";
+import {
+  resolveEmployeeIdForUser,
+  syncBorrowerEmployeeAssignment,
+} from "../Employees/employeeHelpers";
 
 // GraphQL queries
 import {
@@ -232,16 +237,18 @@ export default function Borrowers() {
   // CRUD operations
   const handleCreate = async (formData) => {
     try {
+      const { employeeId, ...borrowerFormData } = formData;
+
       // Filter to only include valid GraphQL fields
-      const filteredData = Object.keys(formData)
+      const filteredData = Object.keys(borrowerFormData)
         .filter((key) => validBorrowerFields.includes(key))
         .reduce((obj, key) => {
           if (
-            formData[key] !== "" &&
-            formData[key] !== null &&
-            formData[key] !== undefined
+            borrowerFormData[key] !== "" &&
+            borrowerFormData[key] !== null &&
+            borrowerFormData[key] !== undefined
           ) {
-            obj[key] = formData[key];
+            obj[key] = borrowerFormData[key];
           }
           return obj;
         }, {});
@@ -274,6 +281,17 @@ export default function Borrowers() {
         displayName: getBorrowerDisplayName(result.data.createBorrower),
       };
 
+      const resolvedEmployeeId = await resolveEmployeeIdForUser({
+        userDetails,
+        preferredEmployeeId: employeeId,
+        branchId: input.branchBorrowersId,
+      });
+      await syncBorrowerEmployeeAssignment({
+        borrowerId: newBorrower.id,
+        employeeId: resolvedEmployeeId,
+      });
+      newBorrower.employeeId = resolvedEmployeeId;
+
       setBorrowers((prev) => [...prev, newBorrower]);
       setNotification({
         message: `${newBorrower.displayName} created successfully!`,
@@ -287,16 +305,18 @@ export default function Borrowers() {
 
   const handleUpdate = async (formData) => {
     try {
+      const { employeeId, ...borrowerFormData } = formData;
+
       // Filter to only include valid GraphQL fields
-      const filteredData = Object.keys(formData)
+      const filteredData = Object.keys(borrowerFormData)
         .filter((key) => validBorrowerFields.includes(key))
         .reduce((obj, key) => {
           if (
-            formData[key] !== "" &&
-            formData[key] !== null &&
-            formData[key] !== undefined
+            borrowerFormData[key] !== "" &&
+            borrowerFormData[key] !== null &&
+            borrowerFormData[key] !== undefined
           ) {
-            obj[key] = formData[key];
+            obj[key] = borrowerFormData[key];
           }
           return obj;
         }, {});
@@ -308,10 +328,10 @@ export default function Borrowers() {
 
       // Ensure specific fields are included if stripped by filter but present in formData
       if (
-        formData.branchBorrowersId &&
+        borrowerFormData.branchBorrowersId &&
         validBorrowerFields.includes("branchBorrowersId")
       ) {
-        input.branchBorrowersId = formData.branchBorrowersId;
+        input.branchBorrowersId = borrowerFormData.branchBorrowersId;
       }
 
       // If non-admin, ensure it stays in their branch (or set it if missing)
@@ -329,6 +349,17 @@ export default function Borrowers() {
         ...result.data.updateBorrower,
         displayName: getBorrowerDisplayName(result.data.updateBorrower),
       };
+
+      const resolvedEmployeeId = await resolveEmployeeIdForUser({
+        userDetails,
+        preferredEmployeeId: employeeId,
+        branchId: input.branchBorrowersId,
+      });
+      await syncBorrowerEmployeeAssignment({
+        borrowerId: updatedBorrower.id,
+        employeeId: resolvedEmployeeId,
+      });
+      updatedBorrower.employeeId = resolvedEmployeeId;
 
       setBorrowers((prev) =>
         prev.map((b) => (b.id === updatedBorrower.id ? updatedBorrower : b)),
@@ -371,9 +402,15 @@ export default function Borrowers() {
   };
 
   // Event handlers
-  const openEditDialog = (borrower) => {
-    setSelectedBorrower(borrower);
-    setEditDialogOpen(true);
+  const openEditDialog = async (borrower) => {
+    try {
+      const fullBorrower = await fetchBorrowerById(borrower.id);
+      setSelectedBorrower(fullBorrower);
+      setEditDialogOpen(true);
+    } catch (error) {
+      console.error("Error loading borrower for edit:", error);
+      setNotification({ message: "Error loading borrower", color: "red" });
+    }
   };
 
   const openDeleteDialog = (borrower) => {

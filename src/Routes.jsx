@@ -24,6 +24,9 @@ import Borrowers from "./Models/Borrowers/Borrowers";
 import CreateBorrowerPage from "./Models/Borrowers/CreateBorrower/CreateBorrowerPage";
 import Temp from "./temp/Temp";
 import BorrowerManagement from "./Models/Borrowers/BorrowerManagement";
+import Employees from "./Models/Employees/Employees";
+import CreateEmployeePage from "./Models/Employees/CreateEmployee/CreateEmployeePage";
+import EmployeeManagement from "./Models/Employees/EmployeeManagement";
 import UserManagement from "./Models/Users/UserManagement";
 import Users from "./Models/Users/Users";
 import SettingsWrapper from "./Models/Settings/SettingsWrapper";
@@ -66,6 +69,18 @@ export default function AppRoutes({ userExists }) {
               <Route
                 path="borrowers/id/:borrowerId/view"
                 element={<BorrowerManagement />}
+              />
+
+              {/* Employees routes */}
+              <Route path="employees" element={<Employees />} />
+              <Route path="employees/create" element={<CreateEmployeePage />} />
+              <Route
+                path="employees/id/:employeeId/view"
+                element={<EmployeeManagement />}
+              />
+              <Route
+                path="employees/manage"
+                element={<Navigate to="/employees" replace />}
               />
 
               {/* Users routes */}

@@ -24,6 +24,12 @@ import CustomEditFormButtons from "../../../ModelAssets/CustomEditFormButtons";
 import { UserContext } from "../../../App";
 import { EditClickedContext } from "../../../ModelAssets/CollectionsTemplate"; // <-- import context
 import WorkingOverlay from "../../../ModelAssets/WorkingOverlay";
+import {
+  getBorrowerAssignedEmployeeId,
+  getDefaultEmployeeForUserContext,
+  getEmployeeOptionLabel,
+  listEmployeesForUserContext,
+} from "../../Employees/employeeHelpers";
 
 import { generateClient } from "aws-amplify/api";
 import { listBranches } from "../../../graphql/queries";
@@ -173,6 +179,8 @@ const CreateBorrower = forwardRef(
       useState("Working...");
 
     const [branches, setBranches] = useState([]);
+    const [employees, setEmployees] = useState([]);
+    const [defaultEmployeeId, setDefaultEmployeeId] = useState("");
 
     useEffect(() => {
       const fetchBranches = async () => {
@@ -228,6 +236,7 @@ const CreateBorrower = forwardRef(
         firstname: dbData.firstname || "",
         othername: dbData.othername || "",
         branchBorrowersId: dbData.branchBorrowersId || "",
+        employeeId: dbData.employeeId || "",
         businessName: dbData.businessName || "",
         typeOfBusiness: dbData.typeOfBusiness || "",
         uniqueIdNumber: dbData.uniqueIdNumber || "",
@@ -294,6 +303,40 @@ const CreateBorrower = forwardRef(
       }
     }, [forceEditMode]);
 
+    useEffect(() => {
+      let cancelled = false;
+
+      const loadEmployees = async () => {
+        if (!userDetails) return;
+
+        try {
+          const [employeeItems, defaultEmployee, assignedEmployeeId] =
+            await Promise.all([
+              listEmployeesForUserContext(userDetails),
+              getDefaultEmployeeForUserContext(userDetails),
+              propInitialValues?.id
+                ? getBorrowerAssignedEmployeeId(propInitialValues.id)
+                : Promise.resolve(null),
+            ]);
+
+          if (cancelled) {
+            return;
+          }
+
+          setEmployees(employeeItems);
+          setDefaultEmployeeId(assignedEmployeeId || defaultEmployee?.id || "");
+        } catch (error) {
+          console.error("Error loading employees for borrower form:", error);
+        }
+      };
+
+      loadEmployees();
+
+      return () => {
+        cancelled = true;
+      };
+    }, [userDetails, propInitialValues?.id]);
+
     // Add effect to respond to editClicked from context (like CreateBranches)
     useEffect(() => {
       // Only allow edit mode changes from context if forceEditMode is true (popup)
@@ -317,6 +360,9 @@ const CreateBorrower = forwardRef(
       if (userDetails?.userType !== "Admin") {
         submissionValues.branchBorrowersId =
           userDetails?.branchUsersId || userDetails?.branch?.id;
+      }
+      if (!submissionValues.employeeId) {
+        submissionValues.employeeId = defaultEmployeeId || "";
       }
 
       try {
@@ -432,6 +478,13 @@ const CreateBorrower = forwardRef(
 
                     if (field.name === "branchBorrowersId") {
                       fieldProps.options = branches;
+                    }
+
+                    if (field.name === "employeeId") {
+                      fieldProps.options = employees.map((employee) => ({
+                        value: employee.id,
+                        label: getEmployeeOptionLabel(employee),
+                      }));
                     }
 
                     if (

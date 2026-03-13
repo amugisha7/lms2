@@ -1,5 +1,6 @@
 import { generateClient } from "aws-amplify/api";
 import dayjs from "dayjs";
+import { resolveEmployeeIdForUser } from "../../Employees/employeeHelpers";
 
 // NOTE: Draft GraphQL operations must be custom-written here.
 
@@ -1015,10 +1016,20 @@ export const createLoanDraft = async ({
   const borrowerBranchId =
     borrower?.branchBorrowersId || draftRecord?.borrowerBranchID || null;
   const branchId = borrowerBranchId || userDetails?.branchUsersId || null;
+  const actorEmployeeId = await resolveEmployeeIdForUser({
+    userDetails,
+    branchId,
+  });
   const persistedDraftRecord = {
     ...(draftRecord || {}),
     borrowerBranchID: borrowerBranchId || null,
   };
+  const loanOfficerEmployeeId = await resolveEmployeeIdForUser({
+    userDetails,
+    preferredEmployeeId: persistedDraftRecord.employeeId,
+    branchId,
+  });
+  persistedDraftRecord.employeeId = loanOfficerEmployeeId;
 
   // Build computation record with all draft data
   const computationRecord = {
@@ -1037,7 +1048,9 @@ export const createLoanDraft = async ({
     borrowerID: persistedDraftRecord?.borrower || null,
     branchID: branchId,
     loanProductID: persistedDraftRecord?.loanProduct || null,
-    createdByEmployeeID: userDetails?.id || null,
+    createdByEmployeeID: actorEmployeeId,
+    assignedToEmployeeID: loanOfficerEmployeeId,
+    lastEditedByEmployeeID: actorEmployeeId,
     
     // Core loan fields from draft
     principal: Number(persistedDraftRecord?.principalAmount) || null,
@@ -1067,7 +1080,7 @@ export const createLoanDraft = async ({
           loanID: created.id,
           eventAt: nowIso(),
           eventType: "CREATED",
-          actorEmployeeID: userDetails?.id || null,
+          actorEmployeeID: actorEmployeeId,
           summary: "Draft loan created",
           payload: safeJsonStringify({ source, status }),
         },
@@ -1116,6 +1129,18 @@ export const updateLoanDraft = async ({
     existing?.borrower?.branchBorrowersId ||
     existing?.branchID ||
     null;
+  const branchId =
+    existingDraftRecord.borrowerBranchID || userDetails?.branchUsersId || null;
+  const actorEmployeeId = await resolveEmployeeIdForUser({
+    userDetails,
+    branchId,
+  });
+  const loanOfficerEmployeeId = await resolveEmployeeIdForUser({
+    userDetails,
+    preferredEmployeeId: existingDraftRecord.employeeId,
+    branchId,
+  });
+  existingDraftRecord.employeeId = loanOfficerEmployeeId;
   
   const scheduleResult = existingDraftRecord
     ? await generateSchedulePreviewFromDraftRecord(existingDraftRecord)
@@ -1128,7 +1153,7 @@ export const updateLoanDraft = async ({
     schedulePreview: scheduleResult?.schedulePreview,
     scheduleHash: scheduleResult?.scheduleHash,
     lastEditedAt: nowIso(),
-    lastEditedByEmployeeID: userDetails?.id || null,
+    lastEditedByEmployeeID: actorEmployeeId,
   };
 
   if (patch?.status) {
@@ -1138,6 +1163,8 @@ export const updateLoanDraft = async ({
   const input = {
     id,
     loanComputationRecord: safeJsonStringify(updatedComputationRecord),
+    lastEditedByEmployeeID: actorEmployeeId,
+    assignedToEmployeeID: loanOfficerEmployeeId,
   };
 
   // Update core loan fields if draft record changed
@@ -1168,6 +1195,10 @@ export const updateLoanDraft = async ({
     }
   }
 
+  if (!existing?.createdByEmployeeID) {
+    input.createdByEmployeeID = actorEmployeeId;
+  }
+
   if (patch?.loanProductID) {
     input.loanProductID = patch.loanProductID;
   }
@@ -1189,7 +1220,7 @@ export const updateLoanDraft = async ({
         loanID: id,
         eventAt: nowIso(),
         eventType: "OTHER",
-        actorEmployeeID: userDetails?.id || null,
+        actorEmployeeID: actorEmployeeId,
         summary: "Draft loan updated",
         payload: safeJsonStringify({ patch }),
       },
@@ -1250,6 +1281,10 @@ export const transitionLoanDraftStatus = async ({
   });
 
   const client = generateClient();
+  const actorEmployeeId = await resolveEmployeeIdForUser({
+    userDetails,
+    branchId: loanDraft?.branchID,
+  });
   await client.graphql({
     query: CREATE_LOAN_EVENT_MUTATION,
     variables: {
@@ -1257,7 +1292,7 @@ export const transitionLoanDraftStatus = async ({
         loanID: loanDraft.id,
         eventAt: nowIso(),
         eventType: "STATUS_CHANGED",
-        actorEmployeeID: userDetails?.id || null,
+        actorEmployeeID: actorEmployeeId,
         summary: `Status changed to ${nextStatus}`,
         payload: safeJsonStringify({ nextStatus, rejectionReason }),
       },
@@ -1293,6 +1328,10 @@ export const listLoanDraftEvents = async ({ loanDraftID, limit = 100 }) => {
 
 export const convertDraftToLoan = async ({ loanDraft, userDetails }) => {
   const client = generateClient();
+  const actorEmployeeId = await resolveEmployeeIdForUser({
+    userDetails,
+    branchId: loanDraft?.branchID,
+  });
 
   if (!loanDraft?.schedulePreview || !loanDraft?.scheduleHash) {
     throw new Error("Draft schedule preview is missing. Save the draft before converting.");
@@ -1325,6 +1364,7 @@ export const convertDraftToLoan = async ({ loanDraft, userDetails }) => {
     id: loanDraft.id,
     status: "Current",
     loanComputationRecord: safeJsonStringify(computationRecord),
+    lastEditedByEmployeeID: actorEmployeeId,
   };
 
   const updateResult = await client.graphql({
@@ -1371,7 +1411,7 @@ export const convertDraftToLoan = async ({ loanDraft, userDetails }) => {
         loanID: loan.id,
         eventAt: nowIso(),
         eventType: "CREATED",
-        actorEmployeeID: userDetails?.id || null,
+        actorEmployeeID: actorEmployeeId,
         summary: "ACTIVATED_FROM_DRAFT",
         payload: safeJsonStringify({ convertedFromDraft: true }),
       },
@@ -1398,6 +1438,10 @@ export const copyLoanDraft = async ({ loanDraft, userDetails }) => {
   });
 
   const client = generateClient();
+  const actorEmployeeId = await resolveEmployeeIdForUser({
+    userDetails,
+    branchId: loanDraft?.branchID,
+  });
   await client.graphql({
     query: CREATE_LOAN_EVENT_MUTATION,
     variables: {
@@ -1405,7 +1449,7 @@ export const copyLoanDraft = async ({ loanDraft, userDetails }) => {
         loanID: created.id,
         eventAt: nowIso(),
         eventType: "OTHER",
-        actorEmployeeID: userDetails?.id || null,
+        actorEmployeeID: actorEmployeeId,
         summary: "Draft copied",
         payload: safeJsonStringify({ fromLoanDraftID: loanDraft?.id }),
       },

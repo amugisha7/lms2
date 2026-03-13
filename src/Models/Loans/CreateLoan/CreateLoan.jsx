@@ -24,6 +24,12 @@ import {
   fetchLoanFeesConfig,
   fetchInstitutionAdmins,
 } from "./createLoanHelpers";
+import {
+  getDefaultEmployeeForUserContext,
+  getEmployeeOptionLabel,
+  listEmployeesByBranch,
+  resolveEmployeeIdForUser,
+} from "../../Employees/employeeHelpers";
 import { sendLoanApprovalRequest } from "../../../Screens/Notifications/notificationsAPI";
 import {
   createLoanDraft,
@@ -295,6 +301,8 @@ const CreateLoan = forwardRef(
     const [workingOverlayOpen, setWorkingOverlayOpen] = useState(false);
     const [workingOverlayMessage, setWorkingOverlayMessage] =
       useState("Working...");
+    const [employees, setEmployees] = useState([]);
+    const [defaultEmployeeId, setDefaultEmployeeId] = useState("");
 
     const isPrivileged = React.useMemo(() => {
       const type = userDetails?.userType;
@@ -349,6 +357,43 @@ const CreateLoan = forwardRef(
       }
     }, [userDetails?.institutionUsersId]);
 
+    useEffect(() => {
+      let cancelled = false;
+
+      const loadEmployees = async () => {
+        const effectiveBranchId =
+          propBorrower?.branchBorrowersId ||
+          loanDraft?.branchID ||
+          userDetails?.branchUsersId ||
+          null;
+        if (!effectiveBranchId) return;
+
+        try {
+          const scopedUserDetails = {
+            ...userDetails,
+            branchUsersId: effectiveBranchId,
+          };
+          const [employeeItems, defaultEmployee] = await Promise.all([
+            listEmployeesByBranch(effectiveBranchId),
+            getDefaultEmployeeForUserContext(scopedUserDetails),
+          ]);
+
+          if (cancelled) return;
+
+          setEmployees(employeeItems);
+          setDefaultEmployeeId(defaultEmployee?.id || "");
+        } catch (error) {
+          console.error("Error loading employees for loan form:", error);
+        }
+      };
+
+      loadEmployees();
+
+      return () => {
+        cancelled = true;
+      };
+    }, [loanDraft?.branchID, propBorrower?.branchBorrowersId, userDetails]);
+
     const formInitialValues = React.useMemo(() => {
       const base = propInitialValues
         ? {
@@ -377,8 +422,11 @@ const CreateLoan = forwardRef(
           }`.trim() || propBorrower.uniqueIdNumber;
       }
 
+      base.employeeId =
+        base.employeeId || loanDraft?.assignedToEmployeeID || defaultEmployeeId;
+
       return base;
-    }, [propInitialValues, propBorrower, loanDraft]);
+    }, [propInitialValues, propBorrower, loanDraft, defaultEmployeeId]);
 
     const saveDraftInternal = async (
       values,
@@ -387,6 +435,9 @@ const CreateLoan = forwardRef(
       let draftValues = { ...values };
       if (propBorrower) {
         draftValues.borrower = propBorrower.id;
+      }
+      if (!draftValues.employeeId) {
+        draftValues.employeeId = defaultEmployeeId;
       }
 
       // Find the borrower object from the borrowers list or use propBorrower
@@ -550,6 +601,10 @@ const CreateLoan = forwardRef(
       setWorkingOverlayOpen(true);
 
       try {
+        const actorEmployeeId = await resolveEmployeeIdForUser({
+          userDetails,
+          branchId: userDetails?.branchUsersId,
+        });
         let currentDraft = loanDraft;
 
         if (!currentDraft?.id) {
@@ -622,6 +677,7 @@ const CreateLoan = forwardRef(
                 loanID: loanId,
                 relatedEntityType: "LOAN_DISBURSEMENT",
                 category: "Loan Disbursement",
+                createdByEmployeeID: actorEmployeeId,
               },
             },
           });
@@ -661,6 +717,7 @@ const CreateLoan = forwardRef(
                   loanID: loanId,
                   relatedEntityType: "LOAN_FEES",
                   category: "Loan Fees",
+                  createdByEmployeeID: actorEmployeeId,
                 },
               },
             });
@@ -674,7 +731,7 @@ const CreateLoan = forwardRef(
                 loanID: loanId,
                 eventAt: new Date().toISOString(),
                 eventType: "DISBURSED",
-                actorEmployeeID: userDetails?.id || null,
+                actorEmployeeID: actorEmployeeId,
                 summary: `Loan disbursed. Principal of ${principalAmount} withdrawn from account.${totalLoanFee > 0 ? ` Loan fees of ${totalLoanFee} deposited.` : ""}`,
                 payload: JSON.stringify({
                   principalAccountId: accountSelection.principalAccountId,
@@ -783,6 +840,16 @@ const CreateLoan = forwardRef(
 
               createLoanForm.forEach((field) => {
                 if (field.name === "loanProduct") {
+                  return;
+                }
+                if (field.name === "employeeId") {
+                  formFields.push({
+                    ...field,
+                    options: employees.map((employee) => ({
+                      value: employee.id,
+                      label: getEmployeeOptionLabel(employee),
+                    })),
+                  });
                   return;
                 }
                 if (field.name === "loanFees") {

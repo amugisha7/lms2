@@ -1005,7 +1005,15 @@ export default function LoansDisplay() {
                   principalBal > 0 ? sf.sf_error : sf.sf_success,
                 )}
               />
-              <SF_ClickableText>View Statement</SF_ClickableText>
+              <SF_ClickableText
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!params.row?.id) return;
+                  navigate(`/loans/id/${params.row.id}/statement`);
+                }}
+              >
+                View Statement
+              </SF_ClickableText>
             </Box>
           );
         },

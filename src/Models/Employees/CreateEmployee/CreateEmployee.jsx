@@ -16,6 +16,8 @@ import employeeForm from "../employeeForm";
 import TextInput from "../../../Resources/FormComponents/TextInput";
 import Dropdown from "../../../Resources/FormComponents/Dropdown";
 import DateInput from "../../../Resources/FormComponents/DateInput";
+import FormLabel from "../../../Resources/FormComponents/FormLabel";
+import FormNotice from "../../../Resources/FormComponents/FormNotice";
 import CreateFormButtons from "../../../ModelAssets/CreateFormButtons";
 import CustomEditFormButtons from "../../../ModelAssets/CustomEditFormButtons";
 import WorkingOverlay from "../../../ModelAssets/WorkingOverlay";
@@ -36,11 +38,50 @@ const baseInitialValues = employeeForm.reduce((acc, field) => {
   return acc;
 }, {});
 
-const validationSchema = Yup.object().shape({
-  firstName: Yup.string().trim().required("First name is required"),
-  lastName: Yup.string().trim().required("Last name is required"),
-  email: Yup.string().nullable().email("Invalid email address"),
+const validationShape = {};
+employeeForm.forEach((field) => {
+  if (!field.name) return;
+
+  let validator;
+
+  if (field.validationType === "email") {
+    validator = Yup.string()
+      .nullable()
+      .email(field.validationMessage || "Invalid email address");
+  } else if (field.validationType === "number") {
+    validator = Yup.number().nullable().typeError("Must be a valid number");
+  } else if (field.validationType === "date") {
+    validator = Yup.date().nullable();
+  } else {
+    validator = Yup.string().nullable();
+    if (field.validationPattern) {
+      validator = validator.matches(
+        field.validationPattern,
+        field.validationMessage || "Invalid value",
+      );
+    }
+    if (field.minLength) {
+      validator = validator.min(
+        field.minLength,
+        `Must be at least ${field.minLength} characters`,
+      );
+    }
+    if (field.maxLength) {
+      validator = validator.max(
+        field.maxLength,
+        `Cannot exceed ${field.maxLength} characters`,
+      );
+    }
+  }
+
+  if (field.required) {
+    validator = validator.required(`${field.label} is required`);
+  }
+
+  validationShape[field.name] = validator;
 });
+
+const validationSchema = Yup.object().shape(validationShape);
 
 const renderField = (field) => {
   switch (field.type) {
@@ -48,6 +89,10 @@ const renderField = (field) => {
       return <Dropdown {...field} />;
     case "date":
       return <DateInput {...field} />;
+    case "label":
+      return <FormLabel {...field} />;
+    case "notice":
+      return <FormNotice {...field} />;
     default:
       return <TextInput {...field} />;
   }
@@ -223,33 +268,15 @@ const CreateEmployee = forwardRef(
         >
           {(formik) => (
             <Form>
-              <Grid container spacing={2}>
-                {enrichedFields.map((field) => (
-                  <FormGrid item xs={12} sm={field.span || 12} key={field.name}>
-                    {renderField({
-                      ...field,
-                      editing: editMode,
-                      disabled:
-                        field.name === "branchEmployeesId" &&
-                        normalizedUserType !== "admin",
-                    })}
-                  </FormGrid>
-                ))}
-              </Grid>
-
-              {submitError ? (
-                <Typography color="error" sx={{ mt: 2 }}>
-                  {submitError}
-                </Typography>
-              ) : null}
-              {submitSuccess ? (
-                <Typography color="success.main" sx={{ mt: 2 }}>
-                  {submitSuccess}
-                </Typography>
-              ) : null}
-
-              {isEditMode ? (
-                editMode ? (
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  width: "100%",
+                  flex: 1,
+                }}
+              >
+                {isEditMode && editMode ? (
                   <CustomEditFormButtons
                     formik={formik}
                     setEditMode={setEditMode}
@@ -257,7 +284,37 @@ const CreateEmployee = forwardRef(
                     setSubmitSuccess={setSubmitSuccess}
                     onCancel={onCancel || onClose}
                   />
-                ) : (
+                ) : null}
+
+                <Grid container spacing={2}>
+                  {enrichedFields.map((field) => (
+                    <FormGrid
+                      size={{ xs: 12, md: field.span || 12 }}
+                      key={field.name || `${field.type}-${field.label}`}
+                    >
+                      {renderField({
+                        ...field,
+                        editing: editMode,
+                        disabled:
+                          field.name === "branchEmployeesId" &&
+                          normalizedUserType !== "admin",
+                      })}
+                    </FormGrid>
+                  ))}
+                </Grid>
+
+                {submitError ? (
+                  <Typography color="error" sx={{ mt: 2 }}>
+                    {submitError}
+                  </Typography>
+                ) : null}
+                {submitSuccess ? (
+                  <Typography color="success.main" sx={{ mt: 2 }}>
+                    {submitSuccess}
+                  </Typography>
+                ) : null}
+
+                {isEditMode && !editMode ? (
                   <Box
                     sx={{ display: "flex", justifyContent: "flex-end", mt: 3 }}
                   >
@@ -266,18 +323,20 @@ const CreateEmployee = forwardRef(
                       details.
                     </Typography>
                   </Box>
-                )
-              ) : (
-                <CreateFormButtons
-                  formik={formik}
-                  setEditMode={setEditMode}
-                  setSubmitError={setSubmitError}
-                  setSubmitSuccess={setSubmitSuccess}
-                  onClose={onClose}
-                  hideCancel={hideCancel}
-                  submitLabel="Save Employee"
-                />
-              )}
+                ) : null}
+
+                {!isEditMode ? (
+                  <CreateFormButtons
+                    formik={formik}
+                    setEditMode={setEditMode}
+                    setSubmitError={setSubmitError}
+                    setSubmitSuccess={setSubmitSuccess}
+                    onClose={onClose}
+                    hideCancel={hideCancel}
+                    submitLabel="Save Employee"
+                  />
+                ) : null}
+              </Box>
             </Form>
           )}
         </Formik>

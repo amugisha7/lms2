@@ -4,8 +4,6 @@ import {
   borrowerLoanOfficersByBorrowerId,
 } from "../../graphql/queries";
 import {
-  createEmployee,
-  updateEmployee,
   deleteEmployee,
   createBorrowerLoanOfficer,
   deleteBorrowerLoanOfficer,
@@ -54,6 +52,7 @@ const EMPLOYEE_FIELDS = `
   taxIdentificationNumber
   taxExemptStatus
   customFieldsData
+  customEmployeeDetails
   relatedUserID
   relatedBorrowerID
   supervisorID
@@ -101,8 +100,25 @@ const CREATE_ONBOARDING_EMPLOYEE_MUTATION = `
   }
 `;
 
+const CREATE_EMPLOYEE_MUTATION = `
+  mutation CreateEmployee($input: CreateEmployeeInput!) {
+    createEmployee(input: $input) {
+      ${EMPLOYEE_FIELDS}
+    }
+  }
+`;
+
+const UPDATE_EMPLOYEE_MUTATION = `
+  mutation UpdateEmployee($input: UpdateEmployeeInput!) {
+    updateEmployee(input: $input) {
+      ${EMPLOYEE_FIELDS}
+    }
+  }
+`;
+
 const sanitizeEmployeeInput = (input = {}) => {
   const allowedFields = [
+    "id",
     "firstName",
     "lastName",
     "middleName",
@@ -329,12 +345,14 @@ export const resolveEmployeeIdForUser = async ({
 
 export const createEmployeeRecord = async (input) => {
   const sanitizedInput = sanitizeEmployeeInput(input);
+  // Exclude `id` from create input — it must not be explicitly set on creation
+  const { id: _id, ...createInput } = sanitizedInput;
   const response = await client.graphql({
-    query: createEmployee,
+    query: CREATE_EMPLOYEE_MUTATION,
     variables: {
       input: {
-        ...sanitizedInput,
-        status: sanitizedInput.status || "active",
+        ...createInput,
+        status: createInput.status || "active",
       },
     },
   });
@@ -409,7 +427,7 @@ export const ensureDefaultEmployeeForUser = async ({
 export const updateEmployeeRecord = async (input) => {
   const sanitizedInput = sanitizeEmployeeInput(input);
   const response = await client.graphql({
-    query: updateEmployee,
+    query: UPDATE_EMPLOYEE_MUTATION,
     variables: {
       input: sanitizedInput,
     },
@@ -429,6 +447,147 @@ export const deleteEmployeeRecord = async (id) => {
   });
 
   return response?.data?.deleteEmployee || null;
+};
+
+const UPDATE_EMPLOYEE_DOCUMENTS_MUTATION = `
+  mutation UpdateEmployee($input: UpdateEmployeeInput!) {
+    updateEmployee(input: $input) {
+      id
+      customEmployeeDetails
+      updatedAt
+    }
+  }
+`;
+
+export const updateEmployeeDocuments = async (employeeId, documents) => {
+  const response = await client.graphql({
+    query: UPDATE_EMPLOYEE_DOCUMENTS_MUTATION,
+    variables: {
+      input: {
+        id: employeeId,
+        customEmployeeDetails: JSON.stringify({ documents }),
+      },
+    },
+  });
+  return response?.data?.updateEmployee || null;
+};
+
+const UPDATE_EMPLOYEE_CUSTOM_FIELDS_MUTATION = `
+  mutation UpdateEmployee($input: UpdateEmployeeInput!) {
+    updateEmployee(input: $input) {
+      id
+      customFieldsData
+      updatedAt
+    }
+  }
+`;
+
+export const fetchCustomFieldsForEmployee = async (institutionId, branchId) => {
+  if (!institutionId || !branchId) return [];
+
+  try {
+    const response = await client.graphql({
+      query: `
+        query ListCustomFormFields(
+          $filter: ModelCustomFormFieldFilterInput
+          $limit: Int
+          $nextToken: String
+        ) {
+          listCustomFormFields(filter: $filter, limit: $limit, nextToken: $nextToken) {
+            items {
+              id
+              formKey
+              label
+              fieldType
+              options
+              required
+              createdAt
+            }
+          }
+        }
+      `,
+      variables: {
+        filter: {
+          and: [
+            { formKey: { eq: "CreateEmployeeForm" } },
+            {
+              or: [
+                { institutionCustomFormFieldsId: { eq: institutionId } },
+                { branchCustomFormFieldsId: { eq: branchId } },
+              ],
+            },
+          ],
+        },
+      },
+    });
+
+    const items = response?.data?.listCustomFormFields?.items || [];
+    if (items.length === 0) return [];
+
+    return items
+      .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+      .map((field) => ({
+        ...field,
+        options: field.options ? JSON.parse(field.options) : null,
+        fieldName: `custom_${field.id}`,
+      }));
+  } catch (error) {
+    console.error("Error fetching employee custom fields:", error);
+    return [];
+  }
+};
+
+export const mapCustomFieldsToEmployeeValues = (employee, customFields) => {
+  if (!employee || !customFields || customFields.length === 0) return {};
+
+  const result = {};
+  customFields.forEach((field) => {
+    result[field.fieldName] = "";
+  });
+
+  if (employee.customFieldsData) {
+    try {
+      const stored =
+        typeof employee.customFieldsData === "string"
+          ? JSON.parse(employee.customFieldsData)
+          : employee.customFieldsData;
+      customFields.forEach((field) => {
+        const entry = stored[field.id];
+        if (entry && entry.value !== undefined) {
+          result[field.fieldName] = entry.value || "";
+        }
+      });
+    } catch (e) {
+      console.warn("Error parsing employee customFieldsData:", e);
+    }
+  }
+
+  return result;
+};
+
+export const updateEmployeeCustomFields = async (employeeId, customFields, formValues) => {
+  const customFieldsData = {};
+  customFields.forEach((field) => {
+    const value = formValues[field.fieldName];
+    customFieldsData[field.id] = {
+      fieldId: field.id,
+      label: field.label,
+      fieldType: field.fieldType,
+      value: typeof value === "string" ? value.trim() || null : value || null,
+    };
+  });
+
+  const response = await client.graphql({
+    query: UPDATE_EMPLOYEE_CUSTOM_FIELDS_MUTATION,
+    variables: {
+      input: {
+        id: employeeId,
+        customFieldsData: JSON.stringify(customFieldsData),
+      },
+    },
+  });
+
+  return response?.data?.updateEmployee || null;
 };
 
 export const getBorrowerAssignedEmployeeId = async (borrowerId) => {

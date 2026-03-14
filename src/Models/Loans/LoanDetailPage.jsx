@@ -170,6 +170,17 @@ export default function LoanDetailPage() {
             {` • Branch: ${loan.branch?.name || "N/A"}`}
           </Typography>
         </Box>
+        <Button
+          variant="outlined"
+          size="small"
+          onClick={() =>
+            navigate(`/loans/id/${loanId}/statement`, {
+              state: { from: `/loans/id/${loanId}/view` },
+            })
+          }
+        >
+          View Statement
+        </Button>
       </Box>
 
       {initialValues ? (

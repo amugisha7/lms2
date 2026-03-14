@@ -31,6 +31,12 @@ export const useHasPermission = (action, resource) => {
       update: ['admin', 'manager'],
       delete: ['admin'],
     },
+    employee: {
+      read: ['any'],
+      create: ['admin', 'manager'],
+      update: ['admin', 'manager'],
+      delete: ['admin'],
+    },
   };
   
   return permissions[resource]?.[action]?.includes(userType.toLowerCase()) || false;

@@ -36,6 +36,7 @@ export const menuItems = [
         name: "Create Borrower",
         icon: <PersonAddIcon sx={{ color: "white" }} />,
         route: "/addBorrower",
+        requiresPermission: { action: "create", resource: "borrower" },
       },
       {
         name: "View Borrowers",
@@ -53,6 +54,7 @@ export const menuItems = [
         name: "Create Loan",
         icon: <PersonAddIcon sx={{ color: "white" }} />,
         route: "/add-loan",
+        requiresPermission: { action: "create", resource: "loan" },
       },
       {
         name: "View Loans",
@@ -95,6 +97,7 @@ export const menuItems = [
         name: "Add Employee",
         icon: <PersonAddIcon sx={{ color: "white" }} />,
         route: "/employees/create",
+        requiresPermission: { action: "create", resource: "employee" },
       },
       {
         name: "Employee Management",

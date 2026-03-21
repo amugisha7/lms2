@@ -9,7 +9,7 @@ export const SYSTEM_MESSAGE_TYPES = {
 
 export const USER_TYPES = {
   ADMIN: "admin",
-  MANAGER: "manager",
+  MANAGER: "branchManager",
   LOAN_OFFICER: "loan_officer",
   STAFF: "staff",
   BORROWER: "borrower",

@@ -28,6 +28,7 @@ import CustomSlider from "../../ModelAssets/CustomSlider";
 import CustomDataGrid from "../../ModelAssets/CustomDataGrid";
 import { useSnackbar } from "../../ModelAssets/SnackbarContext";
 import { UserContext } from "../../App";
+import { useHasPermission } from "../../ModelAssets/Permissions/permissions";
 
 // FormComponents
 import DropDownSearchable from "../../Resources/FormComponents/DropDownSearchable";
@@ -506,12 +507,7 @@ function PaymentHistoryGrid({
   });
   const [savingRowId, setSavingRowId] = useState(null);
 
-  const normalizedUserType = String(userDetails?.userType || "")
-    .toLowerCase()
-    .replace(/\s+/g, "");
-  const canEditPayments = ["admin", "branchmanager"].includes(
-    normalizedUserType,
-  );
+  const canEditPayments = useHasPermission("update", "payment");
 
   const fetchPayments = useCallback(async () => {
     if (!loan?.id) {

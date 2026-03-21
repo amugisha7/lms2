@@ -1,9 +1,11 @@
-import React, { useState, useEffect, useContext } from "react";
-import { Box, Typography, Button, Tabs, Tab } from "@mui/material";
+import React, { useState, useEffect, useContext, useMemo } from "react";
+import { Box, Button, Typography } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { useNavigate } from "react-router-dom";
 import { generateClient } from "aws-amplify/api";
+import { Formik, Form, useField } from "formik";
 import { UserContext } from "../../App";
+import { listBranches } from "../../graphql/queries";
 
 // Reusable components
 import CustomDataGrid from "../../ModelAssets/CustomDataGrid";
@@ -11,6 +13,9 @@ import CustomSlider from "../../ModelAssets/CustomSlider";
 import DeleteDialog from "../../ModelAssets/DeleteDialog";
 import NotificationBar from "../../ModelAssets/NotificationBar";
 import ClickableText from "../../ModelAssets/ClickableText";
+import WorkingOverlay from "../../ModelAssets/WorkingOverlay";
+import PlusButtonMain from "../../ModelAssets/PlusButtonMain";
+import MultipleDropDownSearchable from "../../Resources/FormComponents/MultipleDropDownSearchable";
 
 // Model-specific components
 import CreateUser from "./CreateUser/CreateUser";
@@ -24,6 +29,46 @@ import {
 } from "./userQueries";
 
 import { useHasPermission } from "../../ModelAssets/Permissions/permissions";
+
+// Effect component used inside Formik to sync branch filter values
+function FormikEffect({ onChange, fieldName }) {
+  const [field] = useField(fieldName);
+  const prevValueRef = React.useRef(field.value);
+
+  React.useEffect(() => {
+    if (JSON.stringify(field.value) !== JSON.stringify(prevValueRef.current)) {
+      prevValueRef.current = field.value;
+      onChange(field.value);
+    }
+  }, [field.value, onChange]);
+
+  return null;
+}
+
+// Branch filter dropdown wrapper
+function BranchFilterWrapper({ branches, onFilterChange, selectedCount }) {
+  return (
+    <Box sx={{ mb: 3, width: "100%" }}>
+      <Formik initialValues={{ branchFilter: [] }} enableReinitialize>
+        <Form>
+          <FormikEffect onChange={onFilterChange} fieldName="branchFilter" />
+          <MultipleDropDownSearchable
+            label="Filter by Branch"
+            name="branchFilter"
+            options={branches.map((b) => ({ value: b.id, label: b.name }))}
+            placeholder={selectedCount === 0 ? "All Branches" : ""}
+            editing={true}
+            helperText={
+              selectedCount === 0
+                ? "Showing all branches"
+                : `Showing ${selectedCount} branch(es)`
+            }
+          />
+        </Form>
+      </Formik>
+    </Box>
+  );
+}
 
 // User type mapping from values to labels
 const USER_TYPE_LABELS = {
@@ -45,7 +90,7 @@ export default function Users() {
   const theme = useTheme();
   const navigate = useNavigate();
   const { userDetails } = useContext(UserContext);
-  const client = React.useMemo(() => generateClient(), []);
+  const client = useMemo(() => generateClient(), []);
 
   // State management
   const [users, setUsers] = useState([]);
@@ -54,7 +99,13 @@ export default function Users() {
     message: "",
     color: "green",
   });
-  const [selectedBranchId, setSelectedBranchId] = useState("all");
+  const [workingOverlayOpen, setWorkingOverlayOpen] = useState(false);
+  const [workingOverlayMessage, setWorkingOverlayMessage] =
+    useState("Working...");
+
+  // Branch filter state for Admin users
+  const [branches, setBranches] = useState([]);
+  const [selectedBranchFilter, setSelectedBranchFilter] = useState([]);
 
   // Dialog states
   const [instructionsDialogOpen, setInstructionsDialogOpen] = useState(false);
@@ -69,11 +120,41 @@ export default function Users() {
   // Ref to track fetched institution ID
   const hasFetchedRef = React.useRef();
 
+  // Fetch branches for Admin users
+  useEffect(() => {
+    const fetchBranchesForAdmin = async () => {
+      if (userDetails?.userType === "Admin" && userDetails?.institution?.id) {
+        try {
+          const branchData = await client.graphql({
+            query: listBranches,
+            variables: {
+              limit: 1000,
+              filter: {
+                institutionBranchesId: { eq: userDetails.institution.id },
+              },
+            },
+          });
+          const items = branchData.data.listBranches.items || [];
+          setBranches(items);
+          setSelectedBranchFilter([]);
+        } catch (e) {
+          console.error("Error fetching branches", e);
+        }
+      }
+    };
+
+    if (userDetails) {
+      fetchBranchesForAdmin();
+    }
+  }, [userDetails, client]);
+
   // Fetch users
   const fetchUsers = async () => {
     if (!userDetails?.institutionUsersId) return;
 
     setLoading(true);
+    setWorkingOverlayOpen(true);
+    setWorkingOverlayMessage("Loading Users...");
     try {
       let allUsers = [];
       let nextToken = null;
@@ -106,6 +187,7 @@ export default function Users() {
       setNotification({ message: "Error loading users", color: "red" });
     } finally {
       setLoading(false);
+      setWorkingOverlayOpen(false);
     }
   };
 
@@ -136,7 +218,7 @@ export default function Users() {
       };
 
       setUsers((prev) =>
-        prev.map((u) => (u.id === updatedUser.id ? updatedUser : u))
+        prev.map((u) => (u.id === updatedUser.id ? updatedUser : u)),
       );
       setNotification({
         message: `${updatedUser.displayName} updated successfully!`,
@@ -261,31 +343,25 @@ export default function Users() {
 
   const canCreateUser = useHasPermission("create", "user");
 
-  // Extract unique branches from users
-  const branches = React.useMemo(() => {
-    const branchMap = new Map();
-    users.forEach((user) => {
-      if (user.branch?.id && user.branch?.name) {
-        branchMap.set(user.branch.id, {
-          id: user.branch.id,
-          name: user.branch.name,
-        });
+  // Filter users by branch
+  const filteredUsers = useMemo(() => {
+    if (userDetails?.userType !== "Admin") {
+      // Non-admins only see users from their own branch
+      const userBranchId =
+        userDetails?.branchUsersId || userDetails?.branch?.id;
+      if (userBranchId) {
+        return users.filter((u) => u.branch?.id === userBranchId);
       }
-    });
-    return Array.from(branchMap.values()).sort((a, b) =>
-      a.name.localeCompare(b.name)
-    );
-  }, [users]);
-
-  // Filter users by selected branch
-  const filteredUsers =
-    selectedBranchId === "all"
-      ? users
-      : users.filter((user) => user.branch?.id === selectedBranchId);
-
-  const handleTabChange = (event, newValue) => {
-    setSelectedBranchId(newValue);
-  };
+      return users;
+    }
+    // Admin: apply multi-branch dropdown filter
+    if (selectedBranchFilter.length > 0) {
+      return users.filter((user) =>
+        selectedBranchFilter.includes(user.branch?.id),
+      );
+    }
+    return users;
+  }, [users, selectedBranchFilter, userDetails]);
 
   return (
     <>
@@ -294,6 +370,10 @@ export default function Users() {
         onClose={() => setNotification({ message: "", color: "green" })}
         message={notification.message}
         color={notification.color}
+      />
+      <WorkingOverlay
+        open={workingOverlayOpen}
+        message={workingOverlayMessage}
       />
 
       <Box>
@@ -311,81 +391,26 @@ export default function Users() {
             Users
           </Typography>
           {canCreateUser && (
-            <Button
-              variant="outlined"
+            <PlusButtonMain
               onClick={() => setInstructionsDialogOpen(true)}
-              sx={{
-                borderColor: theme.palette.blueText.main,
-                color: theme.palette.blueText.main,
-                backgroundColor: "transparent",
-                "&:hover": {
-                  backgroundColor: "transparent",
-                  borderColor: theme.palette.blueText.main,
-                  borderWidth: "2px",
-                },
-              }}
-            >
-              Add User
-            </Button>
+              buttonText="ADD USER"
+            />
           )}
         </Box>
 
-        {/* Tabs */}
-        <Box sx={{ width: "100%", mb: 2 }}>
-          <Box
-            sx={{
-              borderBottom: 1,
-              borderColor: theme.palette.divider,
-              backgroundColor: theme.palette.background.paper,
-              borderRadius: "8px 8px 0 0",
-            }}
-          >
-            <Tabs
-              value={selectedBranchId}
-              onChange={handleTabChange}
-              aria-label="branch filter tabs"
-              variant="scrollable"
-              scrollButtons
-              allowScrollButtonsMobile
-              sx={{
-                "& .MuiTabs-indicator": {
-                  backgroundColor: theme.palette.blueText.main,
-                  height: 3,
-                  borderRadius: "1.5px",
-                },
-                "& .MuiTab-root": {
-                  fontFamily: theme.typography.fontFamily,
-                  fontSize: "0.875rem",
-                  fontWeight: 500,
-                  textTransform: "none",
-                  letterSpacing: "0.02em",
-                  color: theme.palette.text.secondary,
-                  minHeight: 48,
-                  padding: "12px 24px",
-                  transition: "all 0.2s ease-in-out",
-                  "&:hover": {
-                    color: theme.palette.blueText.main,
-                  },
-                  "&.Mui-selected": {
-                    color: theme.palette.blueText.main,
-                    fontWeight: 600,
-                  },
-                  "&.Mui-focusVisible": {
-                    backgroundColor: theme.palette.action.focus,
-                  },
-                },
-                "& .MuiTabs-flexContainer": {
-                  gap: 1,
-                },
-              }}
-            >
-              <Tab label="All Branches" value="all" />
-              {branches.map((branch) => (
-                <Tab key={branch.id} label={branch.name} value={branch.id} />
-              ))}
-            </Tabs>
-          </Box>
-        </Box>
+        <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
+          Click on a User to view or edit their details, add files and custom
+          fields.
+        </Typography>
+
+        {/* Branch Filter - Admin Only */}
+        {userDetails?.userType === "Admin" && branches.length > 0 && (
+          <BranchFilterWrapper
+            branches={branches}
+            onFilterChange={setSelectedBranchFilter}
+            selectedCount={selectedBranchFilter.length}
+          />
+        )}
 
         {/* Data Grid */}
         <CustomDataGrid

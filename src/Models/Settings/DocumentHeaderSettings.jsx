@@ -15,6 +15,7 @@ import { useTheme } from "@mui/material/styles";
 import { CloudUpload } from "@mui/icons-material";
 import { UserContext } from "../../App";
 import { useNotification } from "../../ModelAssets/NotificationContext";
+import { useHasPermission } from "../../ModelAssets/Permissions/permissions";
 import { uploadData as amplifyUploadData, getUrl } from "aws-amplify/storage";
 import { updateInstitution } from "./helpers/updateInstitution";
 
@@ -38,10 +39,7 @@ const DocumentHeaderSettings = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // Check if user is admin
-  const isAdmin =
-    userDetails?.userPermissions?.includes("admin") ||
-    userDetails?.userType?.toLowerCase() === "admin";
+  const isAdmin = useHasPermission("update", "settings");
 
   // Initialize header image
   useEffect(() => {

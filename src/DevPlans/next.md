@@ -1,6 +1,7 @@
 - Create loans form. Also create from loan product.
   - Resume:
-    - check employee creation, modification, loan allocation etc.
+    - employee user level view and editing
+    - employee loan allocation etc.
     - employee relationship for allocation of loans
     - enable creation of employee from user with relationship
     - add loan statements

@@ -16,6 +16,7 @@ import myLogo from "../../Resources/loantabs_logo.png";
 import { menuItems } from "./Menu";
 import { UserContext } from "../../App";
 import { useUnreadMessageCount } from "../Notifications";
+import { checkPermission } from "../../ModelAssets/Permissions/permissions";
 
 const SideBar = ({ open = true, onClose }) => {
   const [expandedItems, setExpandedItems] = useState({});
@@ -29,6 +30,20 @@ const SideBar = ({ open = true, onClose }) => {
       [itemName]: !prev[itemName],
     }));
   };
+
+  const visibleMenuItems = menuItems.map((item) => {
+    if (!item.children) return item;
+    const filteredChildren = item.children.filter(
+      (child) =>
+        !child.requiresPermission ||
+        checkPermission(
+          userDetails,
+          child.requiresPermission.action,
+          child.requiresPermission.resource,
+        ),
+    );
+    return { ...item, children: filteredChildren };
+  });
 
   return (
     <Box
@@ -91,7 +106,7 @@ const SideBar = ({ open = true, onClose }) => {
       {/* Menu Section */}
       <Box sx={{ mt: 4 }}>
         <List dense>
-          {menuItems.map((item, index) => {
+          {visibleMenuItems.map((item, index) => {
             if (item.expandable && item.children) {
               const isExpanded = expandedItems[item.name] || false;
 

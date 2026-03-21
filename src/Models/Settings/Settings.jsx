@@ -19,6 +19,7 @@ import {
   Logout as LogoutIcon,
 } from "@mui/icons-material";
 import { UserContext } from "../../App";
+import { useHasPermission } from "../../ModelAssets/Permissions/permissions";
 import { settingsForm, countryOptions } from "./settingsForm";
 import TextInput from "../../Resources/FormComponents/TextInput";
 import Dropdown from "../../Resources/FormComponents/Dropdown";
@@ -135,10 +136,7 @@ const Settings = () => {
     }, 300);
   };
 
-  // Check if user is admin
-  const isAdmin =
-    userDetails?.userPermissions?.includes("admin") ||
-    userDetails?.userType?.toLowerCase() === "admin";
+  const isAdmin = useHasPermission("update", "settings");
 
   useEffect(() => {
     if (userDetails?.institution) {

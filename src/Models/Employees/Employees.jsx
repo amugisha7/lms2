@@ -17,6 +17,7 @@ import {
   getEmployeeDisplayName,
   listEmployeesForUserContext,
 } from "./employeeHelpers";
+import { useHasPermission } from "../../ModelAssets/Permissions/permissions";
 
 // Effect component used inside Formik to sync branch filter values
 function FormikEffect({ onChange, fieldName }) {
@@ -63,6 +64,7 @@ export default function Employees() {
   const navigate = useNavigate();
   const { userDetails } = useContext(UserContext);
   const client = useMemo(() => generateClient(), []);
+  const canCreateEmployee = useHasPermission("create", "employee");
 
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -269,10 +271,12 @@ export default function Employees() {
           <Typography variant="h4" sx={{ fontWeight: 600 }}>
             Employees
           </Typography>
-          <PlusButtonMain
-            onClick={() => navigate("/employees/create")}
-            buttonText="ADD EMPLOYEE"
-          />
+          {canCreateEmployee && (
+            <PlusButtonMain
+              onClick={() => navigate("/employees/create")}
+              buttonText="ADD EMPLOYEE"
+            />
+          )}
         </Box>
 
         <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>

@@ -69,9 +69,14 @@ const employeeForm = [
   {
     label: "Title",
     name: "title",
-    type: "text",
+    type: "select",
     required: false,
     span: 6,
+    options: [
+      { value: "Mr.", label: "Mr." },
+      { value: "Mrs.", label: "Mrs." },
+      { value: "Ms.", label: "Ms." },
+      { value: "Dr.", label: "Dr." }],
   },
   {
     label: "Unique Identification Number:",
@@ -84,6 +89,14 @@ const employeeForm = [
     validationPattern: /^[^,"'!{}]+$/,
     validationMessage: "Invalid characters found. Cannot use , \" ' ! { }",
   },
+    {
+    label: "Date of Birth",
+    name: "dateOfBirth",
+    type: "date",
+    required: false,
+    span: 6,
+  },
+
   {
     label: "Employment Information",
     type: "label",
@@ -131,15 +144,15 @@ const employeeForm = [
     ],
   },
   {
-    label: "Date of Birth",
-    name: "dateOfBirth",
+    label: "Employment Start Date",
+    name: "employmentStartDate",
     type: "date",
     required: false,
     span: 6,
   },
   {
-    label: "Start Date",
-    name: "employmentStartDate",
+    label: "Employment End Date",
+    name: "employmentEndDate",
     type: "date",
     required: false,
     span: 6,
@@ -149,6 +162,7 @@ const employeeForm = [
     name: "grossSalary",
     type: "number",
     required: false,
+    placeholder: "numbers only",
     span: 6,
     validationType: "number",
   },

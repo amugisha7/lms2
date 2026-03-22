@@ -7,6 +7,10 @@ import {
   Tab,
   IconButton,
   CircularProgress,
+  Switch,
+  FormControlLabel,
+  Divider,
+  Breadcrumbs,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useTheme } from "@mui/material/styles";
@@ -35,6 +39,10 @@ import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 import { ColorModeContext } from "../../theme";
 import { useHasPermission } from "../../ModelAssets/Permissions/permissions";
+import {
+  fetchEmployeeByRelatedUserId,
+  createEmployeeRecord,
+} from "../Employees/employeeHelpers";
 
 // Modified function to download PDF using jsPDF and html2canvas
 const downloadPdf = async (
@@ -280,6 +288,9 @@ export default function UserManagement() {
   const [customFieldsLoading, setCustomFieldsLoading] = useState(true);
   const [editCustomFieldsPopupOpen, setEditCustomFieldsPopupOpen] =
     useState(false);
+  const [linkedEmployee, setLinkedEmployee] = useState(null);
+  const [employeeLoading, setEmployeeLoading] = useState(false);
+  const [employeeToggling, setEmployeeToggling] = useState(false);
 
   // Permissions
   const canEditUser = useHasPermission("update", "user");
@@ -304,6 +315,16 @@ export default function UserManagement() {
       fetchUser();
     }
   }, [id]);
+
+  // Fetch linked employee when user data is available
+  useEffect(() => {
+    if (!user?.id) return;
+    setEmployeeLoading(true);
+    fetchEmployeeByRelatedUserId(user.id)
+      .then((emp) => setLinkedEmployee(emp || null))
+      .catch((err) => console.error("Error fetching linked employee:", err))
+      .finally(() => setEmployeeLoading(false));
+  }, [user?.id]);
 
   // Fetch custom fields
   useEffect(() => {
@@ -447,6 +468,46 @@ export default function UserManagement() {
     setEditCustomFieldsPopupOpen(false);
   };
 
+  const handleToggleEmployee = async () => {
+    if (linkedEmployee || employeeToggling) return;
+    setEmployeeToggling(true);
+    try {
+      const newEmployee = await createEmployeeRecord({
+        firstName: user.firstName,
+        lastName: user.lastName,
+        middleName: user.middleName,
+        dateOfBirth: user.dateOfBirth,
+        email: user.email,
+        phoneNumber1: user.phoneNumber1,
+        phoneNumber2: user.phoneNumber2,
+        addressLine1: user.addressLine1,
+        addressLine2: user.addressLine2,
+        city: user.city,
+        stateProvince: user.stateProvince,
+        postalCode: user.postalCode,
+        nationalID: user.nationalID,
+        passportNumber: user.passportNumber,
+        nationality: user.nationality,
+        relatedUserID: user.id,
+        branchEmployeesId: user.branchUsersId,
+        status: "active",
+      });
+      setLinkedEmployee(newEmployee);
+      setNotification({
+        message: "Employee record created successfully!",
+        color: "green",
+      });
+    } catch (err) {
+      console.error("Error creating employee record:", err);
+      setNotification({
+        message: "Failed to create employee record",
+        color: "red",
+      });
+    } finally {
+      setEmployeeToggling(false);
+    }
+  };
+
   const handlePrint = () => {
     const originalMode = theme.palette.mode;
     downloadPdf(
@@ -574,16 +635,42 @@ export default function UserManagement() {
             >
               <ArrowBackIcon />
             </IconButton>
-            <Typography
-              variant="h4"
-              sx={{
-                fontWeight: 600,
-                color: theme.palette.text.primary,
-                fontFamily: theme.typography.h4.fontFamily,
-              }}
-            >
-              {getUserName()}
-            </Typography>
+            <Box>
+              <Breadcrumbs
+                separator="›"
+                aria-label="breadcrumb"
+                sx={{ mb: 0.25 }}
+              >
+                <Typography
+                  variant="caption"
+                  onClick={() => navigate("/users")}
+                  sx={{
+                    color: theme.palette.blueText.main,
+                    cursor: "pointer",
+                    fontWeight: 500,
+                    "&:hover": { textDecoration: "underline" },
+                  }}
+                >
+                  All Users
+                </Typography>
+                <Typography
+                  variant="caption"
+                  sx={{ color: theme.palette.text.secondary }}
+                >
+                  User Profile
+                </Typography>
+              </Breadcrumbs>
+              <Typography
+                variant="h4"
+                sx={{
+                  fontWeight: 600,
+                  color: theme.palette.text.primary,
+                  fontFamily: theme.typography.h4.fontFamily,
+                }}
+              >
+                {getUserName()}
+              </Typography>
+            </Box>
           </Box>
           <Box
             sx={{
@@ -704,6 +791,65 @@ export default function UserManagement() {
                 setNotification={setNotification}
                 canEdit={canEditUser}
               />
+
+              {/* Employee Record Section */}
+              <Box sx={{ mt: 2 }}>
+                <Divider sx={{ mb: 2 }} />
+                <Typography
+                  variant="subtitle1"
+                  sx={{
+                    fontWeight: 600,
+                    mb: 1,
+                    color: theme.palette.text.primary,
+                  }}
+                >
+                  Employee Record
+                </Typography>
+                {employeeLoading ? (
+                  <CircularProgress size={20} />
+                ) : (
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 2,
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={!!linkedEmployee}
+                          onChange={handleToggleEmployee}
+                          disabled={
+                            !!linkedEmployee || employeeToggling || !canEditUser
+                          }
+                        />
+                      }
+                      label={
+                        linkedEmployee
+                          ? `${[linkedEmployee.firstName, linkedEmployee.lastName].filter(Boolean).join(" ") || linkedEmployee.email || "Employee"}`
+                          : "Set as employee"
+                      }
+                    />
+                    {employeeToggling && <CircularProgress size={18} />}
+                    {linkedEmployee && (
+                      <ClickableText
+                        onClick={() =>
+                          navigate(`/employees/id/${linkedEmployee.id}/view`)
+                        }
+                        sx={{
+                          color: theme.palette.blueText.main,
+                          fontSize: "0.9rem",
+                        }}
+                        className="pdf-hide"
+                      >
+                        View Employee Profile
+                      </ClickableText>
+                    )}
+                  </Box>
+                )}
+              </Box>
             </div>
           </TabPanel>
 

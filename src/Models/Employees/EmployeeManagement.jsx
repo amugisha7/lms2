@@ -7,6 +7,7 @@ import {
   Tab,
   IconButton,
   CircularProgress,
+  Breadcrumbs,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useTheme } from "@mui/material/styles";
@@ -528,6 +529,30 @@ export default function EmployeeManagement() {
               <ArrowBackIcon />
             </IconButton>
             <Box>
+              <Breadcrumbs
+                separator="›"
+                aria-label="breadcrumb"
+                sx={{ mb: 0.25 }}
+              >
+                <Typography
+                  variant="caption"
+                  onClick={() => navigate("/employees")}
+                  sx={{
+                    color: theme.palette.blueText.main,
+                    cursor: "pointer",
+                    fontWeight: 500,
+                    "&:hover": { textDecoration: "underline" },
+                  }}
+                >
+                  All Employees
+                </Typography>
+                <Typography
+                  variant="caption"
+                  sx={{ color: theme.palette.text.secondary }}
+                >
+                  Employee Profile
+                </Typography>
+              </Breadcrumbs>
               <Typography
                 variant="h4"
                 sx={{

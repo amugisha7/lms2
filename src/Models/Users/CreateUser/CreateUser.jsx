@@ -17,6 +17,7 @@ import TextInput from "../../../Resources/FormComponents/TextInput";
 import Dropdown from "../../../Resources/FormComponents/Dropdown";
 import DateInput from "../../../Resources/FormComponents/DateInput";
 import TextArea from "../../../Resources/FormComponents/TextArea";
+import FormLabel from "../../../Resources/FormComponents/FormLabel";
 import CreateFormButtons from "../../../ModelAssets/CreateFormButtons";
 import CustomEditFormButtons from "../../../ModelAssets/CustomEditFormButtons";
 // import CustomFields from "../../AdminScreens/CustomFields/CustomFields";
@@ -35,6 +36,7 @@ const FormGrid = styled(Grid)(({ theme }) => ({
 
 // Build initialValues dynamically from createUserForm
 const baseInitialValues = createUserForm.reduce((acc, field) => {
+  if (!field.name) return acc;
   acc[field.name] = field.defaultValue || "";
   return acc;
 }, {});
@@ -64,6 +66,7 @@ const buildValidationSchema = (isReviewMode = false) => {
     if (isReviewMode && field.hiddenInReview) {
       return;
     }
+    if (!field.name) return;
 
     let validator = Yup.string().nullable();
 
@@ -130,6 +133,8 @@ const renderFormField = (field) => {
       return <DateInput {...rest} />;
     case "textarea":
       return <TextArea {...rest} />;
+    case "label":
+      return <FormLabel {...rest} />;
     default:
       return <TextInput {...rest} />;
   }

@@ -2,6 +2,11 @@ import { countries } from "../../../Resources/listOfCountries";
 
 const createUserForm = [
   {
+    label: "Account & Access",
+    type: "label",
+    span: 12,
+  },
+  {
     label: "Email:",
     name: "email",
     type: "email",
@@ -54,6 +59,11 @@ const createUserForm = [
       { value: "Inactive", label: "Inactive" },
       { value: "Suspended", label: "Suspended" },
     ],
+  },
+  {
+    label: "Personal Information",
+    type: "label",
+    span: 12,
   },
   {
     label: "First Name:",
@@ -128,6 +138,11 @@ const createUserForm = [
     validationType: "date",
   },
   {
+    label: "Identification",
+    type: "label",
+    span: 12,
+  },
+  {
     label: "Nationality:",
     name: "nationality",
     type: "select",
@@ -154,6 +169,11 @@ const createUserForm = [
     validationType: "string",
     validationPattern: /^[^,"'!{}]+$/,
     validationMessage: "Invalid characters found. Cannot use , \" ' ! { }",
+  },
+  {
+    label: "Address Information",
+    type: "label",
+    span: 12,
   },
   {
     label: "Address Line 1:",
@@ -204,6 +224,11 @@ const createUserForm = [
     validationType: "string",
     validationPattern: /^[^,"'!{}]+$/,
     validationMessage: "Invalid characters found. Cannot use , \" ' ! { }",
+  },
+  {
+    label: "Additional Information",
+    type: "label",
+    span: 12,
   },
   {
     label: "Description:",

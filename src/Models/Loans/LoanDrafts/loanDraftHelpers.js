@@ -1199,9 +1199,11 @@ export const updateLoanDraft = async ({
     input.createdByEmployeeID = actorEmployeeId;
   }
 
-  if (patch?.loanProductID) {
-    input.loanProductID = patch.loanProductID;
+  // Update createdByEmployeeID when a different loan officer is selected
+  if (loanOfficerEmployeeId && loanOfficerEmployeeId !== existing?.createdByEmployeeID) {
+    input.createdByEmployeeID = loanOfficerEmployeeId;
   }
+
   if (patch?.status) {
     input.status = patch.status;
   }

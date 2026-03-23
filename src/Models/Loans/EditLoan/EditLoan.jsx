@@ -44,6 +44,10 @@ import {
   fetchLoanFeesConfig,
   fetchInstitutionAdmins,
 } from "../CreateLoan/createLoanHelpers";
+import {
+  listEmployeesByBranch,
+  getEmployeeOptionLabel,
+} from "../../Employees/employeeHelpers";
 import { sendLoanApprovalRequest } from "../../../Screens/Notifications/notificationsAPI";
 
 const FormGrid = styled(Grid)(({ theme }) => ({
@@ -295,10 +299,25 @@ const EditLoan = forwardRef(
     const [loanFeesConfigs, setLoanFeesConfigs] = useState([]);
     const [loanFeesLoading, setLoanFeesLoading] = useState(false);
     const [localDraft, setLocalDraft] = useState(loanDraft || null);
+    const [branchEmployees, setBranchEmployees] = useState([]);
 
     useEffect(() => {
       setLocalDraft(loanDraft || null);
     }, [loanDraft]);
+
+    // Load employees for the loan's branch
+    useEffect(() => {
+      const branchId =
+        loanDraft?.branchID || loanDraft?.borrower?.branchBorrowersId;
+      if (!branchId) return;
+      let cancelled = false;
+      listEmployeesByBranch(branchId).then((employees) => {
+        if (!cancelled) setBranchEmployees(employees);
+      });
+      return () => {
+        cancelled = true;
+      };
+    }, [loanDraft?.branchID, loanDraft?.borrower?.branchBorrowersId]);
 
     const normalizedStatus = (() => {
       const raw = localDraft?.status ?? "";
@@ -394,9 +413,19 @@ const EditLoan = forwardRef(
             };
           }
 
+          if (field.name === "employeeId") {
+            return {
+              ...field,
+              options: branchEmployees.map((employee) => ({
+                value: employee.id,
+                label: getEmployeeOptionLabel(employee),
+              })),
+            };
+          }
+
           return field;
         });
-    }, [loanFeesConfigs, userDetails?.institution]);
+    }, [loanFeesConfigs, branchEmployees, userDetails?.institution]);
 
     const handleSubmit = async (values, { setSubmitting }) => {
       setSubmitError("");

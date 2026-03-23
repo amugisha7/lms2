@@ -94,6 +94,11 @@ export default function LoanDetailPage() {
         loanProductName,
         loanProduct:
           loanRecord.loanProductID || draftRecord.loanProduct || "N/A",
+        employeeId:
+          draftRecord.employeeId ||
+          loanRecord.createdByEmployeeID ||
+          loanRecord.createdByEmployee?.id ||
+          "",
       });
     } catch (err) {
       console.error("Failed to load loan:", err);

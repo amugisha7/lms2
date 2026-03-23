@@ -75,6 +75,9 @@ export const getLoan = /* GraphQL */ `
       numberOfPayments
       paymentFrequency
       status
+      branchID
+      createdByEmployeeID
+      borrowerID
       borrower {
         id
         firstname
@@ -88,12 +91,6 @@ export const getLoan = /* GraphQL */ `
         name
       }
       createdByEmployee {
-        id
-        firstName
-        lastName
-        email
-      }
-      assignedToEmployee {
         id
         firstName
         lastName
@@ -188,6 +185,13 @@ export const updateLoan = /* GraphQL */ `
     updateLoan(input: $input, condition: $condition) {
       id
       status
+      createdByEmployeeID
+      createdByEmployee {
+        id
+        firstName
+        lastName
+        email
+      }
     }
   }
 `;
@@ -244,4 +248,18 @@ export const getLoanById = async (id) => {
   });
 
   return result?.data?.getLoan || null;
+};
+
+export const updateLoanOfficer = async (loanId, employeeId) => {
+  const client = generateClient();
+  const result = await client.graphql({
+    query: updateLoan,
+    variables: {
+      input: {
+        id: loanId,
+        createdByEmployeeID: employeeId,
+      },
+    },
+  });
+  return result?.data?.updateLoan || null;
 };

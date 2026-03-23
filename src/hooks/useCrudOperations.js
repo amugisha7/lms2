@@ -1,5 +1,5 @@
 import React from "react";
-import { generateClient } from "aws-amplify/api";
+import resilientClient from "../resilientClient";
 import WorkingOverlay from "../ModelAssets/WorkingOverlay";
 
 export function useCrudOperations(entityName, listQuery, createMutation, updateMutation, deleteMutation, listQueryKey) {
@@ -20,8 +20,7 @@ export function useCrudOperations(entityName, listQuery, createMutation, updateM
     setWorkingOverlayOpen(true);
     setWorkingOverlayMessage(`Loading ${entityName}s...`);
     try {
-      const client = generateClient();
-      const result = await client.graphql({
+      const result = await resilientClient.graphql({
         query: listQuery,
         variables,
       });
@@ -74,8 +73,7 @@ export function useCrudOperations(entityName, listQuery, createMutation, updateM
     setWorkingOverlayOpen(true);
     setWorkingOverlayMessage(`Deleting ${entityName}...`);
     try {
-      const client = generateClient();
-      await client.graphql({
+      await resilientClient.graphql({
         query: deleteMutation,
         variables: {
           input: { id: deleteDialogRow.id },

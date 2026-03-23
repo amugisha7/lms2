@@ -42,9 +42,7 @@ const root = ReactDOM.createRoot(document.getElementById('root'));
 const isCustomerPortal = window.location.pathname.startsWith('/client/');
 
 root.render(
-  <React.StrictMode>
-    {isCustomerPortal ? <CustomerApp /> : <App />}
-  </React.StrictMode>
+  isCustomerPortal ? <CustomerApp /> : <App />
 );
 
 // If you want to start measuring performance in your app, pass a function

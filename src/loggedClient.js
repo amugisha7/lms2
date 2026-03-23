@@ -1,8 +1,6 @@
 // Logged API client for debugging GraphQL calls.
 
-import { generateClient } from "aws-amplify/api";
-
-const originalClient = generateClient();
+import resilientClient from "./resilientClient";
 
 const getDocumentString = (query) => {
   if (typeof query === "string") {
@@ -52,12 +50,12 @@ const logGraphqlRequest = (options) => {
 };
 
 const loggedClient = {
-  ...originalClient,
+  ...resilientClient,
   graphql: async (options) => {
     const metadata = logGraphqlRequest(options);
 
     try {
-      const result = await originalClient.graphql(options);
+      const result = await resilientClient.graphql(options);
       console.log(
         `[API Response] ${metadata.operationType} ${metadata.operationName}`,
         result,

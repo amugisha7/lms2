@@ -79,12 +79,6 @@ const GET_LOAN_FOR_STATEMENT = /* GraphQL */ `
         lastName
         email
       }
-      assignedToEmployee {
-        id
-        firstName
-        lastName
-        email
-      }
       loanProduct {
         id
         name
@@ -780,8 +774,7 @@ export default function LoanStatementScreen() {
     [loan],
   );
   const officerLabel = React.useMemo(
-    () =>
-      formatEmployeeName(loan?.assignedToEmployee || loan?.createdByEmployee),
+    () => formatEmployeeName(loan?.createdByEmployee),
     [loan],
   );
   const compRec = React.useMemo(() => parseLoanComputationRecord(loan), [loan]);

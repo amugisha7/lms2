@@ -1,0 +1,18 @@
+HTTP/1.1 400 Bad Request
+Content-Type: application/json; charset=UTF-8
+Content-Length: 145
+Connection: keep-alive
+Date: Sun, 22 Mar 2026 07:03:52 GMT
+x-amzn-ErrorType: MalformedHttpRequestException
+x-amzn-RequestId: 3c007f6d-a499-4ebe-9131-776ab8215473
+X-Cache: Error from cloudfront
+Via: 1.1 3439487755047758308c2b5cc2f68a2a.cloudfront.net (CloudFront)
+X-Amz-Cf-Pop: NBO50-P2
+X-Amz-Cf-Id: JYq8siz7TFLq86oQZ5jJmBF3Tylvqc2Hy0af7V6RSxGKdmjv3paNsw==
+
+{
+  "errors" : [ {
+    "message" : "Invalid JSON payload in GraphQLAuth POST request.",
+    "errorType" : "MalformedHttpRequestException"
+  } ]
+}

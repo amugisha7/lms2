@@ -75,12 +75,6 @@ const LIST_LOANS_DISPLAY_QUERY = `
           lastName
           email
         }
-        assignedToEmployee {
-          id
-          firstName
-          lastName
-          email
-        }
         balanceSnapshots(limit: 1, sortDirection: DESC) {
           items {
             principalOutstanding
@@ -97,25 +91,6 @@ const LIST_LOANS_DISPLAY_QUERY = `
             paymentStatusEnum
           }
         }
-      }
-      nextToken
-    }
-  }
-`;
-
-const LIST_PAYMENTS_BY_LOAN_QUERY = `
-  query ListPaymentsByLoan($loanID: ID!, $limit: Int, $nextToken: String) {
-    listPayments(
-      filter: { loanID: { eq: $loanID } }
-      limit: $limit
-      nextToken: $nextToken
-    ) {
-      items {
-        id
-        amount
-        status
-        paymentStatusEnum
-        paymentDate
       }
       nextToken
     }
@@ -534,6 +509,11 @@ export default function LoansDisplay() {
   const currencyCode =
     userDetails?.institution?.currencyCode || userDetails?.currencyCode;
   const currency = currencyCode || "$";
+  const normalizedUserType = (userDetails?.userType || "").toLowerCase();
+  const isAdminUser = normalizedUserType === "admin";
+  const activeBranchId = userDetails?.branchUsersId || userDetails?.branch?.id;
+  const activeInstitutionId =
+    userDetails?.institution?.id || userDetails?.institutionUsersId;
   const MoneyText = React.useCallback(
     ({ value, numberSx = {}, prefixSx = {} }) => (
       <CurrencyText
@@ -1028,7 +1008,7 @@ export default function LoansDisplay() {
         minWidth: 130,
         sortable: false,
         valueGetter: (value, row) => {
-          const emp = row.assignedToEmployee || row.createdByEmployee;
+          const emp = row.createdByEmployee;
           return emp
             ? [emp.firstName, emp.lastName].filter(Boolean).join(" ") ||
                 emp.email
@@ -1062,10 +1042,7 @@ export default function LoansDisplay() {
     let result = loans;
 
     // Branch filter (admin only)
-    if (
-      (userDetails?.userType || "").toLowerCase() === "admin" &&
-      selectedBranchFilter.length > 0
-    ) {
+    if (isAdminUser && selectedBranchFilter.length > 0) {
       result = result.filter((loan) =>
         selectedBranchFilter.includes(loan.branchID),
       );
@@ -1094,9 +1071,6 @@ export default function LoansDisplay() {
           loan.id,
           loan.status,
           loan.loanProduct?.name,
-          loan.assignedToEmployee?.firstName,
-          loan.assignedToEmployee?.lastName,
-          loan.assignedToEmployee?.email,
           loan.createdByEmployee?.firstName,
           loan.createdByEmployee?.lastName,
           loan.createdByEmployee?.email,
@@ -1109,7 +1083,7 @@ export default function LoansDisplay() {
     }
 
     return result;
-  }, [loans, statusFilter, searchTerm, selectedBranchFilter, userDetails]);
+  }, [isAdminUser, loans, searchTerm, selectedBranchFilter, statusFilter]);
 
   //  KPI computations
   const kpis = React.useMemo(() => {
@@ -1147,10 +1121,9 @@ export default function LoansDisplay() {
 
   //  Fetch loans
   const fetchLoans = React.useCallback(async () => {
-    const isAdmin = userDetails?.userType === "Admin";
-    const branchId = userDetails?.branchUsersId;
-    const institutionId =
-      userDetails?.institution?.id || userDetails?.institutionUsersId;
+    const isAdmin = isAdminUser;
+    const branchId = activeBranchId;
+    const institutionId = activeInstitutionId;
 
     if ((!isAdmin && !branchId) || (isAdmin && !institutionId)) return;
 
@@ -1217,45 +1190,15 @@ export default function LoansDisplay() {
         );
       });
 
-      const loansWithPayments = await Promise.all(
-        processed.map(async (loan) => {
-          let nextToken = null;
-          let allPayments = [];
-
-          try {
-            do {
-              const paymentResult = await client.graphql({
-                query: LIST_PAYMENTS_BY_LOAN_QUERY,
-                variables: {
-                  loanID: loan.id,
-                  limit: 1000,
-                  nextToken,
-                },
-              });
-
-              const paymentBatch =
-                paymentResult?.data?.listPayments?.items || [];
-              allPayments.push(...paymentBatch.filter(Boolean));
-              nextToken = paymentResult?.data?.listPayments?.nextToken || null;
-            } while (nextToken);
-          } catch (paymentErr) {
-            console.error(
-              `[LoansDisplay] Error fetching payments for loan ${loan.id}:`,
-              paymentErr,
-            );
-          }
-
-          return {
-            ...loan,
-            payments: {
-              ...(loan.payments || {}),
-              items: allPayments,
-            },
-          };
-        }),
+      setLoans(
+        processed.map((loan) => ({
+          ...loan,
+          payments: {
+            ...(loan.payments || {}),
+            items: (loan.payments?.items || []).filter(Boolean),
+          },
+        })),
       );
-
-      setLoans(loansWithPayments);
     } catch (err) {
       console.error("LoansDisplay \u2013 Error fetching loans:", err);
       setLoans([]);
@@ -1263,28 +1206,30 @@ export default function LoansDisplay() {
       setLoading(false);
       setWorkingOverlayOpen(false);
     }
-  }, [userDetails]);
+  }, [activeBranchId, activeInstitutionId, isAdminUser]);
 
   React.useEffect(() => {
     if (!userDetails) return;
-    const fetchKey =
-      userDetails.userType === "Admin"
-        ? userDetails.institution?.id ||
-          userDetails.institutionUsersId ||
-          "admin"
-        : userDetails.branchUsersId;
+    const fetchKey = isAdminUser
+      ? activeInstitutionId || "admin"
+      : activeBranchId;
     if (fetchKey && fetchKey !== hasFetchedRef.current) {
       fetchLoans();
       hasFetchedRef.current = fetchKey;
     }
-  }, [userDetails, fetchLoans]);
+  }, [
+    activeBranchId,
+    activeInstitutionId,
+    fetchLoans,
+    isAdminUser,
+    userDetails,
+  ]);
 
   // Fetch branches list for admin branch filter UI
   React.useEffect(() => {
     const fetchBranchesForAdmin = async () => {
-      const isAdmin = (userDetails?.userType || "").toLowerCase() === "admin";
-      const institutionId =
-        userDetails?.institution?.id || userDetails?.institutionUsersId;
+      const isAdmin = isAdminUser;
+      const institutionId = activeInstitutionId;
       console.log(
         "[LoansDisplay] userType:",
         userDetails?.userType,
@@ -1317,7 +1262,7 @@ export default function LoansDisplay() {
       }
     };
     if (userDetails) fetchBranchesForAdmin();
-  }, [userDetails]);
+  }, [activeInstitutionId, isAdminUser, userDetails]);
 
   return (
     <>
@@ -1387,14 +1332,13 @@ export default function LoansDisplay() {
       </Box>
 
       {/* Branch Filter (Admin only) */}
-      {(userDetails?.userType || "").toLowerCase() === "admin" &&
-        branches.length > 0 && (
-          <BranchFilterWrapper
-            branches={branches}
-            onFilterChange={setSelectedBranchFilter}
-            selectedCount={selectedBranchFilter.length}
-          />
-        )}
+      {isAdminUser && branches.length > 0 && (
+        <BranchFilterWrapper
+          branches={branches}
+          onFilterChange={setSelectedBranchFilter}
+          selectedCount={selectedBranchFilter.length}
+        />
+      )}
 
       {/*  KPI Cards  */}
       {!loading && (

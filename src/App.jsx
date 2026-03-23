@@ -5,6 +5,7 @@ import { createContext, useEffect, useState, useRef } from "react";
 import { NotificationProvider } from "./ModelAssets/NotificationContext";
 import { SnackbarProvider } from "./ModelAssets/SnackbarContext";
 import { generateClient } from "aws-amplify/api";
+import resilientClient from "./resilientClient";
 import AppRoutes from "./Routes";
 import LoadingScreen from "./Resources/LoadingScreen";
 import ErrorLoadingWorkspace from "./Resources/ErrorLoadingWorkspace";
@@ -35,12 +36,11 @@ function App({ signOut, user }) {
 
   const fetchMessages = async (userId) => {
     try {
-      const client = generateClient();
       // Fetch messages where user is sender
       console.log("API Call: LIST_NOTIFICATIONS_QUERY sent messages", {
         senderUserId: userId,
       });
-      const sentResponse = await client.graphql({
+      const sentResponse = await resilientClient.graphql({
         query: LIST_NOTIFICATIONS_QUERY,
         variables: {
           filter: { senderUserId: { eq: userId } },
@@ -52,7 +52,7 @@ function App({ signOut, user }) {
       console.log("API Call: LIST_NOTIFICATIONS_QUERY received messages", {
         recipientUserId: userId,
       });
-      const receivedResponse = await client.graphql({
+      const receivedResponse = await resilientClient.graphql({
         query: LIST_NOTIFICATIONS_QUERY,
         variables: {
           filter: { recipientUserId: { eq: userId } },
@@ -97,13 +97,10 @@ function App({ signOut, user }) {
     if (checkedUserIds.current.has(user.userId)) return;
 
     const checkUser = async () => {
-      let retries = 3;
-      while (retries > 0) {
-        try {
-          const client = generateClient();
-          console.log("API Call: GetUser", { id: user.userId });
-          const res = await client.graphql({
-            query: `query GetUser($id: ID!) { 
+      try {
+        console.log("API Call: GetUser", { id: user.userId });
+        const res = await resilientClient.graphql({
+          query: `query GetUser($id: ID!) { 
               getUser(id: $id) { 
                 id
                 firstName
@@ -162,26 +159,20 @@ function App({ signOut, user }) {
                 }
               } 
             }`,
-            variables: { id: user.userId },
-          });
-          console.log("GetUser response:", res);
-          const userData = res.data.getUser;
-          setUserDetails(userData || null);
-          setError(false);
-          setUserExists(!!userData?.id);
-          setChecking(false);
-          checkedUserIds.current.add(user.userId);
-          return; // Success - exit the retry loop
-        } catch (err) {
-          console.log("Error fetching user:", err);
-          retries--;
-          if (retries === 0) {
-            setError(true);
-            setChecking(false);
-            setUserExists(false); // Make sure to set userExists to false on error
-          }
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-        }
+          variables: { id: user.userId },
+        });
+        console.log("GetUser response:", res);
+        const userData = res.data.getUser;
+        setUserDetails(userData || null);
+        setError(false);
+        setUserExists(!!userData?.id);
+        setChecking(false);
+        checkedUserIds.current.add(user.userId);
+      } catch (err) {
+        console.log("Error fetching user:", err);
+        setError(true);
+        setChecking(false);
+        setUserExists(false);
       }
     };
     checkUser();

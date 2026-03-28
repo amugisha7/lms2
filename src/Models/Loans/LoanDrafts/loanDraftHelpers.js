@@ -1163,8 +1163,6 @@ export const updateLoanDraft = async ({
   const input = {
     id,
     loanComputationRecord: safeJsonStringify(updatedComputationRecord),
-    lastEditedByEmployeeID: actorEmployeeId,
-    assignedToEmployeeID: loanOfficerEmployeeId,
   };
 
   // Update core loan fields if draft record changed
@@ -1366,7 +1364,6 @@ export const convertDraftToLoan = async ({ loanDraft, userDetails }) => {
     id: loanDraft.id,
     status: "Current",
     loanComputationRecord: safeJsonStringify(computationRecord),
-    lastEditedByEmployeeID: actorEmployeeId,
   };
 
   const updateResult = await client.graphql({

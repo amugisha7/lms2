@@ -1,6 +1,5 @@
 - Create loans form. Also create from loan product.
   - Resume:
-    - employee assignment and save changes in the loan details view should exit editing mode.
     - Revise loan details headig to have breadcrumbs.
     - employee loan allocation etc.
     - employee relationship for allocation of loans

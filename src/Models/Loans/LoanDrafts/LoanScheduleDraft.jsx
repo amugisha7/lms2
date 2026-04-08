@@ -15,11 +15,10 @@ import { useTheme } from "@mui/material/styles";
 import WorkingOverlay from "../../../ModelAssets/WorkingOverlay";
 import DraftHeader from "../../../Resources/DraftHeader";
 import { generateSchedulePreviewFromDraftValues } from "../loanComputations";
-import { jsPDF } from "jspdf";
-import html2canvas from "html2canvas";
 import { formatMoneyParts } from "../../../Resources/formatting";
 import { getUrl } from "aws-amplify/storage";
 import { BranchLinkedAccountSelection } from "../SelectAccounts/SelectAccounts";
+import { exportLoanDraftScheduleA4 } from "./loanDraftExportHelpers";
 
 const fmtDate = (d) => {
   if (!d) return "";
@@ -97,7 +96,6 @@ export default function LoanScheduleDraft({
     return type?.toLowerCase() === "admin" || type === "branchManager";
   }, [userDetails]);
 
-  const printAreaRef = React.useRef(null);
   const [exportingPdf, setExportingPdf] = React.useState(false);
   const [showLoanFees, setShowLoanFees] = React.useState(true);
   const [showInterestRate, setShowInterestRate] = React.useState(true);
@@ -120,8 +118,6 @@ export default function LoanScheduleDraft({
   });
 
   const [showAccountSelection, setShowAccountSelection] = React.useState(false);
-
-  const hasLoanFees = totalLoanFee > 0;
 
   const currencyCode = userDetails?.institution?.currencyCode;
 
@@ -312,91 +308,32 @@ export default function LoanScheduleDraft({
 
   const handleExportPdf = async () => {
     if (exportingPdf) return;
-    if (!printAreaRef.current) return;
-
-    const container = printAreaRef.current;
 
     setExportingPdf(true);
     try {
-      // Allow React to paint the overlay and stabilize DOM before snapshotting.
-      await new Promise((resolve) => requestAnimationFrame(resolve));
-      await new Promise((resolve) => requestAnimationFrame(resolve));
-
-      const getPageElements = () =>
-        Array.from(container.querySelectorAll(".page") || []);
-
-      const pageElements = getPageElements();
-      if (!pageElements.length) return;
-
-      // A4 portrait in mm
-      const pdf = new jsPDF({
-        orientation: "portrait",
-        unit: "mm",
-        format: "a4",
+      await exportLoanDraftScheduleA4({
+        loanDraft,
+        installments,
+        totals,
+        draftRecord,
+        borrowerLabel,
+        institutionName,
+        branchName,
+        currency,
+        currencyCode,
+        headerImageSrc: headerImageSignedUrl,
+        showCustomHeader,
+        showCustomHeaderFirstPageOnly,
+        showInstitutionName,
+        showBranchName,
+        showLoanFees,
+        showInterestRate,
+        showInterestMethod,
+        showTotals,
+        loanFeeSummary,
+        totalLoanFee,
+        visibleColumns,
       });
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-
-      // Process each page sequentially using html2canvas
-      for (let i = 0; i < pageElements.length; i++) {
-        const freshPages = getPageElements();
-        const pageElement = freshPages[i];
-        if (!pageElement) continue;
-
-        // Ensure images within the page are loaded before snapshotting.
-        const imgs = Array.from(pageElement.querySelectorAll("img") || []);
-        if (imgs.length) {
-          await Promise.all(
-            imgs.map((img) => {
-              if (img.complete && img.naturalWidth > 0)
-                return Promise.resolve();
-              return new Promise((resolve) => {
-                const done = () => resolve();
-                img.addEventListener("load", done, { once: true });
-                img.addEventListener("error", done, { once: true });
-              });
-            }),
-          );
-        }
-
-        // Capture the page as a canvas image
-        const canvas = await html2canvas(pageElement, {
-          scale: 1.5, // Reduced scale to optimize file size
-          useCORS: true,
-          imageTimeout: 15000,
-          logging: false,
-          backgroundColor: "#ffffff",
-          onclone: (clonedDoc) => {
-            // Ensure backdrops/overlays don't get captured in the snapshot.
-            const backdrops = clonedDoc.querySelectorAll(".MuiBackdrop-root");
-            backdrops.forEach((node) => node.remove());
-          },
-        });
-
-        // Use JPEG with compression to reduce file size
-        const imgData = canvas.toDataURL("image/jpeg", 0.75);
-
-        // Calculate dimensions to fit A4 while maintaining aspect ratio
-        const imgWidth = pageWidth;
-        const imgHeight = (canvas.height * pageWidth) / canvas.width;
-
-        // Add new page only after the first one
-        if (i > 0) {
-          pdf.addPage();
-        }
-
-        pdf.addImage(
-          imgData,
-          "JPEG",
-          0,
-          0,
-          imgWidth,
-          Math.min(imgHeight, pageHeight),
-        );
-      }
-
-      const filename = `LoanSchedule_${borrowerLabel || "Draft"}.pdf`;
-      pdf.save(filename);
     } catch (e) {
       console.error("Failed to export PDF:", e);
     } finally {
@@ -952,7 +889,6 @@ export default function LoanScheduleDraft({
       <WorkingOverlay open={exportingPdf} message="Exporting PDF..." />
 
       <Box
-        ref={printAreaRef}
         sx={{
           display: "flex",
           flexDirection: "column",

@@ -1002,7 +1002,6 @@ export const createLoanDraft = async ({
   source = "BLANK",
   status = "DRAFT",
   termsSnapshot,
-  assignedToEmployeeID,
   borrower,
 }) => {
   const client = generateClient();
@@ -1048,9 +1047,7 @@ export const createLoanDraft = async ({
     borrowerID: persistedDraftRecord?.borrower || null,
     branchID: branchId,
     loanProductID: persistedDraftRecord?.loanProduct || null,
-    createdByEmployeeID: actorEmployeeId,
-    assignedToEmployeeID: loanOfficerEmployeeId,
-    lastEditedByEmployeeID: actorEmployeeId,
+    createdByEmployeeID: loanOfficerEmployeeId || actorEmployeeId,
     
     // Core loan fields from draft
     principal: Number(persistedDraftRecord?.principalAmount) || null,

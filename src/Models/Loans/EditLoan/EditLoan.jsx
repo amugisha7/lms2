@@ -453,6 +453,8 @@ const EditLoan = forwardRef(
         if (!localDraft?.id) throw new Error("Missing draft context");
 
         const { borrowerName, loanProductName, ...draftRecord } = values;
+        // Remove any stale maturityDate so it is always recomputed from startDate + duration
+        delete draftRecord.maturityDate;
         draftRecord.borrowerBranchID =
           draftRecord.borrowerBranchID ||
           localDraft?.borrower?.branchBorrowersId ||

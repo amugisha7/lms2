@@ -455,9 +455,7 @@ export const createLoanWithSchedule = async (values, userDetails) => {
     maturityDate,
     paymentFrequency: repaymentFrequency,
     status: "DRAFT",
-    createdByEmployeeID: actorEmployeeId,
-    assignedToEmployeeID: loanOfficerEmployeeId,
-    lastEditedByEmployeeID: actorEmployeeId,
+    createdByEmployeeID: loanOfficerEmployeeId || actorEmployeeId,
   };
 
   // 2. Calculate Schedule

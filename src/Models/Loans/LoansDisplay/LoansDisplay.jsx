@@ -237,6 +237,22 @@ const daysUntil = (dateStr) => {
   return Math.round((target - now) / 86400000);
 };
 
+//  Compute maturity date from startDate + duration when stored value is absent
+const computeMaturityDate = (loan) => {
+  if (loan.maturityDate) return loan.maturityDate;
+  const { startDate, duration, durationInterval } = loan;
+  if (!startDate || !duration || !durationInterval) return null;
+  const d = new Date(startDate);
+  const n = Number(duration);
+  const interval = String(durationInterval).toLowerCase();
+  if (interval.includes("day")) d.setDate(d.getDate() + n);
+  else if (interval.includes("week")) d.setDate(d.getDate() + n * 7);
+  else if (interval.includes("month")) d.setMonth(d.getMonth() + n);
+  else if (interval.includes("year")) d.setFullYear(d.getFullYear() + n);
+  else return null;
+  return d.toISOString().slice(0, 10);
+};
+
 //  Status filter tabs config
 const STATUS_TABS = [
   { key: "all", label: "All" },
@@ -820,11 +836,14 @@ export default function LoansDisplay() {
         renderHeader: renderTwoLineHeader("Maturity", "Date"),
         flex: 0.75,
         minWidth: 110,
-        valueGetter: (value, row) =>
-          row.maturityDate ? new Date(row.maturityDate).getTime() : 0,
+        valueGetter: (value, row) => {
+          const md = computeMaturityDate(row);
+          return md ? new Date(md).getTime() : 0;
+        },
         renderCell: (params) => {
           const loan = params.row;
-          const daysLeft = daysUntil(loan.maturityDate);
+          const maturityDate = computeMaturityDate(loan);
+          const daysLeft = daysUntil(maturityDate);
           return (
             <Box sx={STACKED_CELL_SX}>
               <Typography
@@ -835,7 +854,7 @@ export default function LoansDisplay() {
                   lineHeight: 1.2,
                 }}
               >
-                {fmtDate(loan.maturityDate)}
+                {fmtDate(maturityDate)}
               </Typography>
               <Box sx={INLINE_META_ROW_SX}>
                 <Typography

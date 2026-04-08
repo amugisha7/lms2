@@ -794,11 +794,41 @@ export default function LoanStatementScreen({
   // PDF export
   // -------------------------------------------------------------------------
   const handleExportPdf = async () => {
-    if (exportingPdf || !printAreaRef.current) return;
+    if (exportingPdf || !loan || rows.length === 0) return;
     setExportingPdf(true);
     try {
+      const interestRateLabel =
+        loan?.interestRate != null
+          ? `${loan.interestRate}%${
+              compRec?.interestPeriod
+                ? ` / ${compRec.interestPeriod.replace("per_", "")}`
+                : ""
+            }`
+          : "N/A";
+
       await exportStatementPdf({
-        printAreaRef: printAreaRef.current,
+        loan,
+        rows,
+        visibleColumns,
+        currency,
+        currencyCode,
+        institutionName,
+        branchName,
+        headerImageSrc: headerImageSignedUrl,
+        showCustomHeader,
+        showCustomHeaderFirstPageOnly,
+        showInstitutionName,
+        showBranchName,
+        borrowerLabel,
+        officerLabel,
+        interestRateLabel,
+        interestMethodLabel: interestMethodLabel(interestMethod),
+        showLoanOfficer,
+        showLoanProduct,
+        showInterestRate,
+        showInterestMethod,
+        showReconciliation,
+        reconciliation,
         filename: `LoanStatement_${loan?.loanNumber || loan?.id || "export"}.pdf`,
       });
     } catch (err) {

@@ -161,7 +161,7 @@ const useBranchLinkedAccounts = (branchId) => {
   return { accounts, accountsLoading };
 };
 
-const useBranchEmployees = (branchId, userDetails) => {
+const useBranchEmployees = (branchId, userDetails, assignedEmployeeId) => {
   const [employees, setEmployees] = useState([]);
   const [employeesLoading, setEmployeesLoading] = useState(true);
   const [defaultEmployeeId, setDefaultEmployeeId] = useState("");
@@ -189,7 +189,13 @@ const useBranchEmployees = (branchId, userDetails) => {
         if (cancelled) return;
 
         setEmployees(items);
-        setDefaultEmployeeId(defaultEmployee?.id || items[0]?.id || "");
+        const assignedIsInBranch =
+          assignedEmployeeId && items.some((e) => e.id === assignedEmployeeId);
+        setDefaultEmployeeId(
+          assignedIsInBranch
+            ? assignedEmployeeId
+            : defaultEmployee?.id || items[0]?.id || "",
+        );
       } catch (error) {
         console.error("Error fetching employees for payment popup:", error);
         if (!cancelled) {
@@ -205,7 +211,7 @@ const useBranchEmployees = (branchId, userDetails) => {
     return () => {
       cancelled = true;
     };
-  }, [branchId, userDetails]);
+  }, [branchId, userDetails, assignedEmployeeId]);
 
   return { employees, employeesLoading, defaultEmployeeId };
 };
@@ -225,9 +231,11 @@ function AddPaymentForm({
     loan?.borrower?.branch?.id ||
     null;
   const { accounts, accountsLoading } = useBranchLinkedAccounts(branchId);
+  const assignedEmployeeId = loan?.createdByEmployeeID || null;
   const { employees, employeesLoading, defaultEmployeeId } = useBranchEmployees(
     branchId,
     userDetails,
+    assignedEmployeeId,
   );
 
   const activeAccounts = useMemo(
@@ -276,7 +284,6 @@ function AddPaymentForm({
         receivingEmployeeID: defaultEmployeeId,
         amount: "",
         paymentDate: new Date().toISOString().split("T")[0],
-        collectedBy: "",
         description: "",
       }}
       validationSchema={paymentValidationSchema}
@@ -296,9 +303,6 @@ function AddPaymentForm({
                 amount: numericAmount,
                 accountID: values.accountID,
                 description: values.description || null,
-                notes: values.collectedBy
-                  ? `Collected by: ${values.collectedBy}`
-                  : null,
                 status: "COMPLETED",
                 paymentStatusEnum: "COMPLETED",
                 receivingEmployeeID:
@@ -335,7 +339,6 @@ function AddPaymentForm({
               receivingEmployeeID: defaultEmployeeId,
               amount: "",
               paymentDate: new Date().toISOString().split("T")[0],
-              collectedBy: "",
               description: "",
             },
           });
@@ -392,7 +395,7 @@ function AddPaymentForm({
               onChange={(e) =>
                 formik.setFieldValue("receivingEmployeeID", e.target.value)
               }
-              helperText="Employee receiving this payment. Defaults to the branch's default employee."
+              helperText="Employee receiving this payment. Defaults to the loan's assigned employee."
               placeholder={
                 employeesLoading
                   ? "Loading employees..."
@@ -414,13 +417,6 @@ function AddPaymentForm({
               name="paymentDate"
               required={true}
               editing={true}
-            />
-
-            <TextInput
-              label="Collected By"
-              name="collectedBy"
-              editing={true}
-              helperText="Optional"
             />
 
             <TextArea

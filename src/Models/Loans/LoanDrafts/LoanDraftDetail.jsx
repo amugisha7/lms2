@@ -2,7 +2,8 @@ import React from "react";
 import { Box, CircularProgress, Typography, Button } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
 import { UserContext } from "../../../App";
-import EditLoan from "../EditLoan/EditLoan";
+import EditLoanDraft from "./EditLoanDraft";
+import CustomSlider from "../../../ModelAssets/CustomSlider";
 import { fetchBorrowers } from "../CreateLoan/createLoanHelpers";
 import { getLoanDraftById } from "./loanDraftHelpers";
 import NotificationBar from "../../../ModelAssets/NotificationBar";
@@ -62,6 +63,34 @@ export default function LoanDraftDetail() {
   const [borrower, setBorrower] = React.useState(null);
   const [initialValues, setInitialValues] = React.useState(null);
   const [notification, setNotification] = React.useState(null);
+  const [editSliderOpen, setEditSliderOpen] = React.useState(false);
+
+  const applyDraftState = React.useCallback(
+    (draft) => {
+      if (!draft) return;
+
+      const attachedBorrower =
+        borrower || loanDraft?.borrower || draft?.borrower || null;
+      const draftRecord = parseDraftRecord(draft);
+      const loanProductName =
+        draft?.loanProduct?.name ||
+        loanDraft?.loanProduct?.name ||
+        (draft?.loanProductID ? "Unknown" : "N/A");
+
+      setLoanDraft({
+        ...draft,
+        borrower: attachedBorrower,
+        loanProduct: draft?.loanProduct || loanDraft?.loanProduct || null,
+      });
+      setInitialValues({
+        ...draftRecord,
+        borrowerName: formatBorrowerName(attachedBorrower),
+        loanProductName,
+        loanProduct: draft?.loanProductID || draftRecord?.loanProduct || "N/A",
+      });
+    },
+    [borrower, loanDraft],
+  );
 
   const load = React.useCallback(async () => {
     if (!draftId) return;
@@ -146,6 +175,34 @@ export default function LoanDraftDetail() {
         />
       )}
 
+      <CustomSlider
+        open={editSliderOpen}
+        onClose={() => setEditSliderOpen(false)}
+        title={`Edit Loan Draft${loanDraft?.draftNumber ? ` (${loanDraft.draftNumber})` : ""}`}
+        showEdit={false}
+        showDelete={false}
+        showPdf={false}
+      >
+        {initialValues && loanDraft ? (
+          <EditLoanDraft
+            mode="edit"
+            embedded
+            loanDraft={loanDraft}
+            initialValues={initialValues}
+            borrower={borrower}
+            onBack={() => setEditSliderOpen(false)}
+            onDraftUpdated={(updatedDraft) => {
+              applyDraftState(updatedDraft);
+              setEditSliderOpen(false);
+              setNotification({
+                type: "success",
+                message: "Draft updated successfully",
+              });
+            }}
+          />
+        ) : null}
+      </CustomSlider>
+
       <Box
         sx={{
           display: "flex",
@@ -176,19 +233,16 @@ export default function LoanDraftDetail() {
 
       {initialValues && (
         <Box sx={{ mt: 2 }}>
-          <EditLoan
+          <EditLoanDraft
+            mode="view"
             loanDraft={loanDraft}
             initialValues={initialValues}
-            onEditSuccess={() => {
-              setNotification({
-                type: "success",
-                message: "Draft updated successfully",
-              });
-              load();
+            borrower={borrower}
+            onBack={() => navigate("/loan-drafts")}
+            onRequestEdit={() => setEditSliderOpen(true)}
+            onDraftUpdated={(updatedDraft) => {
+              applyDraftState(updatedDraft);
             }}
-            isEditMode={false}
-            onCancel={() => navigate("/loan-drafts")}
-            readOnlyFields={["loanProduct", "borrower"]}
           />
         </Box>
       )}

@@ -18,6 +18,7 @@ import Dropdown from "../../../Resources/FormComponents/Dropdown";
 import DropDownSearchable from "../../../Resources/FormComponents/DropDownSearchable";
 import OrderedList from "../../../Resources/FormComponents/OrderedList";
 import CreateFormButtons from "../../../ModelAssets/CreateFormButtons";
+import CustomEditFormButtons from "../../../ModelAssets/CustomEditFormButtons";
 import PlusButtonMain from "../../../ModelAssets/PlusButtonMain";
 import { UserContext } from "../../../App";
 import {
@@ -537,6 +538,9 @@ const UseLoanProduct = forwardRef(
       readOnly = false,
       draftId,
       onDraftUpdated,
+      useEditingButtons = false,
+      hideScheduleAction = false,
+      topContent = null,
     },
     ref,
   ) => {
@@ -1185,6 +1189,25 @@ const UseLoanProduct = forwardRef(
                       }
                     />
 
+                    {!readOnly &&
+                      formik.values.loanProduct &&
+                      useEditingButtons && (
+                        <>
+                          <Box sx={{ width: "100%", mt: 2 }}>
+                            <CustomEditFormButtons
+                              formik={formik}
+                              setEditMode={() => {}}
+                              setSubmitError={setSubmitError}
+                              setSubmitSuccess={setSubmitSuccess}
+                              onCancel={onCancel}
+                            />
+                          </Box>
+                          {topContent ? (
+                            <Box sx={{ mb: 2 }}>{topContent}</Box>
+                          ) : null}
+                        </>
+                      )}
+
                     <CustomPopUp
                       open={scheduleOpen}
                       onClose={() => setScheduleOpen(false)}
@@ -1272,44 +1295,66 @@ const UseLoanProduct = forwardRef(
                         })}
                         {!readOnly && formik.values.loanProduct && (
                           <>
-                            <Box
-                              sx={{
-                                display: "flex",
-                                pr: 2,
-                                justifyContent: {
-                                  xs: "center",
-                                  md: "flex-end",
-                                },
-                                width: "100%",
-                                gap: 1,
-                                flexWrap: "wrap",
-                                mb: 8,
-                                mt: 2,
-                              }}
-                            >
-                              {!hideCancel && (
+                            {!useEditingButtons ? (
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  pr: 2,
+                                  justifyContent: {
+                                    xs: "center",
+                                    md: "flex-end",
+                                  },
+                                  width: "100%",
+                                  gap: 1,
+                                  flexWrap: "wrap",
+                                  mb: 2,
+                                  mt: 2,
+                                }}
+                              >
+                                {!hideCancel && (
+                                  <PlusButtonMain
+                                    buttonText="CANCEL"
+                                    variant="outlined"
+                                    startIcon={null}
+                                    color={theme.palette.error.main}
+                                    onClick={() => {
+                                      formik.resetForm();
+                                      setSubmitError("");
+                                      setSubmitSuccess("");
+                                      if (onClose) onClose();
+                                      if (onCancel) onCancel();
+                                    }}
+                                    disabled={formik.isSubmitting}
+                                  />
+                                )}
+                              </Box>
+                            ) : null}
+
+                            {!hideScheduleAction ? (
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  pr: 2,
+                                  justifyContent: {
+                                    xs: "center",
+                                    md: "flex-end",
+                                  },
+                                  width: "100%",
+                                  gap: 1,
+                                  flexWrap: "wrap",
+                                  mb: 8,
+                                  mt: useEditingButtons ? 0 : 1,
+                                }}
+                              >
                                 <PlusButtonMain
-                                  buttonText="CANCEL"
+                                  buttonText="VIEW LOAN SCHEDULE"
                                   variant="outlined"
                                   startIcon={null}
-                                  color={theme.palette.error.main}
-                                  onClick={() => {
-                                    formik.resetForm();
-                                    setSubmitError("");
-                                    setSubmitSuccess("");
-                                    if (onClose) onClose();
-                                  }}
+                                  onClick={handleExportSchedule}
                                   disabled={formik.isSubmitting}
                                 />
-                              )}
-                              <PlusButtonMain
-                                buttonText="VIEW LOAN SCHEDULE"
-                                variant="outlined"
-                                startIcon={null}
-                                onClick={handleExportSchedule}
-                                disabled={formik.isSubmitting}
-                              />
-                            </Box>
+                              </Box>
+                            ) : null}
                           </>
                         )}
                         {formik.values.loanProduct && submitError && (

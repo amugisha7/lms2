@@ -1,86 +1,354 @@
-/**
- * Export helpers for Loan Statements.
- *
- * Models the A4 html2canvas → jsPDF pipeline from
- * src/Models/Loans/LoanDrafts/LoanScheduleDraft.jsx.
- *
- * No React imports – called imperatively from the statement screen.
- */
 import { jsPDF } from "jspdf";
-import html2canvas from "html2canvas";
+import autoTable from "jspdf-autotable";
+import {
+  PDF_LAYOUT,
+  drawInfoColumns,
+  drawPdfFooter,
+  drawPdfHeader,
+  drawTitleBlock,
+  estimateHeaderHeight,
+  formatCurrencyText,
+  formatPdfDate,
+  loadImageDataUrl,
+} from "../pdfExportUtils";
 
-/**
- * Export the contents of a DOM node to an A4 PDF.
- *
- * @param {object} opts
- * @param {HTMLElement} opts.printAreaRef - The DOM node containing .page divs
- * @param {string}      opts.filename     - Desired PDF file name
- */
-export async function exportStatementPdf({ printAreaRef, filename = "LoanStatement.pdf" }) {
-  if (!printAreaRef) throw new Error("printAreaRef is required");
-
-  const container = printAreaRef;
-
-  // Wait for the DOM to stabilize (images, etc.)
-  await new Promise((r) => requestAnimationFrame(r));
-  await new Promise((r) => requestAnimationFrame(r));
-
-  const getPageElements = () =>
-    Array.from(container.querySelectorAll(".page") || []);
-
-  const pageElements = getPageElements();
-  if (!pageElements.length) throw new Error("No .page elements found in printAreaRef");
-
-  const pdf = new jsPDF({
-    orientation: "portrait",
-    unit: "mm",
-    format: "a4",
-  });
-
-  const pageWidth = pdf.internal.pageSize.getWidth();
-  const pageHeight = pdf.internal.pageSize.getHeight();
-
-  for (let i = 0; i < pageElements.length; i++) {
-    const freshPages = getPageElements();
-    const pageEl = freshPages[i];
-    if (!pageEl) continue;
-
-    // Wait for any images inside the page
-    const imgs = Array.from(pageEl.querySelectorAll("img") || []);
-    if (imgs.length) {
-      await Promise.all(
-        imgs.map((img) => {
-          if (img.complete && img.naturalWidth > 0) return Promise.resolve();
-          return new Promise((resolve) => {
-            img.addEventListener("load", resolve, { once: true });
-            img.addEventListener("error", resolve, { once: true });
-          });
-        })
-      );
-    }
-
-    const canvas = await html2canvas(pageEl, {
-      scale: 1.5,
-      useCORS: true,
-      imageTimeout: 15000,
-      logging: false,
-      backgroundColor: "#ffffff",
-      onclone: (clonedDoc) => {
-        // Remove overlay backdrops so they don't appear in the PDF
-        clonedDoc
-          .querySelectorAll(".MuiBackdrop-root, .no-print")
-          .forEach((node) => node.remove());
-      },
-    });
-
-    const imgData = canvas.toDataURL("image/jpeg", 0.78);
-    const imgWidth = pageWidth;
-    const imgHeight = (canvas.height * pageWidth) / canvas.width;
-
-    if (i > 0) pdf.addPage();
-
-    pdf.addImage(imgData, "JPEG", 0, 0, imgWidth, Math.min(imgHeight, pageHeight));
+const buildDescription = (row) => {
+  if (row.rowType === "disbursement") {
+    return row.description || "Disbursement";
   }
 
-  pdf.save(filename);
+  if (row.rowType === "installment") {
+    return `Installment ${row.installmentNumber}${
+      row.status && row.status !== "DUE" ? ` (${row.status})` : ""
+    }`;
+  }
+
+  return `Payment${row.paymentMethod ? ` (${row.paymentMethod})` : ""}${
+    row.referenceNumber ? ` Ref: ${row.referenceNumber}` : ""
+  }${row.allocDerived ? " *" : ""}`;
+};
+
+const getStatementColumns = (visibleColumns) => {
+  const defs = [
+    { key: "date", label: "Date", isMoney: false },
+    { key: "description", label: "Description", isMoney: false },
+    { key: "scheduledPrincipal", label: "Sched. Principal", isMoney: true },
+    { key: "scheduledInterest", label: "Sched. Interest", isMoney: true },
+    { key: "scheduledFees", label: "Sched. Fees", isMoney: true },
+    { key: "scheduledPenalty", label: "Sched. Penalty", isMoney: true },
+    { key: "scheduledTotal", label: "Total Due", isMoney: true },
+    { key: "paymentAmount", label: "Payment", isMoney: true },
+    { key: "allocPrincipal", label: "Paid Principal", isMoney: true },
+    { key: "allocInterest", label: "Paid Interest", isMoney: true },
+    { key: "allocFees", label: "Paid Fees", isMoney: true },
+    { key: "allocPenalty", label: "Paid Penalty", isMoney: true },
+    { key: "runningBalance", label: "Balance", isMoney: true },
+  ];
+
+  return defs.filter((def) => visibleColumns?.[def.key]);
+};
+
+const buildStatementBody = (rows, columns, currency, currencyCode) =>
+  rows.map((row) => {
+    const record = { _rowType: row.rowType };
+
+    for (const column of columns) {
+      switch (column.key) {
+        case "date":
+          record.date = formatPdfDate(row.date);
+          break;
+        case "description":
+          record.description = buildDescription(row);
+          break;
+        case "scheduledPrincipal":
+          record.scheduledPrincipal =
+            row.rowType === "installment"
+              ? formatCurrencyText(row.principalDue, currency, currencyCode)
+              : "";
+          break;
+        case "scheduledInterest":
+          record.scheduledInterest =
+            row.rowType === "installment"
+              ? formatCurrencyText(row.interestDue, currency, currencyCode)
+              : "";
+          break;
+        case "scheduledFees":
+          record.scheduledFees =
+            row.rowType === "installment"
+              ? formatCurrencyText(row.feesDue, currency, currencyCode)
+              : "";
+          break;
+        case "scheduledPenalty":
+          record.scheduledPenalty =
+            row.rowType === "installment"
+              ? formatCurrencyText(row.penaltyDue, currency, currencyCode)
+              : "";
+          break;
+        case "scheduledTotal":
+          record.scheduledTotal =
+            row.rowType === "installment"
+              ? formatCurrencyText(row.totalDue, currency, currencyCode)
+              : "";
+          break;
+        case "paymentAmount":
+          record.paymentAmount =
+            row.rowType === "payment" || row.rowType === "disbursement"
+              ? formatCurrencyText(
+                  row.amount,
+                  currency,
+                  currencyCode,
+                )
+              : "";
+          break;
+        case "allocPrincipal":
+          record.allocPrincipal =
+            row.rowType === "payment"
+              ? formatCurrencyText(
+                  row.allocPrincipal,
+                  currency,
+                  currencyCode,
+                )
+              : "";
+          break;
+        case "allocInterest":
+          record.allocInterest =
+            row.rowType === "payment"
+              ? formatCurrencyText(row.allocInterest, currency, currencyCode)
+              : "";
+          break;
+        case "allocFees":
+          record.allocFees =
+            row.rowType === "payment"
+              ? formatCurrencyText(row.allocFees, currency, currencyCode)
+              : "";
+          break;
+        case "allocPenalty":
+          record.allocPenalty =
+            row.rowType === "payment"
+              ? formatCurrencyText(row.allocPenalty, currency, currencyCode)
+              : "";
+          break;
+        case "runningBalance":
+          record.runningBalance = formatCurrencyText(
+            row.runningBalance,
+            currency,
+            currencyCode,
+          );
+          break;
+        default:
+          break;
+      }
+    }
+
+    return record;
+  });
+
+export async function exportStatementPdf({
+  loan,
+  rows,
+  visibleColumns,
+  currency = "$",
+  currencyCode,
+  institutionName = "",
+  branchName = "",
+  headerImageSrc,
+  showCustomHeader = false,
+  showCustomHeaderFirstPageOnly = true,
+  showInstitutionName = true,
+  showBranchName = true,
+  borrowerLabel = "",
+  officerLabel = "",
+  interestRateLabel = "",
+  interestMethodLabel = "",
+  showLoanOfficer = false,
+  showLoanProduct = false,
+  showInterestRate = false,
+  showInterestMethod = false,
+  showReconciliation = false,
+  reconciliation = null,
+  filename = "LoanStatement.pdf",
+}) {
+  if (!loan) throw new Error("loan is required");
+  if (!Array.isArray(rows) || rows.length === 0) {
+    throw new Error("Statement rows are required");
+  }
+
+  const doc = new jsPDF({ format: "a4", unit: "pt" });
+  const headerImageDataUrl = await loadImageDataUrl(headerImageSrc);
+  const headerOptions = {
+    showCustomHeader,
+    showCustomHeaderFirstPageOnly,
+    headerImageDataUrl,
+    showInstitutionName,
+    institutionName,
+    showBranchName,
+    branchName,
+  };
+
+  const repeatedTopMargin =
+    Math.max(
+      estimateHeaderHeight(headerOptions, 1),
+      estimateHeaderHeight(headerOptions, 2),
+    ) + 6;
+
+  let y = drawPdfHeader(doc, headerOptions, 1);
+  y = drawTitleBlock(doc, "LOAN STATEMENT", y);
+
+  const leftItems = [
+    { label: "Loan #", value: loan?.loanNumber || loan?.id || "N/A" },
+    { label: "Borrower", value: borrowerLabel || "N/A" },
+    showLoanOfficer ? { label: "Loan Officer", value: officerLabel } : null,
+    { label: "Status", value: loan?.status || "N/A" },
+    showLoanProduct
+      ? { label: "Loan Product", value: loan?.loanProduct?.name || "N/A" }
+      : null,
+  ];
+
+  const rightItems = [
+    {
+      label: "Principal",
+      value: formatCurrencyText(loan?.principal, currency, currencyCode),
+    },
+    showInterestRate
+      ? { label: "Interest Rate", value: interestRateLabel || "N/A" }
+      : null,
+    showInterestMethod
+      ? { label: "Interest Method", value: interestMethodLabel || "N/A" }
+      : null,
+    {
+      label: "Term",
+      value: loan?.duration
+        ? `${loan.duration} ${loan.durationInterval || ""}`.trim()
+        : "N/A",
+    },
+    { label: "Start Date", value: formatPdfDate(loan?.startDate) },
+    { label: "Maturity Date", value: formatPdfDate(loan?.maturityDate) },
+  ];
+
+  y = drawInfoColumns(doc, { leftItems, rightItems, startY: y }) + 4;
+
+  if (showReconciliation && reconciliation?.hasWarning) {
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8.5);
+    doc.setTextColor(230, 81, 0);
+    const lines = doc.splitTextToSize(
+      `Reconciliation: Derived balance ${formatCurrencyText(
+        reconciliation.derivedBalance,
+        currency,
+        currencyCode,
+      )} differs from snapshot ${formatCurrencyText(
+        reconciliation.snapshotBalance,
+        currency,
+        currencyCode,
+      )} by ${formatCurrencyText(reconciliation.diff, currency, currencyCode)}. Historical data may be incomplete.`,
+      doc.internal.pageSize.getWidth() - PDF_LAYOUT.marginX * 2,
+    );
+    doc.text(lines, PDF_LAYOUT.marginX, y);
+    doc.setTextColor(0, 0, 0);
+    y += lines.length * 11 + 4;
+  }
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  doc.text("Statement:", PDF_LAYOUT.marginX, y);
+  y += 10;
+
+  const columns = getStatementColumns(visibleColumns);
+  const body = buildStatementBody(rows, columns, currency, currencyCode);
+  const moneyColumnStyles = columns.reduce((acc, column) => {
+    if (column.isMoney) {
+      acc[column.key] = { halign: "right" };
+    }
+    return acc;
+  }, {});
+
+  autoTable(doc, {
+    startY: y,
+    margin: {
+      left: PDF_LAYOUT.marginX,
+      right: PDF_LAYOUT.marginX,
+      top: repeatedTopMargin,
+      bottom: PDF_LAYOUT.marginBottom + PDF_LAYOUT.footerGap,
+    },
+    columns: columns.map((column) => ({
+      header: column.label,
+      dataKey: column.key,
+    })),
+    body,
+    theme: "grid",
+    styles: {
+      font: "helvetica",
+      fontSize: 8.5,
+      textColor: [0, 0, 0],
+      lineColor: [190, 190, 190],
+      lineWidth: 0.35,
+      cellPadding: { top: 3, right: 4, bottom: 3, left: 4 },
+      overflow: "linebreak",
+      valign: "middle",
+    },
+    headStyles: {
+      fillColor: [238, 238, 238],
+      textColor: [0, 0, 0],
+      fontStyle: "bold",
+      lineColor: [0, 0, 0],
+      lineWidth: 0.75,
+    },
+    alternateRowStyles: {
+      fillColor: [250, 250, 250],
+    },
+    columnStyles: {
+      date: { cellWidth: 58 },
+      description: { cellWidth: 128 },
+      ...moneyColumnStyles,
+    },
+    didDrawPage: (data) => {
+      if (data.pageNumber > 1) {
+        drawPdfHeader(doc, headerOptions, data.pageNumber);
+      }
+    },
+    didParseCell: (data) => {
+      if (data.section !== "body") return;
+      const rowType = data.row.raw?._rowType;
+
+      if (rowType === "disbursement") {
+        data.cell.styles.fillColor = [232, 244, 232];
+        if (data.column.dataKey === "description") {
+          data.cell.styles.fontStyle = "italic";
+        }
+      } else if (rowType === "payment") {
+        data.cell.styles.fillColor = [232, 240, 254];
+        if (data.column.dataKey === "description") {
+          data.cell.styles.fontStyle = "italic";
+        }
+      }
+    },
+  });
+
+  if (rows.some((row) => row.rowType === "payment" && row.allocDerived)) {
+    let footnoteY = (doc.lastAutoTable?.finalY || y) + 10;
+    const pageHeight = doc.internal.pageSize.getHeight();
+
+    if (footnoteY > pageHeight - PDF_LAYOUT.marginBottom - 24) {
+      doc.addPage();
+      footnoteY = drawPdfHeader(doc, headerOptions, doc.getNumberOfPages()) + 8;
+    }
+
+    doc.setFont("helvetica", "italic");
+    doc.setFontSize(8);
+    doc.setTextColor(85, 85, 85);
+    doc.text(
+      "* Payment allocation estimated from repayment order (persisted allocation fields absent).",
+      PDF_LAYOUT.marginX,
+      footnoteY,
+    );
+    doc.setTextColor(0, 0, 0);
+  }
+
+  const totalPages = doc.getNumberOfPages();
+  for (let page = 1; page <= totalPages; page += 1) {
+    doc.setPage(page);
+    drawPdfFooter(doc, page, totalPages);
+  }
+
+  doc.save(filename);
 }

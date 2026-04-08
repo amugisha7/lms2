@@ -1,12 +1,10 @@
 - Create loans form. Also create from loan product.
   - Resume:
     - Work on Loan Statements.
-    - Revise loan details headig to have breadcrumbs.
-    - employee loan allocation etc.
-    - employee relationship for allocation of loans
     - enable creation of employee from user with relationship
-    - add loan statements
+    - Work on payments
     - Implement loan status
+    - Check validity of loan statements.
 
     Put the contracts, collateral and gurantors, other incomes and expenses as tabs on loan drafts and loans.
     i Enable loan contracts

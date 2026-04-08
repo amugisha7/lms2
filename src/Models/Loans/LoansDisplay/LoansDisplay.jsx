@@ -29,7 +29,7 @@ import { useSnackbar } from "../../../ModelAssets/SnackbarContext";
 import MultipleDropDownSearchable from "../../../Resources/FormComponents/MultipleDropDownSearchable";
 import { formatMoneyParts } from "../../../Resources/formatting";
 import { Button } from "@mui/material";
-import BorrowerInfoPopup from "./BorrowerInfoPopup";
+import LoanInfoPopup from "./LoanInfoPopup";
 import ManagePaymentsPopup from "../../Payments/ManagePaymentsPopup";
 
 //  Enhanced query that fetches all the fields we need for the display
@@ -138,6 +138,57 @@ const fmtDate = (dateStr) => {
   }
 };
 
+// Helper: compact date DDMonYY (e.g. "20Jan26")
+const fmtDateCompact = (dateStr) => {
+  if (!dateStr) return "";
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    const months = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+    const day = String(d.getDate()).padStart(2, "0");
+    const mon = months[d.getMonth()];
+    const year = String(d.getFullYear()).slice(-2);
+    return `${day}${mon}${year}`;
+  } catch {
+    return dateStr;
+  }
+};
+
+// Helper: build loan display name "Borrower | Currency Principal | DDMonYY | Product"
+const buildLoanName = (loan, currencyCode) => {
+  const b = loan.borrower || {};
+  const borrowerName =
+    [b.firstname, b.othername, b.businessName]
+      .filter(Boolean)
+      .join(" ")
+      .trim() || "Unknown";
+
+  const prefix = currencyCode || "";
+  const principal =
+    loan.principal != null
+      ? `${prefix} ${Number(loan.principal).toLocaleString()}`
+      : null;
+
+  const date = fmtDateCompact(loan.startDate);
+  const product = loan.loanProduct?.name || "";
+
+  const parts = [borrowerName, principal, date, product].filter(Boolean);
+  return parts.join(" | ");
+};
+
 //  Helper: compute total paid from payments
 const computeTotalPaid = (payments) => {
   if (!payments?.items?.length) return 0;
@@ -193,6 +244,19 @@ const formatDurationCompact = (duration, durationInterval) => {
   }
 
   return `${numericDuration}MO`;
+};
+
+const formatDurationFull = (duration, durationInterval) => {
+  const n = Number(duration);
+  if (!Number.isFinite(n)) return "N/A";
+  const interval = String(durationInterval || "").toLowerCase();
+  const plural = (word, count) => `${count} ${word}${count !== 1 ? "s" : ""}`;
+  if (interval.includes("day")) return plural("Day", n);
+  if (interval.includes("week")) return plural("Week", n);
+  if (interval.includes("quarter")) return plural("Month", n * 3);
+  if (interval.includes("year") || interval.includes("annual"))
+    return plural("Year", n);
+  return plural("Month", n);
 };
 
 //  Status pill color mapping
@@ -641,31 +705,64 @@ export default function LoansDisplay() {
     () => [
       {
         field: "borrower",
-        headerName: "Borrower",
+        headerName: "Loan",
         disableColumnMenu: false,
-        flex: 1,
-        minWidth: 160,
-        valueGetter: (value, row) => {
-          const b = row.borrower || {};
-          return (
-            [b.firstname, b.othername, b.businessName]
-              .filter(Boolean)
-              .join(" ")
-              .trim() || "Unknown"
-          );
-        },
+        flex: 1.4,
+        minWidth: 240,
+        valueGetter: (value, row) => buildLoanName(row, currency),
         renderCell: (params) => {
-          const b = params.row.borrower || {};
-          const name = params.value;
-          const displayName = truncateWithEllipsis(name, 30);
+          const loan = params.row;
+          const loanName = buildLoanName(loan, currency);
+          const statusColors = getStatusColor(loan.status, sf);
           return (
-            <Box sx={STACKED_CELL_SX}>
-              <BorrowerInfoPopup
-                borrower={b}
-                displayName={displayName}
+            <Box
+              sx={{
+                ...STACKED_CELL_SX,
+                whiteSpace: "normal",
+                wordBreak: "break-word",
+                py: 0.5,
+              }}
+            >
+              <LoanInfoPopup
+                loan={loan}
+                loanName={loanName}
+                statusColors={statusColors}
+                MoneyText={MoneyText}
+                getMoneyTextSx={getMoneyTextSx}
+                fmtDate={fmtDate}
+                durationDisplay={formatDurationFull(
+                  loan.duration,
+                  loan.durationInterval,
+                )}
+                daysLeft={daysUntil(loan.maturityDate)}
+                formatRateInterval={formatRateInterval}
+                getBalance={getBalance}
+                computeTotalPaid={computeTotalPaid}
+                getPrincipalBalance={getPrincipalBalance}
+                parseLoanRecord={parseLoanRecord}
                 onNavigate={() =>
-                  b.id && navigate(`/borrowers/id/${b.id}/view`)
+                  loan.id &&
+                  navigate(`/loans/id/${loan.id}/view`, {
+                    state: { from: "/loans" },
+                  })
                 }
+                onBorrowerClick={() =>
+                  loan.borrower?.id &&
+                  navigate(`/borrowers/id/${loan.borrower.id}/view`)
+                }
+                onStatementClick={() =>
+                  loan.id && navigate(`/loans/id/${loan.id}/statement`)
+                }
+                onLoanOfficerClick={() =>
+                  loan.createdByEmployee?.id &&
+                  navigate(`/employees/id/${loan.createdByEmployee.id}/view`)
+                }
+                onPaymentsClick={() => {
+                  if (loan.id) {
+                    setPaymentLoanRow(loan);
+                    setPaymentPopupOpen(true);
+                  }
+                }}
               />
             </Box>
           );
@@ -697,23 +794,12 @@ export default function LoansDisplay() {
                 <Typography
                   sx={{
                     fontSize: "0.6rem",
-                    mt: 0.2,
+                    mt: 0.4,
                     color: sf.sf_textTertiary,
                   }}
                 >
-                  LOAN ID:
+                  LOAN ID: {loanIdDisplay}
                 </Typography>
-                <SF_ClickableText
-                  sx={{ ml: 0.4 }}
-                  onClick={() =>
-                    loan.id &&
-                    navigate(`/loans/id/${loan.id}/view`, {
-                      state: { from: "/loans" },
-                    })
-                  }
-                >
-                  {loanIdDisplay}
-                </SF_ClickableText>
               </Box>
             </Box>
           );
@@ -1034,7 +1120,7 @@ export default function LoansDisplay() {
         },
       },
     ],
-    [sf, renderTwoLineHeader, navigate, MoneyText],
+    [sf, renderTwoLineHeader, navigate, MoneyText, currency, currencyCode],
   );
 
   //  Filtered + sorted loans
@@ -1568,7 +1654,8 @@ export default function LoansDisplay() {
             getRowId={(row) => row.id}
             pageSize={50}
             pageSizeOptions={[25, 50, 100]}
-            rowHeight={70}
+            getRowHeight={() => "auto"}
+            getEstimatedRowHeight={() => 72}
             showToolbar={false}
             sx={{
               borderRadius: 0,
@@ -1576,14 +1663,20 @@ export default function LoansDisplay() {
                 fontSize: "0.74rem",
               },
               "& .MuiDataGrid-cell": {
+                cursor: "default",
                 pt: 0.5,
-                pb: 0,
+                pb: 0.5,
                 display: "flex",
                 alignItems: "flex-start",
                 justifyContent: "center",
                 textAlign: "center",
+                minHeight: "60px !important",
               },
               "& .MuiDataGrid-cell[data-field='borrower']": {
+                justifyContent: "flex-start",
+                textAlign: "left",
+              },
+              "& .MuiDataGrid-cell[data-field='amountDue']": {
                 justifyContent: "flex-start",
                 textAlign: "left",
               },

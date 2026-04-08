@@ -600,8 +600,12 @@ function LedgerTable({
 // ---------------------------------------------------------------------------
 // Main component
 // ---------------------------------------------------------------------------
-export default function LoanStatementScreen() {
-  const { loanId } = useParams();
+export default function LoanStatementScreen({
+  loanId: loanIdProp,
+  embedded = false,
+}) {
+  const params = useParams();
+  const loanId = loanIdProp || params.loanId;
   const navigate = useNavigate();
   const theme = useTheme();
   const { userDetails } = React.useContext(UserContext);
@@ -618,8 +622,11 @@ export default function LoanStatementScreen() {
     React.useState(true);
   const [showInstitutionName, setShowInstitutionName] = React.useState(true);
   const [showBranchName, setShowBranchName] = React.useState(true);
-  const [showTotals, setShowTotals] = React.useState(true);
   const [showReconciliation, setShowReconciliation] = React.useState(false);
+  const [showLoanOfficer, setShowLoanOfficer] = React.useState(false);
+  const [showLoanProduct, setShowLoanProduct] = React.useState(false);
+  const [showInterestRate, setShowInterestRate] = React.useState(false);
+  const [showInterestMethod, setShowInterestMethod] = React.useState(false);
   const [headerImageSignedUrl, setHeaderImageSignedUrl] = React.useState(null);
 
   // Column visibility
@@ -758,7 +765,7 @@ export default function LoanStatementScreen() {
   // -------------------------------------------------------------------------
   // Build ledger
   // -------------------------------------------------------------------------
-  const { rows, scheduleSource, reconciliation, totals } = React.useMemo(
+  const { rows, reconciliation } = React.useMemo(
     () => buildStatementLedger(loan),
     [loan],
   );
@@ -935,18 +942,25 @@ export default function LoanStatementScreen() {
           <Typography variant="body2" sx={{ color: "#000", fontSize: "11px" }}>
             <strong>Borrower:</strong> {borrowerLabel || "N/A"}
           </Typography>
-          <Typography variant="body2" sx={{ color: "#000", fontSize: "11px" }}>
-            <strong>Loan Officer:</strong> {officerLabel}
-          </Typography>
-          <Typography variant="body2" sx={{ color: "#000", fontSize: "11px" }}>
-            <strong>Branch:</strong> {loan?.branch?.name || "N/A"}
-          </Typography>
+          {showLoanOfficer && (
+            <Typography
+              variant="body2"
+              sx={{ color: "#000", fontSize: "11px" }}
+            >
+              <strong>Loan Officer:</strong> {officerLabel}
+            </Typography>
+          )}
           <Typography variant="body2" sx={{ color: "#000", fontSize: "11px" }}>
             <strong>Status:</strong> {loan?.status || "N/A"}
           </Typography>
-          <Typography variant="body2" sx={{ color: "#000", fontSize: "11px" }}>
-            <strong>Loan Product:</strong> {loan?.loanProduct?.name || "N/A"}
-          </Typography>
+          {showLoanProduct && (
+            <Typography
+              variant="body2"
+              sx={{ color: "#000", fontSize: "11px" }}
+            >
+              <strong>Loan Product:</strong> {loan?.loanProduct?.name || "N/A"}
+            </Typography>
+          )}
         </Box>
 
         {/* Right column */}
@@ -954,17 +968,27 @@ export default function LoanStatementScreen() {
           <Typography variant="body2" sx={{ color: "#000", fontSize: "11px" }}>
             <strong>Principal:</strong> <M value={loan?.principal} />
           </Typography>
-          <Typography variant="body2" sx={{ color: "#000", fontSize: "11px" }}>
-            <strong>Interest Rate:</strong>{" "}
-            {loan?.interestRate != null ? `${loan.interestRate}%` : "N/A"}{" "}
-            {compRec?.interestPeriod
-              ? `/ ${compRec.interestPeriod.replace("per_", "")}`
-              : ""}
-          </Typography>
-          <Typography variant="body2" sx={{ color: "#000", fontSize: "11px" }}>
-            <strong>Interest Method:</strong>{" "}
-            {interestMethodLabel(interestMethod)}
-          </Typography>
+          {showInterestRate && (
+            <Typography
+              variant="body2"
+              sx={{ color: "#000", fontSize: "11px" }}
+            >
+              <strong>Interest Rate:</strong>{" "}
+              {loan?.interestRate != null ? `${loan.interestRate}%` : "N/A"}{" "}
+              {compRec?.interestPeriod
+                ? `/ ${compRec.interestPeriod.replace("per_", "")}`
+                : ""}
+            </Typography>
+          )}
+          {showInterestMethod && (
+            <Typography
+              variant="body2"
+              sx={{ color: "#000", fontSize: "11px" }}
+            >
+              <strong>Interest Method:</strong>{" "}
+              {interestMethodLabel(interestMethod)}
+            </Typography>
+          )}
           <Typography variant="body2" sx={{ color: "#000", fontSize: "11px" }}>
             <strong>Term:</strong>{" "}
             {loan?.duration
@@ -979,95 +1003,6 @@ export default function LoanStatementScreen() {
           </Typography>
         </Box>
       </Box>
-
-      {/* Totals block */}
-      {showTotals && totals && (
-        <Box
-          sx={{
-            mt: 1,
-            p: "6px 10px",
-            border: "1px solid #ccc",
-            borderRadius: 0,
-            bgcolor: "#f9f9f9",
-          }}
-        >
-          <Typography
-            variant="body2"
-            sx={{ color: "#000", fontSize: "11px", fontWeight: 600, mb: 0.5 }}
-          >
-            Statement Summary
-          </Typography>
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr 1fr",
-              gap: 0.5,
-            }}
-          >
-            <Typography
-              variant="caption"
-              sx={{ color: "#000", fontSize: "10px" }}
-            >
-              <strong>Sched. Principal:</strong>{" "}
-              <M value={totals.scheduledPrincipal} />
-            </Typography>
-            <Typography
-              variant="caption"
-              sx={{ color: "#000", fontSize: "10px" }}
-            >
-              <strong>Sched. Interest:</strong>{" "}
-              <M value={totals.scheduledInterest} />
-            </Typography>
-            <Typography
-              variant="caption"
-              sx={{ color: "#000", fontSize: "10px" }}
-            >
-              <strong>Total Scheduled:</strong>{" "}
-              <M value={totals.totalScheduled} />
-            </Typography>
-            <Typography
-              variant="caption"
-              sx={{ color: "#000", fontSize: "10px" }}
-            >
-              <strong>Total Paid:</strong>{" "}
-              <M value={totals.totalPaymentsApplied} />
-            </Typography>
-            <Typography
-              variant="caption"
-              sx={{ color: "#000", fontSize: "10px" }}
-            >
-              <strong>Principal Paid:</strong>{" "}
-              <M value={totals.totalPrincipalPaid} />
-            </Typography>
-            <Typography
-              variant="caption"
-              sx={{ color: "#000", fontSize: "10px" }}
-            >
-              <strong>Interest Paid:</strong>{" "}
-              <M value={totals.totalInterestPaid} />
-            </Typography>
-            <Typography
-              variant="caption"
-              sx={{ color: "#000", fontSize: "10px" }}
-            >
-              <strong>Outstanding:</strong> <M value={totals.totalRemaining} />
-            </Typography>
-            <Typography
-              variant="caption"
-              sx={{ color: "#000", fontSize: "10px" }}
-            >
-              <strong>Principal Remaining:</strong>{" "}
-              <M value={totals.remainingPrincipal} />
-            </Typography>
-            <Typography
-              variant="caption"
-              sx={{ color: "#000", fontSize: "10px" }}
-            >
-              <strong>As of:</strong> {fmtDate(new Date().toISOString())}
-            </Typography>
-          </Box>
-        </Box>
-      )}
 
       {/* Reconciliation warning */}
       {showReconciliation && reconciliation?.hasWarning && (
@@ -1091,17 +1026,6 @@ export default function LoanStatementScreen() {
             incomplete.
           </Typography>
         </Box>
-      )}
-
-      {/* Schedule source note */}
-      {scheduleSource === "derived" && (
-        <Typography
-          variant="caption"
-          sx={{ fontSize: "9px", color: "#777", mt: 0.25 }}
-        >
-          Schedule derived from loan terms (persisted installments unavailable
-          or incomplete).
-        </Typography>
       )}
 
       <Box sx={{ mt: 0.5 }}>
@@ -1156,15 +1080,39 @@ export default function LoanStatementScreen() {
         availableColumns={AVAILABLE_COLUMNS}
         checkboxRows={[
           {
+            key: "details",
+            label: "Details",
+            checkboxes: [
+              {
+                key: "loanOfficer",
+                label: "Loan Officer",
+                checked: showLoanOfficer,
+                onChange: setShowLoanOfficer,
+              },
+              {
+                key: "loanProduct",
+                label: "Loan Product",
+                checked: showLoanProduct,
+                onChange: setShowLoanProduct,
+              },
+              {
+                key: "interestRate",
+                label: "Interest Rate",
+                checked: showInterestRate,
+                onChange: setShowInterestRate,
+              },
+              {
+                key: "interestMethod",
+                label: "Interest Method",
+                checked: showInterestMethod,
+                onChange: setShowInterestMethod,
+              },
+            ],
+          },
+          {
             key: "fields",
             label: "Fields",
             checkboxes: [
-              {
-                key: "totals",
-                label: "Totals",
-                checked: showTotals,
-                onChange: setShowTotals,
-              },
               {
                 key: "reconciliation",
                 label: "Reconciliation",
@@ -1176,19 +1124,21 @@ export default function LoanStatementScreen() {
           },
         ]}
         actions={[
-          {
-            key: "back",
-            text: "BACK TO LOAN",
-            variant: "outlined",
-            onClick: () => navigate(`/loans/id/${loanId}/view`),
-          },
+          !embedded
+            ? {
+                key: "back",
+                text: "BACK TO LOAN",
+                variant: "outlined",
+                onClick: () => navigate(`/loans/id/${loanId}/view`),
+              }
+            : null,
           {
             key: "export",
             text: "EXPORT PDF",
             onClick: handleExportPdf,
             disabled: exportingPdf || rows.length === 0,
           },
-        ]}
+        ].filter(Boolean)}
       />
 
       {/* Schedule source / no data warnings */}
@@ -1206,8 +1156,8 @@ export default function LoanStatementScreen() {
           display: "flex",
           flexDirection: "column",
           gap: 2,
-          py: 2,
-          backgroundColor: theme.palette.grey[100],
+          py: embedded ? 0 : 2,
+          backgroundColor: embedded ? "transparent" : theme.palette.grey[100],
           alignItems: { xs: "flex-start", md: "center" },
           maxWidth: "100%",
           overflowX: "auto",

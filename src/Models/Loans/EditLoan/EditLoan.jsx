@@ -139,7 +139,24 @@ const buildValidationSchema = () => {
 
 const baseValidationSchema = buildValidationSchema();
 
-const NON_EDITABLE_FIELD_NAMES = ["principalAmount", "loanStartDate"];
+const NON_EDITABLE_FIELD_NAMES = [
+  "principalAmount",
+  "loanStartDate",
+  "extendLoanAfterMaturity",
+  "interestTypeMaturity",
+  "calculateInterestOn",
+  "loanInterestRateAfterMaturity",
+  "recurringPeriodAfterMaturityUnit",
+  "loanFeesType",
+  "loanFees",
+  "customLoanFeeAmount",
+];
+
+const NON_EDITABLE_LABELS = [
+  "Principal Settings",
+  "Loan Maturity Settings",
+  "Loan Fees",
+];
 
 const renderFormField = (field, formikValues) => {
   const { dynamicHelperText, dynamicLabelMap, ...fieldProps } = field;
@@ -658,7 +675,7 @@ const EditLoan = forwardRef(
 
             return (
               <Form>
-                {!editMode && (
+                {!editMode && (onCancel || !readOnly) && (
                   <Box
                     sx={{
                       display: "flex",
@@ -668,15 +685,14 @@ const EditLoan = forwardRef(
                       gap: 1,
                     }}
                   >
-                    <PlusButtonSmall
-                      variant="outlined"
-                      label="BACK"
-                      IconComponent={ArrowBackIcon}
-                      onClick={() => {
-                        if (onCancel) onCancel();
-                        else navigate(-1);
-                      }}
-                    />
+                    {onCancel && (
+                      <PlusButtonSmall
+                        variant="outlined"
+                        label="BACK"
+                        IconComponent={ArrowBackIcon}
+                        onClick={() => onCancel()}
+                      />
+                    )}
                     {!readOnly && (
                       <PlusButtonSmall
                         variant="outlined"
@@ -755,24 +771,28 @@ const EditLoan = forwardRef(
                   }}
                 >
                   <Grid container spacing={1}>
-                    <FormGrid size={{ xs: 12, md: 12 }}>
-                      <TextInput
-                        label="Borrower"
-                        name="borrowerName"
-                        type="text"
-                        helperText="Borrower is fixed for a draft."
-                        disabled
-                      />
-                    </FormGrid>
-                    <FormGrid size={{ xs: 12, md: 12 }}>
-                      <TextInput
-                        label="Loan Product"
-                        name="loanProductName"
-                        type="text"
-                        helperText="Loan Product is read-only for a draft."
-                        disabled
-                      />
-                    </FormGrid>
+                    {!editMode && (
+                      <FormGrid size={{ xs: 12, md: 12 }}>
+                        <TextInput
+                          label="Borrower"
+                          name="borrowerName"
+                          type="text"
+                          helperText="Borrower is fixed for a draft."
+                          disabled
+                        />
+                      </FormGrid>
+                    )}
+                    {!editMode && (
+                      <FormGrid size={{ xs: 12, md: 12 }}>
+                        <TextInput
+                          label="Loan Product"
+                          name="loanProductName"
+                          type="text"
+                          helperText="Loan Product is read-only for a draft."
+                          disabled
+                        />
+                      </FormGrid>
+                    )}
 
                     {updatedEditLoanForm.map((field, index) => {
                       if (field.dependsOn && field.dependsOnValue) {
@@ -800,6 +820,15 @@ const EditLoan = forwardRef(
                         NON_EDITABLE_FIELD_NAMES.includes(field.name);
                       const fieldEditing = editMode && !isFieldReadOnly;
 
+                      if (editMode && isFieldReadOnly) return null;
+
+                      if (
+                        editMode &&
+                        (field.type === "label" || field.type === "formLink") &&
+                        NON_EDITABLE_LABELS.includes(field.label)
+                      )
+                        return null;
+
                       const fieldRenderProps = {
                         ...field,
                         helperText,
@@ -817,27 +846,6 @@ const EditLoan = forwardRef(
                         </FormGrid>
                       );
                     })}
-
-                    <Box
-                      sx={{
-                        display: "flex",
-                        pr: 2,
-                        justifyContent: { xs: "center", md: "flex-end" },
-                        width: "100%",
-                        gap: 1,
-                        flexWrap: "wrap",
-                        mb: 8,
-                        mt: 2,
-                      }}
-                    >
-                      <PlusButtonMain
-                        buttonText="VIEW LOAN SCHEDULE"
-                        variant="outlined"
-                        startIcon={null}
-                        onClick={handleOpenSchedule}
-                        disabled={formik.isSubmitting}
-                      />
-                    </Box>
 
                     {submitError && (
                       <Typography color="error" sx={{ mt: 2 }}>

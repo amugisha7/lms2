@@ -56,8 +56,8 @@ function Money({ value, currency, currencyCode }) {
 export const DEFAULT_VISIBLE_COLUMNS = {
   date: true,
   description: true,
-  scheduledPrincipal: true,
-  scheduledInterest: true,
+  scheduledPrincipal: false,
+  scheduledInterest: false,
   scheduledFees: false,
   scheduledPenalty: false,
   scheduledTotal: true,
@@ -70,15 +70,8 @@ export const DEFAULT_VISIBLE_COLUMNS = {
 };
 
 export const AVAILABLE_COLUMNS = [
-  { key: "scheduledPrincipal", label: "Sched. Principal" },
-  { key: "scheduledInterest", label: "Sched. Interest" },
-  { key: "scheduledFees", label: "Sched. Fees" },
-  { key: "scheduledPenalty", label: "Sched. Penalty" },
   { key: "scheduledTotal", label: "Total Due" },
   { key: "allocPrincipal", label: "Paid Principal" },
-  { key: "allocInterest", label: "Paid Interest" },
-  { key: "allocFees", label: "Paid Fees" },
-  { key: "allocPenalty", label: "Paid Penalty" },
   { key: "runningBalance", label: "Balance" },
 ];
 

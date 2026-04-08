@@ -1,9 +1,26 @@
 import React from "react";
-import { Box, CircularProgress, Typography, Button } from "@mui/material";
+import {
+  Box,
+  CircularProgress,
+  Typography,
+  Breadcrumbs,
+  Tabs,
+  Tab,
+  IconButton,
+} from "@mui/material";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useTheme } from "@mui/material/styles";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import EditLoan from "./EditLoan/EditLoan";
+import ManagePaymentsPopup from "../Payments/ManagePaymentsPopup";
+import LoanFiles from "./LoanFiles/LoanFiles";
+import LoanStatementPopup from "./LoanStatements/LoanStatementPopup";
 import NotificationBar from "../../ModelAssets/NotificationBar";
+import CustomSlider from "../../ModelAssets/CustomSlider";
+import ClickableText from "../../ModelAssets/ClickableText";
 import { getLoanById } from "./loanHelpers";
+import { UserContext } from "../../App";
+import { buildLoanDisplayName } from "./loanDisplayHelpers";
 
 const parseLoanRecord = (loan) => {
   const record = loan?.draftRecord ?? loan?.loanComputationRecord;
@@ -63,10 +80,17 @@ export default function LoanDetailPage() {
   const { loanId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
+  const theme = useTheme();
+
   const [loading, setLoading] = React.useState(true);
   const [loan, setLoan] = React.useState(null);
   const [initialValues, setInitialValues] = React.useState(null);
   const [notification, setNotification] = React.useState(null);
+  const [tabValue, setTabValue] = React.useState(0);
+  const [editSliderOpen, setEditSliderOpen] = React.useState(false);
+  const [paymentsPopupOpen, setPaymentsPopupOpen] = React.useState(false);
+  const [statementPopupOpen, setStatementPopupOpen] = React.useState(false);
+  const { userDetails } = React.useContext(UserContext);
 
   const backPath = location.state?.from || "/loans";
 
@@ -117,6 +141,14 @@ export default function LoanDetailPage() {
     load();
   }, [load]);
 
+  const currencyCode =
+    userDetails?.institution?.currencyCode || userDetails?.currencyCode || "";
+
+  const getLoanName = () => {
+    if (!loan) return "Loan";
+    return buildLoanDisplayName(loan, currencyCode);
+  };
+
   if (loading) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", mt: 6 }}>
@@ -135,19 +167,18 @@ export default function LoanDetailPage() {
           />
         )}
         <Typography variant="h6">Loan not found</Typography>
-        <Button
-          sx={{ mt: 2 }}
-          variant="outlined"
+        <ClickableText
+          sx={{ mt: 2, color: theme.palette.blueText.main }}
           onClick={() => navigate(backPath)}
         >
           Back to Loans
-        </Button>
+        </ClickableText>
       </Box>
     );
   }
 
   return (
-    <Box sx={{ width: "100%", p: 2 }}>
+    <>
       {notification && (
         <NotificationBar
           notification={notification}
@@ -155,77 +186,268 @@ export default function LoanDetailPage() {
         />
       )}
 
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          mb: 2,
-        }}
+      {/* Edit Slider */}
+      <CustomSlider
+        open={editSliderOpen}
+        onClose={() => setEditSliderOpen(false)}
+        title={`Edit ${getLoanName()}`}
+        showEdit={false}
+        showDelete={false}
+        showPdf={false}
       >
-        <Box>
-          <Typography variant="h5" sx={{ fontWeight: 600 }}>
-            Loan {loan.loanNumber ? `(${loan.loanNumber})` : ""}
-          </Typography>
-          <Typography variant="body2" sx={{ opacity: 0.8 }}>
-            Status: {loan.status}
-            {` • Loan Officer: ${formatOfficerName(
-              loan.assignedToEmployee || loan.createdByEmployee,
-            )}`}
-            {` • Branch: ${loan.branch?.name || "N/A"}`}
-          </Typography>
-        </Box>
-        <Button
-          variant="outlined"
-          size="small"
-          onClick={() =>
-            navigate(`/loans/id/${loanId}/statement`, {
-              state: { from: `/loans/id/${loanId}/view` },
-            })
-          }
-        >
-          View Statement
-        </Button>
-      </Box>
-
-      {initialValues ? (
-        <Box sx={{ mt: 2 }}>
+        {initialValues && (
           <EditLoan
             loanDraft={loan}
             initialValues={initialValues}
             onEditSuccess={() => {
+              setEditSliderOpen(false);
               setNotification({
                 type: "success",
                 message: "Loan updated successfully",
               });
               load();
             }}
-            isEditMode={false}
-            onCancel={() => navigate(backPath)}
-            readOnlyFields={["loanProduct", "borrower"]}
+            isEditMode={true}
+            onCancel={() => setEditSliderOpen(false)}
             allowEditingOverride={true}
+            readOnlyFields={["loanProduct", "borrower"]}
             entityLabel="Loan"
           />
+        )}
+      </CustomSlider>
+
+      {/* Manage Payments Popup */}
+      <ManagePaymentsPopup
+        open={paymentsPopupOpen}
+        onClose={() => setPaymentsPopupOpen(false)}
+        loan={loan}
+        onPaymentSuccess={() => load()}
+      />
+
+      <LoanStatementPopup
+        open={statementPopupOpen}
+        onClose={() => setStatementPopupOpen(false)}
+        loan={loan}
+        loanId={loanId}
+      />
+
+      <Box sx={{ width: "100%" }}>
+        {/* Header */}
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "flex-start",
+            mb: 1,
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+          }}
+        >
+          <Box sx={{ display: "flex", alignItems: "flex-start" }}>
+            <IconButton
+              onClick={() => navigate(backPath)}
+              sx={{
+                mr: 1,
+                mt: 0.5,
+                color: theme.palette.text.primary,
+                "&:hover": { transform: "scale(1.05)" },
+              }}
+            >
+              <ArrowBackIcon />
+            </IconButton>
+            <Box>
+              <Breadcrumbs
+                separator="›"
+                aria-label="breadcrumb"
+                sx={{ mb: 0.25 }}
+              >
+                <Typography
+                  variant="caption"
+                  onClick={() => navigate("/loans")}
+                  sx={{
+                    color: theme.palette.blueText.main,
+                    cursor: "pointer",
+                    fontWeight: 500,
+                    "&:hover": { textDecoration: "underline" },
+                  }}
+                >
+                  All Loans
+                </Typography>
+                <Typography
+                  variant="caption"
+                  sx={{ color: theme.palette.text.secondary }}
+                >
+                  Loan Profile
+                </Typography>
+              </Breadcrumbs>
+
+              <Typography
+                variant="h4"
+                sx={{
+                  fontWeight: 700,
+                  color: theme.palette.text.primary,
+                  fontFamily: theme.typography.h4.fontFamily,
+                }}
+              >
+                {getLoanName()}
+              </Typography>
+
+              <Typography
+                variant="body2"
+                sx={{ color: theme.palette.text.secondary, mt: 0.25 }}
+              >
+                <strong>Loan ID:</strong> {loan.id}
+                {` • `}
+                <strong>Status:</strong> {loan.status || "N/A"}
+                {` • `}
+                <strong>Loan Officer:</strong>{" "}
+                {formatOfficerName(loan.createdByEmployee)}
+              </Typography>
+            </Box>
+          </Box>
         </Box>
-      ) : (
-        <Box sx={{ mt: 2 }}>
-          <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-            Summary
-          </Typography>
-          <Typography variant="body2" sx={{ opacity: 0.85, mt: 0.5 }}>
-            Principal: {loan?.principal ?? "N/A"}
-          </Typography>
-          <Typography variant="body2" sx={{ opacity: 0.85, mt: 0.5 }}>
-            Interest Rate: {loan?.interestRate ?? "N/A"}
-          </Typography>
-          <Typography variant="body2" sx={{ opacity: 0.85, mt: 0.5 }}>
-            Start Date: {loan?.startDate || "N/A"}
-          </Typography>
-          <Typography variant="body2" sx={{ opacity: 0.85, mt: 0.5 }}>
-            Maturity Date: {loan?.maturityDate || "N/A"}
-          </Typography>
+
+        {/* Tabs */}
+        <Box sx={{ width: "100%" }}>
+          <Box
+            sx={{
+              borderBottom: 1,
+              borderColor: theme.palette.divider,
+              backgroundColor: theme.palette.background.paper,
+              borderRadius: "8px 8px 0 0",
+            }}
+          >
+            <Tabs
+              value={tabValue}
+              onChange={(_e, v) => setTabValue(v)}
+              aria-label="loan profile tabs"
+              sx={{
+                "& .MuiTabs-indicator": {
+                  backgroundColor: theme.palette.blueText.main,
+                  height: 3,
+                  borderRadius: "1.5px",
+                },
+                "& .MuiTab-root": {
+                  fontFamily: theme.typography.fontFamily,
+                  fontSize: "0.875rem",
+                  fontWeight: 500,
+                  textTransform: "none",
+                  letterSpacing: "0.02em",
+                  color: theme.palette.text.secondary,
+                  minHeight: 48,
+                  padding: "12px 24px",
+                  transition: "all 0.2s ease-in-out",
+                  "&:hover": { color: theme.palette.blueText.main },
+                  "&.Mui-selected": {
+                    color: theme.palette.blueText.main,
+                    fontWeight: 600,
+                  },
+                },
+                "& .MuiTabs-flexContainer": { gap: 1 },
+              }}
+            >
+              <Tab label="Details" id="loan-tab-0" />
+              <Tab label="Files" id="loan-tab-1" />
+            </Tabs>
+          </Box>
+
+          {/* Details Tab */}
+          <TabPanel value={tabValue} index={0}>
+            {/* Action links */}
+            <Box
+              sx={{
+                display: "flex",
+                gap: 3,
+                mb: 2,
+                alignItems: "center",
+                flexWrap: "wrap",
+                justifyContent: "flex-end",
+              }}
+            >
+              <ClickableText
+                onClick={() => setEditSliderOpen(true)}
+                sx={{ color: theme.palette.blueText.main, fontSize: "0.9rem" }}
+              >
+                Edit
+              </ClickableText>
+              <ClickableText
+                onClick={() => setStatementPopupOpen(true)}
+                sx={{ color: theme.palette.blueText.main, fontSize: "0.9rem" }}
+              >
+                View Statement
+              </ClickableText>
+              <ClickableText
+                onClick={() => setPaymentsPopupOpen(true)}
+                sx={{ color: theme.palette.blueText.main, fontSize: "0.9rem" }}
+              >
+                Manage Payments
+              </ClickableText>
+            </Box>
+
+            {initialValues ? (
+              <EditLoan
+                loanDraft={loan}
+                initialValues={initialValues}
+                onEditSuccess={() => {
+                  setNotification({
+                    type: "success",
+                    message: "Loan updated successfully",
+                  });
+                  load();
+                }}
+                isEditMode={false}
+                readOnlyFields={["loanProduct", "borrower"]}
+                allowEditingOverride={false}
+                entityLabel="Loan"
+              />
+            ) : (
+              <Box sx={{ mt: 2 }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                  Summary
+                </Typography>
+                <Typography variant="body2" sx={{ opacity: 0.85, mt: 0.5 }}>
+                  Principal: {loan?.principal ?? "N/A"}
+                </Typography>
+                <Typography variant="body2" sx={{ opacity: 0.85, mt: 0.5 }}>
+                  Interest Rate: {loan?.interestRate ?? "N/A"}
+                </Typography>
+                <Typography variant="body2" sx={{ opacity: 0.85, mt: 0.5 }}>
+                  Start Date: {loan?.startDate || "N/A"}
+                </Typography>
+                <Typography variant="body2" sx={{ opacity: 0.85, mt: 0.5 }}>
+                  Maturity Date: {loan?.maturityDate || "N/A"}
+                </Typography>
+              </Box>
+            )}
+          </TabPanel>
+
+          {/* Files Tab */}
+          <TabPanel value={tabValue} index={1}>
+            <LoanFiles
+              loan={loan}
+              setNotification={(n) =>
+                setNotification({
+                  type: n.color === "green" ? "success" : "error",
+                  message: n.message,
+                })
+              }
+            />
+          </TabPanel>
         </Box>
-      )}
-    </Box>
+      </Box>
+    </>
+  );
+}
+
+function TabPanel({ children, value, index, ...other }) {
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`loan-tabpanel-${index}`}
+      aria-labelledby={`loan-tab-${index}`}
+      {...other}
+    >
+      <Box sx={{ pt: 3 }}>{children}</Box>
+    </div>
   );
 }

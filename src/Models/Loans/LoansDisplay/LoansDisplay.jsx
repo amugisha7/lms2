@@ -31,6 +31,8 @@ import { formatMoneyParts } from "../../../Resources/formatting";
 import { Button } from "@mui/material";
 import LoanInfoPopup from "./LoanInfoPopup";
 import ManagePaymentsPopup from "../../Payments/ManagePaymentsPopup";
+import LoanStatementPopup from "../LoanStatements/LoanStatementPopup";
+import { buildLoanDisplayName } from "../loanDisplayHelpers";
 
 //  Enhanced query that fetches all the fields we need for the display
 const LIST_LOANS_DISPLAY_QUERY = `
@@ -136,57 +138,6 @@ const fmtDate = (dateStr) => {
   } catch {
     return dateStr;
   }
-};
-
-// Helper: compact date DDMonYY (e.g. "20Jan26")
-const fmtDateCompact = (dateStr) => {
-  if (!dateStr) return "";
-  try {
-    const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return dateStr;
-    const months = [
-      "Jan",
-      "Feb",
-      "Mar",
-      "Apr",
-      "May",
-      "Jun",
-      "Jul",
-      "Aug",
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dec",
-    ];
-    const day = String(d.getDate()).padStart(2, "0");
-    const mon = months[d.getMonth()];
-    const year = String(d.getFullYear()).slice(-2);
-    return `${day}${mon}${year}`;
-  } catch {
-    return dateStr;
-  }
-};
-
-// Helper: build loan display name "Borrower | Currency Principal | DDMonYY | Product"
-const buildLoanName = (loan, currencyCode) => {
-  const b = loan.borrower || {};
-  const borrowerName =
-    [b.firstname, b.othername, b.businessName]
-      .filter(Boolean)
-      .join(" ")
-      .trim() || "Unknown";
-
-  const prefix = currencyCode || "";
-  const principal =
-    loan.principal != null
-      ? `${prefix} ${Number(loan.principal).toLocaleString()}`
-      : null;
-
-  const date = fmtDateCompact(loan.startDate);
-  const product = loan.loanProduct?.name || "";
-
-  const parts = [borrowerName, principal, date, product].filter(Boolean);
-  return parts.join(" | ");
 };
 
 //  Helper: compute total paid from payments
@@ -561,6 +512,8 @@ export default function LoansDisplay() {
   const [selectedBranchFilter, setSelectedBranchFilter] = React.useState([]);
   const [paymentPopupOpen, setPaymentPopupOpen] = React.useState(false);
   const [paymentLoanRow, setPaymentLoanRow] = React.useState(null);
+  const [statementPopupOpen, setStatementPopupOpen] = React.useState(false);
+  const [statementLoanRow, setStatementLoanRow] = React.useState(null);
   const hasFetchedRef = React.useRef();
   const gridDragContainerRef = React.useRef(null);
   const topScrollRef = React.useRef(null);
@@ -700,6 +653,12 @@ export default function LoansDisplay() {
     topEl.scrollBy({ left: delta, behavior: "smooth" });
   }, []);
 
+  const openStatementPopup = React.useCallback((loan) => {
+    if (!loan?.id) return;
+    setStatementLoanRow(loan);
+    setStatementPopupOpen(true);
+  }, []);
+
   //  DataGrid column definitions
   const columns = React.useMemo(
     () => [
@@ -709,10 +668,10 @@ export default function LoansDisplay() {
         disableColumnMenu: false,
         flex: 1.4,
         minWidth: 240,
-        valueGetter: (value, row) => buildLoanName(row, currency),
+        valueGetter: (value, row) => buildLoanDisplayName(row, currency),
         renderCell: (params) => {
           const loan = params.row;
-          const loanName = buildLoanName(loan, currency);
+          const loanName = buildLoanDisplayName(loan, currency);
           const statusColors = getStatusColor(loan.status, sf);
           return (
             <Box
@@ -750,9 +709,7 @@ export default function LoansDisplay() {
                   loan.borrower?.id &&
                   navigate(`/borrowers/id/${loan.borrower.id}/view`)
                 }
-                onStatementClick={() =>
-                  loan.id && navigate(`/loans/id/${loan.id}/statement`)
-                }
+                onStatementClick={() => openStatementPopup(loan)}
                 onLoanOfficerClick={() =>
                   loan.createdByEmployee?.id &&
                   navigate(`/employees/id/${loan.createdByEmployee.id}/view`)
@@ -1074,8 +1031,7 @@ export default function LoansDisplay() {
               <SF_ClickableText
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (!params.row?.id) return;
-                  navigate(`/loans/id/${params.row.id}/statement`);
+                  openStatementPopup(params.row);
                 }}
               >
                 View Statement
@@ -1120,7 +1076,16 @@ export default function LoansDisplay() {
         },
       },
     ],
-    [sf, renderTwoLineHeader, navigate, MoneyText, currency, currencyCode],
+    [
+      sf,
+      renderTwoLineHeader,
+      navigate,
+      MoneyText,
+      currency,
+      currencyCode,
+      openStatementPopup,
+      showSnackbar,
+    ],
   );
 
   //  Filtered + sorted loans
@@ -1699,6 +1664,15 @@ export default function LoansDisplay() {
           }}
         />
       )}
+
+      <LoanStatementPopup
+        open={statementPopupOpen}
+        onClose={() => {
+          setStatementPopupOpen(false);
+          setStatementLoanRow(null);
+        }}
+        loan={statementLoanRow}
+      />
     </>
   );
 }

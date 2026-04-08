@@ -1,6 +1,6 @@
 - Create loans form. Also create from loan product.
   - Resume:
-    - Revise loan table display to have loan names similar to Salesforce opp names.
+    - Work on Loan Statements.
     - Revise loan details headig to have breadcrumbs.
     - employee loan allocation etc.
     - employee relationship for allocation of loans

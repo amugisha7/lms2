@@ -24,6 +24,11 @@ import {
   fetchLoanFeesConfig,
   fetchInstitutionAdmins,
 } from "./createLoanHelpers";
+import {
+  getDefaultEmployeeForUserContext,
+  getEmployeeOptionLabel,
+  listEmployeesByBranch,
+} from "../../Employees/employeeHelpers";
 import { sendLoanApprovalRequest } from "../../../Screens/Notifications/notificationsAPI";
 import {
   createLoanDraft,
@@ -550,6 +555,8 @@ const UseLoanProduct = forwardRef(
     const loanFeesInstitutionIdRef = useRef(null);
     const formikRef = useRef(null);
     const [isProcessing, setIsProcessing] = useState(false);
+    const [employees, setEmployees] = useState([]);
+    const [defaultEmployeeId, setDefaultEmployeeId] = useState("");
 
     const isPrivileged = React.useMemo(() => {
       const type = userDetails?.userType;
@@ -612,6 +619,43 @@ const UseLoanProduct = forwardRef(
       }
     }, [userDetails?.institutionUsersId]);
 
+    useEffect(() => {
+      let cancelled = false;
+
+      const loadEmployees = async () => {
+        const effectiveBranchId =
+          propBorrower?.branchBorrowersId ||
+          loanDraft?.branchID ||
+          userDetails?.branchUsersId ||
+          null;
+        if (!effectiveBranchId) return;
+
+        try {
+          const scopedUserDetails = {
+            ...userDetails,
+            branchUsersId: effectiveBranchId,
+          };
+          const [employeeItems, defaultEmployee] = await Promise.all([
+            listEmployeesByBranch(effectiveBranchId),
+            getDefaultEmployeeForUserContext(scopedUserDetails),
+          ]);
+
+          if (cancelled) return;
+
+          setEmployees(employeeItems);
+          setDefaultEmployeeId(defaultEmployee?.id || "");
+        } catch (error) {
+          console.error("Error loading employees for loan form:", error);
+        }
+      };
+
+      loadEmployees();
+
+      return () => {
+        cancelled = true;
+      };
+    }, [loanDraft?.branchID, propBorrower?.branchBorrowersId, userDetails]);
+
     const formInitialValues = React.useMemo(() => {
       const base = propInitialValues
         ? {
@@ -620,14 +664,30 @@ const UseLoanProduct = forwardRef(
           }
         : { ...baseInitialValues };
 
+      if (loanDraft?.draftRecord) {
+        try {
+          const draftRecord =
+            typeof loanDraft.draftRecord === "string"
+              ? JSON.parse(loanDraft.draftRecord)
+              : loanDraft.draftRecord;
+          Object.assign(base, draftRecord);
+        } catch (err) {
+          console.error("Failed to parse draft record:", err);
+        }
+      }
+
       if (propBorrower) {
         base.borrower =
           `${propBorrower.firstname || ""} ${propBorrower.othername || ""} ${
             propBorrower.businessName || ""
           }`.trim() || propBorrower.uniqueIdNumber;
       }
+
+      base.employeeId =
+        base.employeeId || loanDraft?.assignedToEmployeeID || defaultEmployeeId;
+
       return base;
-    }, [propInitialValues, propBorrower]);
+    }, [propInitialValues, propBorrower, loanDraft, defaultEmployeeId]);
 
     const saveDraftInternal = async (
       values,
@@ -636,6 +696,9 @@ const UseLoanProduct = forwardRef(
       let draftValues = { ...values };
       if (propBorrower) {
         draftValues.borrower = propBorrower.id;
+      }
+      if (!draftValues.employeeId) {
+        draftValues.employeeId = defaultEmployeeId;
       }
 
       // Find the borrower object from the borrowers list or use propBorrower
@@ -936,6 +999,9 @@ const UseLoanProduct = forwardRef(
               {(formik) => {
                 const updatedCreateLoanForm = (() => {
                   const formFields = [];
+                  const employeeField = createLoanForm.find(
+                    (field) => field.name === "employeeId",
+                  );
 
                   // Add Loan Product field at the top
                   formFields.push({
@@ -970,10 +1036,23 @@ const UseLoanProduct = forwardRef(
                     },
                   });
 
+                  if (employeeField) {
+                    formFields.push({
+                      ...employeeField,
+                      options: employees.map((employee) => ({
+                        value: employee.id,
+                        label: getEmployeeOptionLabel(employee),
+                      })),
+                    });
+                  }
+
                   if (formik.values.loanProduct) {
                     createLoanForm.forEach((field) => {
-                      if (field.name === "loanProduct") {
-                        // Skip original loanProduct field as we added it manually
+                      if (
+                        field.name === "loanProduct" ||
+                        field.name === "employeeId"
+                      ) {
+                        // Skip fields added manually above.
                         return;
                       }
 

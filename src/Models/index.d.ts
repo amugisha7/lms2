@@ -33,13 +33,6 @@ export enum LoanApprovalStatus {
   REJECTED = "REJECTED"
 }
 
-export enum InstallmentStatus {
-  PENDING = "PENDING",
-  PARTIALLY_PAID = "PARTIALLY_PAID",
-  PAID = "PAID",
-  OVERDUE = "OVERDUE"
-}
-
 export enum DisbursementStatus {
   PENDING = "PENDING",
   COMPLETED = "COMPLETED",
@@ -1161,7 +1154,6 @@ type EagerLoan = {
   readonly branchID?: string | null;
   readonly branch?: Branch | null;
   readonly payments?: (Payment | null)[] | null;
-  readonly installments?: (LoanInstallment | null)[] | null;
   readonly events?: (LoanEvent | null)[] | null;
   readonly loanFees?: (LoanFees | null)[] | null;
   readonly penalties?: (Penalty | null)[] | null;
@@ -1218,7 +1210,6 @@ type LazyLoan = {
   readonly branchID?: string | null;
   readonly branch: AsyncItem<Branch | undefined>;
   readonly payments: AsyncCollection<Payment>;
-  readonly installments: AsyncCollection<LoanInstallment>;
   readonly events: AsyncCollection<LoanEvent>;
   readonly loanFees: AsyncCollection<LoanFees>;
   readonly penalties: AsyncCollection<Penalty>;
@@ -1248,70 +1239,6 @@ export declare const Loan: (new (init: ModelInit<Loan>) => Loan) & {
   copyOf(source: Loan, mutator: (draft: MutableModel<Loan>) => MutableModel<Loan> | void): Loan;
 }
 
-type EagerLoanInstallment = {
-  readonly [__modelMeta__]: {
-    identifier: ManagedIdentifier<LoanInstallment, 'id'>;
-    readOnlyFields: 'createdAt' | 'updatedAt';
-  };
-  readonly id: string;
-  readonly loanID: string;
-  readonly loan?: Loan | null;
-  readonly dueDate: string;
-  readonly principalDue?: number | null;
-  readonly interestDue?: number | null;
-  readonly feesDue?: number | null;
-  readonly penaltyDue?: number | null;
-  readonly totalDue?: number | null;
-  readonly principalPaid?: number | null;
-  readonly interestPaid?: number | null;
-  readonly feesPaid?: number | null;
-  readonly penaltyPaid?: number | null;
-  readonly totalPaid?: number | null;
-  readonly status?: InstallmentStatus | keyof typeof InstallmentStatus | null;
-  readonly calculationRecord?: string | null;
-  readonly events?: (LoanEvent | null)[] | null;
-  readonly moneyTransactions?: (MoneyTransaction | null)[] | null;
-  readonly payments?: (Payment | null)[] | null;
-  readonly customLoanInstallmentDetails?: string | null;
-  readonly createdAt?: string | null;
-  readonly updatedAt?: string | null;
-}
-
-type LazyLoanInstallment = {
-  readonly [__modelMeta__]: {
-    identifier: ManagedIdentifier<LoanInstallment, 'id'>;
-    readOnlyFields: 'createdAt' | 'updatedAt';
-  };
-  readonly id: string;
-  readonly loanID: string;
-  readonly loan: AsyncItem<Loan | undefined>;
-  readonly dueDate: string;
-  readonly principalDue?: number | null;
-  readonly interestDue?: number | null;
-  readonly feesDue?: number | null;
-  readonly penaltyDue?: number | null;
-  readonly totalDue?: number | null;
-  readonly principalPaid?: number | null;
-  readonly interestPaid?: number | null;
-  readonly feesPaid?: number | null;
-  readonly penaltyPaid?: number | null;
-  readonly totalPaid?: number | null;
-  readonly status?: InstallmentStatus | keyof typeof InstallmentStatus | null;
-  readonly calculationRecord?: string | null;
-  readonly events: AsyncCollection<LoanEvent>;
-  readonly moneyTransactions: AsyncCollection<MoneyTransaction>;
-  readonly payments: AsyncCollection<Payment>;
-  readonly customLoanInstallmentDetails?: string | null;
-  readonly createdAt?: string | null;
-  readonly updatedAt?: string | null;
-}
-
-export declare type LoanInstallment = LazyLoading extends LazyLoadingDisabled ? EagerLoanInstallment : LazyLoanInstallment
-
-export declare const LoanInstallment: (new (init: ModelInit<LoanInstallment>) => LoanInstallment) & {
-  copyOf(source: LoanInstallment, mutator: (draft: MutableModel<LoanInstallment>) => MutableModel<LoanInstallment> | void): LoanInstallment;
-}
-
 type EagerLoanEvent = {
   readonly [__modelMeta__]: {
     identifier: ManagedIdentifier<LoanEvent, 'id'>;
@@ -1327,8 +1254,6 @@ type EagerLoanEvent = {
   readonly payload?: string | null;
   readonly paymentID?: string | null;
   readonly payment?: Payment | null;
-  readonly installmentID?: string | null;
-  readonly installment?: LoanInstallment | null;
   readonly customLoanEventDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
@@ -1349,8 +1274,6 @@ type LazyLoanEvent = {
   readonly payload?: string | null;
   readonly paymentID?: string | null;
   readonly payment: AsyncItem<Payment | undefined>;
-  readonly installmentID?: string | null;
-  readonly installment: AsyncItem<LoanInstallment | undefined>;
   readonly customLoanEventDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
@@ -1722,8 +1645,6 @@ type EagerMoneyTransaction = {
   readonly loan?: Loan | null;
   readonly paymentID?: string | null;
   readonly payment?: Payment | null;
-  readonly installmentID?: string | null;
-  readonly installment?: LoanInstallment | null;
   readonly documents?: (MoneyTransactionDocument | null)[] | null;
   readonly createdByEmployeeID?: string | null;
   readonly createdByEmployee?: Employee | null;
@@ -1758,8 +1679,6 @@ type LazyMoneyTransaction = {
   readonly loan: AsyncItem<Loan | undefined>;
   readonly paymentID?: string | null;
   readonly payment: AsyncItem<Payment | undefined>;
-  readonly installmentID?: string | null;
-  readonly installment: AsyncItem<LoanInstallment | undefined>;
   readonly documents: AsyncCollection<MoneyTransactionDocument>;
   readonly createdByEmployeeID?: string | null;
   readonly createdByEmployee: AsyncItem<Employee | undefined>;
@@ -1793,8 +1712,6 @@ type EagerPayment = {
   readonly notes?: string | null;
   readonly loanID?: string | null;
   readonly loan?: Loan | null;
-  readonly installmentID?: string | null;
-  readonly installment?: LoanInstallment | null;
   readonly moneyTransactionID?: string | null;
   readonly moneyTransaction?: MoneyTransaction | null;
   readonly accountID?: string | null;
@@ -1831,8 +1748,6 @@ type LazyPayment = {
   readonly notes?: string | null;
   readonly loanID?: string | null;
   readonly loan: AsyncItem<Loan | undefined>;
-  readonly installmentID?: string | null;
-  readonly installment: AsyncItem<LoanInstallment | undefined>;
   readonly moneyTransactionID?: string | null;
   readonly moneyTransaction: AsyncItem<MoneyTransaction | undefined>;
   readonly accountID?: string | null;

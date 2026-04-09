@@ -23,7 +23,7 @@ import { UserContext } from "../../../App";
 import { listBranches } from "../../../graphql/queries";
 import WorkingOverlay from "../../../ModelAssets/WorkingOverlay";
 import CustomDataGrid from "../../../ModelAssets/CustomDataGrid";
-import SF_ClickableText from "../../../ModelAssets/SF_ClickableText";
+import SFClickableText from "../../../ModelAssets/SF_ClickableText";
 import PlusButtonMain from "../../../ModelAssets/PlusButtonMain";
 import { useNotification } from "../../../ModelAssets/NotificationContext";
 import { useSnackbar } from "../../../ModelAssets/SnackbarContext";
@@ -34,71 +34,10 @@ import LoanInfoPopup from "./LoanInfoPopup";
 import ManagePaymentsPopup from "../../Payments/ManagePaymentsPopup";
 import LoanStatementPopup from "../LoanStatements/LoanStatementPopup";
 import { buildLoanDisplayName } from "../loanDisplayHelpers";
+import { buildStatementLedger } from "../LoanStatements/statementHelpers";
+import { LIST_LOANS_STATEMENT_READY_QUERY } from "../loanDataQueries";
 
-//  Enhanced query that fetches all the fields we need for the display
-const LIST_LOANS_DISPLAY_QUERY = `
-  query ListLoansDisplay(
-    $filter: ModelLoanFilterInput
-    $limit: Int
-    $nextToken: String
-  ) {
-    listLoans(filter: $filter, limit: $limit, nextToken: $nextToken) {
-      items {
-        id
-        loanNumber
-        branchID
-        principal
-        interestRate
-        startDate
-        maturityDate
-        duration
-        durationInterval
-        loanType
-        loanComputationRecord
-        rateInterval
-        paymentFrequency
-        status
-        loanCurrency
-        borrower {
-          id
-          firstname
-          othername
-          businessName
-          phoneNumber
-          email
-        }
-        loanProduct {
-          id
-          name
-          interestCalculationMethod
-        }
-        createdByEmployee {
-          id
-          firstName
-          lastName
-          email
-        }
-        installments(limit: 1000) {
-          items {
-            principalDue
-            principalPaid
-            totalDue
-            totalPaid
-          }
-        }
-        payments(limit: 1000) {
-          items {
-            amount
-            status
-            paymentDate
-            paymentStatusEnum
-          }
-        }
-      }
-      nextToken
-    }
-  }
-`;
+const LOANS_PAGE_SIZE = 25;
 
 const getCurrencyParts = (value, currency = "$", currencyCode) => {
   if (value == null || isNaN(value)) {
@@ -112,7 +51,6 @@ const getCurrencyParts = (value, currency = "$", currencyCode) => {
   };
 };
 
-//  Helper: format date to DD-MMM-YYYY
 const fmtDate = (dateStr) => {
   if (!dateStr) return "N/A";
   try {
@@ -141,7 +79,6 @@ const fmtDate = (dateStr) => {
   }
 };
 
-//  Helper: compute total paid from payments
 const normalizeMoneyValue = (value) => {
   if (value == null) return 0;
   const numericValue =
@@ -161,55 +98,46 @@ const computeTotalPaid = (payments) => {
     .reduce((sum, p) => sum + normalizeMoneyValue(p?.amount), 0);
 };
 
-const getInstallmentBalance = (loan) => {
-  const installments = loan?.installments?.items ?? [];
-  if (!installments.length) return null;
+const attachDerivedLoanData = (loan) => {
+  const normalizedLoan = {
+    ...loan,
+    payments: {
+      ...(loan?.payments || {}),
+      items: (loan?.payments?.items || []).filter(Boolean),
+    },
+    penalties: {
+      ...(loan?.penalties || {}),
+      items: (loan?.penalties?.items || []).filter(Boolean),
+    },
+  };
+  const derivedStatement = buildStatementLedger(normalizedLoan);
 
-  return installments.reduce(
-    (sum, installment) =>
-      sum +
-      Math.max(
-        normalizeMoneyValue(installment?.totalDue) -
-          normalizeMoneyValue(installment?.totalPaid),
-        0,
-      ),
-    0,
-  );
+  return {
+    ...normalizedLoan,
+    derivedStatement,
+    totalPaidComputed: derivedStatement?.totals?.totalPaymentsApplied || 0,
+    amountDueComputed: derivedStatement?.totals?.totalRemaining || 0,
+    loanBalanceComputed: derivedStatement?.totals?.remainingPrincipal || 0,
+  };
 };
 
-const getPrincipalInstallmentBalance = (loan) => {
-  const installments = loan?.installments?.items ?? [];
-  if (!installments.length) return null;
-
-  return installments.reduce(
-    (sum, installment) =>
-      sum +
-      Math.max(
-        normalizeMoneyValue(installment?.principalDue) -
-          normalizeMoneyValue(installment?.principalPaid),
-        0,
-      ),
-    0,
-  );
-};
-
-//  Helper: get balance from installments or compute
 const getBalance = (loan) => {
-  const installmentBalance = getInstallmentBalance(loan);
-  if (installmentBalance != null) return installmentBalance;
+  if (loan?.amountDueComputed != null) return loan.amountDueComputed;
   const paid = computeTotalPaid(loan.payments);
   return (loan.principal || 0) - paid;
 };
 
-// --- Helper: get principal balance (remaining principal only) ---
 const getPrincipalBalance = (loan) => {
-  const principalInstallmentBalance = getPrincipalInstallmentBalance(loan);
-  if (principalInstallmentBalance != null) return principalInstallmentBalance;
+  if (loan?.loanBalanceComputed != null) return loan.loanBalanceComputed;
   const paid = computeTotalPaid(loan.payments);
   return Math.max((loan.principal || 0) - paid, 0);
 };
 
-// --- Helper: format rate interval ---
+const getTotalPaid = (loan) =>
+  loan?.totalPaidComputed != null
+    ? loan.totalPaidComputed
+    : computeTotalPaid(loan?.payments);
+
 const formatRateInterval = (interval) => {
   if (!interval) return "month";
   const lower = interval.toLowerCase();
@@ -560,6 +488,8 @@ function BranchFilterWrapper({ branches, onFilterChange, selectedCount }) {
 export default function LoansDisplay() {
   const [loans, setLoans] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
+  const [loadingMore, setLoadingMore] = React.useState(false);
+  const [hasMoreLoans, setHasMoreLoans] = React.useState(false);
   const [workingOverlayOpen, setWorkingOverlayOpen] = React.useState(false);
   const [workingOverlayMessage, setWorkingOverlayMessage] =
     React.useState("Working...");
@@ -572,6 +502,11 @@ export default function LoansDisplay() {
   const [statementPopupOpen, setStatementPopupOpen] = React.useState(false);
   const [statementLoanRow, setStatementLoanRow] = React.useState(null);
   const hasFetchedRef = React.useRef();
+  const pagingStateRef = React.useRef({
+    branchIds: [],
+    branchIndex: 0,
+    nextTokens: {},
+  });
   const gridDragContainerRef = React.useRef(null);
   const topScrollRef = React.useRef(null);
   const topScrollInnerRef = React.useRef(null);
@@ -750,6 +685,49 @@ export default function LoansDisplay() {
           const loan = params.row;
           const loanName = buildLoanDisplayName(loan, currency);
           const statusColors = getStatusColor(loan.status, sf);
+          const borrower = loan.borrower || {};
+          const officer = loan.createdByEmployee || {};
+          const loanId = loan.loanNumber || loan.id || "\u2014";
+          const loanIdDisplay =
+            typeof loanId === "string" && loanId.length > 3
+              ? loanId.slice(3)
+              : loanId;
+          const borrowerName =
+            [borrower.firstname, borrower.othername, borrower.businessName]
+              .filter(Boolean)
+              .join(" ")
+              .trim() || "N/A";
+          const officerName =
+            [officer.firstName, officer.lastName].filter(Boolean).join(" ") ||
+            officer.email ||
+            "N/A";
+          const maturityDate = computeMaturityDate(loan);
+          const daysLeft = daysUntil(maturityDate);
+          const daysLeftText =
+            daysLeft == null
+              ? "N/A"
+              : daysLeft < 0
+                ? `${Math.abs(daysLeft)} day${Math.abs(daysLeft) !== 1 ? "s" : ""} overdue`
+                : `${daysLeft} day${daysLeft !== 1 ? "s" : ""}`;
+          const daysLeftIsOverdue = daysLeft != null && daysLeft < 0;
+          const durationDisplay = formatDurationFull(
+            loan.duration,
+            loan.durationInterval,
+          );
+          const rateDisplay =
+            loan.interestRate != null
+              ? `${loan.interestRate}% / ${formatRateInterval(loan.rateInterval)}`
+              : "N/A";
+          const computationRecord = parseLoanRecord(loan);
+          const interestMethod =
+            computationRecord?.interestMethod ||
+            computationRecord?.interestCalculationMethod ||
+            loan.loanProduct?.interestCalculationMethod ||
+            loan.loanType ||
+            "N/A";
+          const balance = getBalance(loan);
+          const totalPaid = getTotalPaid(loan);
+          const principalBal = getPrincipalBalance(loan);
           return (
             <Box
               sx={{
@@ -760,22 +738,26 @@ export default function LoansDisplay() {
               }}
             >
               <LoanInfoPopup
-                loan={loan}
                 loanName={loanName}
+                loanIdDisplay={loanIdDisplay}
+                borrowerName={borrowerName}
+                principal={loan.principal}
+                status={loan.status || "N/A"}
+                startDateDisplay={fmtDate(loan.startDate)}
+                maturityDateDisplay={fmtDate(maturityDate)}
+                durationDisplay={durationDisplay}
+                rateDisplay={rateDisplay}
+                interestMethod={interestMethod}
+                daysLeftText={daysLeftText}
+                daysLeftIsOverdue={daysLeftIsOverdue}
+                totalPaid={totalPaid}
+                amountDue={balance}
+                loanBalance={principalBal}
+                productName={loan.loanProduct?.name || "N/A"}
+                officerName={officerName}
                 statusColors={statusColors}
                 MoneyText={MoneyText}
                 getMoneyTextSx={getMoneyTextSx}
-                fmtDate={fmtDate}
-                durationDisplay={formatDurationFull(
-                  loan.duration,
-                  loan.durationInterval,
-                )}
-                daysLeft={daysUntil(loan.maturityDate)}
-                formatRateInterval={formatRateInterval}
-                getBalance={getBalance}
-                computeTotalPaid={computeTotalPaid}
-                getPrincipalBalance={getPrincipalBalance}
-                parseLoanRecord={parseLoanRecord}
                 onNavigate={() =>
                   loan.id &&
                   navigate(`/loans/id/${loan.id}/view`, {
@@ -1065,14 +1047,14 @@ export default function LoansDisplay() {
         flex: 0.85,
         minWidth: 120,
         type: "number",
-        valueGetter: (value, row) => computeTotalPaid(row.payments),
+        valueGetter: (value, row) => getTotalPaid(row),
         renderCell: (params) => (
           <Box sx={STACKED_CELL_SX}>
             <MoneyText
               value={params.value}
               numberSx={getMoneyTextSx(sf.sf_success, 500)}
             />
-            <SF_ClickableText
+            <SFClickableText
               onClick={(e) => {
                 e.stopPropagation();
                 if (!params.row?.id) {
@@ -1084,7 +1066,7 @@ export default function LoansDisplay() {
               }}
             >
               Manage Payments
-            </SF_ClickableText>
+            </SFClickableText>
           </Box>
         ),
       },
@@ -1108,14 +1090,14 @@ export default function LoansDisplay() {
                   principalBal > 0 ? sf.sf_error : sf.sf_success,
                 )}
               />
-              <SF_ClickableText
+              <SFClickableText
                 onClick={(e) => {
                   e.stopPropagation();
                   openStatementPopup(params.row);
                 }}
               >
                 View Statement
-              </SF_ClickableText>
+              </SFClickableText>
             </Box>
           );
         },
@@ -1150,7 +1132,7 @@ export default function LoansDisplay() {
               >
                 {officerName}
               </Typography>
-              <SF_ClickableText>Loan Comments</SF_ClickableText>
+              <SFClickableText>Loan Comments</SFClickableText>
             </Box>
           );
         },
@@ -1162,7 +1144,6 @@ export default function LoansDisplay() {
       navigate,
       MoneyText,
       currency,
-      currencyCode,
       openStatementPopup,
       showSnackbar,
     ],
@@ -1251,94 +1232,133 @@ export default function LoansDisplay() {
   }, [loans]);
 
   //  Fetch loans
-  const fetchLoans = React.useCallback(async () => {
-    const isAdmin = isAdminUser;
-    const branchId = activeBranchId;
-    const institutionId = activeInstitutionId;
+  const loadLoansPage = React.useCallback(
+    async ({ reset = false } = {}) => {
+      const isAdmin = isAdminUser;
+      const branchId = activeBranchId;
+      const institutionId = activeInstitutionId;
 
-    if ((!isAdmin && !branchId) || (isAdmin && !institutionId)) return;
-
-    setLoading(true);
-    setWorkingOverlayOpen(true);
-    setWorkingOverlayMessage("Loading Loans...");
-
-    try {
-      const client = generateClient();
-
-      let institutionBranchIds = [];
-      if (isAdmin) {
-        let branchesNextToken = null;
-        do {
-          const branchData = await client.graphql({
-            query: listBranches,
-            variables: {
-              limit: 1000,
-              nextToken: branchesNextToken,
-              filter: { institutionBranchesId: { eq: institutionId } },
-            },
-          });
-          const branchItems = branchData?.data?.listBranches?.items || [];
-          institutionBranchIds.push(...branchItems.map((b) => b.id));
-          branchesNextToken = branchData?.data?.listBranches?.nextToken;
-        } while (branchesNextToken);
-        institutionBranchIds = [...new Set(institutionBranchIds)];
+      if ((!isAdmin && !branchId) || (isAdmin && !institutionId)) {
+        setLoading(false);
+        setLoadingMore(false);
+        setHasMoreLoans(false);
+        return;
       }
 
-      let allLoans = [];
-      const loadLoansForBranch = async (targetBranchId) => {
-        let nextToken = null;
-        do {
-          const result = await client.graphql({
-            query: LIST_LOANS_DISPLAY_QUERY,
-            variables: {
-              limit: 100,
-              nextToken,
-              filter: { branchID: { eq: targetBranchId } },
-            },
-          });
-          const batch = result?.data?.listLoans?.items || [];
-          allLoans.push(...batch);
-          nextToken = result?.data?.listLoans?.nextToken;
-        } while (nextToken);
-      };
-
-      if (isAdmin) {
-        for (const bid of institutionBranchIds) {
-          await loadLoansForBranch(bid);
-        }
+      if (reset) {
+        setLoading(true);
+        setWorkingOverlayOpen(true);
+        setWorkingOverlayMessage("Loading Loans...");
       } else {
-        await loadLoansForBranch(branchId);
+        setLoadingMore(true);
       }
 
-      const processed = Array.from(
-        new Map(allLoans.map((l) => [l.id, l])).values(),
-      ).filter((loan) => {
-        const st = (loan.status || "").toLowerCase();
-        return (
-          !st.includes("draft") &&
-          !st.includes("review") &&
-          !st.includes("rejected")
-        );
-      });
+      try {
+        const client = generateClient();
+        let branchIds = pagingStateRef.current.branchIds;
+        let branchIndex = pagingStateRef.current.branchIndex;
+        let nextTokens = { ...(pagingStateRef.current.nextTokens || {}) };
 
-      setLoans(
-        processed.map((loan) => ({
-          ...loan,
-          payments: {
-            ...(loan.payments || {}),
-            items: (loan.payments?.items || []).filter(Boolean),
-          },
-        })),
-      );
-      console.log("Loans object from API:", processed);
-    } catch (err) {
-      console.error("LoansDisplay \u2013 Error fetching loans:", err);
-      setLoans([]);
-    } finally {
-      setLoading(false);
-      setWorkingOverlayOpen(false);
-    }
-  }, [activeBranchId, activeInstitutionId, isAdminUser]);
+        if (reset) {
+          if (isAdmin) {
+            let institutionBranchIds = [];
+            let branchesNextToken = null;
+            do {
+              const branchData = await client.graphql({
+                query: listBranches,
+                variables: {
+                  limit: 1000,
+                  nextToken: branchesNextToken,
+                  filter: { institutionBranchesId: { eq: institutionId } },
+                },
+              });
+              const branchItems = branchData?.data?.listBranches?.items || [];
+              institutionBranchIds.push(
+                ...branchItems.map((branch) => branch.id),
+              );
+              branchesNextToken = branchData?.data?.listBranches?.nextToken;
+            } while (branchesNextToken);
+            branchIds = [...new Set(institutionBranchIds)];
+          } else {
+            branchIds = [branchId];
+          }
+
+          branchIndex = 0;
+          nextTokens = {};
+        }
+
+        const collected = [];
+
+        while (
+          collected.length < LOANS_PAGE_SIZE &&
+          branchIndex < branchIds.length
+        ) {
+          const currentBranchId = branchIds[branchIndex];
+          const result = await client.graphql({
+            query: LIST_LOANS_STATEMENT_READY_QUERY,
+            variables: {
+              limit: LOANS_PAGE_SIZE - collected.length,
+              nextToken: nextTokens[currentBranchId] || null,
+              filter: { branchID: { eq: currentBranchId } },
+            },
+          });
+
+          const listResult = result?.data?.listLoans || {};
+          const batch = Array.isArray(listResult.items)
+            ? listResult.items.filter(Boolean)
+            : [];
+
+          collected.push(...batch);
+
+          if (listResult.nextToken) {
+            nextTokens[currentBranchId] = listResult.nextToken;
+          } else {
+            delete nextTokens[currentBranchId];
+            branchIndex += 1;
+          }
+        }
+
+        const processed = Array.from(
+          new Map(
+            collected.map((loan) => [loan.id, attachDerivedLoanData(loan)]),
+          ).values(),
+        ).filter((loan) => {
+          const st = (loan.status || "").toLowerCase();
+          return (
+            !st.includes("draft") &&
+            !st.includes("review") &&
+            !st.includes("rejected")
+          );
+        });
+
+        setLoans((prev) => {
+          const merged = reset ? processed : [...prev, ...processed];
+          return Array.from(
+            new Map(merged.map((loan) => [loan.id, loan])).values(),
+          );
+        });
+
+        const hasMore =
+          branchIndex < branchIds.length || Object.keys(nextTokens).length > 0;
+
+        pagingStateRef.current = {
+          branchIds,
+          branchIndex,
+          nextTokens,
+        };
+        setHasMoreLoans(hasMore);
+      } catch (err) {
+        console.error("LoansDisplay - Error fetching loans:", err);
+        if (reset) setLoans([]);
+        setHasMoreLoans(false);
+      } finally {
+        setLoading(false);
+        setLoadingMore(false);
+        setWorkingOverlayOpen(false);
+      }
+    },
+    [activeBranchId, activeInstitutionId, isAdminUser],
+  );
 
   React.useEffect(() => {
     if (!userDetails) return;
@@ -1346,13 +1366,13 @@ export default function LoansDisplay() {
       ? activeInstitutionId || "admin"
       : activeBranchId;
     if (fetchKey && fetchKey !== hasFetchedRef.current) {
-      fetchLoans();
+      loadLoansPage({ reset: true });
       hasFetchedRef.current = fetchKey;
     }
   }, [
     activeBranchId,
     activeInstitutionId,
-    fetchLoans,
+    loadLoansPage,
     isAdminUser,
     userDetails,
   ]);
@@ -1434,7 +1454,7 @@ export default function LoansDisplay() {
           >
             {loading
               ? "Loading..."
-              : `${loans.length} total \u00B7 ${filteredLoans.length} shown`}
+              : `${loans.length} loaded \u00B7 ${filteredLoans.length} shown${hasMoreLoans ? " \u00B7 more available" : ""}`}
           </Typography>
         </Box>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -1446,9 +1466,9 @@ export default function LoansDisplay() {
             <IconButton
               onClick={() => {
                 hasFetchedRef.current = null;
-                fetchLoans();
+                loadLoansPage({ reset: true });
               }}
-              disabled={loading}
+              disabled={loading || loadingMore}
               sx={{
                 color: sf.sf_brandPrimary,
                 border: `1px solid ${sf.sf_borderLight}`,
@@ -1731,6 +1751,21 @@ export default function LoansDisplay() {
         </Box>
       </Box>
 
+      {(hasMoreLoans || loadingMore) && (
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+          <Button
+            variant="outlined"
+            onClick={() => loadLoansPage()}
+            disabled={loading || loadingMore}
+            sx={{ borderRadius: 0 }}
+          >
+            {loadingMore
+              ? "LOADING MORE..."
+              : `LOAD ${LOANS_PAGE_SIZE} MORE LOANS`}
+          </Button>
+        </Box>
+      )}
+
       {paymentPopupOpen && paymentLoanRow && (
         <ManagePaymentsPopup
           open={paymentPopupOpen}
@@ -1741,7 +1776,7 @@ export default function LoansDisplay() {
           loan={paymentLoanRow}
           onPaymentSuccess={() => {
             hasFetchedRef.current = null;
-            fetchLoans();
+            loadLoansPage({ reset: true });
           }}
         />
       )}

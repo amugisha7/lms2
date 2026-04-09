@@ -4262,10 +4262,6 @@ export const onCreateLoan = /* GraphQL */ `
         nextToken
         __typename
       }
-      installments {
-        nextToken
-        __typename
-      }
       events {
         nextToken
         __typename
@@ -4505,10 +4501,6 @@ export const onUpdateLoan = /* GraphQL */ `
         __typename
       }
       payments {
-        nextToken
-        __typename
-      }
-      installments {
         nextToken
         __typename
       }
@@ -4754,10 +4746,6 @@ export const onDeleteLoan = /* GraphQL */ `
         nextToken
         __typename
       }
-      installments {
-        nextToken
-        __typename
-      }
       events {
         nextToken
         __typename
@@ -4915,225 +4903,6 @@ export const onDeleteLoan = /* GraphQL */ `
     }
   }
 `;
-export const onCreateLoanInstallment = /* GraphQL */ `
-  subscription OnCreateLoanInstallment(
-    $filter: ModelSubscriptionLoanInstallmentFilterInput
-  ) {
-    onCreateLoanInstallment(filter: $filter) {
-      id
-      loanID
-      loan {
-        id
-        loanNumber
-        approvedDate
-        principal
-        fees
-        interestRate
-        startDate
-        maturityDate
-        stopDate
-        extensionPeriod
-        duration
-        durationInterval
-        loanType
-        rateInterval
-        loanCurrency
-        loanPurpose
-        loanComputationRecord
-        loanAttribute1
-        loanAttribute2
-        numberOfPayments
-        paymentFrequency
-        customFieldsData
-        status
-        borrowerID
-        branchID
-        loanProductID
-        createdByEmployeeID
-        groupID
-        customLoanDetails
-        createdAt
-        updatedAt
-        __typename
-      }
-      dueDate
-      principalDue
-      interestDue
-      feesDue
-      penaltyDue
-      totalDue
-      principalPaid
-      interestPaid
-      feesPaid
-      penaltyPaid
-      totalPaid
-      status
-      calculationRecord
-      events {
-        nextToken
-        __typename
-      }
-      moneyTransactions {
-        nextToken
-        __typename
-      }
-      payments {
-        nextToken
-        __typename
-      }
-      customLoanInstallmentDetails
-      createdAt
-      updatedAt
-      __typename
-    }
-  }
-`;
-export const onUpdateLoanInstallment = /* GraphQL */ `
-  subscription OnUpdateLoanInstallment(
-    $filter: ModelSubscriptionLoanInstallmentFilterInput
-  ) {
-    onUpdateLoanInstallment(filter: $filter) {
-      id
-      loanID
-      loan {
-        id
-        loanNumber
-        approvedDate
-        principal
-        fees
-        interestRate
-        startDate
-        maturityDate
-        stopDate
-        extensionPeriod
-        duration
-        durationInterval
-        loanType
-        rateInterval
-        loanCurrency
-        loanPurpose
-        loanComputationRecord
-        loanAttribute1
-        loanAttribute2
-        numberOfPayments
-        paymentFrequency
-        customFieldsData
-        status
-        borrowerID
-        branchID
-        loanProductID
-        createdByEmployeeID
-        groupID
-        customLoanDetails
-        createdAt
-        updatedAt
-        __typename
-      }
-      dueDate
-      principalDue
-      interestDue
-      feesDue
-      penaltyDue
-      totalDue
-      principalPaid
-      interestPaid
-      feesPaid
-      penaltyPaid
-      totalPaid
-      status
-      calculationRecord
-      events {
-        nextToken
-        __typename
-      }
-      moneyTransactions {
-        nextToken
-        __typename
-      }
-      payments {
-        nextToken
-        __typename
-      }
-      customLoanInstallmentDetails
-      createdAt
-      updatedAt
-      __typename
-    }
-  }
-`;
-export const onDeleteLoanInstallment = /* GraphQL */ `
-  subscription OnDeleteLoanInstallment(
-    $filter: ModelSubscriptionLoanInstallmentFilterInput
-  ) {
-    onDeleteLoanInstallment(filter: $filter) {
-      id
-      loanID
-      loan {
-        id
-        loanNumber
-        approvedDate
-        principal
-        fees
-        interestRate
-        startDate
-        maturityDate
-        stopDate
-        extensionPeriod
-        duration
-        durationInterval
-        loanType
-        rateInterval
-        loanCurrency
-        loanPurpose
-        loanComputationRecord
-        loanAttribute1
-        loanAttribute2
-        numberOfPayments
-        paymentFrequency
-        customFieldsData
-        status
-        borrowerID
-        branchID
-        loanProductID
-        createdByEmployeeID
-        groupID
-        customLoanDetails
-        createdAt
-        updatedAt
-        __typename
-      }
-      dueDate
-      principalDue
-      interestDue
-      feesDue
-      penaltyDue
-      totalDue
-      principalPaid
-      interestPaid
-      feesPaid
-      penaltyPaid
-      totalPaid
-      status
-      calculationRecord
-      events {
-        nextToken
-        __typename
-      }
-      moneyTransactions {
-        nextToken
-        __typename
-      }
-      payments {
-        nextToken
-        __typename
-      }
-      customLoanInstallmentDetails
-      createdAt
-      updatedAt
-      __typename
-    }
-  }
-`;
 export const onCreateLoanEvent = /* GraphQL */ `
   subscription OnCreateLoanEvent(
     $filter: ModelSubscriptionLoanEventFilterInput
@@ -5193,7 +4962,6 @@ export const onCreateLoanEvent = /* GraphQL */ `
         paymentStatusEnum
         notes
         loanID
-        installmentID
         moneyTransactionID
         accountID
         receivingEmployeeID
@@ -5202,28 +4970,6 @@ export const onCreateLoanEvent = /* GraphQL */ `
         amountAllocatedToFees
         amountAllocatedToPenalty
         customPaymentDetails
-        createdAt
-        updatedAt
-        __typename
-      }
-      installmentID
-      installment {
-        id
-        loanID
-        dueDate
-        principalDue
-        interestDue
-        feesDue
-        penaltyDue
-        totalDue
-        principalPaid
-        interestPaid
-        feesPaid
-        penaltyPaid
-        totalPaid
-        status
-        calculationRecord
-        customLoanInstallmentDetails
         createdAt
         updatedAt
         __typename
@@ -5294,7 +5040,6 @@ export const onUpdateLoanEvent = /* GraphQL */ `
         paymentStatusEnum
         notes
         loanID
-        installmentID
         moneyTransactionID
         accountID
         receivingEmployeeID
@@ -5303,28 +5048,6 @@ export const onUpdateLoanEvent = /* GraphQL */ `
         amountAllocatedToFees
         amountAllocatedToPenalty
         customPaymentDetails
-        createdAt
-        updatedAt
-        __typename
-      }
-      installmentID
-      installment {
-        id
-        loanID
-        dueDate
-        principalDue
-        interestDue
-        feesDue
-        penaltyDue
-        totalDue
-        principalPaid
-        interestPaid
-        feesPaid
-        penaltyPaid
-        totalPaid
-        status
-        calculationRecord
-        customLoanInstallmentDetails
         createdAt
         updatedAt
         __typename
@@ -5395,7 +5118,6 @@ export const onDeleteLoanEvent = /* GraphQL */ `
         paymentStatusEnum
         notes
         loanID
-        installmentID
         moneyTransactionID
         accountID
         receivingEmployeeID
@@ -5404,28 +5126,6 @@ export const onDeleteLoanEvent = /* GraphQL */ `
         amountAllocatedToFees
         amountAllocatedToPenalty
         customPaymentDetails
-        createdAt
-        updatedAt
-        __typename
-      }
-      installmentID
-      installment {
-        id
-        loanID
-        dueDate
-        principalDue
-        interestDue
-        feesDue
-        penaltyDue
-        totalDue
-        principalPaid
-        interestPaid
-        feesPaid
-        penaltyPaid
-        totalPaid
-        status
-        calculationRecord
-        customLoanInstallmentDetails
         createdAt
         updatedAt
         __typename
@@ -6722,7 +6422,6 @@ export const onCreateMoneyTransaction = /* GraphQL */ `
         paymentStatusEnum
         notes
         loanID
-        installmentID
         moneyTransactionID
         accountID
         receivingEmployeeID
@@ -6731,28 +6430,6 @@ export const onCreateMoneyTransaction = /* GraphQL */ `
         amountAllocatedToFees
         amountAllocatedToPenalty
         customPaymentDetails
-        createdAt
-        updatedAt
-        __typename
-      }
-      installmentID
-      installment {
-        id
-        loanID
-        dueDate
-        principalDue
-        interestDue
-        feesDue
-        penaltyDue
-        totalDue
-        principalPaid
-        interestPaid
-        feesPaid
-        penaltyPaid
-        totalPaid
-        status
-        calculationRecord
-        customLoanInstallmentDetails
         createdAt
         updatedAt
         __typename
@@ -6914,7 +6591,6 @@ export const onUpdateMoneyTransaction = /* GraphQL */ `
         paymentStatusEnum
         notes
         loanID
-        installmentID
         moneyTransactionID
         accountID
         receivingEmployeeID
@@ -6923,28 +6599,6 @@ export const onUpdateMoneyTransaction = /* GraphQL */ `
         amountAllocatedToFees
         amountAllocatedToPenalty
         customPaymentDetails
-        createdAt
-        updatedAt
-        __typename
-      }
-      installmentID
-      installment {
-        id
-        loanID
-        dueDate
-        principalDue
-        interestDue
-        feesDue
-        penaltyDue
-        totalDue
-        principalPaid
-        interestPaid
-        feesPaid
-        penaltyPaid
-        totalPaid
-        status
-        calculationRecord
-        customLoanInstallmentDetails
         createdAt
         updatedAt
         __typename
@@ -7106,7 +6760,6 @@ export const onDeleteMoneyTransaction = /* GraphQL */ `
         paymentStatusEnum
         notes
         loanID
-        installmentID
         moneyTransactionID
         accountID
         receivingEmployeeID
@@ -7115,28 +6768,6 @@ export const onDeleteMoneyTransaction = /* GraphQL */ `
         amountAllocatedToFees
         amountAllocatedToPenalty
         customPaymentDetails
-        createdAt
-        updatedAt
-        __typename
-      }
-      installmentID
-      installment {
-        id
-        loanID
-        dueDate
-        principalDue
-        interestDue
-        feesDue
-        penaltyDue
-        totalDue
-        principalPaid
-        interestPaid
-        feesPaid
-        penaltyPaid
-        totalPaid
-        status
-        calculationRecord
-        customLoanInstallmentDetails
         createdAt
         updatedAt
         __typename
@@ -7255,28 +6886,6 @@ export const onCreatePayment = /* GraphQL */ `
         updatedAt
         __typename
       }
-      installmentID
-      installment {
-        id
-        loanID
-        dueDate
-        principalDue
-        interestDue
-        feesDue
-        penaltyDue
-        totalDue
-        principalPaid
-        interestPaid
-        feesPaid
-        penaltyPaid
-        totalPaid
-        status
-        calculationRecord
-        customLoanInstallmentDetails
-        createdAt
-        updatedAt
-        __typename
-      }
       moneyTransactionID
       moneyTransaction {
         id
@@ -7295,7 +6904,6 @@ export const onCreatePayment = /* GraphQL */ `
         status
         loanID
         paymentID
-        installmentID
         createdByEmployeeID
         customMoneyTransactionDetails
         createdAt
@@ -7453,28 +7061,6 @@ export const onUpdatePayment = /* GraphQL */ `
         updatedAt
         __typename
       }
-      installmentID
-      installment {
-        id
-        loanID
-        dueDate
-        principalDue
-        interestDue
-        feesDue
-        penaltyDue
-        totalDue
-        principalPaid
-        interestPaid
-        feesPaid
-        penaltyPaid
-        totalPaid
-        status
-        calculationRecord
-        customLoanInstallmentDetails
-        createdAt
-        updatedAt
-        __typename
-      }
       moneyTransactionID
       moneyTransaction {
         id
@@ -7493,7 +7079,6 @@ export const onUpdatePayment = /* GraphQL */ `
         status
         loanID
         paymentID
-        installmentID
         createdByEmployeeID
         customMoneyTransactionDetails
         createdAt
@@ -7651,28 +7236,6 @@ export const onDeletePayment = /* GraphQL */ `
         updatedAt
         __typename
       }
-      installmentID
-      installment {
-        id
-        loanID
-        dueDate
-        principalDue
-        interestDue
-        feesDue
-        penaltyDue
-        totalDue
-        principalPaid
-        interestPaid
-        feesPaid
-        penaltyPaid
-        totalPaid
-        status
-        calculationRecord
-        customLoanInstallmentDetails
-        createdAt
-        updatedAt
-        __typename
-      }
       moneyTransactionID
       moneyTransaction {
         id
@@ -7691,7 +7254,6 @@ export const onDeletePayment = /* GraphQL */ `
         status
         loanID
         paymentID
-        installmentID
         createdByEmployeeID
         customMoneyTransactionDetails
         createdAt
@@ -10534,7 +10096,6 @@ export const onCreateJournalEntry = /* GraphQL */ `
         paymentStatusEnum
         notes
         loanID
-        installmentID
         moneyTransactionID
         accountID
         receivingEmployeeID
@@ -10689,7 +10250,6 @@ export const onUpdateJournalEntry = /* GraphQL */ `
         paymentStatusEnum
         notes
         loanID
-        installmentID
         moneyTransactionID
         accountID
         receivingEmployeeID
@@ -10844,7 +10404,6 @@ export const onDeleteJournalEntry = /* GraphQL */ `
         paymentStatusEnum
         notes
         loanID
-        installmentID
         moneyTransactionID
         accountID
         receivingEmployeeID
@@ -14436,7 +13995,6 @@ export const onCreatePaymentDocument = /* GraphQL */ `
         paymentStatusEnum
         notes
         loanID
-        installmentID
         moneyTransactionID
         accountID
         receivingEmployeeID
@@ -14493,7 +14051,6 @@ export const onUpdatePaymentDocument = /* GraphQL */ `
         paymentStatusEnum
         notes
         loanID
-        installmentID
         moneyTransactionID
         accountID
         receivingEmployeeID
@@ -14550,7 +14107,6 @@ export const onDeletePaymentDocument = /* GraphQL */ `
         paymentStatusEnum
         notes
         loanID
-        installmentID
         moneyTransactionID
         accountID
         receivingEmployeeID
@@ -14612,7 +14168,6 @@ export const onCreateMoneyTransactionDocument = /* GraphQL */ `
         status
         loanID
         paymentID
-        installmentID
         createdByEmployeeID
         customMoneyTransactionDetails
         createdAt
@@ -14669,7 +14224,6 @@ export const onUpdateMoneyTransactionDocument = /* GraphQL */ `
         status
         loanID
         paymentID
-        installmentID
         createdByEmployeeID
         customMoneyTransactionDetails
         createdAt
@@ -14726,7 +14280,6 @@ export const onDeleteMoneyTransactionDocument = /* GraphQL */ `
         status
         loanID
         paymentID
-        installmentID
         createdByEmployeeID
         customMoneyTransactionDetails
         createdAt

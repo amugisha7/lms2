@@ -32,8 +32,23 @@ function DetailCell({ label, children, sf, sx }) {
 }
 
 export default function LoanInfoPopup({
-  loan,
   loanName,
+  loanIdDisplay,
+  borrowerName,
+  principal,
+  status,
+  startDateDisplay,
+  maturityDateDisplay,
+  durationDisplay,
+  rateDisplay,
+  interestMethod,
+  daysLeftText,
+  daysLeftIsOverdue,
+  totalPaid,
+  amountDue,
+  loanBalance,
+  productName,
+  officerName,
   onNavigate,
   onBorrowerClick,
   onLoanOfficerClick,
@@ -43,14 +58,6 @@ export default function LoanInfoPopup({
   statusColors,
   MoneyText,
   getMoneyTextSx,
-  fmtDate,
-  durationDisplay,
-  daysLeft,
-  formatRateInterval,
-  getBalance,
-  computeTotalPaid,
-  getPrincipalBalance,
-  parseLoanRecord,
 }) {
   const theme = useTheme();
   const sf = theme.palette.sf;
@@ -150,40 +157,6 @@ export default function LoanInfoPopup({
     },
     [closePopup, onCommentsClick],
   );
-
-  const b = loan.borrower || {};
-  const borrowerName =
-    [b.firstname, b.othername, b.businessName]
-      .filter(Boolean)
-      .join(" ")
-      .trim() || "N/A";
-  const status = loan.status || "N/A";
-  const loanIdDisplay = loan.loanNumber || loan.id || "\u2014";
-  const officer = loan.createdByEmployee;
-  const officerName = officer
-    ? [officer.firstName, officer.lastName].filter(Boolean).join(" ") ||
-      officer.email
-    : "N/A";
-  const balance = getBalance(loan);
-  const totalPaid = computeTotalPaid(loan.payments);
-  const principalBal = getPrincipalBalance(loan);
-  const computationRecord = parseLoanRecord(loan);
-  const rateDisplay =
-    loan.interestRate != null
-      ? `${loan.interestRate}% / ${formatRateInterval(loan.rateInterval)}`
-      : "N/A";
-  const interestMethod =
-    computationRecord?.interestMethod ||
-    computationRecord?.interestCalculationMethod ||
-    loan.loanProduct?.interestCalculationMethod ||
-    loan.loanType ||
-    "N/A";
-  const daysLeftDisplay =
-    daysLeft == null
-      ? "N/A"
-      : daysLeft < 0
-        ? `${Math.abs(daysLeft)} day${Math.abs(daysLeft) !== 1 ? "s" : ""} overdue`
-        : `${daysLeft} day${daysLeft !== 1 ? "s" : ""}`;
 
   const cellTextSx = {
     fontSize: "0.82rem",
@@ -348,7 +321,7 @@ export default function LoanInfoPopup({
               </DetailCell>
               <DetailCell label="Principal" sf={sf}>
                 <MoneyText
-                  value={loan.principal}
+                  value={principal}
                   numberSx={getMoneyTextSx(sf.sf_textPrimary)}
                 />
               </DetailCell>
@@ -371,14 +344,10 @@ export default function LoanInfoPopup({
 
               {/* Row 3: Date Taken, Maturity, Duration */}
               <DetailCell label="Date Taken" sf={sf}>
-                <Typography sx={cellTextSx}>
-                  {fmtDate(loan.startDate)}
-                </Typography>
+                <Typography sx={cellTextSx}>{startDateDisplay}</Typography>
               </DetailCell>
               <DetailCell label="Maturity" sf={sf}>
-                <Typography sx={cellTextSx}>
-                  {fmtDate(loan.maturityDate)}
-                </Typography>
+                <Typography sx={cellTextSx}>{maturityDateDisplay}</Typography>
               </DetailCell>
               <DetailCell label="Duration" sf={sf}>
                 <Typography sx={cellTextSx}>{durationDisplay}</Typography>
@@ -395,13 +364,10 @@ export default function LoanInfoPopup({
                 <Typography
                   sx={{
                     ...cellTextSx,
-                    color:
-                      daysLeft != null && daysLeft < 0
-                        ? sf.sf_error
-                        : sf.sf_textPrimary,
+                    color: daysLeftIsOverdue ? sf.sf_error : sf.sf_textPrimary,
                   }}
                 >
-                  {daysLeftDisplay}
+                  {daysLeftText}
                 </Typography>
               </DetailCell>
 
@@ -414,26 +380,24 @@ export default function LoanInfoPopup({
               </DetailCell>
               <DetailCell label="Amount Due" sf={sf}>
                 <MoneyText
-                  value={balance}
+                  value={amountDue}
                   numberSx={getMoneyTextSx(
-                    balance > 0 ? sf.sf_textPrimary : sf.sf_success,
+                    amountDue > 0 ? sf.sf_textPrimary : sf.sf_success,
                   )}
                 />
               </DetailCell>
               <DetailCell label="Loan Balance" sf={sf}>
                 <MoneyText
-                  value={principalBal}
+                  value={loanBalance}
                   numberSx={getMoneyTextSx(
-                    principalBal > 0 ? sf.sf_error : sf.sf_success,
+                    loanBalance > 0 ? sf.sf_error : sf.sf_success,
                   )}
                 />
               </DetailCell>
 
               {/* Row 6: Loan Product, Loan Officer (clickable) */}
               <DetailCell label="Product" sf={sf}>
-                <Typography sx={cellTextSx}>
-                  {loan.loanProduct?.name || "N/A"}
-                </Typography>
+                <Typography sx={cellTextSx}>{productName}</Typography>
               </DetailCell>
               <DetailCell label="Loan Officer" sf={sf}>
                 <ClickableText

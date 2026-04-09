@@ -1964,10 +1964,6 @@ export const getLoan = /* GraphQL */ `
         nextToken
         __typename
       }
-      installments {
-        nextToken
-        __typename
-      }
       events {
         nextToken
         __typename
@@ -2171,114 +2167,6 @@ export const listLoans = /* GraphQL */ `
     }
   }
 `;
-export const getLoanInstallment = /* GraphQL */ `
-  query GetLoanInstallment($id: ID!) {
-    getLoanInstallment(id: $id) {
-      id
-      loanID
-      loan {
-        id
-        loanNumber
-        approvedDate
-        principal
-        fees
-        interestRate
-        startDate
-        maturityDate
-        stopDate
-        extensionPeriod
-        duration
-        durationInterval
-        loanType
-        rateInterval
-        loanCurrency
-        loanPurpose
-        loanComputationRecord
-        loanAttribute1
-        loanAttribute2
-        numberOfPayments
-        paymentFrequency
-        customFieldsData
-        status
-        borrowerID
-        branchID
-        loanProductID
-        createdByEmployeeID
-        groupID
-        customLoanDetails
-        createdAt
-        updatedAt
-        __typename
-      }
-      dueDate
-      principalDue
-      interestDue
-      feesDue
-      penaltyDue
-      totalDue
-      principalPaid
-      interestPaid
-      feesPaid
-      penaltyPaid
-      totalPaid
-      status
-      calculationRecord
-      events {
-        nextToken
-        __typename
-      }
-      moneyTransactions {
-        nextToken
-        __typename
-      }
-      payments {
-        nextToken
-        __typename
-      }
-      customLoanInstallmentDetails
-      createdAt
-      updatedAt
-      __typename
-    }
-  }
-`;
-export const listLoanInstallments = /* GraphQL */ `
-  query ListLoanInstallments(
-    $filter: ModelLoanInstallmentFilterInput
-    $limit: Int
-    $nextToken: String
-  ) {
-    listLoanInstallments(
-      filter: $filter
-      limit: $limit
-      nextToken: $nextToken
-    ) {
-      items {
-        id
-        loanID
-        dueDate
-        principalDue
-        interestDue
-        feesDue
-        penaltyDue
-        totalDue
-        principalPaid
-        interestPaid
-        feesPaid
-        penaltyPaid
-        totalPaid
-        status
-        calculationRecord
-        customLoanInstallmentDetails
-        createdAt
-        updatedAt
-        __typename
-      }
-      nextToken
-      __typename
-    }
-  }
-`;
 export const getLoanEvent = /* GraphQL */ `
   query GetLoanEvent($id: ID!) {
     getLoanEvent(id: $id) {
@@ -2336,7 +2224,6 @@ export const getLoanEvent = /* GraphQL */ `
         paymentStatusEnum
         notes
         loanID
-        installmentID
         moneyTransactionID
         accountID
         receivingEmployeeID
@@ -2345,28 +2232,6 @@ export const getLoanEvent = /* GraphQL */ `
         amountAllocatedToFees
         amountAllocatedToPenalty
         customPaymentDetails
-        createdAt
-        updatedAt
-        __typename
-      }
-      installmentID
-      installment {
-        id
-        loanID
-        dueDate
-        principalDue
-        interestDue
-        feesDue
-        penaltyDue
-        totalDue
-        principalPaid
-        interestPaid
-        feesPaid
-        penaltyPaid
-        totalPaid
-        status
-        calculationRecord
-        customLoanInstallmentDetails
         createdAt
         updatedAt
         __typename
@@ -2394,7 +2259,6 @@ export const listLoanEvents = /* GraphQL */ `
         summary
         payload
         paymentID
-        installmentID
         customLoanEventDetails
         createdAt
         updatedAt
@@ -3062,7 +2926,6 @@ export const getMoneyTransaction = /* GraphQL */ `
         paymentStatusEnum
         notes
         loanID
-        installmentID
         moneyTransactionID
         accountID
         receivingEmployeeID
@@ -3071,28 +2934,6 @@ export const getMoneyTransaction = /* GraphQL */ `
         amountAllocatedToFees
         amountAllocatedToPenalty
         customPaymentDetails
-        createdAt
-        updatedAt
-        __typename
-      }
-      installmentID
-      installment {
-        id
-        loanID
-        dueDate
-        principalDue
-        interestDue
-        feesDue
-        penaltyDue
-        totalDue
-        principalPaid
-        interestPaid
-        feesPaid
-        penaltyPaid
-        totalPaid
-        status
-        calculationRecord
-        customLoanInstallmentDetails
         createdAt
         updatedAt
         __typename
@@ -3191,7 +3032,6 @@ export const listMoneyTransactions = /* GraphQL */ `
         status
         loanID
         paymentID
-        installmentID
         createdByEmployeeID
         customMoneyTransactionDetails
         createdAt
@@ -3252,28 +3092,6 @@ export const getPayment = /* GraphQL */ `
         updatedAt
         __typename
       }
-      installmentID
-      installment {
-        id
-        loanID
-        dueDate
-        principalDue
-        interestDue
-        feesDue
-        penaltyDue
-        totalDue
-        principalPaid
-        interestPaid
-        feesPaid
-        penaltyPaid
-        totalPaid
-        status
-        calculationRecord
-        customLoanInstallmentDetails
-        createdAt
-        updatedAt
-        __typename
-      }
       moneyTransactionID
       moneyTransaction {
         id
@@ -3292,7 +3110,6 @@ export const getPayment = /* GraphQL */ `
         status
         loanID
         paymentID
-        installmentID
         createdByEmployeeID
         customMoneyTransactionDetails
         createdAt
@@ -3421,7 +3238,6 @@ export const listPayments = /* GraphQL */ `
         paymentStatusEnum
         notes
         loanID
-        installmentID
         moneyTransactionID
         accountID
         receivingEmployeeID
@@ -4788,7 +4604,6 @@ export const getJournalEntry = /* GraphQL */ `
         paymentStatusEnum
         notes
         loanID
-        installmentID
         moneyTransactionID
         accountID
         receivingEmployeeID
@@ -6505,7 +6320,6 @@ export const getPaymentDocument = /* GraphQL */ `
         paymentStatusEnum
         notes
         loanID
-        installmentID
         moneyTransactionID
         accountID
         receivingEmployeeID
@@ -6589,7 +6403,6 @@ export const getMoneyTransactionDocument = /* GraphQL */ `
         status
         loanID
         paymentID
-        installmentID
         createdByEmployeeID
         customMoneyTransactionDetails
         createdAt
@@ -8375,49 +8188,6 @@ export const loansByGroupID = /* GraphQL */ `
     }
   }
 `;
-export const loanInstallmentsByLoanIDAndDueDate = /* GraphQL */ `
-  query LoanInstallmentsByLoanIDAndDueDate(
-    $loanID: ID!
-    $dueDate: ModelStringKeyConditionInput
-    $sortDirection: ModelSortDirection
-    $filter: ModelLoanInstallmentFilterInput
-    $limit: Int
-    $nextToken: String
-  ) {
-    loanInstallmentsByLoanIDAndDueDate(
-      loanID: $loanID
-      dueDate: $dueDate
-      sortDirection: $sortDirection
-      filter: $filter
-      limit: $limit
-      nextToken: $nextToken
-    ) {
-      items {
-        id
-        loanID
-        dueDate
-        principalDue
-        interestDue
-        feesDue
-        penaltyDue
-        totalDue
-        principalPaid
-        interestPaid
-        feesPaid
-        penaltyPaid
-        totalPaid
-        status
-        calculationRecord
-        customLoanInstallmentDetails
-        createdAt
-        updatedAt
-        __typename
-      }
-      nextToken
-      __typename
-    }
-  }
-`;
 export const loanEventsByLoanIDAndEventAt = /* GraphQL */ `
   query LoanEventsByLoanIDAndEventAt(
     $loanID: ID!
@@ -8444,7 +8214,6 @@ export const loanEventsByLoanIDAndEventAt = /* GraphQL */ `
         summary
         payload
         paymentID
-        installmentID
         customLoanEventDetails
         createdAt
         updatedAt
@@ -8479,42 +8248,6 @@ export const loanEventsByPaymentID = /* GraphQL */ `
         summary
         payload
         paymentID
-        installmentID
-        customLoanEventDetails
-        createdAt
-        updatedAt
-        __typename
-      }
-      nextToken
-      __typename
-    }
-  }
-`;
-export const loanEventsByInstallmentID = /* GraphQL */ `
-  query LoanEventsByInstallmentID(
-    $installmentID: ID!
-    $sortDirection: ModelSortDirection
-    $filter: ModelLoanEventFilterInput
-    $limit: Int
-    $nextToken: String
-  ) {
-    loanEventsByInstallmentID(
-      installmentID: $installmentID
-      sortDirection: $sortDirection
-      filter: $filter
-      limit: $limit
-      nextToken: $nextToken
-    ) {
-      items {
-        id
-        loanID
-        eventAt
-        eventType
-        actorEmployeeID
-        summary
-        payload
-        paymentID
-        installmentID
         customLoanEventDetails
         createdAt
         updatedAt
@@ -8687,7 +8420,6 @@ export const moneyTransactionsByLoanIDAndTransactionDate = /* GraphQL */ `
         status
         loanID
         paymentID
-        installmentID
         createdByEmployeeID
         customMoneyTransactionDetails
         createdAt
@@ -8732,52 +8464,6 @@ export const moneyTransactionsByPaymentID = /* GraphQL */ `
         status
         loanID
         paymentID
-        installmentID
-        createdByEmployeeID
-        customMoneyTransactionDetails
-        createdAt
-        updatedAt
-        accountMoneyTransactionsId
-        __typename
-      }
-      nextToken
-      __typename
-    }
-  }
-`;
-export const moneyTransactionsByInstallmentID = /* GraphQL */ `
-  query MoneyTransactionsByInstallmentID(
-    $installmentID: ID!
-    $sortDirection: ModelSortDirection
-    $filter: ModelMoneyTransactionFilterInput
-    $limit: Int
-    $nextToken: String
-  ) {
-    moneyTransactionsByInstallmentID(
-      installmentID: $installmentID
-      sortDirection: $sortDirection
-      filter: $filter
-      limit: $limit
-      nextToken: $nextToken
-    ) {
-      items {
-        id
-        transactionType
-        transactionDate
-        amount
-        description
-        referenceNumber
-        relatedEntityType
-        approvalStatus
-        approvedDate
-        category
-        notes
-        paymentMethod
-        deviceInfo
-        status
-        loanID
-        paymentID
-        installmentID
         createdByEmployeeID
         customMoneyTransactionDetails
         createdAt
@@ -8822,7 +8508,6 @@ export const moneyTransactionsByCreatedByEmployeeID = /* GraphQL */ `
         status
         loanID
         paymentID
-        installmentID
         createdByEmployeeID
         customMoneyTransactionDetails
         createdAt
@@ -8864,52 +8549,6 @@ export const paymentsByLoanIDAndPaymentDate = /* GraphQL */ `
         paymentStatusEnum
         notes
         loanID
-        installmentID
-        moneyTransactionID
-        accountID
-        receivingEmployeeID
-        amountAllocatedToPrincipal
-        amountAllocatedToInterest
-        amountAllocatedToFees
-        amountAllocatedToPenalty
-        customPaymentDetails
-        createdAt
-        updatedAt
-        __typename
-      }
-      nextToken
-      __typename
-    }
-  }
-`;
-export const paymentsByInstallmentID = /* GraphQL */ `
-  query PaymentsByInstallmentID(
-    $installmentID: ID!
-    $sortDirection: ModelSortDirection
-    $filter: ModelPaymentFilterInput
-    $limit: Int
-    $nextToken: String
-  ) {
-    paymentsByInstallmentID(
-      installmentID: $installmentID
-      sortDirection: $sortDirection
-      filter: $filter
-      limit: $limit
-      nextToken: $nextToken
-    ) {
-      items {
-        id
-        paymentDate
-        paymentType
-        amount
-        description
-        referenceNumber
-        paymentMethod
-        status
-        paymentStatusEnum
-        notes
-        loanID
-        installmentID
         moneyTransactionID
         accountID
         receivingEmployeeID
@@ -8954,7 +8593,6 @@ export const paymentsByMoneyTransactionID = /* GraphQL */ `
         paymentStatusEnum
         notes
         loanID
-        installmentID
         moneyTransactionID
         accountID
         receivingEmployeeID
@@ -8999,7 +8637,6 @@ export const paymentsByAccountID = /* GraphQL */ `
         paymentStatusEnum
         notes
         loanID
-        installmentID
         moneyTransactionID
         accountID
         receivingEmployeeID
@@ -9044,7 +8681,6 @@ export const paymentsByReceivingEmployeeID = /* GraphQL */ `
         paymentStatusEnum
         notes
         loanID
-        installmentID
         moneyTransactionID
         accountID
         receivingEmployeeID

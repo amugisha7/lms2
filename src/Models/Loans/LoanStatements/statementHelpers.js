@@ -83,6 +83,11 @@ export function formatEmployeeName(employee) {
 // ---------------------------------------------------------------------------
 
 const EXCLUDED_STATUSES = new Set(["REVERSED", "VOIDED", "FAILED"]);
+const EXCLUDED_PENALTY_STATUSES = new Set([
+  "VOIDED",
+  "CANCELLED",
+  "REVERSED",
+]);
 
 /**
  * Returns true if a payment should be included in statement totals.
@@ -94,6 +99,11 @@ export function isValidPayment(payment) {
     ""
   ).toUpperCase();
   return !EXCLUDED_STATUSES.has(st);
+}
+
+function isActivePenalty(penalty) {
+  const st = (penalty?.penaltyStatus || penalty?.status || "").toUpperCase();
+  return !EXCLUDED_PENALTY_STATUSES.has(st);
 }
 
 // ---------------------------------------------------------------------------
@@ -228,16 +238,26 @@ function deriveScheduleFromComputationRecord(loan) {
   const rec = parseLoanComputationRecord(loan);
   if (!rec || typeof rec !== "object") return null;
 
+  const normalizedRateInterval = (() => {
+    const raw = String(loan?.rateInterval || rec?.rateInterval || "").toLowerCase();
+    if (raw.includes("day")) return "per_day";
+    if (raw.includes("week")) return "per_week";
+    if (raw.includes("year") || raw.includes("annual")) return "per_year";
+    if (raw.includes("loan")) return "per_loan";
+    return raw ? "per_month" : null;
+  })();
+
   // Merge in the top-level loan fields that the computation router expects.
   const values = {
     principalAmount: loan.principal ?? rec.principalAmount,
     interestRate: loan.interestRate ?? rec.interestRate,
     interestMethod:
+      loan.loanProduct?.interestCalculationMethod ??
       loan.interestCalculationMethod ??
       rec.interestMethod ??
       rec.interestCalculationMethod,
     interestType: rec.interestType ?? "percentage",
-    interestPeriod: rec.interestPeriod ?? "per_month",
+    interestPeriod: rec.interestPeriod ?? normalizedRateInterval ?? "per_month",
     loanStartDate: loan.startDate ?? rec.loanStartDate ?? rec.startDate,
     startDate: loan.startDate ?? rec.startDate ?? rec.loanStartDate,
     disbursementDate:
@@ -275,11 +295,58 @@ function deriveScheduleFromComputationRecord(loan) {
     if (!result?.supported || !result?.schedulePreview?.installments?.length) {
       return null;
     }
-    return result.schedulePreview.installments;
+    return result.schedulePreview.installments.map((inst, index) => ({
+      id: inst.id || `derived-${index + 1}`,
+      dueDate: inst.dueDate,
+      openingBalance: round2(inst.openingBalance || 0),
+      principalDue: round2(inst.principalDue || 0),
+      interestDue: round2(inst.interestDue || 0),
+      feesDue: round2(inst.feesDue || 0),
+      penaltyDue: round2(inst.penaltyDue || 0),
+      totalDue: round2(
+        inst.totalDue ||
+          (inst.principalDue || 0) +
+            (inst.interestDue || 0) +
+            (inst.feesDue || 0) +
+            (inst.penaltyDue || 0)
+      ),
+      principalPaid: round2(inst.principalPaid || 0),
+      interestPaid: round2(inst.interestPaid || 0),
+      feesPaid: round2(inst.feesPaid || 0),
+      penaltyPaid: round2(inst.penaltyPaid || 0),
+      totalPaid: round2(inst.totalPaid || 0),
+      status:
+        inst.status ||
+        (dayjs(inst.dueDate).isBefore(dayjs(), "day") ? "DUE" : "UPCOMING"),
+    }));
   } catch (err) {
     console.error("[statementHelpers] deriveScheduleFromComputationRecord failed:", err);
     return null;
   }
+}
+
+export function resolveLoanSchedule(loan) {
+  return resolvePersistedInstallments(loan) || deriveScheduleFromComputationRecord(loan) || [];
+}
+
+function resolvePenaltyEvents(loan) {
+  const items = loan?.penalties?.items;
+  if (!Array.isArray(items) || items.length === 0) return [];
+
+  return items
+    .filter(Boolean)
+    .filter(isActivePenalty)
+    .map((penalty, index) => ({
+      id: penalty.id || `penalty-${index + 1}`,
+      date: penalty.penaltyDate || penalty.createdAt || penalty.updatedAt,
+      amount: round2(penalty.amount || 0),
+      description:
+        penalty.penaltyName || penalty.penaltyType || penalty.penaltyCategory || "Penalty",
+      status: penalty.penaltyStatus || penalty.status || "",
+      notes: penalty.notes || penalty.penaltyDescription || "",
+    }))
+    .filter((penalty) => penalty.amount > 0 && penalty.date)
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
 }
 
 // ---------------------------------------------------------------------------
@@ -291,6 +358,7 @@ function deriveScheduleFromComputationRecord(loan) {
  *
  * Each row is one of:
  *  { rowType: 'installment', date, installmentNumber, dueAmounts, cumulativeScheduledPaid, balance }
+ *  { rowType: 'penalty', date, amount, description, runningBalance }
  *  { rowType: 'payment', date, amount, allocations, runningBalance, paymentRef }
  *
  * Returns:
@@ -315,16 +383,18 @@ export function buildStatementLedger(loan) {
 
   // 1. Resolve schedule
   const persistedInstallments = resolvePersistedInstallments(loan);
-  let schedule = persistedInstallments;
+  let schedule = resolveLoanSchedule(loan);
   let scheduleSource = persistedInstallments ? "persisted" : "derived";
 
-  if (!schedule) {
-    schedule = deriveScheduleFromComputationRecord(loan);
-  }
   if (!schedule || schedule.length === 0) {
     scheduleSource = "none";
     schedule = [];
   }
+
+  const penaltyEvents = resolvePenaltyEvents(loan);
+  const assessedPenalty = round2(
+    penaltyEvents.reduce((sum, penalty) => sum + penalty.amount, 0)
+  );
 
   // 2. Compute running opening balances for schedule rows
   //    (some persisted installments have imprecise openingBalance)
@@ -391,12 +461,19 @@ export function buildStatementLedger(loan) {
       data: { ...inst, _instNum: instNum },
     });
   }
+  for (const penalty of penaltyEvents) {
+    events.push({
+      _date: new Date(penalty.date || 0),
+      _type: "penalty",
+      data: penalty,
+    });
+  }
   for (const p of validPayments) {
     events.push({ _date: new Date(p.paymentDate || 0), _type: "payment", data: p });
   }
 
   // Sort chronologically; installments before same-day payments
-  const typeOrder = { installment: 0, payment: 1 };
+  const typeOrder = { installment: 0, penalty: 1, payment: 2 };
   events.sort((a, b) => {
     const dt = a._date - b._date;
     if (dt !== 0) return dt;
@@ -431,6 +508,22 @@ export function buildStatementLedger(loan) {
         penaltyPaid: round2(inst.penaltyPaid || 0),
         totalPaid: round2(inst.totalPaid || 0),
         status: inst.status || "",
+        runningBalance: runningTotal(),
+      });
+    } else if (ev._type === "penalty") {
+      const penalty = ev.data;
+      balanceState.penalty = round2(balanceState.penalty + penalty.amount);
+
+      rows.push({
+        rowType: "penalty",
+        key: `penalty-${penalty.id}`,
+        date: penalty.date,
+        amount: penalty.amount,
+        penaltyDue: penalty.amount,
+        totalDue: penalty.amount,
+        description: penalty.description,
+        status: penalty.status,
+        notes: penalty.notes,
         runningBalance: runningTotal(),
       });
     } else if (ev._type === "payment") {
@@ -501,7 +594,11 @@ export function buildStatementLedger(loan) {
   const scheduledFees = totalScheduledFees;
   const scheduledPenalty = totalScheduledPenalty;
   const totalScheduled = round2(
-    scheduledPrincipal + scheduledInterest + scheduledFees + scheduledPenalty
+    scheduledPrincipal +
+      scheduledInterest +
+      scheduledFees +
+      scheduledPenalty +
+      assessedPenalty
   );
 
   // 8. Reconciliation
@@ -520,6 +617,7 @@ export function buildStatementLedger(loan) {
   };
 
   return {
+    schedule,
     rows,
     scheduleSource,
     reconciliation,
@@ -528,6 +626,7 @@ export function buildStatementLedger(loan) {
       scheduledInterest,
       scheduledFees,
       scheduledPenalty,
+      assessedPenalty,
       totalScheduled,
       totalPaymentsApplied,
       totalPrincipalPaid,

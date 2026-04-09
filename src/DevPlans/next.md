@@ -1,6 +1,5 @@
 - Create loans form. Also create from loan product.
   - Resume:
-    - Work on payments
     - Work on Loan Statements.
     - Implement loan status
     - Check validity of loan statements.

@@ -26,7 +26,7 @@ export default function LoanStatementPopup({ open, onClose, loan, loanId }) {
       showDelete={false}
       maxWidth="xl"
     >
-      <LoanStatementScreen loanId={loanId || loan?.id} embedded />
+      <LoanStatementScreen loan={loan} loanId={loanId || loan?.id} embedded />
     </CustomPopUp>
   );
 }

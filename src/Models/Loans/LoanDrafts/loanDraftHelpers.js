@@ -644,48 +644,6 @@ const GET_LOAN_QUERY = `
   }
 `;
 
-const LOANS_BY_BRANCH_QUERY = `
-  query LoansByBranchIDAndStartDate(
-    $branchID: ID!
-    $startDate: ModelStringKeyConditionInput
-    $sortDirection: ModelSortDirection
-    $filter: ModelLoanFilterInput
-    $limit: Int
-    $nextToken: String
-  ) {
-    loansByBranchIDAndStartDate(
-      branchID: $branchID
-      startDate: $startDate
-      sortDirection: $sortDirection
-      filter: $filter
-      limit: $limit
-      nextToken: $nextToken
-    ) {
-      items {
-        id
-        loanNumber
-        status
-        borrowerID
-        loanProductID
-        principal
-        interestRate
-        startDate
-        maturityDate
-        loanComputationRecord
-        createdAt
-        updatedAt
-        borrower {
-          id
-          firstname
-          othername
-          businessName
-        }
-      }
-      nextToken
-    }
-  }
-`;
-
 // Simpler query for listing loans by branch without requiring startDate key condition
 const LIST_LOANS_BY_BRANCH_QUERY = `
   query ListLoans(
@@ -793,41 +751,6 @@ const LOAN_EVENTS_BY_LOAN_QUERY = `
     }
   }
 `;
-
-const CREATE_LOAN_INSTALLMENT_MUTATION = `
-  mutation CreateLoanInstallment($input: CreateLoanInstallmentInput!) {
-    createLoanInstallment(input: $input) {
-      id
-    }
-  }
-`;
-
-const CREATE_LOAN_ACCOUNT_MUTATION = `
-  mutation CreateLoanAccount($input: CreateLoanAccountInput!) {
-    createLoanAccount(input: $input) {
-      id
-    }
-  }
-`;
-
-const runWithConcurrency = async (items, limit, worker) => {
-  const list = Array.isArray(items) ? items : [];
-  const concurrency = Math.max(1, Math.min(limit || 1, list.length || 1));
-  const results = new Array(list.length);
-  let nextIndex = 0;
-
-  const runners = Array.from({ length: concurrency }, async () => {
-    while (true) {
-      const current = nextIndex;
-      nextIndex += 1;
-      if (current >= list.length) return;
-      results[current] = await worker(list[current], current);
-    }
-  });
-
-  await Promise.all(runners);
-  return results;
-};
 
 // ------------------------------
 // Public Draft API - Using Loan model
@@ -1011,7 +934,6 @@ export const createLoanDraft = async ({
     console.warn("Schedule preview generation failed:", scheduleResult.reason);
   }
 
-  const borrowerId = draftRecord?.borrower || null;
   const borrowerBranchId =
     borrower?.branchBorrowersId || draftRecord?.borrowerBranchID || null;
   const branchId = borrowerBranchId || userDetails?.branchUsersId || null;
@@ -1370,34 +1292,6 @@ export const convertDraftToLoan = async ({ loanDraft, userDetails }) => {
 
   const loan = updateResult?.data?.updateLoan;
   if (!loan?.id) throw new Error("Failed to convert draft loan to active");
-
-  // Create Installments
-  const INSTALLMENT_CONCURRENCY = 6;
-  await runWithConcurrency(installments, INSTALLMENT_CONCURRENCY, (inst) =>
-    client.graphql({
-      query: CREATE_LOAN_INSTALLMENT_MUTATION,
-      variables: {
-        input: {
-          loanID: loan.id,
-          dueDate: inst.dueDate,
-          principalDue: inst.principalDue,
-          interestDue: inst.interestDue,
-          feesDue: inst.feesDue || 0,
-          penaltyDue: inst.penaltyDue || 0,
-          totalDue: inst.totalDue,
-          principalPaid: 0,
-          interestPaid: 0,
-          feesPaid: 0,
-          penaltyPaid: 0,
-          totalPaid: 0,
-          status: "PENDING",
-          calculationRecord: safeJsonStringify({
-            source: "DRAFT_SCHEDULE_PREVIEW",
-          }),
-        },
-      },
-    })
-  );
 
   // Create Loan Event
   await client.graphql({

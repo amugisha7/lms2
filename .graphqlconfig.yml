@@ -1,6 +1,6 @@
 projects:
   lms2:
-    schemaPath: src/graphql/schema.json
+    schemaPath: amplify/backend/api/lms2/build/schema.graphql
     includes:
       - src/graphql/**/*.js
     excludes:

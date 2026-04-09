@@ -1,27 +1,8 @@
 import { generateClient } from "aws-amplify/api";
-import { createLoan as createLoanMutation, createLoanInstallment as createLoanInstallmentMutation } from "../loanHelpers";
+import { createLoan as createLoanMutation } from "../loanHelpers";
 import { calculateSchedule } from "../../Payments/servicingEngine";
 import dayjs from 'dayjs';
 import { resolveEmployeeIdForUser } from "../../Employees/employeeHelpers";
-
-const runWithConcurrency = async (items, limit, worker) => {
-  const list = Array.isArray(items) ? items : [];
-  const concurrency = Math.max(1, Math.min(limit || 1, list.length || 1));
-  const results = new Array(list.length);
-  let nextIndex = 0;
-
-  const runners = Array.from({ length: concurrency }, async () => {
-    while (true) {
-      const current = nextIndex;
-      nextIndex += 1;
-      if (current >= list.length) return;
-      results[current] = await worker(list[current], current);
-    }
-  });
-
-  await Promise.all(runners);
-  return results;
-};
 
 const LIST_ACCOUNTS_MINIMAL_QUERY = `
   query ListAccounts($institutionId: ID!, $nextToken: String) {
@@ -54,22 +35,6 @@ const LIST_BORROWERS_QUERY = `
         businessName
         uniqueIdNumber
         branchBorrowersId
-      }
-      nextToken
-    }
-  }
-`;
-
-const LIST_LOAN_PRODUCTS_QUERY = `
-  query ListLoanProducts($institutionId: ID!, $nextToken: String) {
-    listLoanProducts(
-      filter: { institutionLoanProductsId: { eq: $institutionId } }
-      limit: 100
-      nextToken: $nextToken
-    ) {
-      items {
-        id
-        name
       }
       nextToken
     }
@@ -509,6 +474,26 @@ export const createLoanWithSchedule = async (values, userDetails) => {
     startDate,
     maturityDate,
     paymentFrequency: repaymentFrequency,
+    loanComputationRecord: JSON.stringify({
+      principalAmount: Number(values?.principalAmount),
+      interestRate: Number(values?.interestRate),
+      interestMethod: values?.interestMethod || null,
+      interestCalculationMethod: values?.interestMethod || null,
+      interestType: values?.interestType || "percentage",
+      interestPeriod: values?.interestPeriod || "per_month",
+      loanStartDate: startDate,
+      startDate,
+      maturityDate,
+      termDuration: duration,
+      loanDuration: duration,
+      durationPeriod: durationInterval,
+      durationInterval,
+      repaymentFrequency,
+      paymentFrequency: repaymentFrequency,
+      repaymentFrequencyType: values?.repaymentFrequencyType || null,
+      customPaymentDays: values?.customPaymentDays || [],
+      customPaymentDates: values?.customPaymentDates || [],
+    }),
     status: "DRAFT",
     createdByEmployeeID: loanOfficerEmployeeId || actorEmployeeId,
   };
@@ -524,6 +509,10 @@ export const createLoanWithSchedule = async (values, userDetails) => {
     startDate: loanInput.startDate
   });
 
+  if (!Array.isArray(schedule) || schedule.length === 0) {
+    throw new Error("Unable to compute a repayment schedule for this loan.");
+  }
+
   // 3. Create Loan
   const result = await client.graphql({
     query: createLoanMutation,
@@ -531,33 +520,6 @@ export const createLoanWithSchedule = async (values, userDetails) => {
   });
   
   const loan = result.data.createLoan;
-  
-  // 4. Create Installments
-  const installments = Array.isArray(schedule) ? schedule : [];
-  const INSTALLMENT_CONCURRENCY = 6;
-
-  await runWithConcurrency(installments, INSTALLMENT_CONCURRENCY, (inst) =>
-    client.graphql({
-      query: createLoanInstallmentMutation,
-      variables: {
-        input: {
-          loanID: loan.id,
-          dueDate: inst.dueDate,
-          principalDue: inst.principalDue,
-          interestDue: inst.interestDue,
-          feesDue: inst.feesDue,
-          penaltyDue: inst.penaltyDue,
-          totalDue: inst.totalDue,
-          principalPaid: 0,
-          interestPaid: 0,
-          feesPaid: 0,
-          penaltyPaid: 0,
-          totalPaid: 0,
-          status: "PENDING",
-        },
-      },
-    })
-  );
   
   return loan;
 };

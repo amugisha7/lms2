@@ -4117,22 +4117,6 @@ export const schema = {
                         ]
                     }
                 },
-                "installments": {
-                    "name": "installments",
-                    "isArray": true,
-                    "type": {
-                        "model": "LoanInstallment"
-                    },
-                    "isRequired": false,
-                    "attributes": [],
-                    "isArrayNullable": true,
-                    "association": {
-                        "connectionType": "HAS_MANY",
-                        "associatedWith": [
-                            "loan"
-                        ]
-                    }
-                },
                 "events": {
                     "name": "events",
                     "isArray": true,
@@ -4480,222 +4464,6 @@ export const schema = {
                 }
             ]
         },
-        "LoanInstallment": {
-            "name": "LoanInstallment",
-            "fields": {
-                "id": {
-                    "name": "id",
-                    "isArray": false,
-                    "type": "ID",
-                    "isRequired": true,
-                    "attributes": []
-                },
-                "loanID": {
-                    "name": "loanID",
-                    "isArray": false,
-                    "type": "ID",
-                    "isRequired": true,
-                    "attributes": []
-                },
-                "loan": {
-                    "name": "loan",
-                    "isArray": false,
-                    "type": {
-                        "model": "Loan"
-                    },
-                    "isRequired": false,
-                    "attributes": [],
-                    "association": {
-                        "connectionType": "BELONGS_TO",
-                        "targetNames": [
-                            "loanID"
-                        ]
-                    }
-                },
-                "dueDate": {
-                    "name": "dueDate",
-                    "isArray": false,
-                    "type": "AWSDate",
-                    "isRequired": true,
-                    "attributes": []
-                },
-                "principalDue": {
-                    "name": "principalDue",
-                    "isArray": false,
-                    "type": "Float",
-                    "isRequired": false,
-                    "attributes": []
-                },
-                "interestDue": {
-                    "name": "interestDue",
-                    "isArray": false,
-                    "type": "Float",
-                    "isRequired": false,
-                    "attributes": []
-                },
-                "feesDue": {
-                    "name": "feesDue",
-                    "isArray": false,
-                    "type": "Float",
-                    "isRequired": false,
-                    "attributes": []
-                },
-                "penaltyDue": {
-                    "name": "penaltyDue",
-                    "isArray": false,
-                    "type": "Float",
-                    "isRequired": false,
-                    "attributes": []
-                },
-                "totalDue": {
-                    "name": "totalDue",
-                    "isArray": false,
-                    "type": "Float",
-                    "isRequired": false,
-                    "attributes": []
-                },
-                "principalPaid": {
-                    "name": "principalPaid",
-                    "isArray": false,
-                    "type": "Float",
-                    "isRequired": false,
-                    "attributes": []
-                },
-                "interestPaid": {
-                    "name": "interestPaid",
-                    "isArray": false,
-                    "type": "Float",
-                    "isRequired": false,
-                    "attributes": []
-                },
-                "feesPaid": {
-                    "name": "feesPaid",
-                    "isArray": false,
-                    "type": "Float",
-                    "isRequired": false,
-                    "attributes": []
-                },
-                "penaltyPaid": {
-                    "name": "penaltyPaid",
-                    "isArray": false,
-                    "type": "Float",
-                    "isRequired": false,
-                    "attributes": []
-                },
-                "totalPaid": {
-                    "name": "totalPaid",
-                    "isArray": false,
-                    "type": "Float",
-                    "isRequired": false,
-                    "attributes": []
-                },
-                "status": {
-                    "name": "status",
-                    "isArray": false,
-                    "type": {
-                        "enum": "InstallmentStatus"
-                    },
-                    "isRequired": false,
-                    "attributes": []
-                },
-                "calculationRecord": {
-                    "name": "calculationRecord",
-                    "isArray": false,
-                    "type": "AWSJSON",
-                    "isRequired": false,
-                    "attributes": []
-                },
-                "events": {
-                    "name": "events",
-                    "isArray": true,
-                    "type": {
-                        "model": "LoanEvent"
-                    },
-                    "isRequired": false,
-                    "attributes": [],
-                    "isArrayNullable": true,
-                    "association": {
-                        "connectionType": "HAS_MANY",
-                        "associatedWith": [
-                            "installment"
-                        ]
-                    }
-                },
-                "moneyTransactions": {
-                    "name": "moneyTransactions",
-                    "isArray": true,
-                    "type": {
-                        "model": "MoneyTransaction"
-                    },
-                    "isRequired": false,
-                    "attributes": [],
-                    "isArrayNullable": true,
-                    "association": {
-                        "connectionType": "HAS_MANY",
-                        "associatedWith": [
-                            "installment"
-                        ]
-                    }
-                },
-                "payments": {
-                    "name": "payments",
-                    "isArray": true,
-                    "type": {
-                        "model": "Payment"
-                    },
-                    "isRequired": false,
-                    "attributes": [],
-                    "isArrayNullable": true,
-                    "association": {
-                        "connectionType": "HAS_MANY",
-                        "associatedWith": [
-                            "installment"
-                        ]
-                    }
-                },
-                "customLoanInstallmentDetails": {
-                    "name": "customLoanInstallmentDetails",
-                    "isArray": false,
-                    "type": "AWSJSON",
-                    "isRequired": false,
-                    "attributes": []
-                },
-                "createdAt": {
-                    "name": "createdAt",
-                    "isArray": false,
-                    "type": "AWSDateTime",
-                    "isRequired": false,
-                    "attributes": [],
-                    "isReadOnly": true
-                },
-                "updatedAt": {
-                    "name": "updatedAt",
-                    "isArray": false,
-                    "type": "AWSDateTime",
-                    "isRequired": false,
-                    "attributes": [],
-                    "isReadOnly": true
-                }
-            },
-            "syncable": true,
-            "pluralName": "LoanInstallments",
-            "attributes": [
-                {
-                    "type": "model",
-                    "properties": {}
-                },
-                {
-                    "type": "key",
-                    "properties": {
-                        "name": "byLoan",
-                        "fields": [
-                            "loanID",
-                            "dueDate"
-                        ]
-                    }
-                }
-            ]
-        },
         "LoanEvent": {
             "name": "LoanEvent",
             "fields": {
@@ -4787,28 +4555,6 @@ export const schema = {
                         ]
                     }
                 },
-                "installmentID": {
-                    "name": "installmentID",
-                    "isArray": false,
-                    "type": "ID",
-                    "isRequired": false,
-                    "attributes": []
-                },
-                "installment": {
-                    "name": "installment",
-                    "isArray": false,
-                    "type": {
-                        "model": "LoanInstallment"
-                    },
-                    "isRequired": false,
-                    "attributes": [],
-                    "association": {
-                        "connectionType": "BELONGS_TO",
-                        "targetNames": [
-                            "installmentID"
-                        ]
-                    }
-                },
                 "customLoanEventDetails": {
                     "name": "customLoanEventDetails",
                     "isArray": false,
@@ -4856,15 +4602,6 @@ export const schema = {
                         "name": "byPayment",
                         "fields": [
                             "paymentID"
-                        ]
-                    }
-                },
-                {
-                    "type": "key",
-                    "properties": {
-                        "name": "byInstallment",
-                        "fields": [
-                            "installmentID"
                         ]
                     }
                 }
@@ -6140,28 +5877,6 @@ export const schema = {
                         ]
                     }
                 },
-                "installmentID": {
-                    "name": "installmentID",
-                    "isArray": false,
-                    "type": "ID",
-                    "isRequired": false,
-                    "attributes": []
-                },
-                "installment": {
-                    "name": "installment",
-                    "isArray": false,
-                    "type": {
-                        "model": "LoanInstallment"
-                    },
-                    "isRequired": false,
-                    "attributes": [],
-                    "association": {
-                        "connectionType": "BELONGS_TO",
-                        "targetNames": [
-                            "installmentID"
-                        ]
-                    }
-                },
                 "documents": {
                     "name": "documents",
                     "isArray": true,
@@ -6276,15 +5991,6 @@ export const schema = {
                 {
                     "type": "key",
                     "properties": {
-                        "name": "byInstallment",
-                        "fields": [
-                            "installmentID"
-                        ]
-                    }
-                },
-                {
-                    "type": "key",
-                    "properties": {
                         "name": "byCreatedByEmployeeID",
                         "fields": [
                             "createdByEmployeeID"
@@ -6387,28 +6093,6 @@ export const schema = {
                         "connectionType": "BELONGS_TO",
                         "targetNames": [
                             "loanID"
-                        ]
-                    }
-                },
-                "installmentID": {
-                    "name": "installmentID",
-                    "isArray": false,
-                    "type": "ID",
-                    "isRequired": false,
-                    "attributes": []
-                },
-                "installment": {
-                    "name": "installment",
-                    "isArray": false,
-                    "type": {
-                        "model": "LoanInstallment"
-                    },
-                    "isRequired": false,
-                    "attributes": [],
-                    "association": {
-                        "connectionType": "BELONGS_TO",
-                        "targetNames": [
-                            "installmentID"
                         ]
                     }
                 },
@@ -6608,15 +6292,6 @@ export const schema = {
                         "fields": [
                             "loanID",
                             "paymentDate"
-                        ]
-                    }
-                },
-                {
-                    "type": "key",
-                    "properties": {
-                        "name": "byInstallment",
-                        "fields": [
-                            "installmentID"
                         ]
                     }
                 },
@@ -12157,15 +11832,6 @@ export const schema = {
                 "REJECTED"
             ]
         },
-        "InstallmentStatus": {
-            "name": "InstallmentStatus",
-            "values": [
-                "PENDING",
-                "PARTIALLY_PAID",
-                "PAID",
-                "OVERDUE"
-            ]
-        },
         "DisbursementStatus": {
             "name": "DisbursementStatus",
             "values": [
@@ -12209,5 +11875,5 @@ export const schema = {
     },
     "nonModels": {},
     "codegenVersion": "3.4.4",
-    "version": "3f09685b36824f56193560d09cfaa21d"
+    "version": "7c9a70499e521b2dd978d7be24e69001"
 };

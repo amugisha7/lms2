@@ -196,7 +196,7 @@ Required GraphQL operations (minimum set):
    - archive
 7. Convert draft → Loan:
    - Create Loan (linked to draft)
-   - Create LoanInstallments (from schedule preview or regenerated deterministically)
+   - Persist the raw computation inputs used to derive the schedule deterministically at read time
    - Create initial LoanDisbursement record if your Loans module requires it
 8. Create/list draft events
 
@@ -274,7 +274,7 @@ Conversion must:
 
 1. Validate draft completeness.
 2. Create Loan linked to draft (`loanDraftID`).
-3. Generate and persist schedule rows (LoanInstallment) from schedulePreview or deterministic regeneration.
+3. Persist the computation record needed to derive the schedule, statement, and penalties without storing LoanInstallment rows.
 4. Create a LoanEvent (CREATED_FROM_DRAFT) if your loans module supports LoanEvent.
 5. Mark draft status → CONVERTED and set convertedAt.
 6. Create LoanDraftEvent.

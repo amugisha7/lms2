@@ -19,6 +19,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { CustomerContext } from "../../CustomerApp";
 import { formatMoney } from "../../Resources/formatting";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { resolveLoanSchedule } from "../../Models/Loans/LoanStatements/statementHelpers";
 
 export default function CustomerLoanDetail() {
   const { loanId, institutionId } = useParams();
@@ -42,17 +43,50 @@ export default function CustomerLoanDetail() {
               loanNumber
               principal
               interestRate
-              loanStatusEnum
-              approvalStatusEnum
               startDate
               maturityDate
               duration
               durationInterval
               paymentFrequency
+              rateInterval
               loanCurrency
+              loanComputationRecord
+              status
               borrowerID
               loanProduct {
                 name
+                interestCalculationMethod
+                repaymentOrder
+              }
+              penalties(limit: 1000) {
+                items {
+                  id
+                  amount
+                  penaltyName
+                  penaltyDate
+                  penaltyStatus
+                  notes
+                  penaltyType
+                  penaltyDescription
+                  status
+                }
+              }
+              payments(limit: 1000) {
+                items {
+                  id
+                  paymentDate
+                  amount
+                  paymentMethod
+                  status
+                  paymentStatusEnum
+                  notes
+                  description
+                  referenceNumber
+                  amountAllocatedToPrincipal
+                  amountAllocatedToInterest
+                  amountAllocatedToFees
+                  amountAllocatedToPenalty
+                }
               }
               createdAt
             }
@@ -69,61 +103,13 @@ export default function CustomerLoanDetail() {
         }
 
         setLoan(loanData);
-
-        // Fetch installments (payment schedule)
-        const installmentsResult = await client.graphql({
-          query: `query ListLoanInstallments($filter: ModelLoanInstallmentFilterInput) {
-            listLoanInstallments(filter: $filter) {
-              items {
-                id
-                dueDate
-                principalDue
-                interestDue
-                totalDue
-                principalPaid
-                interestPaid
-                totalPaid
-                status
-              }
-            }
-          }`,
-          variables: {
-            filter: {
-              loanID: { eq: loanId },
-            },
-          },
-        });
-
-        const installmentItems =
-          installmentsResult?.data?.listLoanInstallments?.items || [];
         setInstallments(
-          installmentItems.sort(
+          resolveLoanSchedule(loanData).sort(
             (a, b) => new Date(a.dueDate) - new Date(b.dueDate),
           ),
         );
 
-        // Fetch payments
-        const paymentsResult = await client.graphql({
-          query: `query ListPayments($filter: ModelPaymentFilterInput) {
-            listPayments(filter: $filter) {
-              items {
-                id
-                paymentDate
-                amount
-                paymentMethod
-                status
-                notes
-              }
-            }
-          }`,
-          variables: {
-            filter: {
-              loanID: { eq: loanId },
-            },
-          },
-        });
-
-        const paymentItems = paymentsResult?.data?.listPayments?.items || [];
+        const paymentItems = loanData?.payments?.items || [];
         setPayments(
           paymentItems.sort(
             (a, b) => new Date(b.paymentDate) - new Date(a.paymentDate),

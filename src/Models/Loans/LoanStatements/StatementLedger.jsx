@@ -13,7 +13,6 @@ import {
   TableCell,
   TableHead,
   TableRow,
-  Typography,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { formatMoneyParts } from "../../../Resources/formatting";
@@ -311,7 +310,6 @@ export default function StatementLedger({
                       {row.referenceNumber
                         ? ` Ref: ${row.referenceNumber}`
                         : ""}
-                      {row.allocDerived ? " *" : ""}
                     </TableCell>
                   )}
                   {vc.scheduledPrincipal && <TableCell sx={CELL_BASE} />}
@@ -363,17 +361,6 @@ export default function StatementLedger({
           })}
         </TableBody>
       </Table>
-
-      {/* Legend for derived allocations */}
-      {rows.some((r) => r.rowType === "payment" && r.allocDerived) && (
-        <Typography
-          variant="caption"
-          sx={{ display: "block", mt: 0.5, color: "text.secondary" }}
-        >
-          * Payment allocation estimated from repayment order (persisted
-          allocation fields absent).
-        </Typography>
-      )}
     </Box>
   );
 }

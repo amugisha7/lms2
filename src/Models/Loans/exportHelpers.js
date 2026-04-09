@@ -7,6 +7,7 @@
  */
 import jsPDF from 'jspdf';
 export { exportStatementPdf } from './LoanStatements/statementExportHelpers';
+import { resolveLoanSchedule } from './LoanStatements/statementHelpers';
 
 // ---------------------------------------------------------------------------
 // Legacy stub – kept for any callers that haven't migrated yet.
@@ -47,7 +48,9 @@ export const exportSchedule = (loan) => {
   doc.text(`Due Date | Principal | Interest | Total | Status`, 10, y);
   y += 10;
 
-  const installments = loan.installments?.items?.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate)) || [];
+  const installments = resolveLoanSchedule(loan).sort(
+    (a, b) => new Date(a.dueDate) - new Date(b.dueDate),
+  );
 
   installments.forEach(inst => {
     if (y > 280) { doc.addPage(); y = 20; }

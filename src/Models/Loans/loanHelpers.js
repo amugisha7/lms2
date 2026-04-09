@@ -27,20 +27,34 @@ export const listLoans = /* GraphQL */ `
         loanProduct {
           id
           name
+          interestCalculationMethod
+          repaymentOrder
         }
-        installments(limit: 1000) {
+        penalties(limit: 1000) {
           items {
-            principalDue
-            principalPaid
-            totalDue
-            totalPaid
+            id
+            amount
+            penaltyName
+            penaltyDate
+            penaltyStatus
+            notes
+            penaltyType
+            penaltyDescription
+            status
           }
         }
         payments(limit: 1000) {
           items {
+            id
             amount
             status
             paymentStatusEnum
+            paymentMethod
+            referenceNumber
+            amountAllocatedToPrincipal
+            amountAllocatedToInterest
+            amountAllocatedToFees
+            amountAllocatedToPenalty
           }
         }
       }
@@ -82,6 +96,7 @@ export const getLoan = /* GraphQL */ `
         businessName
         phoneNumber
         email
+        uniqueIdNumber
       }
       branch {
         id
@@ -93,20 +108,19 @@ export const getLoan = /* GraphQL */ `
         lastName
         email
       }
-      installments(limit: 1000) {
+      penalties(limit: 1000) {
         items {
           id
-          dueDate
-          principalDue
-          interestDue
-          feesDue
-          penaltyDue
-          totalDue
-          principalPaid
-          interestPaid
-          feesPaid
-          penaltyPaid
-          totalPaid
+          amount
+          penaltyName
+          penaltyCategory
+          penaltyCalculationMethod
+          penaltyRate
+          penaltyDate
+          penaltyStatus
+          notes
+          penaltyType
+          penaltyDescription
           status
         }
       }
@@ -115,10 +129,15 @@ export const getLoan = /* GraphQL */ `
           id
           paymentDate
           amount
+          description
           paymentMethod
           referenceNumber
           status
           paymentStatusEnum
+          amountAllocatedToPrincipal
+          amountAllocatedToInterest
+          amountAllocatedToFees
+          amountAllocatedToPenalty
         }
       }
       events(limit: 100) {
@@ -134,6 +153,8 @@ export const getLoan = /* GraphQL */ `
         id
         name
         description
+        interestCalculationMethod
+        repaymentOrder
       }
     }
   }
@@ -167,17 +188,6 @@ export const updateLoan = /* GraphQL */ `
         lastName
         email
       }
-    }
-  }
-`;
-
-export const createLoanInstallment = /* GraphQL */ `
-  mutation CreateLoanInstallment(
-    $input: CreateLoanInstallmentInput!
-    $condition: ModelLoanInstallmentConditionInput
-  ) {
-    createLoanInstallment(input: $input, condition: $condition) {
-      id
     }
   }
 `;

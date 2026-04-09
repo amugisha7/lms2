@@ -36,90 +36,7 @@ import {
 } from "./statementHelpers";
 import { DEFAULT_VISIBLE_COLUMNS, AVAILABLE_COLUMNS } from "./StatementLedger";
 import { exportStatementPdf } from "./statementExportHelpers";
-
-// ---------------------------------------------------------------------------
-// GraphQL query – fetches everything the statement needs
-// ---------------------------------------------------------------------------
-const GET_LOAN_FOR_STATEMENT = /* GraphQL */ `
-  query GetLoanForStatement($id: ID!) {
-    getLoan(id: $id) {
-      id
-      loanNumber
-      principal
-      interestRate
-      startDate
-      maturityDate
-      duration
-      durationInterval
-      loanType
-      rateInterval
-      loanCurrency
-      loanPurpose
-      status
-      paymentFrequency
-      loanComputationRecord
-      numberOfPayments
-      branchID
-      borrower {
-        id
-        firstname
-        othername
-        businessName
-        phoneNumber
-        email
-        uniqueIdNumber
-      }
-      branch {
-        id
-        name
-      }
-      createdByEmployee {
-        id
-        firstName
-        lastName
-        email
-      }
-      loanProduct {
-        id
-        name
-        interestCalculationMethod
-        repaymentOrder
-      }
-      installments(limit: 1000) {
-        items {
-          id
-          dueDate
-          principalDue
-          interestDue
-          feesDue
-          penaltyDue
-          totalDue
-          principalPaid
-          interestPaid
-          feesPaid
-          penaltyPaid
-          totalPaid
-          status
-        }
-      }
-      payments(limit: 1000) {
-        items {
-          id
-          paymentDate
-          amount
-          paymentMethod
-          referenceNumber
-          status
-          paymentStatusEnum
-          amountAllocatedToPrincipal
-          amountAllocatedToInterest
-          amountAllocatedToFees
-          amountAllocatedToPenalty
-        }
-      }
-    }
-  }
-`;
+import { GET_LOAN_STATEMENT_READY_QUERY } from "../loanDataQueries";
 
 // ---------------------------------------------------------------------------
 // Date / money helpers
@@ -469,6 +386,77 @@ function LedgerTable({
               );
             }
 
+            if (row.rowType === "penalty") {
+              return (
+                <TableRow key={row.key} sx={{ bgcolor: "#fff4e5" }}>
+                  <TableCell sx={{ ...CELL_BASE, color: "#000" }}>
+                    {rowNum}
+                  </TableCell>
+                  {vc.date && (
+                    <TableCell sx={{ ...CELL_BASE, color: "#000" }}>
+                      {fmtDate(row.date)}
+                    </TableCell>
+                  )}
+                  {vc.description && (
+                    <TableCell
+                      sx={{ ...CELL_BASE, color: "#000", fontStyle: "italic" }}
+                    >
+                      {row.description}
+                      {row.status ? ` (${row.status})` : ""}
+                    </TableCell>
+                  )}
+                  {vc.scheduledPrincipal && (
+                    <TableCell sx={{ ...CELL_BASE, color: "#000" }} />
+                  )}
+                  {vc.scheduledInterest && (
+                    <TableCell sx={{ ...CELL_BASE, color: "#000" }} />
+                  )}
+                  {vc.scheduledFees && (
+                    <TableCell sx={{ ...CELL_BASE, color: "#000" }} />
+                  )}
+                  {vc.scheduledPenalty && (
+                    <TableCell
+                      sx={{ ...CELL_BASE, color: "#000", fontWeight: 600 }}
+                      align="right"
+                    >
+                      <M value={row.penaltyDue} />
+                    </TableCell>
+                  )}
+                  {vc.scheduledTotal && (
+                    <TableCell
+                      sx={{ ...CELL_BASE, color: "#000", fontWeight: 600 }}
+                      align="right"
+                    >
+                      <M value={row.totalDue} />
+                    </TableCell>
+                  )}
+                  {vc.paymentAmount && (
+                    <TableCell sx={{ ...CELL_BASE, color: "#000" }} />
+                  )}
+                  {vc.allocPrincipal && (
+                    <TableCell sx={{ ...CELL_BASE, color: "#000" }} />
+                  )}
+                  {vc.allocInterest && (
+                    <TableCell sx={{ ...CELL_BASE, color: "#000" }} />
+                  )}
+                  {vc.allocFees && (
+                    <TableCell sx={{ ...CELL_BASE, color: "#000" }} />
+                  )}
+                  {vc.allocPenalty && (
+                    <TableCell sx={{ ...CELL_BASE, color: "#000" }} />
+                  )}
+                  {vc.runningBalance && (
+                    <TableCell
+                      sx={{ ...CELL_BASE, color: "#000", fontWeight: 600 }}
+                      align="right"
+                    >
+                      <M value={row.runningBalance} />
+                    </TableCell>
+                  )}
+                </TableRow>
+              );
+            }
+
             if (row.rowType === "payment") {
               return (
                 <TableRow key={row.key} sx={{ bgcolor: "#e8f0fe" }}>
@@ -489,7 +477,6 @@ function LedgerTable({
                       {row.referenceNumber
                         ? ` Ref: ${row.referenceNumber}`
                         : ""}
-                      {row.allocDerived ? " *" : ""}
                     </TableCell>
                   )}
                   {vc.scheduledPrincipal && (
@@ -563,14 +550,6 @@ function LedgerTable({
           })}
         </TableBody>
       </Table>
-      {rows.some((r) => r.rowType === "payment" && r.allocDerived) && (
-        <Typography
-          sx={{ fontSize: "9px", mt: 0.5, color: "#555", fontStyle: "italic" }}
-        >
-          * Payment allocation estimated from repayment order (persisted
-          allocation fields absent).
-        </Typography>
-      )}
     </Box>
   );
 }
@@ -579,6 +558,7 @@ function LedgerTable({
 // Main component
 // ---------------------------------------------------------------------------
 export default function LoanStatementScreen({
+  loan: loanProp,
   loanId: loanIdProp,
   embedded = false,
 }) {
@@ -589,10 +569,11 @@ export default function LoanStatementScreen({
   const { userDetails } = React.useContext(UserContext);
   const { showSnackbar } = useSnackbar();
 
-  const [loan, setLoan] = React.useState(null);
-  const [loading, setLoading] = React.useState(true);
+  const [fetchedLoan, setFetchedLoan] = React.useState(null);
+  const [loading, setLoading] = React.useState(!loanProp);
   const [exportingPdf, setExportingPdf] = React.useState(false);
   const printAreaRef = React.useRef(null);
+  const loan = loanProp || fetchedLoan;
 
   // Header / display toggles
   const [showCustomHeader, setShowCustomHeader] = React.useState(false);
@@ -600,7 +581,6 @@ export default function LoanStatementScreen({
     React.useState(true);
   const [showInstitutionName, setShowInstitutionName] = React.useState(true);
   const [showBranchName, setShowBranchName] = React.useState(true);
-  const [showReconciliation, setShowReconciliation] = React.useState(false);
   const [showLoanOfficer, setShowLoanOfficer] = React.useState(false);
   const [showLoanProduct, setShowLoanProduct] = React.useState(false);
   const [showInterestRate, setShowInterestRate] = React.useState(false);
@@ -711,24 +691,33 @@ export default function LoanStatementScreen({
   // Fetch loan
   // -------------------------------------------------------------------------
   React.useEffect(() => {
-    if (!loanId) return;
+    if (loanProp) {
+      setLoading(false);
+      return;
+    }
+
+    if (!loanId) {
+      setLoading(false);
+      return;
+    }
+
     let cancelled = false;
     const fetchLoan = async () => {
       setLoading(true);
       try {
         const client = generateClient();
         const result = await client.graphql({
-          query: GET_LOAN_FOR_STATEMENT,
+          query: GET_LOAN_STATEMENT_READY_QUERY,
           variables: { id: loanId },
         });
         if (!cancelled) {
-          setLoan(result?.data?.getLoan || null);
+          setFetchedLoan(result?.data?.getLoan || null);
         }
       } catch (err) {
         console.error("Failed to fetch loan for statement:", err);
         if (!cancelled) {
           showSnackbar("Failed to load loan statement data", "error");
-          setLoan(null);
+          setFetchedLoan(null);
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -738,15 +727,12 @@ export default function LoanStatementScreen({
     return () => {
       cancelled = true;
     };
-  }, [loanId, showSnackbar]);
+  }, [loanId, loanProp, showSnackbar]);
 
   // -------------------------------------------------------------------------
   // Build ledger
   // -------------------------------------------------------------------------
-  const { rows, reconciliation } = React.useMemo(
-    () => buildStatementLedger(loan),
-    [loan],
-  );
+  const { rows } = React.useMemo(() => buildStatementLedger(loan), [loan]);
 
   const pages = React.useMemo(() => chunk(rows, ROWS_PER_PAGE), [rows]);
   const totalPages = Math.max(pages.length, 1);
@@ -805,8 +791,6 @@ export default function LoanStatementScreen({
         showLoanProduct,
         showInterestRate,
         showInterestMethod,
-        showReconciliation,
-        reconciliation,
         filename: `LoanStatement_${loan?.loanNumber || loan?.id || "export"}.pdf`,
       });
     } catch (err) {
@@ -1012,30 +996,6 @@ export default function LoanStatementScreen({
         </Box>
       </Box>
 
-      {/* Reconciliation warning */}
-      {showReconciliation && reconciliation?.hasWarning && (
-        <Box
-          sx={{
-            mt: 0.5,
-            p: "4px 8px",
-            border: "1px solid #e65100",
-            bgcolor: "#fff3e0",
-            borderRadius: 0,
-          }}
-        >
-          <Typography
-            variant="caption"
-            sx={{ color: "#e65100", fontSize: "10px" }}
-          >
-            ⚠ Reconciliation: Derived balance (
-            <M value={reconciliation.derivedBalance} />) differs from snapshot (
-            <M value={reconciliation.snapshotBalance} />) by{" "}
-            <M value={reconciliation.diff} />. Historical data may be
-            incomplete.
-          </Typography>
-        </Box>
-      )}
-
       <Box sx={{ mt: 0.5 }}>
         <Typography variant="body2" sx={{ color: "#000", fontSize: "11px" }}>
           <strong>Statement:</strong>
@@ -1114,19 +1074,6 @@ export default function LoanStatementScreen({
                 label: "Interest Method",
                 checked: showInterestMethod,
                 onChange: setShowInterestMethod,
-              },
-            ],
-          },
-          {
-            key: "fields",
-            label: "Fields",
-            checkboxes: [
-              {
-                key: "reconciliation",
-                label: "Reconciliation",
-                checked: showReconciliation,
-                onChange: setShowReconciliation,
-                disabled: !reconciliation?.hasWarning,
               },
             ],
           },

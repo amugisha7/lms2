@@ -33,13 +33,6 @@ const LoanApprovalStatus = {
   "REJECTED": "REJECTED"
 };
 
-const InstallmentStatus = {
-  "PENDING": "PENDING",
-  "PARTIALLY_PAID": "PARTIALLY_PAID",
-  "PAID": "PAID",
-  "OVERDUE": "OVERDUE"
-};
-
 const DisbursementStatus = {
   "PENDING": "PENDING",
   "COMPLETED": "COMPLETED",
@@ -72,7 +65,7 @@ const ApprovalType = {
   "PAYMENT": "PAYMENT"
 };
 
-const { Institution, Branch, User, Employee, Borrower, Guarantor, Security, UserNotification, LoanProduct, CreditScore, Document, Contract, Application, Collateral, Loan, LoanInstallment, LoanEvent, Investment, LoanFees, Penalty, Payroll, Account, MoneyTransaction, Payment, Expense, OtherIncome, FinancialReport, CustomFormField, LoanFeesConfig, Message, Notification, Group, SavingsProduct, SavingsAccount, SavingsTransaction, ShareAccount, ShareTransaction, ChartOfAccounts, JournalEntry, JournalLine, Meeting, DividendDeclaration, Approval, AccountBranch, BranchLoanProduct, BranchLoanFeesConfig, PayrollEmployee, BorrowerLoanOfficer, BorrowerDocument, LoanGuarantor, ApplicationGuarantor, GuarantorCollateral, LoanProductLoanFees, LoanProductLoanFeesConfig, LoanProductPenalty, LoanDocument, ApplicationDocument, ContractDocument, ExpenseDocument, PaymentDocument, MoneyTransactionDocument, ApplicationContract, CollateralContract, LoanContract, ApplicationCollateral, ApplicationExpense, LoanApplication, LoanCollateral, LoanAccount, LoanExpense, InvestmentAccount, LoanFeesLoanFeesConfig, OtherIncomeAccount } = initSchema(schema);
+const { Institution, Branch, User, Employee, Borrower, Guarantor, Security, UserNotification, LoanProduct, CreditScore, Document, Contract, Application, Collateral, Loan, LoanEvent, Investment, LoanFees, Penalty, Payroll, Account, MoneyTransaction, Payment, Expense, OtherIncome, FinancialReport, CustomFormField, LoanFeesConfig, Message, Notification, Group, SavingsProduct, SavingsAccount, SavingsTransaction, ShareAccount, ShareTransaction, ChartOfAccounts, JournalEntry, JournalLine, Meeting, DividendDeclaration, Approval, AccountBranch, BranchLoanProduct, BranchLoanFeesConfig, PayrollEmployee, BorrowerLoanOfficer, BorrowerDocument, LoanGuarantor, ApplicationGuarantor, GuarantorCollateral, LoanProductLoanFees, LoanProductLoanFeesConfig, LoanProductPenalty, LoanDocument, ApplicationDocument, ContractDocument, ExpenseDocument, PaymentDocument, MoneyTransactionDocument, ApplicationContract, CollateralContract, LoanContract, ApplicationCollateral, ApplicationExpense, LoanApplication, LoanCollateral, LoanAccount, LoanExpense, InvestmentAccount, LoanFeesLoanFeesConfig, OtherIncomeAccount } = initSchema(schema);
 
 export {
   Institution,
@@ -90,7 +83,6 @@ export {
   Application,
   Collateral,
   Loan,
-  LoanInstallment,
   LoanEvent,
   Investment,
   LoanFees,
@@ -152,7 +144,6 @@ export {
   Frequency,
   LoanStatus,
   LoanApprovalStatus,
-  InstallmentStatus,
   DisbursementStatus,
   PaymentStatus,
   LoanEventType,

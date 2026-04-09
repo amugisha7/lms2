@@ -23,9 +23,15 @@ const buildDescription = (row) => {
     }`;
   }
 
+  if (row.rowType === "penalty") {
+    return `${row.description || "Penalty"}${
+      row.status ? ` (${row.status})` : ""
+    }`;
+  }
+
   return `Payment${row.paymentMethod ? ` (${row.paymentMethod})` : ""}${
     row.referenceNumber ? ` Ref: ${row.referenceNumber}` : ""
-  }${row.allocDerived ? " *" : ""}`;
+  }`;
 };
 
 const getStatementColumns = (visibleColumns) => {
@@ -80,13 +86,13 @@ const buildStatementBody = (rows, columns, currency, currencyCode) =>
           break;
         case "scheduledPenalty":
           record.scheduledPenalty =
-            row.rowType === "installment"
+            row.rowType === "installment" || row.rowType === "penalty"
               ? formatCurrencyText(row.penaltyDue, currency, currencyCode)
               : "";
           break;
         case "scheduledTotal":
           record.scheduledTotal =
-            row.rowType === "installment"
+            row.rowType === "installment" || row.rowType === "penalty"
               ? formatCurrencyText(row.totalDue, currency, currencyCode)
               : "";
           break;
@@ -164,8 +170,6 @@ export async function exportStatementPdf({
   showLoanProduct = false,
   showInterestRate = false,
   showInterestMethod = false,
-  showReconciliation = false,
-  reconciliation = null,
   filename = "LoanStatement.pdf",
 }) {
   if (!loan) throw new Error("loan is required");
@@ -226,27 +230,6 @@ export async function exportStatementPdf({
   ];
 
   y = drawInfoColumns(doc, { leftItems, rightItems, startY: y }) + 4;
-
-  if (showReconciliation && reconciliation?.hasWarning) {
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(8.5);
-    doc.setTextColor(230, 81, 0);
-    const lines = doc.splitTextToSize(
-      `Reconciliation: Derived balance ${formatCurrencyText(
-        reconciliation.derivedBalance,
-        currency,
-        currencyCode,
-      )} differs from snapshot ${formatCurrencyText(
-        reconciliation.snapshotBalance,
-        currency,
-        currencyCode,
-      )} by ${formatCurrencyText(reconciliation.diff, currency, currencyCode)}. Historical data may be incomplete.`,
-      doc.internal.pageSize.getWidth() - PDF_LAYOUT.marginX * 2,
-    );
-    doc.text(lines, PDF_LAYOUT.marginX, y);
-    doc.setTextColor(0, 0, 0);
-    y += lines.length * 11 + 4;
-  }
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
@@ -323,26 +306,6 @@ export async function exportStatementPdf({
       }
     },
   });
-
-  if (rows.some((row) => row.rowType === "payment" && row.allocDerived)) {
-    let footnoteY = (doc.lastAutoTable?.finalY || y) + 10;
-    const pageHeight = doc.internal.pageSize.getHeight();
-
-    if (footnoteY > pageHeight - PDF_LAYOUT.marginBottom - 24) {
-      doc.addPage();
-      footnoteY = drawPdfHeader(doc, headerOptions, doc.getNumberOfPages()) + 8;
-    }
-
-    doc.setFont("helvetica", "italic");
-    doc.setFontSize(8);
-    doc.setTextColor(85, 85, 85);
-    doc.text(
-      "* Payment allocation estimated from repayment order (persisted allocation fields absent).",
-      PDF_LAYOUT.marginX,
-      footnoteY,
-    );
-    doc.setTextColor(0, 0, 0);
-  }
 
   const totalPages = doc.getNumberOfPages();
   for (let page = 1; page <= totalPages; page += 1) {

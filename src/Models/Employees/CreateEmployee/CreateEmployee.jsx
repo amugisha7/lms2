@@ -333,7 +333,7 @@ const CreateEmployee = forwardRef(
                     setSubmitSuccess={setSubmitSuccess}
                     onClose={onClose}
                     hideCancel={hideCancel}
-                    submitLabel="Save Employee"
+                    submitLabel="SAVE EMPLOYEE"
                   />
                 ) : null}
               </Box>

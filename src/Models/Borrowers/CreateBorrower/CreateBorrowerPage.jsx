@@ -5,7 +5,9 @@ import { generateClient } from "aws-amplify/api";
 import { UserContext } from "../../../App";
 import CreateBorrower from "./CreateBorrower";
 import NotificationBar from "../../../ModelAssets/NotificationBar";
+import DropDownSearchable from "../../../Resources/FormComponents/DropDownSearchable";
 import { CREATE_BORROWER_MUTATION } from "../borrowerQueries";
+import { listBranches } from "../../../graphql/queries";
 import {
   resolveEmployeeIdForUser,
   syncBorrowerEmployeeAssignment,
@@ -15,10 +17,68 @@ export default function CreateBorrowerPage() {
   const navigate = useNavigate();
   const { userDetails } = useContext(UserContext);
   const client = React.useMemo(() => generateClient(), []);
+  const isAdmin = String(userDetails?.userType || "").toLowerCase() === "admin";
   const [notification, setNotification] = React.useState({
     message: "",
     color: "green",
   });
+  const [branches, setBranches] = React.useState([]);
+  const [selectedBranchId, setSelectedBranchId] = React.useState("");
+
+  React.useEffect(() => {
+    if (!userDetails) return;
+
+    if (!isAdmin) {
+      setSelectedBranchId(
+        userDetails.branchUsersId || userDetails.branch?.id || "",
+      );
+    }
+  }, [isAdmin, userDetails]);
+
+  React.useEffect(() => {
+    if (!isAdmin || !userDetails?.institution?.id) {
+      setBranches([]);
+      return;
+    }
+
+    let cancelled = false;
+
+    const fetchBranches = async () => {
+      try {
+        const branchData = await client.graphql({
+          query: listBranches,
+          variables: {
+            limit: 1000,
+            filter: {
+              institutionBranchesId: { eq: userDetails.institution.id },
+            },
+          },
+        });
+
+        if (cancelled) return;
+
+        const items = branchData?.data?.listBranches?.items || [];
+        setBranches(
+          items.map((branch) => ({ value: branch.id, label: branch.name })),
+        );
+      } catch (error) {
+        console.error("Error fetching branches", error);
+      }
+    };
+
+    fetchBranches();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [client, isAdmin, userDetails?.institution?.id]);
+
+  const branchOptions = React.useMemo(() => branches, [branches]);
+  const effectiveBranchId =
+    selectedBranchId ||
+    userDetails?.branchUsersId ||
+    userDetails?.branch?.id ||
+    "";
 
   // Valid borrower fields for GraphQL input
   const validBorrowerFields = [
@@ -146,14 +206,52 @@ export default function CreateBorrowerPage() {
         <Typography variant="h4" sx={{ fontWeight: 600, mb: 3 }}>
           Create New Borrower
         </Typography>
-        <Paper elevation={2} sx={{ p: 3 }}>
-          <CreateBorrower
-            onCreateBorrowerAPI={handleCreate}
-            onClose={handleClose}
-            isEditMode={false}
-            forceEditMode={true}
-          />
-        </Paper>
+
+        {isAdmin && (
+          <Box sx={{ width: "100%", mb: 2 }}>
+            <DropDownSearchable
+              label="Select Branch"
+              name="branchBorrowersId"
+              placeholder="type to search branches..."
+              required={true}
+              options={branchOptions}
+              value={selectedBranchId}
+              onChange={(e) => setSelectedBranchId(e.target.value)}
+              helperText="Choose a branch before creating a borrower."
+            />
+          </Box>
+        )}
+
+        {effectiveBranchId ? (
+          <Paper
+            elevation={2}
+            sx={{ p: 3, backgroundColor: "background.paper" }}
+          >
+            <CreateBorrower
+              key={effectiveBranchId}
+              onCreateBorrowerAPI={handleCreate}
+              onClose={handleClose}
+              isEditMode={false}
+              forceEditMode={true}
+              selectedBranchId={effectiveBranchId}
+              hideBranchField
+            />
+          </Paper>
+        ) : (
+          <Box
+            sx={{
+              mt: 3,
+              p: 2,
+              backgroundColor: "#e3f2fd",
+              border: "1px solid #2196f3",
+              borderRadius: 1,
+            }}
+          >
+            <Typography variant="body2" sx={{ color: "#1565c0" }}>
+              Please select a branch above to proceed with creating a borrower.
+            </Typography>
+          </Box>
+        )}
       </Box>
     </>
   );

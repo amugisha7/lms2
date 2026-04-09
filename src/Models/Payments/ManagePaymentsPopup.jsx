@@ -8,7 +8,6 @@ import React, {
 import {
   Box,
   Typography,
-  Button,
   Chip,
   Tabs,
   Tab,
@@ -25,6 +24,7 @@ import SaveOutlinedIcon from "@mui/icons-material/SaveOutlined";
 import CloseIcon from "@mui/icons-material/Close";
 
 import CustomSlider from "../../ModelAssets/CustomSlider";
+import PlusButtonMain from "../../ModelAssets/PlusButtonMain";
 import CustomDataGrid from "../../ModelAssets/CustomDataGrid";
 import { useSnackbar } from "../../ModelAssets/SnackbarContext";
 import { UserContext } from "../../App";
@@ -268,11 +268,13 @@ function AddPaymentForm({
   const currencyLabel =
     userDetails?.institution?.currencyCode || userDetails?.currencyCode || "";
   const employeeOptions = useMemo(
-    () =>
-      employees.map((employee) => ({
+    () => [
+      { value: "", label: "None" },
+      ...employees.map((employee) => ({
         value: employee.id,
         label: getEmployeeOptionLabel(employee),
       })),
+    ],
     [employees],
   );
 
@@ -385,24 +387,6 @@ function AddPaymentForm({
               }
             />
 
-            <DropDownSearchable
-              label="Receiving Employee"
-              name="receivingEmployeeID"
-              editing={true}
-              disabled={employeesLoading}
-              options={employeeOptions}
-              value={formik.values.receivingEmployeeID}
-              onChange={(e) =>
-                formik.setFieldValue("receivingEmployeeID", e.target.value)
-              }
-              helperText="Employee receiving this payment. Defaults to the loan's assigned employee."
-              placeholder={
-                employeesLoading
-                  ? "Loading employees..."
-                  : "Search for an employee..."
-              }
-            />
-
             <TextInput
               label="Payment Amount"
               name="amount"
@@ -417,6 +401,23 @@ function AddPaymentForm({
               name="paymentDate"
               required={true}
               editing={true}
+            />
+            <DropDownSearchable
+              label="Receiving Employee"
+              name="receivingEmployeeID"
+              editing={true}
+              disabled={employeesLoading}
+              options={employeeOptions}
+              value={formik.values.receivingEmployeeID}
+              onChange={(e) =>
+                formik.setFieldValue("receivingEmployeeID", e.target.value)
+              }
+              helperText="Employee receiving this payment. Optional"
+              placeholder={
+                employeesLoading
+                  ? "Loading employees..."
+                  : "Search for an employee..."
+              }
             />
 
             <TextArea
@@ -452,30 +453,19 @@ function AddPaymentForm({
             )}
 
             <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
-              <Button
+              <PlusButtonMain
                 type="submit"
-                variant="contained"
+                variant="outlined"
+                buttonText={
+                  formik.isSubmitting ? "Submitting..." : "SUBMIT PAYMENT"
+                }
                 disabled={
                   formik.isSubmitting ||
                   accountsLoading ||
                   employeesLoading ||
                   !accountOptions.length
                 }
-                sx={{
-                  bgcolor: sf.sf_brandPrimary,
-                  color: "#fff",
-                  borderRadius: 0,
-                  textTransform: "none",
-                  fontWeight: 600,
-                  fontSize: "0.82rem",
-                  px: 3,
-                  "&:hover": {
-                    bgcolor: sf.sf_brandPrimaryHover || sf.sf_brandPrimary,
-                  },
-                }}
-              >
-                {formik.isSubmitting ? "Submitting..." : "Submit Payment"}
-              </Button>
+              />
             </Box>
           </Box>
         </Form>

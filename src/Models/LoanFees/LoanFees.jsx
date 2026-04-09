@@ -15,6 +15,7 @@ import CustomSlider from "../../ModelAssets/CustomSlider";
 import { UserContext } from "../../App";
 import CreateLoanFeesForm from "./CreateLoanFeesForm";
 import EditLoanFeesForm from "./EditLoanFeesForm";
+import { syncLoanFeeBranches } from "./loanFeesConfigHelpers";
 
 const CATEGORY_LABELS = {
   non_deductable: "Non-Deductable Fee",
@@ -99,6 +100,16 @@ export default function LoanFees() {
                   description
                   percentageBase
                   rate
+                  branches {
+                    items {
+                      id
+                      branchId
+                      branch {
+                        id
+                        name
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -129,7 +140,7 @@ export default function LoanFees() {
 
   const handleEditSuccess = (updatedItem) => {
     setItems((prev) =>
-      prev.map((item) => (item.id === updatedItem.id ? updatedItem : item))
+      prev.map((item) => (item.id === updatedItem.id ? updatedItem : item)),
     );
     setEditDialogOpen(false);
   };
@@ -153,13 +164,15 @@ export default function LoanFees() {
       });
       const relations =
         loanProductFeesResult.data.listLoanProductLoanFeesConfigs.items;
-      
+
       for (const item of relations) {
         await client.graphql({
           query: DELETE_LOAN_PRODUCT_LOAN_FEES_CONFIG_MUTATION,
           variables: { input: { id: item.id } },
         });
       }
+
+      await syncLoanFeeBranches(deleteDialogRow.id, []);
 
       await client.graphql({
         query: `
@@ -220,8 +233,11 @@ export default function LoanFees() {
   // Handle successful edit from view mode
   const handleViewEditSuccess = (updatedLoanFee) => {
     setItems((prev) =>
-      prev.map((item) => (item.id === updatedLoanFee.id ? updatedLoanFee : item))
+      prev.map((item) =>
+        item.id === updatedLoanFee.id ? updatedLoanFee : item,
+      ),
     );
+    setSelectedLoanFee(updatedLoanFee);
     setEditClicked(false);
   };
 
@@ -294,6 +310,22 @@ export default function LoanFees() {
       renderCell: (params) => CATEGORY_LABELS[params.value] || params.value,
     },
     {
+      field: "branches",
+      headerName: "Branches",
+      width: 220,
+      renderCell: (params) => {
+        const items = params.row.branches?.items || [];
+        if (items.length === 0) {
+          return "All Branches";
+        }
+
+        return items
+          .map((item) => item?.branch?.name)
+          .filter(Boolean)
+          .join(", ");
+      },
+    },
+    {
       field: "status",
       headerName: "Status",
       width: 80,
@@ -314,7 +346,6 @@ export default function LoanFees() {
         columns={columns}
         searchFields={["name"]}
         noDataMessage="No Loan Fees found"
-        
         // Create
         onCreateClick={() => setCreateDialogOpen(true)}
         createDialogOpen={createDialogOpen}
@@ -322,20 +353,18 @@ export default function LoanFees() {
         createDialogTitle="Create Loan Fee"
         CreateFormComponent={CreateLoanFeesForm}
         createFormProps={{
-            onSuccess: handleCreateSuccess,
-            onClose: () => setCreateDialogOpen(false)
+          onSuccess: handleCreateSuccess,
+          onClose: () => setCreateDialogOpen(false),
         }}
-
         // Edit
         editDialogOpen={editDialogOpen}
         editDialogRow={editDialogRow}
         onEditDialogClose={() => setEditDialogOpen(false)}
         EditFormComponent={EditLoanFeesForm}
         editFormProps={{
-            onSuccess: handleEditSuccess,
-            onClose: () => setEditDialogOpen(false)
+          onSuccess: handleEditSuccess,
+          onClose: () => setEditDialogOpen(false),
         }}
-
         // Delete
         deleteDialogOpen={deleteDialogOpen}
         onDeleteDialogClose={() => setDeleteDialogOpen(false)}
@@ -344,7 +373,7 @@ export default function LoanFees() {
         deleteError={deleteError}
         deleteDialogRow={deleteDialogRow}
       />
-      
+
       <Popover
         open={Boolean(popoverAnchorEl)}
         anchorEl={popoverAnchorEl}

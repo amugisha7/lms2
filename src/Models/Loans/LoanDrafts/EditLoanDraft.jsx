@@ -18,10 +18,12 @@ import {
 } from "./loanDraftHelpers";
 import LoanScheduleDraft from "./LoanScheduleDraft";
 import NotificationBar from "../../../ModelAssets/NotificationBar";
+import { useSnackbar } from "../../../ModelAssets/SnackbarContext";
 import { UserContext } from "../../../App";
 import {
   fetchInstitutionAdmins,
   fetchLoanProducts,
+  fetchLoanFeesConfig,
 } from "../CreateLoan/createLoanHelpers";
 import { sendLoanApprovalRequest } from "../../../Screens/Notifications/notificationsAPI";
 
@@ -83,6 +85,7 @@ export default function EditLoanDraft({
   const { draftId } = useParams();
   const navigate = useNavigate();
   const { userDetails } = useContext(UserContext);
+  const { showSnackbar } = useSnackbar();
   const isViewMode = mode === "view";
   const [loading, setLoading] = useState(!propLoanDraft || !propInitialValues);
   const [draftData, setDraftData] = useState(propLoanDraft);
@@ -92,6 +95,7 @@ export default function EditLoanDraft({
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [loanProducts, setLoanProducts] = useState([]);
   const [loanProductsLoading, setLoanProductsLoading] = useState(false);
+  const [loanFeesConfigs, setLoanFeesConfigs] = useState([]);
 
   useEffect(() => {
     if (propLoanDraft) setDraftData(propLoanDraft);
@@ -255,6 +259,81 @@ export default function EditLoanDraft({
     userDetails?.institutionUsersId,
   ]);
 
+  // Fetch loan fees configs so the schedule can display fee information
+  useEffect(() => {
+    const institutionId = userDetails?.institutionUsersId;
+    const branchId =
+      borrower?.branchBorrowersId ||
+      draftData?.branchID ||
+      userDetails?.branchUsersId ||
+      null;
+    if (!institutionId) {
+      setLoanFeesConfigs([]);
+      return;
+    }
+    fetchLoanFeesConfig(institutionId, branchId)
+      .then((data) => setLoanFeesConfigs(Array.isArray(data) ? data : []))
+      .catch((err) => console.error("Error fetching loan fees configs:", err));
+  }, [
+    borrower?.branchBorrowersId,
+    draftData?.branchID,
+    userDetails?.branchUsersId,
+    userDetails?.institutionUsersId,
+  ]);
+
+  const totalLoanFee = useMemo(() => {
+    if (!initialValues) return 0;
+    const { loanFeesType, customLoanFeeAmount, loanFees, principalAmount } =
+      initialValues;
+    if (loanFeesType === "custom") {
+      return parseFloat(customLoanFeeAmount) || 0;
+    }
+    if (loanFeesType === "pre-defined" && loanFees) {
+      const config = loanFeesConfigs.find((c) => c.id === loanFees);
+      if (config) {
+        if (config.calculationMethod === "fixed") {
+          return parseFloat(config.rate) || 0;
+        } else if (config.calculationMethod === "percentage") {
+          const principal = parseFloat(principalAmount) || 0;
+          return (principal * parseFloat(config.rate || 0)) / 100;
+        }
+      }
+    }
+    return 0;
+  }, [initialValues, loanFeesConfigs]);
+
+  const loanFeeSummary = useMemo(() => {
+    if (!initialValues) return null;
+    const { loanFeesType, loanFees } = initialValues;
+    if (!loanFeesType || loanFeesType === "none") return null;
+    if (loanFeesType === "custom") {
+      return {
+        label: null,
+        amount: totalLoanFee,
+        calculationMethod: null,
+        rate: null,
+      };
+    }
+    if (loanFeesType === "pre-defined" && loanFees) {
+      const config = loanFeesConfigs.find((c) => c.id === loanFees);
+      return {
+        label: config?.name || "Loan Fee",
+        amount: totalLoanFee,
+        calculationMethod: config?.calculationMethod || null,
+        rate: config?.rate || null,
+      };
+    }
+    if (loanFeesType === "pre-defined") {
+      return {
+        label: "Loan Fee",
+        amount: totalLoanFee,
+        calculationMethod: null,
+        rate: null,
+      };
+    }
+    return null;
+  }, [initialValues, loanFeesConfigs, totalLoanFee]);
+
   const scheduleBorrower = borrower || draftData?.borrower || null;
   const borrowerDisplayName =
     formatBorrowerName(scheduleBorrower) || draftData?.borrowerID || "N/A";
@@ -346,11 +425,19 @@ export default function EditLoanDraft({
     try {
       if (!draftData?.id) throw new Error("Save Draft first.");
 
-      await convertDraftToLoan({ loanDraft: draftData, userDetails });
+      const loan = await convertDraftToLoan({
+        loanDraft: draftData,
+        userDetails,
+      });
       setScheduleOpen(false);
+      showSnackbar(
+        `Loan ${loan?.loanNumber || loan?.id || draftData?.loanNumber || draftData?.id || ""} created successfully.`.trim(),
+        "green",
+      );
       navigate("/loans");
     } catch (err) {
       console.error(err);
+      showSnackbar(err?.message || "Failed to create loan.", "red");
       setNotification({
         type: "error",
         message: err?.message || "Failed to create loan.",
@@ -463,6 +550,8 @@ export default function EditLoanDraft({
           createButtonText={
             isPrivileged ? "CREATE LOAN" : "SUBMIT FOR APPROVAL"
           }
+          totalLoanFee={totalLoanFee}
+          loanFeeSummary={loanFeeSummary}
           isEditDraftFlow
         />
       </CustomPopUp>

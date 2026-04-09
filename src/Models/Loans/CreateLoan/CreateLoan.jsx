@@ -19,7 +19,7 @@ import OrderedList from "../../../Resources/FormComponents/OrderedList";
 import CreateFormButtons from "../../../ModelAssets/CreateFormButtons";
 import PlusButtonMain from "../../../ModelAssets/PlusButtonMain";
 import { UserContext } from "../../../App";
-import { useNotification } from "../../../ModelAssets/NotificationContext";
+import { useSnackbar } from "../../../ModelAssets/SnackbarContext";
 import {
   fetchLoanFeesConfig,
   fetchInstitutionAdmins,
@@ -284,7 +284,7 @@ const CreateLoan = forwardRef(
     ref,
   ) => {
     const { userDetails } = useContext(UserContext);
-    const { showNotification } = useNotification();
+    const { showSnackbar } = useSnackbar();
     const navigate = useNavigate();
     const theme = useTheme();
     const [submitError, setSubmitError] = useState("");
@@ -294,8 +294,6 @@ const CreateLoan = forwardRef(
     const [scheduleOpen, setScheduleOpen] = useState(false);
     const [loanFeesConfigs, setLoanFeesConfigs] = useState([]);
     const [loanFeesLoading, setLoanFeesLoading] = useState(false);
-    const loanFeesFetchedRef = useRef(false);
-    const loanFeesInstitutionIdRef = useRef(null);
     const formikRef = useRef(null);
     const [isProcessing, setIsProcessing] = useState(false);
     const [workingOverlayOpen, setWorkingOverlayOpen] = useState(false);
@@ -334,28 +332,35 @@ const CreateLoan = forwardRef(
 
     useEffect(() => {
       const currentInstitutionId = userDetails?.institutionUsersId;
-      if (
-        currentInstitutionId &&
-        currentInstitutionId !== loanFeesInstitutionIdRef.current
-      ) {
-        loanFeesFetchedRef.current = false;
-        loanFeesInstitutionIdRef.current = currentInstitutionId;
+      const effectiveBranchId =
+        propBorrower?.branchBorrowersId ||
+        loanDraft?.branchID ||
+        userDetails?.branchUsersId ||
+        null;
+
+      if (!currentInstitutionId) {
+        setLoanFeesConfigs([]);
+        setLoanFeesLoading(false);
+        return;
       }
-      if (!loanFeesFetchedRef.current && currentInstitutionId) {
-        setLoanFeesLoading(true);
-        fetchLoanFeesConfig(currentInstitutionId)
-          .then((data) => {
-            setLoanFeesConfigs(Array.isArray(data) ? data : []);
-            loanFeesFetchedRef.current = true;
-          })
-          .catch((err) => {
-            console.error("Error fetching loan fees configs:", err);
-          })
-          .finally(() => {
-            setLoanFeesLoading(false);
-          });
-      }
-    }, [userDetails?.institutionUsersId]);
+
+      setLoanFeesLoading(true);
+      fetchLoanFeesConfig(currentInstitutionId, effectiveBranchId)
+        .then((data) => {
+          setLoanFeesConfigs(Array.isArray(data) ? data : []);
+        })
+        .catch((err) => {
+          console.error("Error fetching loan fees configs:", err);
+        })
+        .finally(() => {
+          setLoanFeesLoading(false);
+        });
+    }, [
+      loanDraft?.branchID,
+      propBorrower?.branchBorrowersId,
+      userDetails?.branchUsersId,
+      userDetails?.institutionUsersId,
+    ]);
 
     useEffect(() => {
       let cancelled = false;
@@ -599,6 +604,10 @@ const CreateLoan = forwardRef(
       setIsProcessing(true);
       setWorkingOverlayMessage("Creating loan and disbursing funds...");
       setWorkingOverlayOpen(true);
+      let createdLoan = null;
+      let principalDisbursed = false;
+      let feesRecorded = !Boolean(accountSelection?.totalLoanFee);
+      let disbursementEventRecorded = false;
 
       try {
         const actorEmployeeId = await resolveEmployeeIdForUser({
@@ -633,6 +642,7 @@ const CreateLoan = forwardRef(
           loanDraft: currentDraft,
           userDetails,
         });
+        createdLoan = loan;
 
         if (!loan?.id) {
           throw new Error("Failed to create loan.");
@@ -697,6 +707,7 @@ const CreateLoan = forwardRef(
               },
             },
           });
+          principalDisbursed = true;
 
           // Step 4: Create loan fees transaction if applicable
           if (totalLoanFee > 0 && accountSelection.feesAccountId) {
@@ -721,6 +732,7 @@ const CreateLoan = forwardRef(
                 },
               },
             });
+            feesRecorded = true;
           }
 
           // Step 5: Create a DISBURSED loan event
@@ -743,20 +755,39 @@ const CreateLoan = forwardRef(
               },
             },
           });
+          disbursementEventRecorded = true;
         }
 
-        const successMessage = "Loan created and disbursed successfully!";
+        const successMessage =
+          isPrivileged && accountSelection
+            ? accountSelection.totalLoanFee > 0 &&
+              accountSelection.feesAccountId
+              ? `Loan ${loan.loanNumber || loan.id} created, principal disbursed, and loan fees recorded successfully.`
+              : `Loan ${loan.loanNumber || loan.id} created and principal disbursed successfully.`
+            : `Loan ${loan.loanNumber || loan.id} created successfully.`;
         setSubmitSuccess(successMessage);
-        showNotification(successMessage, "green");
+        showSnackbar(successMessage, "green");
         setWorkingOverlayOpen(false);
         setScheduleOpen(false);
         navigate("/loans");
         return loan;
       } catch (err) {
         console.error(err);
-        const errorMessage = err?.message || "Failed to create loan.";
+        let errorMessage = err?.message || "Failed to create loan.";
+
+        if (createdLoan?.id) {
+          const loanNumber = createdLoan.loanNumber || createdLoan.id;
+          if (!principalDisbursed) {
+            errorMessage = `Loan ${loanNumber} was created, but principal disbursement did not complete. Review the loan before retrying.`;
+          } else if (!feesRecorded) {
+            errorMessage = `Loan ${loanNumber} was created and principal was disbursed, but loan fee posting did not complete. Review the loan transactions.`;
+          } else if (!disbursementEventRecorded) {
+            errorMessage = `Loan ${loanNumber} was created and funds were posted, but the final disbursement event was not recorded. Review the loan activity.`;
+          }
+        }
+
         setSubmitError(errorMessage);
-        showNotification(errorMessage, "red");
+        showSnackbar(errorMessage, "red");
         setWorkingOverlayOpen(false);
       } finally {
         setIsProcessing(false);

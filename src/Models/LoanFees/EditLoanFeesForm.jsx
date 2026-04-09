@@ -10,7 +10,14 @@ import CustomEditFormButtons from "../../ModelAssets/CustomEditFormButtons";
 import TextInput from "../../Resources/FormComponents/TextInput";
 import NumberInput from "../../Resources/FormComponents/NumberInput";
 import RadioGroup from "../../Resources/FormComponents/RadioGroup";
+import MultipleDropDown from "../../Resources/FormComponents/MultipleDropDown";
 import Typography from "@mui/material/Typography";
+import {
+  buildLoanFeeBranchItems,
+  extractLoanFeeBranchIds,
+  fetchInstitutionBranches,
+  syncLoanFeeBranches,
+} from "./loanFeesConfigHelpers";
 
 const FEE_CALCULATION_OPTIONS = [
   { value: "fixed", label: "Fixed Amount" },
@@ -36,7 +43,7 @@ const STATUS_OPTIONS = [
 
 const EditLoanFeesForm = forwardRef(function EditLoanFeesForm(
   { initialValues, onClose, onSuccess, isEditMode = false },
-  ref
+  ref,
 ) {
   const client = generateClient();
   const { userDetails } = React.useContext(UserContext);
@@ -44,6 +51,8 @@ const EditLoanFeesForm = forwardRef(function EditLoanFeesForm(
   const [submitSuccess, setSubmitSuccess] = React.useState("");
   const [editMode, setEditMode] = React.useState(!isEditMode);
   const editClickedContext = React.useContext(EditClickedContext);
+  const [branches, setBranches] = React.useState([]);
+  const [viewBranches, setViewBranches] = React.useState([]);
 
   // Expose methods to parent via ref
   useImperativeHandle(ref, () => ({
@@ -60,6 +69,45 @@ const EditLoanFeesForm = forwardRef(function EditLoanFeesForm(
     }
   }, [editClickedContext?.editClicked, isEditMode, editMode]);
 
+  React.useEffect(() => {
+    let cancelled = false;
+
+    const loadBranches = async () => {
+      if (!userDetails?.institutionUsersId) return;
+
+      try {
+        const items = await fetchInstitutionBranches(
+          userDetails.institutionUsersId,
+        );
+        if (!cancelled) {
+          setBranches(items);
+        }
+      } catch (error) {
+        console.error("Error loading branches for loan fee form:", error);
+      }
+    };
+
+    loadBranches();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [userDetails?.institutionUsersId]);
+
+  React.useEffect(() => {
+    const items = initialValues?.branches?.items || [];
+    setViewBranches(
+      items
+        .map((item) => {
+          const branchId = item?.branch?.id || item?.branchId;
+          const branchName = item?.branch?.name || "";
+          if (!branchId) return null;
+          return { value: branchId, label: branchName };
+        })
+        .filter(Boolean),
+    );
+  }, [initialValues]);
+
   const formik = useFormik({
     initialValues: {
       name: initialValues.name || "",
@@ -72,6 +120,7 @@ const EditLoanFeesForm = forwardRef(function EditLoanFeesForm(
           ? initialValues.rate
           : "",
       status: initialValues.status || "active",
+      branchIds: extractLoanFeeBranchIds(initialValues),
     },
     enableReinitialize: true,
     validationSchema: Yup.object().shape({
@@ -83,7 +132,9 @@ const EditLoanFeesForm = forwardRef(function EditLoanFeesForm(
         .max(500, "Description too long")
         .matches(/^[^,"'!{}]+$/, "Description contains invalid characters"),
       category: Yup.string().required("Fee Category is required"),
-      calculationMethod: Yup.string().required("Calculation Method is required"),
+      calculationMethod: Yup.string().required(
+        "Calculation Method is required",
+      ),
       feeValue: Yup.number()
         .typeError("Fee value must be a number")
         .required("Fee value is required")
@@ -94,6 +145,9 @@ const EditLoanFeesForm = forwardRef(function EditLoanFeesForm(
         then: () => Yup.string().required("Percentage Base is required"),
         otherwise: () => Yup.string().nullable(),
       }),
+      branchIds: Yup.array()
+        .of(Yup.string().required())
+        .min(1, "Select at least one branch."),
     }),
     onSubmit: async (values, { setSubmitting }) => {
       setSubmitError("");
@@ -141,19 +195,43 @@ const EditLoanFeesForm = forwardRef(function EditLoanFeesForm(
           variables: { input },
         });
 
+        await syncLoanFeeBranches(initialValues.id, values.branchIds);
+
+        const updatedLoanFeeConfig = {
+          ...result.data.updateLoanFeesConfig,
+          branches: {
+            items: buildLoanFeeBranchItems(values.branchIds, branches),
+          },
+        };
+
+        setViewBranches(
+          values.branchIds
+            .map((branchId) => {
+              const branchDetails = branches.find(
+                (branch) => branch.id === branchId,
+              );
+              if (!branchDetails) return null;
+              return {
+                value: branchDetails.id,
+                label: branchDetails.name,
+              };
+            })
+            .filter(Boolean),
+        );
+
         setSubmitSuccess("Loan fee config updated!");
-        
+
         // If in view mode, turn off edit mode after successful update
         if (isEditMode) {
           setEditMode(false);
           setTimeout(() => setSubmitSuccess(""), 2000);
         }
-        
+
         if (onSuccess) {
-            // onSuccess expects the updated item
-             onSuccess(result.data.updateLoanFeesConfig);
+          // onSuccess expects the updated item
+          onSuccess(updatedLoanFeeConfig);
         } else if (onClose) {
-            onClose();
+          onClose();
         }
       } catch (err) {
         console.error("Error updating loan fee config:", err);
@@ -164,12 +242,18 @@ const EditLoanFeesForm = forwardRef(function EditLoanFeesForm(
     },
   });
 
-   // Effect to manage percentageBase when calculationMethod changes
-   React.useEffect(() => {
-    if (formik.values.calculationMethod === "percentage" && !formik.values.percentageBase) {
+  // Effect to manage percentageBase when calculationMethod changes
+  React.useEffect(() => {
+    if (
+      formik.values.calculationMethod === "percentage" &&
+      !formik.values.percentageBase
+    ) {
       formik.setFieldValue("percentageBase", "principal");
-    } else if (formik.values.calculationMethod !== "percentage" && formik.values.percentageBase) {
-       formik.setFieldValue("percentageBase", ""); // Clear it
+    } else if (
+      formik.values.calculationMethod !== "percentage" &&
+      formik.values.percentageBase
+    ) {
+      formik.setFieldValue("percentageBase", ""); // Clear it
     }
   }, [formik.values.calculationMethod]);
 
@@ -223,29 +307,47 @@ const EditLoanFeesForm = forwardRef(function EditLoanFeesForm(
           editing={editMode}
         />
 
-      {formik.values.calculationMethod === "percentage" && (
+        {formik.values.calculationMethod === "percentage" && (
           <RadioGroup
-          label="% Base"
-          name="percentageBase"
-          options={FEE_PERCENTAGE_BASE_OPTIONS}
-          required
-          editing={editMode}
+            label="% Base"
+            name="percentageBase"
+            options={FEE_PERCENTAGE_BASE_OPTIONS}
+            required
+            editing={editMode}
           />
-      )}
+        )}
 
         <NumberInput
           label={
-              formik.values.calculationMethod === "fixed" 
-              ? `Amount (${userDetails?.institution?.currencyCode || ""})` 
+            formik.values.calculationMethod === "fixed"
+              ? `Amount (${userDetails?.institution?.currencyCode || ""})`
               : "Rate (%)"
           }
           name="feeValue"
           placeholder={
-              formik.values.calculationMethod === "fixed" 
-              ? "Enter fixed amount" 
+            formik.values.calculationMethod === "fixed"
+              ? "Enter fixed amount"
               : "Enter percentage"
           }
           required
+          editing={editMode}
+        />
+
+        <MultipleDropDown
+          label="Branches"
+          name="branchIds"
+          options={
+            editMode
+              ? branches.map((branch) => ({
+                  value: branch.id,
+                  label: branch.name,
+                }))
+              : viewBranches
+          }
+          required
+          showSelectAll={editMode}
+          placeholder="Select Branches"
+          helperText="This loan fee will only be available to the selected Branches."
           editing={editMode}
         />
 
@@ -275,7 +377,7 @@ const EditLoanFeesForm = forwardRef(function EditLoanFeesForm(
             setSubmitError={setSubmitError}
             setSubmitSuccess={setSubmitSuccess}
             onClose={onClose}
-            setEditMode={setEditMode} 
+            setEditMode={setEditMode}
           />
         )}
       </Box>

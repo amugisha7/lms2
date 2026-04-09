@@ -1,15 +1,17 @@
 import React from "react";
 import Button from "@mui/material/Button";
 import { useTheme } from "@mui/material/styles";
+import PlusButtonMain from "./PlusButtonMain";
 
 const CreateFormButtons = ({
   formik,
-  setEditMode,
-  setSubmitError,
-  setSubmitSuccess,
+  setEditMode = () => {},
+  setSubmitError = () => {},
+  setSubmitSuccess = () => {},
   onClose, // add onClose prop
   hideCancel, // new prop
   submitLabel = "Save",
+  submitDisabled = false,
 }) => {
   const theme = useTheme();
 
@@ -40,6 +42,9 @@ const CreateFormButtons = ({
               if (onClose) onClose();
             }}
             sx={{
+              padding: "5px 10px",
+              fontSize: "0.8rem",
+              borderRadius: "0px",
               minWidth: 120,
               fontWeight: 600,
               borderColor: theme.palette.error.main,
@@ -58,30 +63,15 @@ const CreateFormButtons = ({
               },
             }}
           >
-            Cancel
+            CANCEL
           </Button>
         )}
-        <Button
+        <PlusButtonMain
           type="submit"
-          variant="contained"
-          disabled={formik.isSubmitting}
-          sx={{
-            minWidth: 120,
-            fontWeight: 600,
-            boxShadow:
-              theme.palette.mode === "dark"
-                ? "0 2px 8px rgba(118, 177, 211, 0.3)"
-                : "0 2px 8px rgba(25, 118, 210, 0.3)",
-            "&:hover": {
-              boxShadow:
-                theme.palette.mode === "dark"
-                  ? "0 4px 12px rgba(118, 177, 211, 0.4)"
-                  : "0 4px 12px rgba(25, 118, 210, 0.4)",
-            },
-          }}
-        >
-          {formik.isSubmitting ? "Saving..." : submitLabel}
-        </Button>
+          variant="outlined"
+          disabled={formik.isSubmitting || submitDisabled}
+          buttonText={formik.isSubmitting ? "Saving..." : submitLabel}
+        />
       </div>
     </>
   );

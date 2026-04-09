@@ -8,7 +8,13 @@ import CreateFormButtons from "../../ModelAssets/CreateFormButtons";
 import TextInput from "../../Resources/FormComponents/TextInput";
 import NumberInput from "../../Resources/FormComponents/NumberInput";
 import RadioGroup from "../../Resources/FormComponents/RadioGroup";
+import MultipleDropDown from "../../Resources/FormComponents/MultipleDropDown";
 import Typography from "@mui/material/Typography";
+import {
+  buildLoanFeeBranchItems,
+  fetchInstitutionBranches,
+  syncLoanFeeBranches,
+} from "./loanFeesConfigHelpers";
 
 const FEE_CALCULATION_OPTIONS = [
   { value: "fixed", label: "Fixed Amount" },
@@ -44,6 +50,32 @@ export default function CreateLoanFeesForm({ onSuccess, onClose }) {
   const { userDetails } = React.useContext(UserContext);
   const [submitError, setSubmitError] = React.useState("");
   const [submitSuccess, setSubmitSuccess] = React.useState("");
+  const [branches, setBranches] = React.useState([]);
+
+  React.useEffect(() => {
+    let cancelled = false;
+
+    const loadBranches = async () => {
+      if (!userDetails?.institutionUsersId) return;
+
+      try {
+        const items = await fetchInstitutionBranches(
+          userDetails.institutionUsersId,
+        );
+        if (!cancelled) {
+          setBranches(items);
+        }
+      } catch (error) {
+        console.error("Error loading branches for loan fees:", error);
+      }
+    };
+
+    loadBranches();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [userDetails?.institutionUsersId]);
 
   const formik = useFormik({
     initialValues: {
@@ -53,6 +85,7 @@ export default function CreateLoanFeesForm({ onSuccess, onClose }) {
       calculationMethod: "fixed",
       percentageBase: "",
       feeValue: "",
+      branchIds: [],
     },
     validationSchema: Yup.object().shape({
       name: Yup.string()
@@ -63,7 +96,9 @@ export default function CreateLoanFeesForm({ onSuccess, onClose }) {
         .max(500, "Description too long")
         .matches(/^[^,"'!{}]+$/, "Description contains invalid characters"),
       category: Yup.string().required("Fee Category is required"),
-      calculationMethod: Yup.string().required("Calculation Method is required"),
+      calculationMethod: Yup.string().required(
+        "Calculation Method is required",
+      ),
       feeValue: Yup.number()
         .typeError("Fee value must be a number")
         .required("Fee value is required")
@@ -73,6 +108,9 @@ export default function CreateLoanFeesForm({ onSuccess, onClose }) {
         then: () => Yup.string().required("Percentage Base is required"),
         otherwise: () => Yup.string().nullable(),
       }),
+      branchIds: Yup.array()
+        .of(Yup.string().required())
+        .min(1, "Select at least one branch."),
     }),
     onSubmit: async (values, { setSubmitting, resetForm }) => {
       setSubmitError("");
@@ -119,10 +157,20 @@ export default function CreateLoanFeesForm({ onSuccess, onClose }) {
           variables: { input },
         });
 
+        const createdLoanFeeConfig = result?.data?.createLoanFeesConfig;
+        await syncLoanFeeBranches(createdLoanFeeConfig?.id, values.branchIds);
+
+        const completeLoanFeeConfig = {
+          ...createdLoanFeeConfig,
+          branches: {
+            items: buildLoanFeeBranchItems(values.branchIds, branches),
+          },
+        };
+
         setSubmitSuccess("Loan fee config created!");
         resetForm();
         if (onSuccess) {
-          onSuccess(result.data.createLoanFeesConfig);
+          onSuccess(completeLoanFeeConfig);
         }
       } catch (err) {
         console.error("Error creating loan fee config:", err);
@@ -135,9 +183,15 @@ export default function CreateLoanFeesForm({ onSuccess, onClose }) {
 
   // Effect to manage percentageBase when calculationMethod changes
   React.useEffect(() => {
-    if (formik.values.calculationMethod === "percentage" && !formik.values.percentageBase) {
+    if (
+      formik.values.calculationMethod === "percentage" &&
+      !formik.values.percentageBase
+    ) {
       formik.setFieldValue("percentageBase", "principal");
-    } else if (formik.values.calculationMethod !== "percentage" && formik.values.percentageBase) {
+    } else if (
+      formik.values.calculationMethod !== "percentage" &&
+      formik.values.percentageBase
+    ) {
       formik.setFieldValue("percentageBase", "");
     }
   }, [formik.values.calculationMethod]);
@@ -179,27 +233,40 @@ export default function CreateLoanFeesForm({ onSuccess, onClose }) {
         />
 
         {formik.values.calculationMethod === "percentage" && (
-           <RadioGroup
-              label="% Base"
-              name="percentageBase"
-              options={FEE_PERCENTAGE_BASE_OPTIONS}
-              required
-           />
+          <RadioGroup
+            label="% Base"
+            name="percentageBase"
+            options={FEE_PERCENTAGE_BASE_OPTIONS}
+            required
+          />
         )}
 
         <NumberInput
           label={
-              formik.values.calculationMethod === "fixed" 
-              ? `Amount (${userDetails?.institution?.currencyCode || ""})` 
+            formik.values.calculationMethod === "fixed"
+              ? `Amount (${userDetails?.institution?.currencyCode || ""})`
               : "Rate (%)"
           }
           name="feeValue"
           placeholder={
-              formik.values.calculationMethod === "fixed" 
-              ? "Enter fixed amount" 
+            formik.values.calculationMethod === "fixed"
+              ? "Enter fixed amount"
               : "Enter percentage"
           }
           required
+        />
+
+        <MultipleDropDown
+          label="Branches"
+          name="branchIds"
+          options={branches.map((branch) => ({
+            value: branch.id,
+            label: branch.name,
+          }))}
+          required
+          showSelectAll
+          placeholder="Select Branches"
+          helperText="This loan fee will only be available to the selected Branches."
         />
 
         {submitError && (

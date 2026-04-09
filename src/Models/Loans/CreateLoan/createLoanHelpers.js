@@ -234,6 +234,14 @@ export const fetchLoanProducts = async (institutionId, branchId, isAdmin = false
                       status
                       percentageBase
                       rate
+                      branches {
+                        items {
+                          branchId
+                          branch {
+                            id
+                          }
+                        }
+                      }
                     }
                   }
                 }
@@ -259,17 +267,41 @@ export const fetchLoanProducts = async (institutionId, branchId, isAdmin = false
       }
       nextToken = newNextToken;
     }
-    // Admin users can see all loan products for the institution
-    // Non-admin users only see products associated with their branch
-    if (branchId && !isAdmin) {
-      const filtered = allLoanProductsList.filter((p) => {
-        const branchItems = p?.branches?.items || [];
-        return branchItems.some((bi) => bi?.branch?.id === branchId);
-      });
-      return filtered;
+    const branchFilteredProducts =
+      branchId && !isAdmin
+        ? allLoanProductsList.filter((product) => {
+            const branchItems = product?.branches?.items || [];
+            return branchItems.some((item) => item?.branch?.id === branchId);
+          })
+        : allLoanProductsList;
+
+    if (!branchId) {
+      return branchFilteredProducts;
     }
 
-    return allLoanProductsList;
+    return branchFilteredProducts.map((product) => {
+      const feeItems = product?.loanFeesConfigs?.items || [];
+      const filteredFeeItems = feeItems.filter((item) => {
+        const feeBranchItems = item?.loanFeesConfig?.branches?.items || [];
+        if (feeBranchItems.length === 0) {
+          return true;
+        }
+
+        return feeBranchItems.some(
+          (feeBranchItem) =>
+            feeBranchItem?.branch?.id === branchId ||
+            feeBranchItem?.branchId === branchId,
+        );
+      });
+
+      return {
+        ...product,
+        loanFeesConfigs: {
+          ...(product?.loanFeesConfigs || {}),
+          items: filteredFeeItems,
+        },
+      };
+    });
   } catch (err) {
     console.error("Error fetching loan products:", err);
     throw err;
@@ -314,7 +346,7 @@ export const fetchAccounts = async (institutionId) => {
   }
 };
 
-export const fetchLoanFeesConfig = async (institutionId) => {
+export const fetchLoanFeesConfig = async (institutionId, branchId = null) => {
   const client = generateClient();
   let allLoanFeesConfigList = [];
   let nextToken = null;
@@ -342,6 +374,15 @@ export const fetchLoanFeesConfig = async (institutionId) => {
                 description
                 percentageBase
                 rate
+                branches {
+                  items {
+                    branchId
+                    branch {
+                      id
+                      name
+                    }
+                  }
+                }
               }
               nextToken
             }
@@ -365,7 +406,21 @@ export const fetchLoanFeesConfig = async (institutionId) => {
       }
       nextToken = newNextToken;
     }
-    return allLoanFeesConfigList;
+
+    if (!branchId) {
+      return allLoanFeesConfigList;
+    }
+
+    return allLoanFeesConfigList.filter((loanFeeConfig) => {
+      const branchItems = loanFeeConfig?.branches?.items || [];
+      if (branchItems.length === 0) {
+        return true;
+      }
+
+      return branchItems.some(
+        (item) => item?.branch?.id === branchId || item?.branchId === branchId,
+      );
+    });
   } catch (err) {
     console.error("Error fetching loan fees config:", err);
     throw err;

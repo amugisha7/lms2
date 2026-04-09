@@ -20,6 +20,7 @@ import OrderedList from "../../../Resources/FormComponents/OrderedList";
 import CreateFormButtons from "../../../ModelAssets/CreateFormButtons";
 import CustomEditFormButtons from "../../../ModelAssets/CustomEditFormButtons";
 import PlusButtonMain from "../../../ModelAssets/PlusButtonMain";
+import { useSnackbar } from "../../../ModelAssets/SnackbarContext";
 import { UserContext } from "../../../App";
 import {
   fetchLoanFeesConfig,
@@ -545,6 +546,7 @@ const UseLoanProduct = forwardRef(
     ref,
   ) => {
     const { userDetails } = useContext(UserContext);
+    const { showSnackbar } = useSnackbar();
     const navigate = useNavigate();
     const theme = useTheme();
     const [submitError, setSubmitError] = useState("");
@@ -555,8 +557,6 @@ const UseLoanProduct = forwardRef(
     const [scheduleOpen, setScheduleOpen] = useState(false);
     const [loanFeesConfigs, setLoanFeesConfigs] = useState([]);
     const [loanFeesLoading, setLoanFeesLoading] = useState(false);
-    const loanFeesFetchedRef = useRef(false);
-    const loanFeesInstitutionIdRef = useRef(null);
     const formikRef = useRef(null);
     const [isProcessing, setIsProcessing] = useState(false);
     const [employees, setEmployees] = useState([]);
@@ -600,28 +600,35 @@ const UseLoanProduct = forwardRef(
 
     useEffect(() => {
       const currentInstitutionId = userDetails?.institutionUsersId;
-      if (
-        currentInstitutionId &&
-        currentInstitutionId !== loanFeesInstitutionIdRef.current
-      ) {
-        loanFeesFetchedRef.current = false;
-        loanFeesInstitutionIdRef.current = currentInstitutionId;
+      const effectiveBranchId =
+        propBorrower?.branchBorrowersId ||
+        loanDraft?.branchID ||
+        userDetails?.branchUsersId ||
+        null;
+
+      if (!currentInstitutionId) {
+        setLoanFeesConfigs([]);
+        setLoanFeesLoading(false);
+        return;
       }
-      if (!loanFeesFetchedRef.current && currentInstitutionId) {
-        setLoanFeesLoading(true);
-        fetchLoanFeesConfig(currentInstitutionId)
-          .then((data) => {
-            setLoanFeesConfigs(Array.isArray(data) ? data : []);
-            loanFeesFetchedRef.current = true;
-          })
-          .catch((err) => {
-            console.error("Error fetching loan fees configs:", err);
-          })
-          .finally(() => {
-            setLoanFeesLoading(false);
-          });
-      }
-    }, [userDetails?.institutionUsersId]);
+
+      setLoanFeesLoading(true);
+      fetchLoanFeesConfig(currentInstitutionId, effectiveBranchId)
+        .then((data) => {
+          setLoanFeesConfigs(Array.isArray(data) ? data : []);
+        })
+        .catch((err) => {
+          console.error("Error fetching loan fees configs:", err);
+        })
+        .finally(() => {
+          setLoanFeesLoading(false);
+        });
+    }, [
+      loanDraft?.branchID,
+      propBorrower?.branchBorrowersId,
+      userDetails?.branchUsersId,
+      userDetails?.institutionUsersId,
+    ]);
 
     useEffect(() => {
       let cancelled = false;
@@ -887,12 +894,17 @@ const UseLoanProduct = forwardRef(
           loanDraft: currentDraft,
           userDetails,
         });
-        setSubmitSuccess("Draft converted to loan.");
+        const successMessage =
+          `Loan ${loan?.loanNumber || loan?.id || ""} created successfully.`.trim();
+        setSubmitSuccess(successMessage);
+        showSnackbar(successMessage, "green");
         navigate("/loans");
         return loan;
       } catch (err) {
         console.error(err);
-        setSubmitError(err?.message || "Failed to convert to loan.");
+        const errorMessage = err?.message || "Failed to convert to loan.";
+        setSubmitError(errorMessage);
+        showSnackbar(errorMessage, "red");
         setIsProcessing(false);
       }
     };

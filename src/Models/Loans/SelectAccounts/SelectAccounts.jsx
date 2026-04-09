@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Formik, Form } from "formik";
 import * as Yup from "yup";
-import { Box, Grid, Typography, Button, Alert } from "@mui/material";
+import { Box, Grid, Typography, Alert } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { useTheme } from "@mui/material/styles";
 import { useNavigate } from "react-router-dom";
@@ -10,9 +10,10 @@ import { generateClient } from "aws-amplify/api";
 import selectAccountsForm from "./selectAccountsForm";
 import DropDownSearchable from "../../../Resources/FormComponents/DropDownSearchable";
 import FormLabel from "../../../Resources/FormComponents/FormLabel";
+import CreateFormButtons from "../../../ModelAssets/CreateFormButtons";
 import WorkingOverlay from "../../../ModelAssets/WorkingOverlay";
 import NotificationBar from "../../../ModelAssets/NotificationBar";
-import { useNotification } from "../../../ModelAssets/NotificationContext";
+import { useSnackbar } from "../../../ModelAssets/SnackbarContext";
 import { convertDraftToLoan } from "../LoanDrafts/loanDraftHelpers";
 import { CREATE_MONEY_TRANSACTION_MUTATION } from "../../Accounts/MoneyTransactions/moneyTransactionHelpes";
 import { createLoanDisbursement, createLoanEvent } from "../loanHelpers";
@@ -143,6 +144,31 @@ export function BranchLinkedAccountSelection({
       }));
   }, [accounts]);
 
+  const formikLike = useMemo(
+    () => ({
+      isSubmitting: false,
+      resetForm: () => {
+        setPrincipalAccountId("");
+        setFeesAccountId("");
+      },
+    }),
+    [],
+  );
+
+  const submitDisabled =
+    accountsLoading || !principalAccountId || (hasLoanFees && !feesAccountId);
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    if (submitDisabled) return;
+
+    onConfirm?.({
+      principalAccountId,
+      feesAccountId: hasLoanFees ? feesAccountId : null,
+      totalLoanFee,
+    });
+  };
+
   return (
     <Box
       sx={{
@@ -165,7 +191,11 @@ export function BranchLinkedAccountSelection({
         the loan.
       </Typography>
 
-      <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+      <Box
+        component="form"
+        onSubmit={handleSubmit}
+        sx={{ display: "flex", flexDirection: "column", gap: 2 }}
+      >
         <DropDownSearchable
           label="Principal Account"
           name="principalAccountId"
@@ -206,29 +236,12 @@ export function BranchLinkedAccountSelection({
           </Alert>
         )}
 
-        <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() =>
-              onConfirm?.({
-                principalAccountId,
-                feesAccountId: hasLoanFees ? feesAccountId : null,
-                totalLoanFee,
-              })
-            }
-            disabled={
-              accountsLoading ||
-              !principalAccountId ||
-              (hasLoanFees && !feesAccountId)
-            }
-          >
-            CONFIRM LOAN
-          </Button>
-          <Button variant="outlined" color="primary" onClick={onCancel}>
-            CANCEL
-          </Button>
-        </Box>
+        <CreateFormButtons
+          formik={formikLike}
+          onClose={onCancel}
+          submitLabel="CONFIRM LOAN"
+          submitDisabled={submitDisabled}
+        />
       </Box>
     </Box>
   );
@@ -244,7 +257,7 @@ export default function SelectAccounts({
 }) {
   const theme = useTheme();
   const navigate = useNavigate();
-  const { showNotification } = useNotification();
+  const { showSnackbar } = useSnackbar();
   const [overlayOpen, setOverlayOpen] = useState(false);
   const [overlayMessage, setOverlayMessage] = useState("Working...");
   const [notification, setNotification] = useState(null);
@@ -282,6 +295,10 @@ export default function SelectAccounts({
   const handleSubmit = async (values, { setSubmitting }) => {
     setOverlayOpen(true);
     setOverlayMessage("Creating loan and disbursing funds...");
+    let createdLoan = null;
+    let principalDisbursed = false;
+    let feesRecorded = !hasLoanFees;
+    let disbursementEventRecorded = false;
 
     try {
       const client = generateClient();
@@ -292,6 +309,7 @@ export default function SelectAccounts({
         loanDraft,
         userDetails,
       });
+      createdLoan = loan;
 
       if (!loan?.id) {
         throw new Error("Failed to create loan.");
@@ -340,6 +358,7 @@ export default function SelectAccounts({
           },
         },
       });
+      principalDisbursed = true;
 
       // Step 4: Create loan fees transaction if applicable
       if (hasLoanFees && values.feesAccountId) {
@@ -363,6 +382,7 @@ export default function SelectAccounts({
             },
           },
         });
+        feesRecorded = true;
       }
 
       // Step 5: Create a DISBURSED loan event
@@ -385,18 +405,35 @@ export default function SelectAccounts({
           },
         },
       });
+      disbursementEventRecorded = true;
 
       setOverlayOpen(false);
-      showNotification("Loan created and disbursed successfully!", "green");
+      const successMessage =
+        hasLoanFees && values.feesAccountId
+          ? `Loan ${loanNumber} created, principal disbursed, and loan fees recorded successfully.`
+          : `Loan ${loanNumber} created and principal disbursed successfully.`;
+      showSnackbar(successMessage, "green");
 
       if (onSuccess) onSuccess(loan);
       navigate("/loans");
     } catch (err) {
       console.error("Error disbursing loan:", err);
       setOverlayOpen(false);
-      const errorMessage =
+      let errorMessage =
         err?.message || "Failed to disburse loan. Please try again.";
-      showNotification(errorMessage, "red");
+
+      if (createdLoan?.id) {
+        const loanNumber = createdLoan.loanNumber || createdLoan.id;
+        if (!principalDisbursed) {
+          errorMessage = `Loan ${loanNumber} was created, but principal disbursement did not complete. Review the loan before retrying.`;
+        } else if (!feesRecorded) {
+          errorMessage = `Loan ${loanNumber} was created and principal was disbursed, but loan fee posting did not complete. Review the loan transactions.`;
+        } else if (!disbursementEventRecorded) {
+          errorMessage = `Loan ${loanNumber} was created and funds were posted, but the final disbursement event was not recorded. Review the loan activity.`;
+        }
+      }
+
+      showSnackbar(errorMessage, "red");
       setNotification({ message: errorMessage, color: "red" });
     } finally {
       setSubmitting(false);
@@ -582,40 +619,20 @@ export default function SelectAccounts({
 
             <Box
               sx={{
-                display: "flex",
-                justifyContent: "flex-end",
-                gap: 2,
                 mt: 4,
                 pt: 2,
                 borderTop: `1px solid ${theme.palette.divider}`,
               }}
             >
-              <Button
-                variant="outlined"
-                onClick={onClose}
-                disabled={formik.isSubmitting}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="contained"
-                type="submit"
-                disabled={
-                  formik.isSubmitting ||
-                  accountsLoading ||
-                  accounts.length === 0
-                }
-                sx={{
-                  backgroundColor:
-                    theme.palette.mode === "dark" ? "#76B1D3" : "#1976d2",
-                  "&:hover": {
-                    backgroundColor:
-                      theme.palette.mode === "dark" ? "#5a9bc2" : "#1565c0",
-                  },
-                }}
-              >
-                Disburse & Activate Loan
-              </Button>
+              <CreateFormButtons
+                formik={formik}
+                onClose={onClose}
+                submitLabel="Disburse & Activate Loan"
+                submitDisabled={accountsLoading || accounts.length === 0}
+                setSubmitError={() => {}}
+                setSubmitSuccess={() => {}}
+                setEditMode={() => {}}
+              />
             </Box>
           </Form>
         )}

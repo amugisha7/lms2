@@ -1,8 +1,11 @@
 - Create loans form. Also create from loan product.
   - Resume:
-    - Work on Loan Statements.
+    - Loan creation confirmations. also change the buttons for creation.
     - enable creation of employee from user with relationship
+    - Check users who have just joined, they should not have access until approved.
+    - the loan Id on the loans page is incorrect.
     - Work on payments
+    - Work on Loan Statements.
     - Implement loan status
     - Check validity of loan statements.
 

@@ -34,7 +34,7 @@ import CustomPopUp from "../../../ModelAssets/CustomPopUp";
 import LoanScheduleDraft from "../LoanDrafts/LoanScheduleDraft";
 
 import { UserContext } from "../../../App";
-import { useNotification } from "../../../ModelAssets/NotificationContext";
+import { useSnackbar } from "../../../ModelAssets/SnackbarContext";
 import {
   updateLoanDraft,
   transitionLoanDraftStatus,
@@ -300,7 +300,7 @@ const EditLoan = forwardRef(
     ref,
   ) => {
     const { userDetails } = useContext(UserContext);
-    const { showNotification } = useNotification();
+    const { showSnackbar } = useSnackbar();
     const theme = useTheme();
     const navigate = useNavigate();
 
@@ -358,10 +358,12 @@ const EditLoan = forwardRef(
 
     useEffect(() => {
       const currentInstitutionId = userDetails?.institutionUsersId;
+      const effectiveBranchId =
+        localDraft?.branchID || localDraft?.borrower?.branchBorrowersId || null;
       if (!currentInstitutionId) return;
 
       setLoanFeesLoading(true);
-      fetchLoanFeesConfig(currentInstitutionId)
+      fetchLoanFeesConfig(currentInstitutionId, effectiveBranchId)
         .then((data) => {
           setLoanFeesConfigs(Array.isArray(data) ? data : []);
         })
@@ -371,7 +373,11 @@ const EditLoan = forwardRef(
         .finally(() => {
           setLoanFeesLoading(false);
         });
-    }, [userDetails?.institutionUsersId]);
+    }, [
+      localDraft?.borrower?.branchBorrowersId,
+      localDraft?.branchID,
+      userDetails?.institutionUsersId,
+    ]);
 
     const formInitialValues = propInitialValues
       ? {
@@ -574,15 +580,16 @@ const EditLoan = forwardRef(
       try {
         if (!localDraft?.id) throw new Error("Save Draft first.");
         await convertDraftToLoan({ loanDraft: localDraft, userDetails });
-        const successMessage = "Loan created successfully.";
+        const successMessage =
+          `Loan ${localDraft?.loanNumber || localDraft?.id || ""} created successfully.`.trim();
         setSubmitSuccess(successMessage);
-        showNotification(successMessage, "green");
+        showSnackbar(successMessage, "green");
         navigate("/loans");
       } catch (err) {
         console.error(err);
         const errorMessage = err?.message || "Failed to create loan.";
         setSubmitError(errorMessage);
-        showNotification(errorMessage, "red");
+        showSnackbar(errorMessage, "red");
       }
     };
 

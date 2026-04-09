@@ -28,6 +28,7 @@ import {
   getBorrowerAssignedEmployeeId,
   getDefaultEmployeeForUserContext,
   getEmployeeOptionLabel,
+  listEmployeesByBranch,
   listEmployeesForUserContext,
 } from "../../Employees/employeeHelpers";
 
@@ -160,6 +161,8 @@ const CreateBorrower = forwardRef(
       forceEditMode = false, // Add prop to force edit mode
       isCustomerPortal = false, // Customer portal mode
       prefilledEmail = null, // Pre-filled email for customer portal
+      selectedBranchId = "",
+      hideBranchField = false,
     },
     ref,
   ) => {
@@ -181,10 +184,22 @@ const CreateBorrower = forwardRef(
     const [branches, setBranches] = useState([]);
     const [employees, setEmployees] = useState([]);
     const [defaultEmployeeId, setDefaultEmployeeId] = useState("");
+    const effectiveBranchId =
+      selectedBranchId ||
+      propInitialValues?.branchBorrowersId ||
+      userDetails?.branchUsersId ||
+      userDetails?.branch?.id ||
+      "";
+    const isAdmin =
+      String(userDetails?.userType || "").toLowerCase() === "admin";
 
     useEffect(() => {
       const fetchBranches = async () => {
-        if (userDetails?.userType === "Admin" && userDetails?.institution?.id) {
+        if (
+          !hideBranchField &&
+          userDetails?.userType === "Admin" &&
+          userDetails?.institution?.id
+        ) {
           try {
             const client = generateClient();
             const branchData = await client.graphql({
@@ -206,7 +221,7 @@ const CreateBorrower = forwardRef(
       if (userDetails) {
         fetchBranches();
       }
-    }, [userDetails]);
+    }, [hideBranchField, userDetails]);
 
     // Update validation schema based on customer portal mode
     useEffect(() => {
@@ -280,9 +295,15 @@ const CreateBorrower = forwardRef(
       ? {
           ...baseInitialValues,
           ...mapDbFieldsToFormFields(propInitialValues),
+          branchBorrowersId:
+            selectedBranchId ||
+            mapDbFieldsToFormFields(propInitialValues).branchBorrowersId ||
+            "",
         }
       : {
           ...initialValues,
+          branchBorrowersId:
+            selectedBranchId || initialValues.branchBorrowersId || "",
           // Pre-fill email in customer portal mode
           ...(isCustomerPortal && prefilledEmail
             ? { email: prefilledEmail }
@@ -309,11 +330,30 @@ const CreateBorrower = forwardRef(
       const loadEmployees = async () => {
         if (!userDetails) return;
 
+        if (isAdmin && !effectiveBranchId && !propInitialValues?.id) {
+          setEmployees([]);
+          setDefaultEmployeeId("");
+          return;
+        }
+
         try {
+          const scopedUserDetails = effectiveBranchId
+            ? {
+                ...userDetails,
+                branchUsersId: effectiveBranchId,
+                branch: {
+                  ...(userDetails?.branch || {}),
+                  id: effectiveBranchId,
+                },
+              }
+            : userDetails;
+
           const [employeeItems, defaultEmployee, assignedEmployeeId] =
             await Promise.all([
-              listEmployeesForUserContext(userDetails),
-              getDefaultEmployeeForUserContext(userDetails),
+              effectiveBranchId
+                ? listEmployeesByBranch(effectiveBranchId)
+                : listEmployeesForUserContext(userDetails),
+              getDefaultEmployeeForUserContext(scopedUserDetails),
               propInitialValues?.id
                 ? getBorrowerAssignedEmployeeId(propInitialValues.id)
                 : Promise.resolve(null),
@@ -335,7 +375,7 @@ const CreateBorrower = forwardRef(
       return () => {
         cancelled = true;
       };
-    }, [userDetails, propInitialValues?.id]);
+    }, [effectiveBranchId, isAdmin, propInitialValues?.id, userDetails]);
 
     // Add effect to respond to editClicked from context (like CreateBranches)
     useEffect(() => {
@@ -357,7 +397,9 @@ const CreateBorrower = forwardRef(
       console.log("CreateBorrower Form Values:", values); // <-- Add this log
 
       const submissionValues = { ...values };
-      if (userDetails?.userType !== "Admin") {
+      if (selectedBranchId) {
+        submissionValues.branchBorrowersId = selectedBranchId;
+      } else if (userDetails?.userType !== "Admin") {
         submissionValues.branchBorrowersId =
           userDetails?.branchUsersId || userDetails?.branch?.id;
       }
@@ -458,7 +500,7 @@ const CreateBorrower = forwardRef(
                     // Branch Logic
                     if (
                       field.name === "branchBorrowersId" &&
-                      userDetails?.userType !== "Admin"
+                      (hideBranchField || userDetails?.userType !== "Admin")
                     ) {
                       return null;
                     }
@@ -536,7 +578,7 @@ const CreateBorrower = forwardRef(
                         onClose={onClose}
                         hideCancel={hideCancel}
                         submitLabel={
-                          isCustomerPortal ? "Save My Profile" : "Save"
+                          isCustomerPortal ? "SAVE MY PROFILE" : "SAVE BORROWER"
                         }
                       />
                     ) : null}

@@ -290,9 +290,8 @@ function deriveScheduleFromComputationRecord(loan) {
  * Build the combined chronological statement ledger.
  *
  * Each row is one of:
- *  { rowType: 'disbursement', date, amount, description, runningBalance }
- *  { rowType: 'installment',  date, installmentNumber, dueAmounts, cumulativeScheduledPaid, balance }
- *  { rowType: 'payment',      date, amount, allocations, runningBalance, paymentRef }
+ *  { rowType: 'installment', date, installmentNumber, dueAmounts, cumulativeScheduledPaid, balance }
+ *  { rowType: 'payment', date, amount, allocations, runningBalance, paymentRef }
  *
  * Returns:
  * {
@@ -349,13 +348,7 @@ export function buildStatementLedger(loan) {
       return da - db;
     });
 
-  // 4. Collect disbursements
-  const disbursements = (loan?.disbursements?.items ?? [])
-    .filter((d) => d.status !== "FAILED" && d.status !== "VOIDED")
-    .slice()
-    .sort((a, b) => new Date(a.disbursedAt || 0) - new Date(b.disbursedAt || 0));
-
-  // 5. Build chronological ledger with running balances
+  // 4. Build chronological ledger with running balances
   //    Track: principal, interest, fees, penalty outstanding separately
   const principal = round2(loan.principal || 0);
 
@@ -386,12 +379,9 @@ export function buildStatementLedger(loan) {
         balanceState.penalty
     );
 
-  // 6. Merge all events on a timeline
+  // 5. Merge all events on a timeline
   const events = [];
 
-  for (const d of disbursements) {
-    events.push({ _date: new Date(d.disbursedAt || 0), _type: "disbursement", data: d });
-  }
   let instNum = 0;
   for (const inst of schedule) {
     instNum++;
@@ -405,15 +395,15 @@ export function buildStatementLedger(loan) {
     events.push({ _date: new Date(p.paymentDate || 0), _type: "payment", data: p });
   }
 
-  // Sort chronologically; installments before same-day payments; disbursements first
-  const typeOrder = { disbursement: 0, installment: 1, payment: 2 };
+  // Sort chronologically; installments before same-day payments
+  const typeOrder = { installment: 0, payment: 1 };
   events.sort((a, b) => {
     const dt = a._date - b._date;
     if (dt !== 0) return dt;
     return (typeOrder[a._type] || 0) - (typeOrder[b._type] || 0);
   });
 
-  // 7. Walk timeline and produce rows
+  // 6. Walk timeline and produce rows
   const rows = [];
   let totalPaymentsApplied = 0;
   let totalPrincipalPaid = 0;
@@ -422,16 +412,7 @@ export function buildStatementLedger(loan) {
   let totalPenaltyPaid = 0;
 
   for (const ev of events) {
-    if (ev._type === "disbursement") {
-      rows.push({
-        rowType: "disbursement",
-        key: `disb-${ev.data.id}`,
-        date: ev.data.disbursedAt,
-        amount: round2(ev.data.amount || 0),
-        description: `Disbursement${ev.data.method ? ` (${ev.data.method})` : ""}${ev.data.reference ? ` Ref: ${ev.data.reference}` : ""}`,
-        runningBalance: runningTotal(),
-      });
-    } else if (ev._type === "installment") {
+    if (ev._type === "installment") {
       const inst = ev.data;
       rows.push({
         rowType: "installment",
@@ -512,7 +493,7 @@ export function buildStatementLedger(loan) {
     }
   }
 
-  // 8. Totals
+  // 7. Totals
   const scheduledPrincipal = round2(
     schedule.reduce((s, i) => s + (i.principalDue || 0), 0)
   );
@@ -523,21 +504,15 @@ export function buildStatementLedger(loan) {
     scheduledPrincipal + scheduledInterest + scheduledFees + scheduledPenalty
   );
 
-  // 9. Reconciliation
-  const snapshot = loan?.balanceSnapshots?.items?.[0];
-  const snapshotBalance = snapshot
-    ? round2(snapshot.totalOutstanding ?? snapshot.principalOutstanding ?? 0)
-    : null;
+  // 8. Reconciliation
+  const snapshotBalance = null;
   const derivedBalance = runningTotal();
-  const diff =
-    snapshotBalance != null
-      ? round2(Math.abs(derivedBalance - snapshotBalance))
-      : null;
+  const diff = null;
   const reconciliation = {
     derivedBalance,
     snapshotBalance,
     diff,
-    hasWarning: diff != null && diff > 1,
+    hasWarning: false,
     principalBalance: balanceState.principal,
     interestBalance: balanceState.interest,
     feesBalance: balanceState.fees,

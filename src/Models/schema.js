@@ -267,6 +267,68 @@ export const schema = {
                     "isRequired": false,
                     "attributes": []
                 },
+                "savingsProducts": {
+                    "name": "savingsProducts",
+                    "isArray": true,
+                    "type": {
+                        "model": "SavingsProduct"
+                    },
+                    "isRequired": false,
+                    "attributes": [],
+                    "isArrayNullable": true,
+                    "association": {
+                        "connectionType": "HAS_MANY",
+                        "associatedWith": [
+                            "institutionSavingsProductsId"
+                        ]
+                    }
+                },
+                "chartOfAccounts": {
+                    "name": "chartOfAccounts",
+                    "isArray": true,
+                    "type": {
+                        "model": "ChartOfAccounts"
+                    },
+                    "isRequired": false,
+                    "attributes": [],
+                    "isArrayNullable": true,
+                    "association": {
+                        "connectionType": "HAS_MANY",
+                        "associatedWith": [
+                            "institutionChartOfAccountsId"
+                        ]
+                    }
+                },
+                "dividendDeclarations": {
+                    "name": "dividendDeclarations",
+                    "isArray": true,
+                    "type": {
+                        "model": "DividendDeclaration"
+                    },
+                    "isRequired": false,
+                    "attributes": [],
+                    "isArrayNullable": true,
+                    "association": {
+                        "connectionType": "HAS_MANY",
+                        "associatedWith": [
+                            "institutionDividendDeclarationsId"
+                        ]
+                    }
+                },
+                "customDocumentHeader": {
+                    "name": "customDocumentHeader",
+                    "isArray": false,
+                    "type": "AWSJSON",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "customInstitutionDetails": {
+                    "name": "customInstitutionDetails",
+                    "isArray": false,
+                    "type": "AWSJSON",
+                    "isRequired": false,
+                    "attributes": []
+                },
                 "createdAt": {
                     "name": "createdAt",
                     "isArray": false,
@@ -521,6 +583,29 @@ export const schema = {
                             "branch"
                         ]
                     }
+                },
+                "groups": {
+                    "name": "groups",
+                    "isArray": true,
+                    "type": {
+                        "model": "Group"
+                    },
+                    "isRequired": false,
+                    "attributes": [],
+                    "isArrayNullable": true,
+                    "association": {
+                        "connectionType": "HAS_MANY",
+                        "associatedWith": [
+                            "branchGroupsId"
+                        ]
+                    }
+                },
+                "customBranchDetails": {
+                    "name": "customBranchDetails",
+                    "isArray": false,
+                    "type": "AWSJSON",
+                    "isRequired": false,
+                    "attributes": []
                 },
                 "createdAt": {
                     "name": "createdAt",
@@ -821,6 +906,13 @@ export const schema = {
                             "recipient"
                         ]
                     }
+                },
+                "customUserDetails": {
+                    "name": "customUserDetails",
+                    "isArray": false,
+                    "type": "AWSJSON",
+                    "isRequired": false,
+                    "attributes": []
                 },
                 "createdAt": {
                     "name": "createdAt",
@@ -1183,102 +1275,6 @@ export const schema = {
                         ]
                     }
                 },
-                "approvedLoans": {
-                    "name": "approvedLoans",
-                    "isArray": true,
-                    "type": {
-                        "model": "LoanApprovedByEmployee"
-                    },
-                    "isRequired": false,
-                    "attributes": [],
-                    "isArrayNullable": true,
-                    "association": {
-                        "connectionType": "HAS_MANY",
-                        "associatedWith": [
-                            "employee"
-                        ]
-                    }
-                },
-                "approvedExpenses": {
-                    "name": "approvedExpenses",
-                    "isArray": true,
-                    "type": {
-                        "model": "ExpenseApprovedByEmployee"
-                    },
-                    "isRequired": false,
-                    "attributes": [],
-                    "isArrayNullable": true,
-                    "association": {
-                        "connectionType": "HAS_MANY",
-                        "associatedWith": [
-                            "employee"
-                        ]
-                    }
-                },
-                "approvedApplications": {
-                    "name": "approvedApplications",
-                    "isArray": true,
-                    "type": {
-                        "model": "ApplicationApprovedByEmployee"
-                    },
-                    "isRequired": false,
-                    "attributes": [],
-                    "isArrayNullable": true,
-                    "association": {
-                        "connectionType": "HAS_MANY",
-                        "associatedWith": [
-                            "employee"
-                        ]
-                    }
-                },
-                "approvedCreditScores": {
-                    "name": "approvedCreditScores",
-                    "isArray": true,
-                    "type": {
-                        "model": "CreditScoreApprovedByEmployee"
-                    },
-                    "isRequired": false,
-                    "attributes": [],
-                    "isArrayNullable": true,
-                    "association": {
-                        "connectionType": "HAS_MANY",
-                        "associatedWith": [
-                            "employee"
-                        ]
-                    }
-                },
-                "approvedMoneyTransactions": {
-                    "name": "approvedMoneyTransactions",
-                    "isArray": true,
-                    "type": {
-                        "model": "MoneyTransactionApprovedByEmployee"
-                    },
-                    "isRequired": false,
-                    "attributes": [],
-                    "isArrayNullable": true,
-                    "association": {
-                        "connectionType": "HAS_MANY",
-                        "associatedWith": [
-                            "employee"
-                        ]
-                    }
-                },
-                "approvedPayments": {
-                    "name": "approvedPayments",
-                    "isArray": true,
-                    "type": {
-                        "model": "PaymentApprovedByEmployee"
-                    },
-                    "isRequired": false,
-                    "attributes": [],
-                    "isArrayNullable": true,
-                    "association": {
-                        "connectionType": "HAS_MANY",
-                        "associatedWith": [
-                            "employee"
-                        ]
-                    }
-                },
                 "borrowers": {
                     "name": "borrowers",
                     "isArray": true,
@@ -1460,6 +1456,61 @@ export const schema = {
                             "createdByEmployee"
                         ]
                     }
+                },
+                "postedJournalEntries": {
+                    "name": "postedJournalEntries",
+                    "isArray": true,
+                    "type": {
+                        "model": "JournalEntry"
+                    },
+                    "isRequired": false,
+                    "attributes": [],
+                    "isArrayNullable": true,
+                    "association": {
+                        "connectionType": "HAS_MANY",
+                        "associatedWith": [
+                            "employeePostedJournalEntriesId"
+                        ]
+                    }
+                },
+                "initiatedSavingsTransactions": {
+                    "name": "initiatedSavingsTransactions",
+                    "isArray": true,
+                    "type": {
+                        "model": "SavingsTransaction"
+                    },
+                    "isRequired": false,
+                    "attributes": [],
+                    "isArrayNullable": true,
+                    "association": {
+                        "connectionType": "HAS_MANY",
+                        "associatedWith": [
+                            "employeeInitiatedSavingsTransactionsId"
+                        ]
+                    }
+                },
+                "approvals": {
+                    "name": "approvals",
+                    "isArray": true,
+                    "type": {
+                        "model": "Approval"
+                    },
+                    "isRequired": false,
+                    "attributes": [],
+                    "isArrayNullable": true,
+                    "association": {
+                        "connectionType": "HAS_MANY",
+                        "associatedWith": [
+                            "employeeApprovalsId"
+                        ]
+                    }
+                },
+                "customEmployeeDetails": {
+                    "name": "customEmployeeDetails",
+                    "isArray": false,
+                    "type": "AWSJSON",
+                    "isRequired": false,
+                    "attributes": []
                 },
                 "createdAt": {
                     "name": "createdAt",
@@ -1768,7 +1819,7 @@ export const schema = {
                     "association": {
                         "connectionType": "HAS_MANY",
                         "associatedWith": [
-                            "borrowerLoansId"
+                            "borrower"
                         ]
                     }
                 },
@@ -1900,6 +1951,76 @@ export const schema = {
                         ]
                     }
                 },
+                "groupID": {
+                    "name": "groupID",
+                    "isArray": false,
+                    "type": "ID",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "group": {
+                    "name": "group",
+                    "isArray": false,
+                    "type": {
+                        "model": "Group"
+                    },
+                    "isRequired": false,
+                    "attributes": [],
+                    "association": {
+                        "connectionType": "BELONGS_TO",
+                        "targetNames": [
+                            "groupID"
+                        ]
+                    }
+                },
+                "memberType": {
+                    "name": "memberType",
+                    "isArray": false,
+                    "type": "String",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "savingsAccounts": {
+                    "name": "savingsAccounts",
+                    "isArray": true,
+                    "type": {
+                        "model": "SavingsAccount"
+                    },
+                    "isRequired": false,
+                    "attributes": [],
+                    "isArrayNullable": true,
+                    "association": {
+                        "connectionType": "HAS_MANY",
+                        "associatedWith": [
+                            "borrowerSavingsAccountsId"
+                        ]
+                    }
+                },
+                "shareAccount": {
+                    "name": "shareAccount",
+                    "isArray": false,
+                    "type": {
+                        "model": "ShareAccount"
+                    },
+                    "isRequired": false,
+                    "attributes": [],
+                    "association": {
+                        "connectionType": "HAS_ONE",
+                        "associatedWith": [
+                            "id"
+                        ],
+                        "targetNames": [
+                            "borrowerShareAccountId"
+                        ]
+                    }
+                },
+                "customBorrowerDetails": {
+                    "name": "customBorrowerDetails",
+                    "isArray": false,
+                    "type": "AWSJSON",
+                    "isRequired": false,
+                    "attributes": []
+                },
                 "createdAt": {
                     "name": "createdAt",
                     "isArray": false,
@@ -1922,6 +2043,13 @@ export const schema = {
                     "type": "ID",
                     "isRequired": false,
                     "attributes": []
+                },
+                "borrowerShareAccountId": {
+                    "name": "borrowerShareAccountId",
+                    "isArray": false,
+                    "type": "ID",
+                    "isRequired": false,
+                    "attributes": []
                 }
             },
             "syncable": true,
@@ -1930,6 +2058,15 @@ export const schema = {
                 {
                     "type": "model",
                     "properties": {}
+                },
+                {
+                    "type": "key",
+                    "properties": {
+                        "name": "byGroup",
+                        "fields": [
+                            "groupID"
+                        ]
+                    }
                 }
             ]
         },
@@ -2039,6 +2176,50 @@ export const schema = {
                         ]
                     }
                 },
+                "isExistingMember": {
+                    "name": "isExistingMember",
+                    "isArray": false,
+                    "type": "Boolean",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "memberID": {
+                    "name": "memberID",
+                    "isArray": false,
+                    "type": "ID",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "lockedSavingsAmount": {
+                    "name": "lockedSavingsAmount",
+                    "isArray": false,
+                    "type": "Float",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "collaterals": {
+                    "name": "collaterals",
+                    "isArray": true,
+                    "type": {
+                        "model": "GuarantorCollateral"
+                    },
+                    "isRequired": false,
+                    "attributes": [],
+                    "isArrayNullable": true,
+                    "association": {
+                        "connectionType": "HAS_MANY",
+                        "associatedWith": [
+                            "guarantor"
+                        ]
+                    }
+                },
+                "customGuarantorDetails": {
+                    "name": "customGuarantorDetails",
+                    "isArray": false,
+                    "type": "AWSJSON",
+                    "isRequired": false,
+                    "attributes": []
+                },
                 "createdAt": {
                     "name": "createdAt",
                     "isArray": false,
@@ -2131,6 +2312,13 @@ export const schema = {
                             "borrowerSecuritiesId"
                         ]
                     }
+                },
+                "customSecurityDetails": {
+                    "name": "customSecurityDetails",
+                    "isArray": false,
+                    "type": "AWSJSON",
+                    "isRequired": false,
+                    "attributes": []
                 },
                 "createdAt": {
                     "name": "createdAt",
@@ -2231,6 +2419,13 @@ export const schema = {
                             "userUserNotificationsId"
                         ]
                     }
+                },
+                "customUserNotificationDetails": {
+                    "name": "customUserNotificationDetails",
+                    "isArray": false,
+                    "type": "AWSJSON",
+                    "isRequired": false,
+                    "attributes": []
                 },
                 "createdAt": {
                     "name": "createdAt",
@@ -2547,6 +2742,13 @@ export const schema = {
                         ]
                     }
                 },
+                "customLoanProductDetails": {
+                    "name": "customLoanProductDetails",
+                    "isArray": false,
+                    "type": "AWSJSON",
+                    "isRequired": false,
+                    "attributes": []
+                },
                 "createdAt": {
                     "name": "createdAt",
                     "isArray": false,
@@ -2639,22 +2841,6 @@ export const schema = {
                     "isRequired": false,
                     "attributes": []
                 },
-                "approvedByEmployees": {
-                    "name": "approvedByEmployees",
-                    "isArray": true,
-                    "type": {
-                        "model": "CreditScoreApprovedByEmployee"
-                    },
-                    "isRequired": false,
-                    "attributes": [],
-                    "isArrayNullable": true,
-                    "association": {
-                        "connectionType": "HAS_MANY",
-                        "associatedWith": [
-                            "creditScore"
-                        ]
-                    }
-                },
                 "borrowerID": {
                     "name": "borrowerID",
                     "isArray": false,
@@ -2698,6 +2884,13 @@ export const schema = {
                             "createdByEmployeeID"
                         ]
                     }
+                },
+                "customCreditScoreDetails": {
+                    "name": "customCreditScoreDetails",
+                    "isArray": false,
+                    "type": "AWSJSON",
+                    "isRequired": false,
+                    "attributes": []
                 },
                 "createdAt": {
                     "name": "createdAt",
@@ -2965,6 +3158,13 @@ export const schema = {
                         ]
                     }
                 },
+                "customDocumentDetails": {
+                    "name": "customDocumentDetails",
+                    "isArray": false,
+                    "type": "AWSJSON",
+                    "isRequired": false,
+                    "attributes": []
+                },
                 "createdAt": {
                     "name": "createdAt",
                     "isArray": false,
@@ -3137,6 +3337,13 @@ export const schema = {
                             "contract"
                         ]
                     }
+                },
+                "customContractDetails": {
+                    "name": "customContractDetails",
+                    "isArray": false,
+                    "type": "AWSJSON",
+                    "isRequired": false,
+                    "attributes": []
                 },
                 "createdAt": {
                     "name": "createdAt",
@@ -3341,22 +3548,6 @@ export const schema = {
                         ]
                     }
                 },
-                "approvedByEmployees": {
-                    "name": "approvedByEmployees",
-                    "isArray": true,
-                    "type": {
-                        "model": "ApplicationApprovedByEmployee"
-                    },
-                    "isRequired": false,
-                    "attributes": [],
-                    "isArrayNullable": true,
-                    "association": {
-                        "connectionType": "HAS_MANY",
-                        "associatedWith": [
-                            "application"
-                        ]
-                    }
-                },
                 "documents": {
                     "name": "documents",
                     "isArray": true,
@@ -3419,6 +3610,13 @@ export const schema = {
                 },
                 "customFieldsData": {
                     "name": "customFieldsData",
+                    "isArray": false,
+                    "type": "AWSJSON",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "customApplicationDetails": {
+                    "name": "customApplicationDetails",
                     "isArray": false,
                     "type": "AWSJSON",
                     "isRequired": false,
@@ -3639,6 +3837,29 @@ export const schema = {
                         ]
                     }
                 },
+                "guarantors": {
+                    "name": "guarantors",
+                    "isArray": true,
+                    "type": {
+                        "model": "GuarantorCollateral"
+                    },
+                    "isRequired": false,
+                    "attributes": [],
+                    "isArrayNullable": true,
+                    "association": {
+                        "connectionType": "HAS_MANY",
+                        "associatedWith": [
+                            "collateral"
+                        ]
+                    }
+                },
+                "customCollateralDetails": {
+                    "name": "customCollateralDetails",
+                    "isArray": false,
+                    "type": "AWSJSON",
+                    "isRequired": false,
+                    "attributes": []
+                },
                 "createdAt": {
                     "name": "createdAt",
                     "isArray": false,
@@ -3686,22 +3907,6 @@ export const schema = {
                     "name": "loanNumber",
                     "isArray": false,
                     "type": "String",
-                    "isRequired": false,
-                    "attributes": []
-                },
-                "approvalStatus": {
-                    "name": "approvalStatus",
-                    "isArray": false,
-                    "type": "String",
-                    "isRequired": false,
-                    "attributes": []
-                },
-                "approvalStatusEnum": {
-                    "name": "approvalStatusEnum",
-                    "isArray": false,
-                    "type": {
-                        "enum": "LoanApprovalStatus"
-                    },
                     "isRequired": false,
                     "attributes": []
                 },
@@ -3786,22 +3991,6 @@ export const schema = {
                     "name": "rateInterval",
                     "isArray": false,
                     "type": "String",
-                    "isRequired": false,
-                    "attributes": []
-                },
-                "loanStatus": {
-                    "name": "loanStatus",
-                    "isArray": false,
-                    "type": "String",
-                    "isRequired": false,
-                    "attributes": []
-                },
-                "loanStatusEnum": {
-                    "name": "loanStatusEnum",
-                    "isArray": false,
-                    "type": {
-                        "enum": "LoanStatus"
-                    },
                     "isRequired": false,
                     "attributes": []
                 },
@@ -3944,43 +4133,11 @@ export const schema = {
                         ]
                     }
                 },
-                "disbursements": {
-                    "name": "disbursements",
-                    "isArray": true,
-                    "type": {
-                        "model": "LoanDisbursement"
-                    },
-                    "isRequired": false,
-                    "attributes": [],
-                    "isArrayNullable": true,
-                    "association": {
-                        "connectionType": "HAS_MANY",
-                        "associatedWith": [
-                            "loan"
-                        ]
-                    }
-                },
                 "events": {
                     "name": "events",
                     "isArray": true,
                     "type": {
                         "model": "LoanEvent"
-                    },
-                    "isRequired": false,
-                    "attributes": [],
-                    "isArrayNullable": true,
-                    "association": {
-                        "connectionType": "HAS_MANY",
-                        "associatedWith": [
-                            "loan"
-                        ]
-                    }
-                },
-                "balanceSnapshots": {
-                    "name": "balanceSnapshots",
-                    "isArray": true,
-                    "type": {
-                        "model": "LoanBalanceSnapshot"
                     },
                     "isRequired": false,
                     "attributes": [],
@@ -4120,22 +4277,6 @@ export const schema = {
                         ]
                     }
                 },
-                "approvedByEmployees": {
-                    "name": "approvedByEmployees",
-                    "isArray": true,
-                    "type": {
-                        "model": "LoanApprovedByEmployee"
-                    },
-                    "isRequired": false,
-                    "attributes": [],
-                    "isArrayNullable": true,
-                    "association": {
-                        "connectionType": "HAS_MANY",
-                        "associatedWith": [
-                            "loan"
-                        ]
-                    }
-                },
                 "documents": {
                     "name": "documents",
                     "isArray": true,
@@ -4212,6 +4353,51 @@ export const schema = {
                         ]
                     }
                 },
+                "groupID": {
+                    "name": "groupID",
+                    "isArray": false,
+                    "type": "ID",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "group": {
+                    "name": "group",
+                    "isArray": false,
+                    "type": {
+                        "model": "Group"
+                    },
+                    "isRequired": false,
+                    "attributes": [],
+                    "association": {
+                        "connectionType": "BELONGS_TO",
+                        "targetNames": [
+                            "groupID"
+                        ]
+                    }
+                },
+                "relatedJournalEntries": {
+                    "name": "relatedJournalEntries",
+                    "isArray": true,
+                    "type": {
+                        "model": "JournalEntry"
+                    },
+                    "isRequired": false,
+                    "attributes": [],
+                    "isArrayNullable": true,
+                    "association": {
+                        "connectionType": "HAS_MANY",
+                        "associatedWith": [
+                            "relatedLoan"
+                        ]
+                    }
+                },
+                "customLoanDetails": {
+                    "name": "customLoanDetails",
+                    "isArray": false,
+                    "type": "AWSJSON",
+                    "isRequired": false,
+                    "attributes": []
+                },
                 "createdAt": {
                     "name": "createdAt",
                     "isArray": false,
@@ -4227,13 +4413,6 @@ export const schema = {
                     "isRequired": false,
                     "attributes": [],
                     "isReadOnly": true
-                },
-                "borrowerLoansId": {
-                    "name": "borrowerLoansId",
-                    "isArray": false,
-                    "type": "ID",
-                    "isRequired": false,
-                    "attributes": []
                 }
             },
             "syncable": true,
@@ -4287,6 +4466,15 @@ export const schema = {
                         "name": "byCreatedByEmployeeID",
                         "fields": [
                             "createdByEmployeeID"
+                        ]
+                    }
+                },
+                {
+                    "type": "key",
+                    "properties": {
+                        "name": "byGroupLoan",
+                        "fields": [
+                            "groupID"
                         ]
                     }
                 }
@@ -4465,6 +4653,13 @@ export const schema = {
                         ]
                     }
                 },
+                "customLoanInstallmentDetails": {
+                    "name": "customLoanInstallmentDetails",
+                    "isArray": false,
+                    "type": "AWSJSON",
+                    "isRequired": false,
+                    "attributes": []
+                },
                 "createdAt": {
                     "name": "createdAt",
                     "isArray": false,
@@ -4496,205 +4691,6 @@ export const schema = {
                         "fields": [
                             "loanID",
                             "dueDate"
-                        ]
-                    }
-                }
-            ]
-        },
-        "LoanDisbursement": {
-            "name": "LoanDisbursement",
-            "fields": {
-                "id": {
-                    "name": "id",
-                    "isArray": false,
-                    "type": "ID",
-                    "isRequired": true,
-                    "attributes": []
-                },
-                "loanID": {
-                    "name": "loanID",
-                    "isArray": false,
-                    "type": "ID",
-                    "isRequired": true,
-                    "attributes": []
-                },
-                "loan": {
-                    "name": "loan",
-                    "isArray": false,
-                    "type": {
-                        "model": "Loan"
-                    },
-                    "isRequired": false,
-                    "attributes": [],
-                    "association": {
-                        "connectionType": "BELONGS_TO",
-                        "targetNames": [
-                            "loanID"
-                        ]
-                    }
-                },
-                "disbursedAt": {
-                    "name": "disbursedAt",
-                    "isArray": false,
-                    "type": "AWSDateTime",
-                    "isRequired": true,
-                    "attributes": []
-                },
-                "amount": {
-                    "name": "amount",
-                    "isArray": false,
-                    "type": "Float",
-                    "isRequired": true,
-                    "attributes": []
-                },
-                "status": {
-                    "name": "status",
-                    "isArray": false,
-                    "type": {
-                        "enum": "DisbursementStatus"
-                    },
-                    "isRequired": false,
-                    "attributes": []
-                },
-                "method": {
-                    "name": "method",
-                    "isArray": false,
-                    "type": "String",
-                    "isRequired": false,
-                    "attributes": []
-                },
-                "reference": {
-                    "name": "reference",
-                    "isArray": false,
-                    "type": "String",
-                    "isRequired": false,
-                    "attributes": []
-                },
-                "accountID": {
-                    "name": "accountID",
-                    "isArray": false,
-                    "type": "ID",
-                    "isRequired": false,
-                    "attributes": []
-                },
-                "account": {
-                    "name": "account",
-                    "isArray": false,
-                    "type": {
-                        "model": "Account"
-                    },
-                    "isRequired": false,
-                    "attributes": [],
-                    "association": {
-                        "connectionType": "BELONGS_TO",
-                        "targetNames": [
-                            "accountID"
-                        ]
-                    }
-                },
-                "moneyTransactionID": {
-                    "name": "moneyTransactionID",
-                    "isArray": false,
-                    "type": "ID",
-                    "isRequired": false,
-                    "attributes": []
-                },
-                "moneyTransaction": {
-                    "name": "moneyTransaction",
-                    "isArray": false,
-                    "type": {
-                        "model": "MoneyTransaction"
-                    },
-                    "isRequired": false,
-                    "attributes": [],
-                    "association": {
-                        "connectionType": "BELONGS_TO",
-                        "targetNames": [
-                            "moneyTransactionID"
-                        ]
-                    }
-                },
-                "moneyTransactions": {
-                    "name": "moneyTransactions",
-                    "isArray": true,
-                    "type": {
-                        "model": "MoneyTransaction"
-                    },
-                    "isRequired": false,
-                    "attributes": [],
-                    "isArrayNullable": true,
-                    "association": {
-                        "connectionType": "HAS_MANY",
-                        "associatedWith": [
-                            "disbursement"
-                        ]
-                    }
-                },
-                "events": {
-                    "name": "events",
-                    "isArray": true,
-                    "type": {
-                        "model": "LoanEvent"
-                    },
-                    "isRequired": false,
-                    "attributes": [],
-                    "isArrayNullable": true,
-                    "association": {
-                        "connectionType": "HAS_MANY",
-                        "associatedWith": [
-                            "disbursement"
-                        ]
-                    }
-                },
-                "createdAt": {
-                    "name": "createdAt",
-                    "isArray": false,
-                    "type": "AWSDateTime",
-                    "isRequired": false,
-                    "attributes": [],
-                    "isReadOnly": true
-                },
-                "updatedAt": {
-                    "name": "updatedAt",
-                    "isArray": false,
-                    "type": "AWSDateTime",
-                    "isRequired": false,
-                    "attributes": [],
-                    "isReadOnly": true
-                }
-            },
-            "syncable": true,
-            "pluralName": "LoanDisbursements",
-            "attributes": [
-                {
-                    "type": "model",
-                    "properties": {}
-                },
-                {
-                    "type": "key",
-                    "properties": {
-                        "name": "byLoan",
-                        "fields": [
-                            "loanID",
-                            "disbursedAt"
-                        ]
-                    }
-                },
-                {
-                    "type": "key",
-                    "properties": {
-                        "name": "byAccountID",
-                        "fields": [
-                            "accountID"
-                        ]
-                    }
-                },
-                {
-                    "type": "key",
-                    "properties": {
-                        "name": "byMoneyTransaction",
-                        "fields": [
-                            "moneyTransactionID"
                         ]
                     }
                 }
@@ -4813,27 +4809,12 @@ export const schema = {
                         ]
                     }
                 },
-                "disbursementID": {
-                    "name": "disbursementID",
+                "customLoanEventDetails": {
+                    "name": "customLoanEventDetails",
                     "isArray": false,
-                    "type": "ID",
+                    "type": "AWSJSON",
                     "isRequired": false,
                     "attributes": []
-                },
-                "disbursement": {
-                    "name": "disbursement",
-                    "isArray": false,
-                    "type": {
-                        "model": "LoanDisbursement"
-                    },
-                    "isRequired": false,
-                    "attributes": [],
-                    "association": {
-                        "connectionType": "BELONGS_TO",
-                        "targetNames": [
-                            "disbursementID"
-                        ]
-                    }
                 },
                 "createdAt": {
                     "name": "createdAt",
@@ -4884,139 +4865,6 @@ export const schema = {
                         "name": "byInstallment",
                         "fields": [
                             "installmentID"
-                        ]
-                    }
-                },
-                {
-                    "type": "key",
-                    "properties": {
-                        "name": "byDisbursement",
-                        "fields": [
-                            "disbursementID"
-                        ]
-                    }
-                }
-            ]
-        },
-        "LoanBalanceSnapshot": {
-            "name": "LoanBalanceSnapshot",
-            "fields": {
-                "id": {
-                    "name": "id",
-                    "isArray": false,
-                    "type": "ID",
-                    "isRequired": true,
-                    "attributes": []
-                },
-                "loanID": {
-                    "name": "loanID",
-                    "isArray": false,
-                    "type": "ID",
-                    "isRequired": true,
-                    "attributes": []
-                },
-                "loan": {
-                    "name": "loan",
-                    "isArray": false,
-                    "type": {
-                        "model": "Loan"
-                    },
-                    "isRequired": false,
-                    "attributes": [],
-                    "association": {
-                        "connectionType": "BELONGS_TO",
-                        "targetNames": [
-                            "loanID"
-                        ]
-                    }
-                },
-                "asOfAt": {
-                    "name": "asOfAt",
-                    "isArray": false,
-                    "type": "AWSDateTime",
-                    "isRequired": true,
-                    "attributes": []
-                },
-                "principalOutstanding": {
-                    "name": "principalOutstanding",
-                    "isArray": false,
-                    "type": "Float",
-                    "isRequired": false,
-                    "attributes": []
-                },
-                "interestOutstanding": {
-                    "name": "interestOutstanding",
-                    "isArray": false,
-                    "type": "Float",
-                    "isRequired": false,
-                    "attributes": []
-                },
-                "feesOutstanding": {
-                    "name": "feesOutstanding",
-                    "isArray": false,
-                    "type": "Float",
-                    "isRequired": false,
-                    "attributes": []
-                },
-                "penaltyOutstanding": {
-                    "name": "penaltyOutstanding",
-                    "isArray": false,
-                    "type": "Float",
-                    "isRequired": false,
-                    "attributes": []
-                },
-                "totalOutstanding": {
-                    "name": "totalOutstanding",
-                    "isArray": false,
-                    "type": "Float",
-                    "isRequired": false,
-                    "attributes": []
-                },
-                "daysPastDue": {
-                    "name": "daysPastDue",
-                    "isArray": false,
-                    "type": "Int",
-                    "isRequired": false,
-                    "attributes": []
-                },
-                "snapshotRecord": {
-                    "name": "snapshotRecord",
-                    "isArray": false,
-                    "type": "AWSJSON",
-                    "isRequired": false,
-                    "attributes": []
-                },
-                "createdAt": {
-                    "name": "createdAt",
-                    "isArray": false,
-                    "type": "AWSDateTime",
-                    "isRequired": false,
-                    "attributes": [],
-                    "isReadOnly": true
-                },
-                "updatedAt": {
-                    "name": "updatedAt",
-                    "isArray": false,
-                    "type": "AWSDateTime",
-                    "isRequired": false,
-                    "attributes": [],
-                    "isReadOnly": true
-                }
-            },
-            "syncable": true,
-            "pluralName": "LoanBalanceSnapshots",
-            "attributes": [
-                {
-                    "type": "model",
-                    "properties": {}
-                },
-                {
-                    "type": "key",
-                    "properties": {
-                        "name": "byLoan",
-                        "fields": [
-                            "loanID",
-                            "asOfAt"
                         ]
                     }
                 }
@@ -5173,6 +5021,13 @@ export const schema = {
                             "investment"
                         ]
                     }
+                },
+                "customInvestmentDetails": {
+                    "name": "customInvestmentDetails",
+                    "isArray": false,
+                    "type": "AWSJSON",
+                    "isRequired": false,
+                    "attributes": []
                 },
                 "createdAt": {
                     "name": "createdAt",
@@ -5370,6 +5225,13 @@ export const schema = {
                         ]
                     }
                 },
+                "customLoanFeesDetails": {
+                    "name": "customLoanFeesDetails",
+                    "isArray": false,
+                    "type": "AWSJSON",
+                    "isRequired": false,
+                    "attributes": []
+                },
                 "createdAt": {
                     "name": "createdAt",
                     "isArray": false,
@@ -5566,6 +5428,13 @@ export const schema = {
                         ]
                     }
                 },
+                "customPenaltyDetails": {
+                    "name": "customPenaltyDetails",
+                    "isArray": false,
+                    "type": "AWSJSON",
+                    "isRequired": false,
+                    "attributes": []
+                },
                 "createdAt": {
                     "name": "createdAt",
                     "isArray": false,
@@ -5725,6 +5594,13 @@ export const schema = {
                             "payroll"
                         ]
                     }
+                },
+                "customPayrollDetails": {
+                    "name": "customPayrollDetails",
+                    "isArray": false,
+                    "type": "AWSJSON",
+                    "isRequired": false,
+                    "attributes": []
                 },
                 "createdAt": {
                     "name": "createdAt",
@@ -6017,22 +5893,6 @@ export const schema = {
                         ]
                     }
                 },
-                "disbursements": {
-                    "name": "disbursements",
-                    "isArray": true,
-                    "type": {
-                        "model": "LoanDisbursement"
-                    },
-                    "isRequired": false,
-                    "attributes": [],
-                    "isArrayNullable": true,
-                    "association": {
-                        "connectionType": "HAS_MANY",
-                        "associatedWith": [
-                            "account"
-                        ]
-                    }
-                },
                 "penalties": {
                     "name": "penalties",
                     "isArray": true,
@@ -6070,6 +5930,13 @@ export const schema = {
                             "createdByEmployeeID"
                         ]
                     }
+                },
+                "customAccountDetails": {
+                    "name": "customAccountDetails",
+                    "isArray": false,
+                    "type": "AWSJSON",
+                    "isRequired": false,
+                    "attributes": []
                 },
                 "createdAt": {
                     "name": "createdAt",
@@ -6273,28 +6140,6 @@ export const schema = {
                         ]
                     }
                 },
-                "disbursementID": {
-                    "name": "disbursementID",
-                    "isArray": false,
-                    "type": "ID",
-                    "isRequired": false,
-                    "attributes": []
-                },
-                "disbursement": {
-                    "name": "disbursement",
-                    "isArray": false,
-                    "type": {
-                        "model": "LoanDisbursement"
-                    },
-                    "isRequired": false,
-                    "attributes": [],
-                    "association": {
-                        "connectionType": "BELONGS_TO",
-                        "targetNames": [
-                            "disbursementID"
-                        ]
-                    }
-                },
                 "installmentID": {
                     "name": "installmentID",
                     "isArray": false,
@@ -6314,22 +6159,6 @@ export const schema = {
                         "connectionType": "BELONGS_TO",
                         "targetNames": [
                             "installmentID"
-                        ]
-                    }
-                },
-                "approvedByEmployees": {
-                    "name": "approvedByEmployees",
-                    "isArray": true,
-                    "type": {
-                        "model": "MoneyTransactionApprovedByEmployee"
-                    },
-                    "isRequired": false,
-                    "attributes": [],
-                    "isArrayNullable": true,
-                    "association": {
-                        "connectionType": "HAS_MANY",
-                        "associatedWith": [
-                            "moneyTransaction"
                         ]
                     }
                 },
@@ -6387,21 +6216,12 @@ export const schema = {
                         ]
                     }
                 },
-                "disbursementsLink": {
-                    "name": "disbursementsLink",
-                    "isArray": true,
-                    "type": {
-                        "model": "LoanDisbursement"
-                    },
+                "customMoneyTransactionDetails": {
+                    "name": "customMoneyTransactionDetails",
+                    "isArray": false,
+                    "type": "AWSJSON",
                     "isRequired": false,
-                    "attributes": [],
-                    "isArrayNullable": true,
-                    "association": {
-                        "connectionType": "HAS_MANY",
-                        "associatedWith": [
-                            "moneyTransaction"
-                        ]
-                    }
+                    "attributes": []
                 },
                 "createdAt": {
                     "name": "createdAt",
@@ -6450,15 +6270,6 @@ export const schema = {
                         "name": "byPayment",
                         "fields": [
                             "paymentID"
-                        ]
-                    }
-                },
-                {
-                    "type": "key",
-                    "properties": {
-                        "name": "byDisbursement",
-                        "fields": [
-                            "disbursementID"
                         ]
                     }
                 },
@@ -6667,22 +6478,6 @@ export const schema = {
                         ]
                     }
                 },
-                "approvedByEmployees": {
-                    "name": "approvedByEmployees",
-                    "isArray": true,
-                    "type": {
-                        "model": "PaymentApprovedByEmployee"
-                    },
-                    "isRequired": false,
-                    "attributes": [],
-                    "isArrayNullable": true,
-                    "association": {
-                        "connectionType": "HAS_MANY",
-                        "associatedWith": [
-                            "payment"
-                        ]
-                    }
-                },
                 "documents": {
                     "name": "documents",
                     "isArray": true,
@@ -6730,6 +6525,57 @@ export const schema = {
                             "payment"
                         ]
                     }
+                },
+                "amountAllocatedToPrincipal": {
+                    "name": "amountAllocatedToPrincipal",
+                    "isArray": false,
+                    "type": "Float",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "amountAllocatedToInterest": {
+                    "name": "amountAllocatedToInterest",
+                    "isArray": false,
+                    "type": "Float",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "amountAllocatedToFees": {
+                    "name": "amountAllocatedToFees",
+                    "isArray": false,
+                    "type": "Float",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "amountAllocatedToPenalty": {
+                    "name": "amountAllocatedToPenalty",
+                    "isArray": false,
+                    "type": "Float",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "relatedJournalEntries": {
+                    "name": "relatedJournalEntries",
+                    "isArray": true,
+                    "type": {
+                        "model": "JournalEntry"
+                    },
+                    "isRequired": false,
+                    "attributes": [],
+                    "isArrayNullable": true,
+                    "association": {
+                        "connectionType": "HAS_MANY",
+                        "associatedWith": [
+                            "relatedPayment"
+                        ]
+                    }
+                },
+                "customPaymentDetails": {
+                    "name": "customPaymentDetails",
+                    "isArray": false,
+                    "type": "AWSJSON",
+                    "isRequired": false,
+                    "attributes": []
                 },
                 "createdAt": {
                     "name": "createdAt",
@@ -6951,22 +6797,6 @@ export const schema = {
                         ]
                     }
                 },
-                "approvedByEmployees": {
-                    "name": "approvedByEmployees",
-                    "isArray": true,
-                    "type": {
-                        "model": "ExpenseApprovedByEmployee"
-                    },
-                    "isRequired": false,
-                    "attributes": [],
-                    "isArrayNullable": true,
-                    "association": {
-                        "connectionType": "HAS_MANY",
-                        "associatedWith": [
-                            "expense"
-                        ]
-                    }
-                },
                 "documents": {
                     "name": "documents",
                     "isArray": true,
@@ -7004,6 +6834,29 @@ export const schema = {
                             "createdByEmployeeID"
                         ]
                     }
+                },
+                "relatedJournalEntries": {
+                    "name": "relatedJournalEntries",
+                    "isArray": true,
+                    "type": {
+                        "model": "JournalEntry"
+                    },
+                    "isRequired": false,
+                    "attributes": [],
+                    "isArrayNullable": true,
+                    "association": {
+                        "connectionType": "HAS_MANY",
+                        "associatedWith": [
+                            "relatedExpense"
+                        ]
+                    }
+                },
+                "customExpenseDetails": {
+                    "name": "customExpenseDetails",
+                    "isArray": false,
+                    "type": "AWSJSON",
+                    "isRequired": false,
+                    "attributes": []
                 },
                 "createdAt": {
                     "name": "createdAt",
@@ -7115,6 +6968,13 @@ export const schema = {
                         ]
                     }
                 },
+                "customOtherIncomeDetails": {
+                    "name": "customOtherIncomeDetails",
+                    "isArray": false,
+                    "type": "AWSJSON",
+                    "isRequired": false,
+                    "attributes": []
+                },
                 "createdAt": {
                     "name": "createdAt",
                     "isArray": false,
@@ -7214,6 +7074,13 @@ export const schema = {
                             "branchFinancialReportsId"
                         ]
                     }
+                },
+                "customFinancialReportDetails": {
+                    "name": "customFinancialReportDetails",
+                    "isArray": false,
+                    "type": "AWSJSON",
+                    "isRequired": false,
+                    "attributes": []
                 },
                 "createdAt": {
                     "name": "createdAt",
@@ -7343,6 +7210,13 @@ export const schema = {
                             "institutionCustomFormFieldsId"
                         ]
                     }
+                },
+                "customCustomFormFieldDetails": {
+                    "name": "customCustomFormFieldDetails",
+                    "isArray": false,
+                    "type": "AWSJSON",
+                    "isRequired": false,
+                    "attributes": []
                 },
                 "createdAt": {
                     "name": "createdAt",
@@ -7506,6 +7380,13 @@ export const schema = {
                         ]
                     }
                 },
+                "customLoanFeesConfigDetails": {
+                    "name": "customLoanFeesConfigDetails",
+                    "isArray": false,
+                    "type": "AWSJSON",
+                    "isRequired": false,
+                    "attributes": []
+                },
                 "createdAt": {
                     "name": "createdAt",
                     "isArray": false,
@@ -7619,6 +7500,13 @@ export const schema = {
                     "isArray": false,
                     "type": "ID",
                     "isRequired": true,
+                    "attributes": []
+                },
+                "customMessageDetails": {
+                    "name": "customMessageDetails",
+                    "isArray": false,
+                    "type": "AWSJSON",
+                    "isRequired": false,
                     "attributes": []
                 },
                 "updatedAt": {
@@ -7767,6 +7655,13 @@ export const schema = {
                     "isRequired": false,
                     "attributes": []
                 },
+                "customNotificationDetails": {
+                    "name": "customNotificationDetails",
+                    "isArray": false,
+                    "type": "AWSJSON",
+                    "isRequired": false,
+                    "attributes": []
+                },
                 "updatedAt": {
                     "name": "updatedAt",
                     "isArray": false,
@@ -7809,6 +7704,1475 @@ export const schema = {
                             "institutionMessagesId"
                         ]
                     }
+                }
+            ]
+        },
+        "Group": {
+            "name": "Group",
+            "fields": {
+                "id": {
+                    "name": "id",
+                    "isArray": false,
+                    "type": "ID",
+                    "isRequired": true,
+                    "attributes": []
+                },
+                "name": {
+                    "name": "name",
+                    "isArray": false,
+                    "type": "String",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "groupNumber": {
+                    "name": "groupNumber",
+                    "isArray": false,
+                    "type": "String",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "formationDate": {
+                    "name": "formationDate",
+                    "isArray": false,
+                    "type": "AWSDate",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "meetingDay": {
+                    "name": "meetingDay",
+                    "isArray": false,
+                    "type": "String",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "meetingFrequency": {
+                    "name": "meetingFrequency",
+                    "isArray": false,
+                    "type": "String",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "chairpersonID": {
+                    "name": "chairpersonID",
+                    "isArray": false,
+                    "type": "String",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "secretaryID": {
+                    "name": "secretaryID",
+                    "isArray": false,
+                    "type": "String",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "viceChairpersonID": {
+                    "name": "viceChairpersonID",
+                    "isArray": false,
+                    "type": "String",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "treasurerID": {
+                    "name": "treasurerID",
+                    "isArray": false,
+                    "type": "String",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "status": {
+                    "name": "status",
+                    "isArray": false,
+                    "type": "String",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "branch": {
+                    "name": "branch",
+                    "isArray": false,
+                    "type": {
+                        "model": "Branch"
+                    },
+                    "isRequired": false,
+                    "attributes": [],
+                    "association": {
+                        "connectionType": "BELONGS_TO",
+                        "targetNames": [
+                            "branchGroupsId"
+                        ]
+                    }
+                },
+                "members": {
+                    "name": "members",
+                    "isArray": true,
+                    "type": {
+                        "model": "Borrower"
+                    },
+                    "isRequired": false,
+                    "attributes": [],
+                    "isArrayNullable": true,
+                    "association": {
+                        "connectionType": "HAS_MANY",
+                        "associatedWith": [
+                            "group"
+                        ]
+                    }
+                },
+                "loans": {
+                    "name": "loans",
+                    "isArray": true,
+                    "type": {
+                        "model": "Loan"
+                    },
+                    "isRequired": false,
+                    "attributes": [],
+                    "isArrayNullable": true,
+                    "association": {
+                        "connectionType": "HAS_MANY",
+                        "associatedWith": [
+                            "group"
+                        ]
+                    }
+                },
+                "groupSavingsAccount": {
+                    "name": "groupSavingsAccount",
+                    "isArray": false,
+                    "type": {
+                        "model": "SavingsAccount"
+                    },
+                    "isRequired": false,
+                    "attributes": [],
+                    "association": {
+                        "connectionType": "HAS_ONE",
+                        "associatedWith": [
+                            "id"
+                        ],
+                        "targetNames": [
+                            "groupGroupSavingsAccountId"
+                        ]
+                    }
+                },
+                "customGroupDetails": {
+                    "name": "customGroupDetails",
+                    "isArray": false,
+                    "type": "AWSJSON",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "createdAt": {
+                    "name": "createdAt",
+                    "isArray": false,
+                    "type": "AWSDateTime",
+                    "isRequired": false,
+                    "attributes": [],
+                    "isReadOnly": true
+                },
+                "updatedAt": {
+                    "name": "updatedAt",
+                    "isArray": false,
+                    "type": "AWSDateTime",
+                    "isRequired": false,
+                    "attributes": [],
+                    "isReadOnly": true
+                },
+                "branchGroupsId": {
+                    "name": "branchGroupsId",
+                    "isArray": false,
+                    "type": "ID",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "groupGroupSavingsAccountId": {
+                    "name": "groupGroupSavingsAccountId",
+                    "isArray": false,
+                    "type": "ID",
+                    "isRequired": false,
+                    "attributes": []
+                }
+            },
+            "syncable": true,
+            "pluralName": "Groups",
+            "attributes": [
+                {
+                    "type": "model",
+                    "properties": {}
+                }
+            ]
+        },
+        "SavingsProduct": {
+            "name": "SavingsProduct",
+            "fields": {
+                "id": {
+                    "name": "id",
+                    "isArray": false,
+                    "type": "ID",
+                    "isRequired": true,
+                    "attributes": []
+                },
+                "name": {
+                    "name": "name",
+                    "isArray": false,
+                    "type": "String",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "type": {
+                    "name": "type",
+                    "isArray": false,
+                    "type": "String",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "interestRate": {
+                    "name": "interestRate",
+                    "isArray": false,
+                    "type": "Float",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "interestPostingFrequency": {
+                    "name": "interestPostingFrequency",
+                    "isArray": false,
+                    "type": "String",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "minBalance": {
+                    "name": "minBalance",
+                    "isArray": false,
+                    "type": "Float",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "institution": {
+                    "name": "institution",
+                    "isArray": false,
+                    "type": {
+                        "model": "Institution"
+                    },
+                    "isRequired": false,
+                    "attributes": [],
+                    "association": {
+                        "connectionType": "BELONGS_TO",
+                        "targetNames": [
+                            "institutionSavingsProductsId"
+                        ]
+                    }
+                },
+                "savingsAccounts": {
+                    "name": "savingsAccounts",
+                    "isArray": true,
+                    "type": {
+                        "model": "SavingsAccount"
+                    },
+                    "isRequired": false,
+                    "attributes": [],
+                    "isArrayNullable": true,
+                    "association": {
+                        "connectionType": "HAS_MANY",
+                        "associatedWith": [
+                            "savingsProductSavingsAccountsId"
+                        ]
+                    }
+                },
+                "customSavingsProductDetails": {
+                    "name": "customSavingsProductDetails",
+                    "isArray": false,
+                    "type": "AWSJSON",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "createdAt": {
+                    "name": "createdAt",
+                    "isArray": false,
+                    "type": "AWSDateTime",
+                    "isRequired": false,
+                    "attributes": [],
+                    "isReadOnly": true
+                },
+                "updatedAt": {
+                    "name": "updatedAt",
+                    "isArray": false,
+                    "type": "AWSDateTime",
+                    "isRequired": false,
+                    "attributes": [],
+                    "isReadOnly": true
+                },
+                "institutionSavingsProductsId": {
+                    "name": "institutionSavingsProductsId",
+                    "isArray": false,
+                    "type": "ID",
+                    "isRequired": false,
+                    "attributes": []
+                }
+            },
+            "syncable": true,
+            "pluralName": "SavingsProducts",
+            "attributes": [
+                {
+                    "type": "model",
+                    "properties": {}
+                }
+            ]
+        },
+        "SavingsAccount": {
+            "name": "SavingsAccount",
+            "fields": {
+                "id": {
+                    "name": "id",
+                    "isArray": false,
+                    "type": "ID",
+                    "isRequired": true,
+                    "attributes": []
+                },
+                "accountNumber": {
+                    "name": "accountNumber",
+                    "isArray": false,
+                    "type": "String",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "balance": {
+                    "name": "balance",
+                    "isArray": false,
+                    "type": "Float",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "status": {
+                    "name": "status",
+                    "isArray": false,
+                    "type": "String",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "borrower": {
+                    "name": "borrower",
+                    "isArray": false,
+                    "type": {
+                        "model": "Borrower"
+                    },
+                    "isRequired": false,
+                    "attributes": [],
+                    "association": {
+                        "connectionType": "BELONGS_TO",
+                        "targetNames": [
+                            "borrowerSavingsAccountsId"
+                        ]
+                    }
+                },
+                "savingsProduct": {
+                    "name": "savingsProduct",
+                    "isArray": false,
+                    "type": {
+                        "model": "SavingsProduct"
+                    },
+                    "isRequired": false,
+                    "attributes": [],
+                    "association": {
+                        "connectionType": "BELONGS_TO",
+                        "targetNames": [
+                            "savingsProductSavingsAccountsId"
+                        ]
+                    }
+                },
+                "lockedAmount": {
+                    "name": "lockedAmount",
+                    "isArray": false,
+                    "type": "Float",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "lockedForLoanID": {
+                    "name": "lockedForLoanID",
+                    "isArray": false,
+                    "type": "ID",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "transactions": {
+                    "name": "transactions",
+                    "isArray": true,
+                    "type": {
+                        "model": "SavingsTransaction"
+                    },
+                    "isRequired": false,
+                    "attributes": [],
+                    "isArrayNullable": true,
+                    "association": {
+                        "connectionType": "HAS_MANY",
+                        "associatedWith": [
+                            "savingsAccountTransactionsId"
+                        ]
+                    }
+                },
+                "customSavingsAccountDetails": {
+                    "name": "customSavingsAccountDetails",
+                    "isArray": false,
+                    "type": "AWSJSON",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "createdAt": {
+                    "name": "createdAt",
+                    "isArray": false,
+                    "type": "AWSDateTime",
+                    "isRequired": false,
+                    "attributes": [],
+                    "isReadOnly": true
+                },
+                "updatedAt": {
+                    "name": "updatedAt",
+                    "isArray": false,
+                    "type": "AWSDateTime",
+                    "isRequired": false,
+                    "attributes": [],
+                    "isReadOnly": true
+                },
+                "borrowerSavingsAccountsId": {
+                    "name": "borrowerSavingsAccountsId",
+                    "isArray": false,
+                    "type": "ID",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "savingsProductSavingsAccountsId": {
+                    "name": "savingsProductSavingsAccountsId",
+                    "isArray": false,
+                    "type": "ID",
+                    "isRequired": false,
+                    "attributes": []
+                }
+            },
+            "syncable": true,
+            "pluralName": "SavingsAccounts",
+            "attributes": [
+                {
+                    "type": "model",
+                    "properties": {}
+                }
+            ]
+        },
+        "SavingsTransaction": {
+            "name": "SavingsTransaction",
+            "fields": {
+                "id": {
+                    "name": "id",
+                    "isArray": false,
+                    "type": "ID",
+                    "isRequired": true,
+                    "attributes": []
+                },
+                "amount": {
+                    "name": "amount",
+                    "isArray": false,
+                    "type": "Float",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "type": {
+                    "name": "type",
+                    "isArray": false,
+                    "type": "String",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "date": {
+                    "name": "date",
+                    "isArray": false,
+                    "type": "AWSDateTime",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "savingsAccount": {
+                    "name": "savingsAccount",
+                    "isArray": false,
+                    "type": {
+                        "model": "SavingsAccount"
+                    },
+                    "isRequired": false,
+                    "attributes": [],
+                    "association": {
+                        "connectionType": "BELONGS_TO",
+                        "targetNames": [
+                            "savingsAccountTransactionsId"
+                        ]
+                    }
+                },
+                "initiatedBy": {
+                    "name": "initiatedBy",
+                    "isArray": false,
+                    "type": {
+                        "model": "Employee"
+                    },
+                    "isRequired": false,
+                    "attributes": [],
+                    "association": {
+                        "connectionType": "BELONGS_TO",
+                        "targetNames": [
+                            "employeeInitiatedSavingsTransactionsId"
+                        ]
+                    }
+                },
+                "customSavingsTransactionDetails": {
+                    "name": "customSavingsTransactionDetails",
+                    "isArray": false,
+                    "type": "AWSJSON",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "createdAt": {
+                    "name": "createdAt",
+                    "isArray": false,
+                    "type": "AWSDateTime",
+                    "isRequired": false,
+                    "attributes": [],
+                    "isReadOnly": true
+                },
+                "updatedAt": {
+                    "name": "updatedAt",
+                    "isArray": false,
+                    "type": "AWSDateTime",
+                    "isRequired": false,
+                    "attributes": [],
+                    "isReadOnly": true
+                },
+                "employeeInitiatedSavingsTransactionsId": {
+                    "name": "employeeInitiatedSavingsTransactionsId",
+                    "isArray": false,
+                    "type": "ID",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "savingsAccountTransactionsId": {
+                    "name": "savingsAccountTransactionsId",
+                    "isArray": false,
+                    "type": "ID",
+                    "isRequired": false,
+                    "attributes": []
+                }
+            },
+            "syncable": true,
+            "pluralName": "SavingsTransactions",
+            "attributes": [
+                {
+                    "type": "model",
+                    "properties": {}
+                }
+            ]
+        },
+        "ShareAccount": {
+            "name": "ShareAccount",
+            "fields": {
+                "id": {
+                    "name": "id",
+                    "isArray": false,
+                    "type": "ID",
+                    "isRequired": true,
+                    "attributes": []
+                },
+                "numberOfShares": {
+                    "name": "numberOfShares",
+                    "isArray": false,
+                    "type": "Float",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "shareValue": {
+                    "name": "shareValue",
+                    "isArray": false,
+                    "type": "Float",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "totalValue": {
+                    "name": "totalValue",
+                    "isArray": false,
+                    "type": "Float",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "borrower": {
+                    "name": "borrower",
+                    "isArray": false,
+                    "type": {
+                        "model": "Borrower"
+                    },
+                    "isRequired": false,
+                    "attributes": [],
+                    "association": {
+                        "connectionType": "BELONGS_TO",
+                        "targetNames": [
+                            "shareAccountBorrowerId"
+                        ]
+                    }
+                },
+                "transactions": {
+                    "name": "transactions",
+                    "isArray": true,
+                    "type": {
+                        "model": "ShareTransaction"
+                    },
+                    "isRequired": false,
+                    "attributes": [],
+                    "isArrayNullable": true,
+                    "association": {
+                        "connectionType": "HAS_MANY",
+                        "associatedWith": [
+                            "shareAccountTransactionsId"
+                        ]
+                    }
+                },
+                "customShareAccountDetails": {
+                    "name": "customShareAccountDetails",
+                    "isArray": false,
+                    "type": "AWSJSON",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "createdAt": {
+                    "name": "createdAt",
+                    "isArray": false,
+                    "type": "AWSDateTime",
+                    "isRequired": false,
+                    "attributes": [],
+                    "isReadOnly": true
+                },
+                "updatedAt": {
+                    "name": "updatedAt",
+                    "isArray": false,
+                    "type": "AWSDateTime",
+                    "isRequired": false,
+                    "attributes": [],
+                    "isReadOnly": true
+                },
+                "shareAccountBorrowerId": {
+                    "name": "shareAccountBorrowerId",
+                    "isArray": false,
+                    "type": "ID",
+                    "isRequired": false,
+                    "attributes": []
+                }
+            },
+            "syncable": true,
+            "pluralName": "ShareAccounts",
+            "attributes": [
+                {
+                    "type": "model",
+                    "properties": {}
+                }
+            ]
+        },
+        "ShareTransaction": {
+            "name": "ShareTransaction",
+            "fields": {
+                "id": {
+                    "name": "id",
+                    "isArray": false,
+                    "type": "ID",
+                    "isRequired": true,
+                    "attributes": []
+                },
+                "type": {
+                    "name": "type",
+                    "isArray": false,
+                    "type": "String",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "numberOfShares": {
+                    "name": "numberOfShares",
+                    "isArray": false,
+                    "type": "Float",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "amount": {
+                    "name": "amount",
+                    "isArray": false,
+                    "type": "Float",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "date": {
+                    "name": "date",
+                    "isArray": false,
+                    "type": "AWSDateTime",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "shareAccount": {
+                    "name": "shareAccount",
+                    "isArray": false,
+                    "type": {
+                        "model": "ShareAccount"
+                    },
+                    "isRequired": false,
+                    "attributes": [],
+                    "association": {
+                        "connectionType": "BELONGS_TO",
+                        "targetNames": [
+                            "shareAccountTransactionsId"
+                        ]
+                    }
+                },
+                "customShareTransactionDetails": {
+                    "name": "customShareTransactionDetails",
+                    "isArray": false,
+                    "type": "AWSJSON",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "createdAt": {
+                    "name": "createdAt",
+                    "isArray": false,
+                    "type": "AWSDateTime",
+                    "isRequired": false,
+                    "attributes": [],
+                    "isReadOnly": true
+                },
+                "updatedAt": {
+                    "name": "updatedAt",
+                    "isArray": false,
+                    "type": "AWSDateTime",
+                    "isRequired": false,
+                    "attributes": [],
+                    "isReadOnly": true
+                },
+                "shareAccountTransactionsId": {
+                    "name": "shareAccountTransactionsId",
+                    "isArray": false,
+                    "type": "ID",
+                    "isRequired": false,
+                    "attributes": []
+                }
+            },
+            "syncable": true,
+            "pluralName": "ShareTransactions",
+            "attributes": [
+                {
+                    "type": "model",
+                    "properties": {}
+                }
+            ]
+        },
+        "ChartOfAccounts": {
+            "name": "ChartOfAccounts",
+            "fields": {
+                "id": {
+                    "name": "id",
+                    "isArray": false,
+                    "type": "ID",
+                    "isRequired": true,
+                    "attributes": []
+                },
+                "code": {
+                    "name": "code",
+                    "isArray": false,
+                    "type": "String",
+                    "isRequired": true,
+                    "attributes": []
+                },
+                "name": {
+                    "name": "name",
+                    "isArray": false,
+                    "type": "String",
+                    "isRequired": true,
+                    "attributes": []
+                },
+                "type": {
+                    "name": "type",
+                    "isArray": false,
+                    "type": "String",
+                    "isRequired": true,
+                    "attributes": []
+                },
+                "subtype": {
+                    "name": "subtype",
+                    "isArray": false,
+                    "type": "String",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "balance": {
+                    "name": "balance",
+                    "isArray": false,
+                    "type": "Float",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "institution": {
+                    "name": "institution",
+                    "isArray": false,
+                    "type": {
+                        "model": "Institution"
+                    },
+                    "isRequired": false,
+                    "attributes": [],
+                    "association": {
+                        "connectionType": "BELONGS_TO",
+                        "targetNames": [
+                            "institutionChartOfAccountsId"
+                        ]
+                    }
+                },
+                "journalLines": {
+                    "name": "journalLines",
+                    "isArray": true,
+                    "type": {
+                        "model": "JournalLine"
+                    },
+                    "isRequired": false,
+                    "attributes": [],
+                    "isArrayNullable": true,
+                    "association": {
+                        "connectionType": "HAS_MANY",
+                        "associatedWith": [
+                            "chartOfAccountsJournalLinesId"
+                        ]
+                    }
+                },
+                "customChartOfAccountsDetails": {
+                    "name": "customChartOfAccountsDetails",
+                    "isArray": false,
+                    "type": "AWSJSON",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "createdAt": {
+                    "name": "createdAt",
+                    "isArray": false,
+                    "type": "AWSDateTime",
+                    "isRequired": false,
+                    "attributes": [],
+                    "isReadOnly": true
+                },
+                "updatedAt": {
+                    "name": "updatedAt",
+                    "isArray": false,
+                    "type": "AWSDateTime",
+                    "isRequired": false,
+                    "attributes": [],
+                    "isReadOnly": true
+                },
+                "institutionChartOfAccountsId": {
+                    "name": "institutionChartOfAccountsId",
+                    "isArray": false,
+                    "type": "ID",
+                    "isRequired": false,
+                    "attributes": []
+                }
+            },
+            "syncable": true,
+            "pluralName": "ChartOfAccounts",
+            "attributes": [
+                {
+                    "type": "model",
+                    "properties": {}
+                }
+            ]
+        },
+        "JournalEntry": {
+            "name": "JournalEntry",
+            "fields": {
+                "id": {
+                    "name": "id",
+                    "isArray": false,
+                    "type": "ID",
+                    "isRequired": true,
+                    "attributes": []
+                },
+                "date": {
+                    "name": "date",
+                    "isArray": false,
+                    "type": "AWSDate",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "description": {
+                    "name": "description",
+                    "isArray": false,
+                    "type": "String",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "reference": {
+                    "name": "reference",
+                    "isArray": false,
+                    "type": "String",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "postedBy": {
+                    "name": "postedBy",
+                    "isArray": false,
+                    "type": {
+                        "model": "Employee"
+                    },
+                    "isRequired": false,
+                    "attributes": [],
+                    "association": {
+                        "connectionType": "BELONGS_TO",
+                        "targetNames": [
+                            "employeePostedJournalEntriesId"
+                        ]
+                    }
+                },
+                "status": {
+                    "name": "status",
+                    "isArray": false,
+                    "type": "String",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "lines": {
+                    "name": "lines",
+                    "isArray": true,
+                    "type": {
+                        "model": "JournalLine"
+                    },
+                    "isRequired": false,
+                    "attributes": [],
+                    "isArrayNullable": true,
+                    "association": {
+                        "connectionType": "HAS_MANY",
+                        "associatedWith": [
+                            "journalEntryLinesId"
+                        ]
+                    }
+                },
+                "relatedLoanID": {
+                    "name": "relatedLoanID",
+                    "isArray": false,
+                    "type": "ID",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "relatedLoan": {
+                    "name": "relatedLoan",
+                    "isArray": false,
+                    "type": {
+                        "model": "Loan"
+                    },
+                    "isRequired": false,
+                    "attributes": [],
+                    "association": {
+                        "connectionType": "BELONGS_TO",
+                        "targetNames": [
+                            "relatedLoanID"
+                        ]
+                    }
+                },
+                "relatedPaymentID": {
+                    "name": "relatedPaymentID",
+                    "isArray": false,
+                    "type": "ID",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "relatedPayment": {
+                    "name": "relatedPayment",
+                    "isArray": false,
+                    "type": {
+                        "model": "Payment"
+                    },
+                    "isRequired": false,
+                    "attributes": [],
+                    "association": {
+                        "connectionType": "BELONGS_TO",
+                        "targetNames": [
+                            "relatedPaymentID"
+                        ]
+                    }
+                },
+                "relatedExpenseID": {
+                    "name": "relatedExpenseID",
+                    "isArray": false,
+                    "type": "ID",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "relatedExpense": {
+                    "name": "relatedExpense",
+                    "isArray": false,
+                    "type": {
+                        "model": "Expense"
+                    },
+                    "isRequired": false,
+                    "attributes": [],
+                    "association": {
+                        "connectionType": "BELONGS_TO",
+                        "targetNames": [
+                            "relatedExpenseID"
+                        ]
+                    }
+                },
+                "customJournalEntryDetails": {
+                    "name": "customJournalEntryDetails",
+                    "isArray": false,
+                    "type": "AWSJSON",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "createdAt": {
+                    "name": "createdAt",
+                    "isArray": false,
+                    "type": "AWSDateTime",
+                    "isRequired": false,
+                    "attributes": [],
+                    "isReadOnly": true
+                },
+                "updatedAt": {
+                    "name": "updatedAt",
+                    "isArray": false,
+                    "type": "AWSDateTime",
+                    "isRequired": false,
+                    "attributes": [],
+                    "isReadOnly": true
+                },
+                "employeePostedJournalEntriesId": {
+                    "name": "employeePostedJournalEntriesId",
+                    "isArray": false,
+                    "type": "ID",
+                    "isRequired": false,
+                    "attributes": []
+                }
+            },
+            "syncable": true,
+            "pluralName": "JournalEntries",
+            "attributes": [
+                {
+                    "type": "model",
+                    "properties": {}
+                },
+                {
+                    "type": "key",
+                    "properties": {
+                        "name": "byRelatedLoanID",
+                        "fields": [
+                            "relatedLoanID"
+                        ]
+                    }
+                },
+                {
+                    "type": "key",
+                    "properties": {
+                        "name": "byRelatedPaymentID",
+                        "fields": [
+                            "relatedPaymentID"
+                        ]
+                    }
+                },
+                {
+                    "type": "key",
+                    "properties": {
+                        "name": "byRelatedExpenseID",
+                        "fields": [
+                            "relatedExpenseID"
+                        ]
+                    }
+                }
+            ]
+        },
+        "JournalLine": {
+            "name": "JournalLine",
+            "fields": {
+                "id": {
+                    "name": "id",
+                    "isArray": false,
+                    "type": "ID",
+                    "isRequired": true,
+                    "attributes": []
+                },
+                "journalEntry": {
+                    "name": "journalEntry",
+                    "isArray": false,
+                    "type": {
+                        "model": "JournalEntry"
+                    },
+                    "isRequired": false,
+                    "attributes": [],
+                    "association": {
+                        "connectionType": "BELONGS_TO",
+                        "targetNames": [
+                            "journalEntryLinesId"
+                        ]
+                    }
+                },
+                "chartOfAccounts": {
+                    "name": "chartOfAccounts",
+                    "isArray": false,
+                    "type": {
+                        "model": "ChartOfAccounts"
+                    },
+                    "isRequired": false,
+                    "attributes": [],
+                    "association": {
+                        "connectionType": "BELONGS_TO",
+                        "targetNames": [
+                            "chartOfAccountsJournalLinesId"
+                        ]
+                    }
+                },
+                "debit": {
+                    "name": "debit",
+                    "isArray": false,
+                    "type": "Float",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "credit": {
+                    "name": "credit",
+                    "isArray": false,
+                    "type": "Float",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "description": {
+                    "name": "description",
+                    "isArray": false,
+                    "type": "String",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "customJournalLineDetails": {
+                    "name": "customJournalLineDetails",
+                    "isArray": false,
+                    "type": "AWSJSON",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "createdAt": {
+                    "name": "createdAt",
+                    "isArray": false,
+                    "type": "AWSDateTime",
+                    "isRequired": false,
+                    "attributes": [],
+                    "isReadOnly": true
+                },
+                "updatedAt": {
+                    "name": "updatedAt",
+                    "isArray": false,
+                    "type": "AWSDateTime",
+                    "isRequired": false,
+                    "attributes": [],
+                    "isReadOnly": true
+                },
+                "chartOfAccountsJournalLinesId": {
+                    "name": "chartOfAccountsJournalLinesId",
+                    "isArray": false,
+                    "type": "ID",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "journalEntryLinesId": {
+                    "name": "journalEntryLinesId",
+                    "isArray": false,
+                    "type": "ID",
+                    "isRequired": false,
+                    "attributes": []
+                }
+            },
+            "syncable": true,
+            "pluralName": "JournalLines",
+            "attributes": [
+                {
+                    "type": "model",
+                    "properties": {}
+                }
+            ]
+        },
+        "Meeting": {
+            "name": "Meeting",
+            "fields": {
+                "id": {
+                    "name": "id",
+                    "isArray": false,
+                    "type": "ID",
+                    "isRequired": true,
+                    "attributes": []
+                },
+                "title": {
+                    "name": "title",
+                    "isArray": false,
+                    "type": "String",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "date": {
+                    "name": "date",
+                    "isArray": false,
+                    "type": "AWSDateTime",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "type": {
+                    "name": "type",
+                    "isArray": false,
+                    "type": "String",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "status": {
+                    "name": "status",
+                    "isArray": false,
+                    "type": "String",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "minutes": {
+                    "name": "minutes",
+                    "isArray": false,
+                    "type": "String",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "attendanceRecord": {
+                    "name": "attendanceRecord",
+                    "isArray": false,
+                    "type": "AWSJSON",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "resolutionsRecord": {
+                    "name": "resolutionsRecord",
+                    "isArray": false,
+                    "type": "AWSJSON",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "customMeetingDetails": {
+                    "name": "customMeetingDetails",
+                    "isArray": false,
+                    "type": "AWSJSON",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "createdAt": {
+                    "name": "createdAt",
+                    "isArray": false,
+                    "type": "AWSDateTime",
+                    "isRequired": false,
+                    "attributes": [],
+                    "isReadOnly": true
+                },
+                "updatedAt": {
+                    "name": "updatedAt",
+                    "isArray": false,
+                    "type": "AWSDateTime",
+                    "isRequired": false,
+                    "attributes": [],
+                    "isReadOnly": true
+                }
+            },
+            "syncable": true,
+            "pluralName": "Meetings",
+            "attributes": [
+                {
+                    "type": "model",
+                    "properties": {}
+                }
+            ]
+        },
+        "DividendDeclaration": {
+            "name": "DividendDeclaration",
+            "fields": {
+                "id": {
+                    "name": "id",
+                    "isArray": false,
+                    "type": "ID",
+                    "isRequired": true,
+                    "attributes": []
+                },
+                "fiscalYear": {
+                    "name": "fiscalYear",
+                    "isArray": false,
+                    "type": "Int",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "distributableSurplus": {
+                    "name": "distributableSurplus",
+                    "isArray": false,
+                    "type": "Float",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "dividendRate": {
+                    "name": "dividendRate",
+                    "isArray": false,
+                    "type": "Float",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "interestRebateRate": {
+                    "name": "interestRebateRate",
+                    "isArray": false,
+                    "type": "Float",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "status": {
+                    "name": "status",
+                    "isArray": false,
+                    "type": "String",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "institution": {
+                    "name": "institution",
+                    "isArray": false,
+                    "type": {
+                        "model": "Institution"
+                    },
+                    "isRequired": false,
+                    "attributes": [],
+                    "association": {
+                        "connectionType": "BELONGS_TO",
+                        "targetNames": [
+                            "institutionDividendDeclarationsId"
+                        ]
+                    }
+                },
+                "customDividendDeclarationDetails": {
+                    "name": "customDividendDeclarationDetails",
+                    "isArray": false,
+                    "type": "AWSJSON",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "createdAt": {
+                    "name": "createdAt",
+                    "isArray": false,
+                    "type": "AWSDateTime",
+                    "isRequired": false,
+                    "attributes": [],
+                    "isReadOnly": true
+                },
+                "updatedAt": {
+                    "name": "updatedAt",
+                    "isArray": false,
+                    "type": "AWSDateTime",
+                    "isRequired": false,
+                    "attributes": [],
+                    "isReadOnly": true
+                },
+                "institutionDividendDeclarationsId": {
+                    "name": "institutionDividendDeclarationsId",
+                    "isArray": false,
+                    "type": "ID",
+                    "isRequired": false,
+                    "attributes": []
+                }
+            },
+            "syncable": true,
+            "pluralName": "DividendDeclarations",
+            "attributes": [
+                {
+                    "type": "model",
+                    "properties": {}
+                }
+            ]
+        },
+        "Approval": {
+            "name": "Approval",
+            "fields": {
+                "id": {
+                    "name": "id",
+                    "isArray": false,
+                    "type": "ID",
+                    "isRequired": true,
+                    "attributes": []
+                },
+                "approvalType": {
+                    "name": "approvalType",
+                    "isArray": false,
+                    "type": {
+                        "enum": "ApprovalType"
+                    },
+                    "isRequired": true,
+                    "attributes": []
+                },
+                "recordID": {
+                    "name": "recordID",
+                    "isArray": false,
+                    "type": "ID",
+                    "isRequired": true,
+                    "attributes": []
+                },
+                "approvalDate": {
+                    "name": "approvalDate",
+                    "isArray": false,
+                    "type": "AWSDate",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "status": {
+                    "name": "status",
+                    "isArray": false,
+                    "type": "String",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "notes": {
+                    "name": "notes",
+                    "isArray": false,
+                    "type": "String",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "employee": {
+                    "name": "employee",
+                    "isArray": false,
+                    "type": {
+                        "model": "Employee"
+                    },
+                    "isRequired": false,
+                    "attributes": [],
+                    "association": {
+                        "connectionType": "BELONGS_TO",
+                        "targetNames": [
+                            "employeeApprovalsId"
+                        ]
+                    }
+                },
+                "customApprovalDetails": {
+                    "name": "customApprovalDetails",
+                    "isArray": false,
+                    "type": "AWSJSON",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "createdAt": {
+                    "name": "createdAt",
+                    "isArray": false,
+                    "type": "AWSDateTime",
+                    "isRequired": false,
+                    "attributes": [],
+                    "isReadOnly": true
+                },
+                "updatedAt": {
+                    "name": "updatedAt",
+                    "isArray": false,
+                    "type": "AWSDateTime",
+                    "isRequired": false,
+                    "attributes": [],
+                    "isReadOnly": true
+                },
+                "employeeApprovalsId": {
+                    "name": "employeeApprovalsId",
+                    "isArray": false,
+                    "type": "ID",
+                    "isRequired": false,
+                    "attributes": []
+                }
+            },
+            "syncable": true,
+            "pluralName": "Approvals",
+            "attributes": [
+                {
+                    "type": "model",
+                    "properties": {}
                 }
             ]
         },
@@ -8204,594 +9568,6 @@ export const schema = {
                 }
             ]
         },
-        "LoanApprovedByEmployee": {
-            "name": "LoanApprovedByEmployee",
-            "fields": {
-                "id": {
-                    "name": "id",
-                    "isArray": false,
-                    "type": "ID",
-                    "isRequired": true,
-                    "attributes": []
-                },
-                "employeeId": {
-                    "name": "employeeId",
-                    "isArray": false,
-                    "type": "ID",
-                    "isRequired": false,
-                    "attributes": []
-                },
-                "loanId": {
-                    "name": "loanId",
-                    "isArray": false,
-                    "type": "ID",
-                    "isRequired": false,
-                    "attributes": []
-                },
-                "employee": {
-                    "name": "employee",
-                    "isArray": false,
-                    "type": {
-                        "model": "Employee"
-                    },
-                    "isRequired": true,
-                    "attributes": [],
-                    "association": {
-                        "connectionType": "BELONGS_TO",
-                        "targetNames": [
-                            "employeeId"
-                        ]
-                    }
-                },
-                "loan": {
-                    "name": "loan",
-                    "isArray": false,
-                    "type": {
-                        "model": "Loan"
-                    },
-                    "isRequired": true,
-                    "attributes": [],
-                    "association": {
-                        "connectionType": "BELONGS_TO",
-                        "targetNames": [
-                            "loanId"
-                        ]
-                    }
-                },
-                "createdAt": {
-                    "name": "createdAt",
-                    "isArray": false,
-                    "type": "AWSDateTime",
-                    "isRequired": false,
-                    "attributes": [],
-                    "isReadOnly": true
-                },
-                "updatedAt": {
-                    "name": "updatedAt",
-                    "isArray": false,
-                    "type": "AWSDateTime",
-                    "isRequired": false,
-                    "attributes": [],
-                    "isReadOnly": true
-                }
-            },
-            "syncable": true,
-            "pluralName": "LoanApprovedByEmployees",
-            "attributes": [
-                {
-                    "type": "model",
-                    "properties": {}
-                },
-                {
-                    "type": "key",
-                    "properties": {
-                        "name": "byEmployee",
-                        "fields": [
-                            "employeeId"
-                        ]
-                    }
-                },
-                {
-                    "type": "key",
-                    "properties": {
-                        "name": "byLoan",
-                        "fields": [
-                            "loanId"
-                        ]
-                    }
-                }
-            ]
-        },
-        "ExpenseApprovedByEmployee": {
-            "name": "ExpenseApprovedByEmployee",
-            "fields": {
-                "id": {
-                    "name": "id",
-                    "isArray": false,
-                    "type": "ID",
-                    "isRequired": true,
-                    "attributes": []
-                },
-                "employeeId": {
-                    "name": "employeeId",
-                    "isArray": false,
-                    "type": "ID",
-                    "isRequired": false,
-                    "attributes": []
-                },
-                "expenseId": {
-                    "name": "expenseId",
-                    "isArray": false,
-                    "type": "ID",
-                    "isRequired": false,
-                    "attributes": []
-                },
-                "employee": {
-                    "name": "employee",
-                    "isArray": false,
-                    "type": {
-                        "model": "Employee"
-                    },
-                    "isRequired": true,
-                    "attributes": [],
-                    "association": {
-                        "connectionType": "BELONGS_TO",
-                        "targetNames": [
-                            "employeeId"
-                        ]
-                    }
-                },
-                "expense": {
-                    "name": "expense",
-                    "isArray": false,
-                    "type": {
-                        "model": "Expense"
-                    },
-                    "isRequired": true,
-                    "attributes": [],
-                    "association": {
-                        "connectionType": "BELONGS_TO",
-                        "targetNames": [
-                            "expenseId"
-                        ]
-                    }
-                },
-                "createdAt": {
-                    "name": "createdAt",
-                    "isArray": false,
-                    "type": "AWSDateTime",
-                    "isRequired": false,
-                    "attributes": [],
-                    "isReadOnly": true
-                },
-                "updatedAt": {
-                    "name": "updatedAt",
-                    "isArray": false,
-                    "type": "AWSDateTime",
-                    "isRequired": false,
-                    "attributes": [],
-                    "isReadOnly": true
-                }
-            },
-            "syncable": true,
-            "pluralName": "ExpenseApprovedByEmployees",
-            "attributes": [
-                {
-                    "type": "model",
-                    "properties": {}
-                },
-                {
-                    "type": "key",
-                    "properties": {
-                        "name": "byEmployee",
-                        "fields": [
-                            "employeeId"
-                        ]
-                    }
-                },
-                {
-                    "type": "key",
-                    "properties": {
-                        "name": "byExpense",
-                        "fields": [
-                            "expenseId"
-                        ]
-                    }
-                }
-            ]
-        },
-        "ApplicationApprovedByEmployee": {
-            "name": "ApplicationApprovedByEmployee",
-            "fields": {
-                "id": {
-                    "name": "id",
-                    "isArray": false,
-                    "type": "ID",
-                    "isRequired": true,
-                    "attributes": []
-                },
-                "employeeId": {
-                    "name": "employeeId",
-                    "isArray": false,
-                    "type": "ID",
-                    "isRequired": false,
-                    "attributes": []
-                },
-                "applicationId": {
-                    "name": "applicationId",
-                    "isArray": false,
-                    "type": "ID",
-                    "isRequired": false,
-                    "attributes": []
-                },
-                "employee": {
-                    "name": "employee",
-                    "isArray": false,
-                    "type": {
-                        "model": "Employee"
-                    },
-                    "isRequired": true,
-                    "attributes": [],
-                    "association": {
-                        "connectionType": "BELONGS_TO",
-                        "targetNames": [
-                            "employeeId"
-                        ]
-                    }
-                },
-                "application": {
-                    "name": "application",
-                    "isArray": false,
-                    "type": {
-                        "model": "Application"
-                    },
-                    "isRequired": true,
-                    "attributes": [],
-                    "association": {
-                        "connectionType": "BELONGS_TO",
-                        "targetNames": [
-                            "applicationId"
-                        ]
-                    }
-                },
-                "createdAt": {
-                    "name": "createdAt",
-                    "isArray": false,
-                    "type": "AWSDateTime",
-                    "isRequired": false,
-                    "attributes": [],
-                    "isReadOnly": true
-                },
-                "updatedAt": {
-                    "name": "updatedAt",
-                    "isArray": false,
-                    "type": "AWSDateTime",
-                    "isRequired": false,
-                    "attributes": [],
-                    "isReadOnly": true
-                }
-            },
-            "syncable": true,
-            "pluralName": "ApplicationApprovedByEmployees",
-            "attributes": [
-                {
-                    "type": "model",
-                    "properties": {}
-                },
-                {
-                    "type": "key",
-                    "properties": {
-                        "name": "byEmployee",
-                        "fields": [
-                            "employeeId"
-                        ]
-                    }
-                },
-                {
-                    "type": "key",
-                    "properties": {
-                        "name": "byApplication",
-                        "fields": [
-                            "applicationId"
-                        ]
-                    }
-                }
-            ]
-        },
-        "CreditScoreApprovedByEmployee": {
-            "name": "CreditScoreApprovedByEmployee",
-            "fields": {
-                "id": {
-                    "name": "id",
-                    "isArray": false,
-                    "type": "ID",
-                    "isRequired": true,
-                    "attributes": []
-                },
-                "employeeId": {
-                    "name": "employeeId",
-                    "isArray": false,
-                    "type": "ID",
-                    "isRequired": false,
-                    "attributes": []
-                },
-                "creditScoreId": {
-                    "name": "creditScoreId",
-                    "isArray": false,
-                    "type": "ID",
-                    "isRequired": false,
-                    "attributes": []
-                },
-                "employee": {
-                    "name": "employee",
-                    "isArray": false,
-                    "type": {
-                        "model": "Employee"
-                    },
-                    "isRequired": true,
-                    "attributes": [],
-                    "association": {
-                        "connectionType": "BELONGS_TO",
-                        "targetNames": [
-                            "employeeId"
-                        ]
-                    }
-                },
-                "creditScore": {
-                    "name": "creditScore",
-                    "isArray": false,
-                    "type": {
-                        "model": "CreditScore"
-                    },
-                    "isRequired": true,
-                    "attributes": [],
-                    "association": {
-                        "connectionType": "BELONGS_TO",
-                        "targetNames": [
-                            "creditScoreId"
-                        ]
-                    }
-                },
-                "createdAt": {
-                    "name": "createdAt",
-                    "isArray": false,
-                    "type": "AWSDateTime",
-                    "isRequired": false,
-                    "attributes": [],
-                    "isReadOnly": true
-                },
-                "updatedAt": {
-                    "name": "updatedAt",
-                    "isArray": false,
-                    "type": "AWSDateTime",
-                    "isRequired": false,
-                    "attributes": [],
-                    "isReadOnly": true
-                }
-            },
-            "syncable": true,
-            "pluralName": "CreditScoreApprovedByEmployees",
-            "attributes": [
-                {
-                    "type": "model",
-                    "properties": {}
-                },
-                {
-                    "type": "key",
-                    "properties": {
-                        "name": "byEmployee",
-                        "fields": [
-                            "employeeId"
-                        ]
-                    }
-                },
-                {
-                    "type": "key",
-                    "properties": {
-                        "name": "byCreditScore",
-                        "fields": [
-                            "creditScoreId"
-                        ]
-                    }
-                }
-            ]
-        },
-        "MoneyTransactionApprovedByEmployee": {
-            "name": "MoneyTransactionApprovedByEmployee",
-            "fields": {
-                "id": {
-                    "name": "id",
-                    "isArray": false,
-                    "type": "ID",
-                    "isRequired": true,
-                    "attributes": []
-                },
-                "employeeId": {
-                    "name": "employeeId",
-                    "isArray": false,
-                    "type": "ID",
-                    "isRequired": false,
-                    "attributes": []
-                },
-                "moneyTransactionId": {
-                    "name": "moneyTransactionId",
-                    "isArray": false,
-                    "type": "ID",
-                    "isRequired": false,
-                    "attributes": []
-                },
-                "employee": {
-                    "name": "employee",
-                    "isArray": false,
-                    "type": {
-                        "model": "Employee"
-                    },
-                    "isRequired": true,
-                    "attributes": [],
-                    "association": {
-                        "connectionType": "BELONGS_TO",
-                        "targetNames": [
-                            "employeeId"
-                        ]
-                    }
-                },
-                "moneyTransaction": {
-                    "name": "moneyTransaction",
-                    "isArray": false,
-                    "type": {
-                        "model": "MoneyTransaction"
-                    },
-                    "isRequired": true,
-                    "attributes": [],
-                    "association": {
-                        "connectionType": "BELONGS_TO",
-                        "targetNames": [
-                            "moneyTransactionId"
-                        ]
-                    }
-                },
-                "createdAt": {
-                    "name": "createdAt",
-                    "isArray": false,
-                    "type": "AWSDateTime",
-                    "isRequired": false,
-                    "attributes": [],
-                    "isReadOnly": true
-                },
-                "updatedAt": {
-                    "name": "updatedAt",
-                    "isArray": false,
-                    "type": "AWSDateTime",
-                    "isRequired": false,
-                    "attributes": [],
-                    "isReadOnly": true
-                }
-            },
-            "syncable": true,
-            "pluralName": "MoneyTransactionApprovedByEmployees",
-            "attributes": [
-                {
-                    "type": "model",
-                    "properties": {}
-                },
-                {
-                    "type": "key",
-                    "properties": {
-                        "name": "byEmployee",
-                        "fields": [
-                            "employeeId"
-                        ]
-                    }
-                },
-                {
-                    "type": "key",
-                    "properties": {
-                        "name": "byMoneyTransaction",
-                        "fields": [
-                            "moneyTransactionId"
-                        ]
-                    }
-                }
-            ]
-        },
-        "PaymentApprovedByEmployee": {
-            "name": "PaymentApprovedByEmployee",
-            "fields": {
-                "id": {
-                    "name": "id",
-                    "isArray": false,
-                    "type": "ID",
-                    "isRequired": true,
-                    "attributes": []
-                },
-                "employeeId": {
-                    "name": "employeeId",
-                    "isArray": false,
-                    "type": "ID",
-                    "isRequired": false,
-                    "attributes": []
-                },
-                "paymentId": {
-                    "name": "paymentId",
-                    "isArray": false,
-                    "type": "ID",
-                    "isRequired": false,
-                    "attributes": []
-                },
-                "employee": {
-                    "name": "employee",
-                    "isArray": false,
-                    "type": {
-                        "model": "Employee"
-                    },
-                    "isRequired": true,
-                    "attributes": [],
-                    "association": {
-                        "connectionType": "BELONGS_TO",
-                        "targetNames": [
-                            "employeeId"
-                        ]
-                    }
-                },
-                "payment": {
-                    "name": "payment",
-                    "isArray": false,
-                    "type": {
-                        "model": "Payment"
-                    },
-                    "isRequired": true,
-                    "attributes": [],
-                    "association": {
-                        "connectionType": "BELONGS_TO",
-                        "targetNames": [
-                            "paymentId"
-                        ]
-                    }
-                },
-                "createdAt": {
-                    "name": "createdAt",
-                    "isArray": false,
-                    "type": "AWSDateTime",
-                    "isRequired": false,
-                    "attributes": [],
-                    "isReadOnly": true
-                },
-                "updatedAt": {
-                    "name": "updatedAt",
-                    "isArray": false,
-                    "type": "AWSDateTime",
-                    "isRequired": false,
-                    "attributes": [],
-                    "isReadOnly": true
-                }
-            },
-            "syncable": true,
-            "pluralName": "PaymentApprovedByEmployees",
-            "attributes": [
-                {
-                    "type": "model",
-                    "properties": {}
-                },
-                {
-                    "type": "key",
-                    "properties": {
-                        "name": "byEmployee",
-                        "fields": [
-                            "employeeId"
-                        ]
-                    }
-                },
-                {
-                    "type": "key",
-                    "properties": {
-                        "name": "byPayment",
-                        "fields": [
-                            "paymentId"
-                        ]
-                    }
-                }
-            ]
-        },
         "BorrowerLoanOfficer": {
             "name": "BorrowerLoanOfficer",
             "fields": {
@@ -9179,6 +9955,104 @@ export const schema = {
                         "name": "byApplication",
                         "fields": [
                             "applicationId"
+                        ]
+                    }
+                }
+            ]
+        },
+        "GuarantorCollateral": {
+            "name": "GuarantorCollateral",
+            "fields": {
+                "id": {
+                    "name": "id",
+                    "isArray": false,
+                    "type": "ID",
+                    "isRequired": true,
+                    "attributes": []
+                },
+                "guarantorId": {
+                    "name": "guarantorId",
+                    "isArray": false,
+                    "type": "ID",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "collateralId": {
+                    "name": "collateralId",
+                    "isArray": false,
+                    "type": "ID",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "guarantor": {
+                    "name": "guarantor",
+                    "isArray": false,
+                    "type": {
+                        "model": "Guarantor"
+                    },
+                    "isRequired": true,
+                    "attributes": [],
+                    "association": {
+                        "connectionType": "BELONGS_TO",
+                        "targetNames": [
+                            "guarantorId"
+                        ]
+                    }
+                },
+                "collateral": {
+                    "name": "collateral",
+                    "isArray": false,
+                    "type": {
+                        "model": "Collateral"
+                    },
+                    "isRequired": true,
+                    "attributes": [],
+                    "association": {
+                        "connectionType": "BELONGS_TO",
+                        "targetNames": [
+                            "collateralId"
+                        ]
+                    }
+                },
+                "createdAt": {
+                    "name": "createdAt",
+                    "isArray": false,
+                    "type": "AWSDateTime",
+                    "isRequired": false,
+                    "attributes": [],
+                    "isReadOnly": true
+                },
+                "updatedAt": {
+                    "name": "updatedAt",
+                    "isArray": false,
+                    "type": "AWSDateTime",
+                    "isRequired": false,
+                    "attributes": [],
+                    "isReadOnly": true
+                }
+            },
+            "syncable": true,
+            "pluralName": "GuarantorCollaterals",
+            "attributes": [
+                {
+                    "type": "model",
+                    "properties": {}
+                },
+                {
+                    "type": "key",
+                    "properties": {
+                        "name": "byGuarantor",
+                        "fields": [
+                            "guarantorId"
+                        ]
+                    }
+                },
+                {
+                    "type": "key",
+                    "properties": {
+                        "name": "byCollateral",
+                        "fields": [
+                            "collateralId"
                         ]
                     }
                 }
@@ -11320,9 +12194,20 @@ export const schema = {
                 "STATUS_CHANGED",
                 "OTHER"
             ]
+        },
+        "ApprovalType": {
+            "name": "ApprovalType",
+            "values": [
+                "LOAN",
+                "EXPENSE",
+                "APPLICATION",
+                "CREDIT_SCORE",
+                "MONEY_TRANSACTION",
+                "PAYMENT"
+            ]
         }
     },
     "nonModels": {},
     "codegenVersion": "3.4.4",
-    "version": "2c859d96513fba8af3e5f3add90f407b"
+    "version": "3f09685b36824f56193560d09cfaa21d"
 };

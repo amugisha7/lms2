@@ -603,22 +603,22 @@ export const associateLoanWithPenalty = async (loanId, penaltyId) => {
 };
 
 export const buildLoanInput = (values, userDetails) => ({
-  borrowerLoansId: values.borrower,
-  loanProductLoansId: values.loanProduct,
-  principalAmount: values.principalAmount ? Number(values.principalAmount) : null,
+  borrowerID: values.borrower || null,
+  branchID:
+    values.borrowerBranchID ||
+    values.borrowerObj?.branchBorrowersId ||
+    userDetails?.branchUsersId ||
+    null,
+  ...(values.loanProduct ? { loanProductID: values.loanProduct } : {}),
+  principal: values.principalAmount ? Number(values.principalAmount) : null,
   interestRate: values.interestRate ? Number(values.interestRate) : null,
-  termDuration: values.termDuration ? Number(values.termDuration) : null,
-  durationPeriod: values.durationPeriod || null,
-  disbursementDate: values.disbursementDate || null,
+  duration: values.termDuration ? Number(values.termDuration) : null,
+  durationInterval: values.durationPeriod || null,
+  startDate: values.disbursementDate || null,
   maturityDate: values.maturityDate || null,
-  status: values.status || "Pending",
-  repaymentFrequency: values.repaymentFrequency || null,
-  repaymentOrder: values.repaymentOrder ? JSON.stringify(values.repaymentOrder) : null,
-  totalAmountDue: values.totalAmountDue ? Number(values.totalAmountDue) : null,
-  totalAmountPaid: 0,
-  outstandingBalance: values.principalAmount ? Number(values.principalAmount) : null,
-  institutionLoansId: userDetails?.institutionUsersId || null,
-  createdByEmployeeLoansId: values.employeeId || null,
+  status: values.status || "DRAFT",
+  paymentFrequency: values.repaymentFrequency || null,
+  createdByEmployeeID: values.employeeId || null,
 });
 export const fetchInstitutionAdmins = async (institutionId) => {
   const client = generateClient();

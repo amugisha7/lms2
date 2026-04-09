@@ -295,12 +295,21 @@ export default function LoanDetailPage() {
                 variant="body2"
                 sx={{ color: theme.palette.text.secondary, mt: 0.25 }}
               >
-                <strong>Loan ID:</strong> {loan.id}
+                Status:<strong> {loan.status || "N/A"}</strong>
                 {` • `}
-                <strong>Status:</strong> {loan.status || "N/A"}
+                Loan ID:
+                <strong>
+                  {" "}
+                  {(() => {
+                    const loanId = loan.loanNumber || loan.id || "\u2014";
+                    return typeof loanId === "string" && loanId.length > 3
+                      ? loanId.slice(3)
+                      : loanId;
+                  })()}
+                </strong>
                 {` • `}
-                <strong>Loan Officer:</strong>{" "}
-                {formatOfficerName(loan.createdByEmployee)}
+                Loan Officer:
+                <strong> {formatOfficerName(loan.createdByEmployee)}</strong>
               </Typography>
             </Box>
           </Box>

@@ -26,6 +26,40 @@ import {
   exportPaymentHistory,
 } from "./exportHelpers";
 
+const EXCLUDED_PAYMENT_STATUSES = new Set(["REVERSED", "VOIDED", "FAILED"]);
+
+const toMoneyNumber = (value) => {
+  const numericValue = Number(value);
+  return Number.isFinite(numericValue) ? numericValue : 0;
+};
+
+const computeOutstanding = (loan) => {
+  const installments = loan?.installments?.items ?? [];
+  if (installments.length) {
+    return installments.reduce(
+      (sum, installment) =>
+        sum +
+        Math.max(
+          toMoneyNumber(installment?.totalDue) -
+            toMoneyNumber(installment?.totalPaid),
+          0,
+        ),
+      0,
+    );
+  }
+
+  const totalPaid = (loan?.payments?.items ?? [])
+    .filter((payment) => {
+      const status = String(
+        payment?.paymentStatusEnum || payment?.status || "",
+      ).toUpperCase();
+      return !EXCLUDED_PAYMENT_STATUSES.has(status);
+    })
+    .reduce((sum, payment) => sum + toMoneyNumber(payment?.amount), 0);
+
+  return Math.max(toMoneyNumber(loan?.principal) - totalPaid, 0);
+};
+
 const LoanDetail = ({ loanId, onClose, initialTab = 0 }) => {
   const [loan, setLoan] = useState(null);
   const [tabValue, setTabValue] = useState(initialTab ?? 0);
@@ -88,10 +122,7 @@ const LoanDetail = ({ loanId, onClose, initialTab = 0 }) => {
         <Grid size={{ xs: 12, md: 4 }}>
           <Paper sx={{ p: 2 }}>
             <Typography variant="subtitle2">Outstanding</Typography>
-            <Typography variant="h6">
-              {loan.balanceSnapshots?.items?.[0]?.totalOutstanding ||
-                loan.principal}
-            </Typography>
+            <Typography variant="h6">{computeOutstanding(loan)}</Typography>
           </Paper>
         </Grid>
       </Grid>

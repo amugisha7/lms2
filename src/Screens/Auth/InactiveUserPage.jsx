@@ -120,7 +120,7 @@ export default function InactiveUserPage() {
             sx={{
               p: 2.5,
               borderRadius: 3,
-              bgcolor: theme.palette.action.hover,
+              //   bgcolor: theme.palette.action.hover,
             }}
           >
             <Typography variant="subtitle2" color="text.secondary">

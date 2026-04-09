@@ -17,7 +17,7 @@ import { useSnackbar } from "../../../ModelAssets/SnackbarContext";
 import { useNotification } from "../../../ModelAssets/NotificationContext";
 import { convertDraftToLoan } from "../LoanDrafts/loanDraftHelpers";
 import { CREATE_MONEY_TRANSACTION_MUTATION } from "../../Accounts/MoneyTransactions/moneyTransactionHelpes";
-import { createLoanDisbursement, createLoanEvent } from "../loanHelpers";
+import { createLoanEvent } from "../loanHelpers";
 
 const LIST_ACCOUNT_BRANCHES_QUERY = `
   query ListAccountBranches($branchId: ID!, $nextToken: String) {
@@ -358,25 +358,9 @@ export default function SelectAccounts({
           },
         },
       });
-
-      // Step 3: Create a LoanDisbursement record
-      await client.graphql({
-        query: createLoanDisbursement,
-        variables: {
-          input: {
-            loanID: loanId,
-            disbursedAt: new Date().toISOString(),
-            amount: principalAmount,
-            status: "COMPLETED",
-            method: "Account Transfer",
-            reference: `DISB-${loanNumber}`,
-            accountID: values.principalAccountId,
-          },
-        },
-      });
       principalDisbursed = true;
 
-      // Step 4: Create loan fees transaction if applicable
+      // Step 3: Create loan fees transaction if applicable
       if (hasLoanFees && values.feesAccountId) {
         setOverlayMessage("Recording loan fees...");
         const feesDescription = `Loan #${loanNumber} - Loan Fees received from ${borrowerName} (Loan ID: ${loanId})`;
@@ -401,7 +385,7 @@ export default function SelectAccounts({
         feesRecorded = true;
       }
 
-      // Step 5: Create a DISBURSED loan event
+      // Step 4: Create a DISBURSED loan event
       await client.graphql({
         query: createLoanEvent,
         variables: {

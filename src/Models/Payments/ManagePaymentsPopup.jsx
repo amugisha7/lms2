@@ -52,6 +52,8 @@ import {
   resolveEmployeeIdForUser,
 } from "../Employees/employeeHelpers";
 
+import { buildLoanDisplayName } from "../Loans/loanDisplayHelpers";
+
 const client = generateClient();
 
 const TABS = [
@@ -918,7 +920,7 @@ export default function ManagePaymentsPopup({
     <CustomSlider
       open={open}
       onClose={onClose}
-      title={`Manage Payments — Loan ${loan.loanNumber || loan.id}`}
+      title={`Manage Payments — ${buildLoanDisplayName(loan, currencyCode)}`}
       showEdit={false}
       showDelete={false}
       maxWidth="md"

@@ -118,7 +118,7 @@ export default function CustomerLoanDetail() {
           }`,
           variables: {
             filter: {
-              loanPaymentsId: { eq: loanId },
+              loanID: { eq: loanId },
             },
           },
         });

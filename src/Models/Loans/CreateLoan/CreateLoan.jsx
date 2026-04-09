@@ -51,7 +51,7 @@ import WorkingOverlay from "../../../ModelAssets/WorkingOverlay";
 import CustomPopUp from "../../../ModelAssets/CustomPopUp";
 import LoanScheduleDraft from "../LoanDrafts/LoanScheduleDraft";
 import { CREATE_MONEY_TRANSACTION_MUTATION } from "../../Accounts/MoneyTransactions/moneyTransactionHelpes";
-import { createLoanDisbursement, createLoanEvent } from "../loanHelpers";
+import { createLoanEvent } from "../loanHelpers";
 import { generateClient } from "aws-amplify/api";
 
 const FormGrid = styled(Grid)(({ theme }) => ({
@@ -691,25 +691,9 @@ const CreateLoan = forwardRef(
               },
             },
           });
-
-          // Step 3: Create a LoanDisbursement record
-          await client.graphql({
-            query: createLoanDisbursement,
-            variables: {
-              input: {
-                loanID: loanId,
-                disbursedAt: new Date().toISOString(),
-                amount: principalAmount,
-                status: "COMPLETED",
-                method: "Account Transfer",
-                reference: `DISB-${loanNumber}`,
-                accountID: accountSelection.principalAccountId,
-              },
-            },
-          });
           principalDisbursed = true;
 
-          // Step 4: Create loan fees transaction if applicable
+          // Step 3: Create loan fees transaction if applicable
           if (totalLoanFee > 0 && accountSelection.feesAccountId) {
             setWorkingOverlayMessage("Recording loan fees...");
             const feesDescription = `Loan #${loanNumber} - Loan Fees received from ${borrowerName} (Loan ID: ${loanId})`;
@@ -735,7 +719,7 @@ const CreateLoan = forwardRef(
             feesRecorded = true;
           }
 
-          // Step 5: Create a DISBURSED loan event
+          // Step 4: Create a DISBURSED loan event
           await client.graphql({
             query: createLoanEvent,
             variables: {

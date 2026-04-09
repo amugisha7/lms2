@@ -63,6 +63,15 @@ export enum LoanEventType {
   OTHER = "OTHER"
 }
 
+export enum ApprovalType {
+  LOAN = "LOAN",
+  EXPENSE = "EXPENSE",
+  APPLICATION = "APPLICATION",
+  CREDIT_SCORE = "CREDIT_SCORE",
+  MONEY_TRANSACTION = "MONEY_TRANSACTION",
+  PAYMENT = "PAYMENT"
+}
+
 
 
 type EagerInstitution = {
@@ -100,6 +109,11 @@ type EagerInstitution = {
   readonly loanFeesConfigs?: (LoanFeesConfig | null)[] | null;
   readonly accounts?: (Account | null)[] | null;
   readonly status?: string | null;
+  readonly savingsProducts?: (SavingsProduct | null)[] | null;
+  readonly chartOfAccounts?: (ChartOfAccounts | null)[] | null;
+  readonly dividendDeclarations?: (DividendDeclaration | null)[] | null;
+  readonly customDocumentHeader?: string | null;
+  readonly customInstitutionDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
 }
@@ -139,6 +153,11 @@ type LazyInstitution = {
   readonly loanFeesConfigs: AsyncCollection<LoanFeesConfig>;
   readonly accounts: AsyncCollection<Account>;
   readonly status?: string | null;
+  readonly savingsProducts: AsyncCollection<SavingsProduct>;
+  readonly chartOfAccounts: AsyncCollection<ChartOfAccounts>;
+  readonly dividendDeclarations: AsyncCollection<DividendDeclaration>;
+  readonly customDocumentHeader?: string | null;
+  readonly customInstitutionDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
 }
@@ -171,6 +190,8 @@ type EagerBranch = {
   readonly customFormFields?: (CustomFormField | null)[] | null;
   readonly loans?: (Loan | null)[] | null;
   readonly loanFeesConfigs?: (BranchLoanFeesConfig | null)[] | null;
+  readonly groups?: (Group | null)[] | null;
+  readonly customBranchDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
   readonly institutionBranchesId?: string | null;
@@ -198,6 +219,8 @@ type LazyBranch = {
   readonly customFormFields: AsyncCollection<CustomFormField>;
   readonly loans: AsyncCollection<Loan>;
   readonly loanFeesConfigs: AsyncCollection<BranchLoanFeesConfig>;
+  readonly groups: AsyncCollection<Group>;
+  readonly customBranchDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
   readonly institutionBranchesId?: string | null;
@@ -243,6 +266,7 @@ type EagerUser = {
   readonly receivedMessages?: (Message | null)[] | null;
   readonly sentNotifications?: (Notification | null)[] | null;
   readonly receivedNotifications?: (Notification | null)[] | null;
+  readonly customUserDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
   readonly institutionUsersId?: string | null;
@@ -283,6 +307,7 @@ type LazyUser = {
   readonly receivedMessages: AsyncCollection<Message>;
   readonly sentNotifications: AsyncCollection<Notification>;
   readonly receivedNotifications: AsyncCollection<Notification>;
+  readonly customUserDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
   readonly institutionUsersId?: string | null;
@@ -343,12 +368,6 @@ type EagerEmployee = {
   readonly relatedUserID?: string | null;
   readonly relatedBorrowerID?: string | null;
   readonly payroll?: (PayrollEmployee | null)[] | null;
-  readonly approvedLoans?: (LoanApprovedByEmployee | null)[] | null;
-  readonly approvedExpenses?: (ExpenseApprovedByEmployee | null)[] | null;
-  readonly approvedApplications?: (ApplicationApprovedByEmployee | null)[] | null;
-  readonly approvedCreditScores?: (CreditScoreApprovedByEmployee | null)[] | null;
-  readonly approvedMoneyTransactions?: (MoneyTransactionApprovedByEmployee | null)[] | null;
-  readonly approvedPayments?: (PaymentApprovedByEmployee | null)[] | null;
   readonly borrowers?: (BorrowerLoanOfficer | null)[] | null;
   readonly supervisorID?: string | null;
   readonly supervisor?: Employee | null;
@@ -361,6 +380,10 @@ type EagerEmployee = {
   readonly loans?: (Loan | null)[] | null;
   readonly moneyTransactions?: (MoneyTransaction | null)[] | null;
   readonly accounts?: (Account | null)[] | null;
+  readonly postedJournalEntries?: (JournalEntry | null)[] | null;
+  readonly initiatedSavingsTransactions?: (SavingsTransaction | null)[] | null;
+  readonly approvals?: (Approval | null)[] | null;
+  readonly customEmployeeDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
   readonly branchEmployeesId?: string | null;
@@ -414,12 +437,6 @@ type LazyEmployee = {
   readonly relatedUserID?: string | null;
   readonly relatedBorrowerID?: string | null;
   readonly payroll: AsyncCollection<PayrollEmployee>;
-  readonly approvedLoans: AsyncCollection<LoanApprovedByEmployee>;
-  readonly approvedExpenses: AsyncCollection<ExpenseApprovedByEmployee>;
-  readonly approvedApplications: AsyncCollection<ApplicationApprovedByEmployee>;
-  readonly approvedCreditScores: AsyncCollection<CreditScoreApprovedByEmployee>;
-  readonly approvedMoneyTransactions: AsyncCollection<MoneyTransactionApprovedByEmployee>;
-  readonly approvedPayments: AsyncCollection<PaymentApprovedByEmployee>;
   readonly borrowers: AsyncCollection<BorrowerLoanOfficer>;
   readonly supervisorID?: string | null;
   readonly supervisor: AsyncItem<Employee | undefined>;
@@ -432,6 +449,10 @@ type LazyEmployee = {
   readonly loans: AsyncCollection<Loan>;
   readonly moneyTransactions: AsyncCollection<MoneyTransaction>;
   readonly accounts: AsyncCollection<Account>;
+  readonly postedJournalEntries: AsyncCollection<JournalEntry>;
+  readonly initiatedSavingsTransactions: AsyncCollection<SavingsTransaction>;
+  readonly approvals: AsyncCollection<Approval>;
+  readonly customEmployeeDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
   readonly branchEmployeesId?: string | null;
@@ -489,9 +510,16 @@ type EagerBorrower = {
   readonly employees?: (BorrowerLoanOfficer | null)[] | null;
   readonly collaterals?: (Collateral | null)[] | null;
   readonly creditScores?: (CreditScore | null)[] | null;
+  readonly groupID?: string | null;
+  readonly group?: Group | null;
+  readonly memberType?: string | null;
+  readonly savingsAccounts?: (SavingsAccount | null)[] | null;
+  readonly shareAccount?: ShareAccount | null;
+  readonly customBorrowerDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
   readonly branchBorrowersId?: string | null;
+  readonly borrowerShareAccountId?: string | null;
 }
 
 type LazyBorrower = {
@@ -540,9 +568,16 @@ type LazyBorrower = {
   readonly employees: AsyncCollection<BorrowerLoanOfficer>;
   readonly collaterals: AsyncCollection<Collateral>;
   readonly creditScores: AsyncCollection<CreditScore>;
+  readonly groupID?: string | null;
+  readonly group: AsyncItem<Group | undefined>;
+  readonly memberType?: string | null;
+  readonly savingsAccounts: AsyncCollection<SavingsAccount>;
+  readonly shareAccount: AsyncItem<ShareAccount | undefined>;
+  readonly customBorrowerDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
   readonly branchBorrowersId?: string | null;
+  readonly borrowerShareAccountId?: string | null;
 }
 
 export declare type Borrower = LazyLoading extends LazyLoadingDisabled ? EagerBorrower : LazyBorrower
@@ -567,6 +602,11 @@ type EagerGuarantor = {
   readonly borrower?: Borrower | null;
   readonly loans?: (LoanGuarantor | null)[] | null;
   readonly applications?: (ApplicationGuarantor | null)[] | null;
+  readonly isExistingMember?: boolean | null;
+  readonly memberID?: string | null;
+  readonly lockedSavingsAmount?: number | null;
+  readonly collaterals?: (GuarantorCollateral | null)[] | null;
+  readonly customGuarantorDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
   readonly borrowerGuarantorsId?: string | null;
@@ -588,6 +628,11 @@ type LazyGuarantor = {
   readonly borrower: AsyncItem<Borrower | undefined>;
   readonly loans: AsyncCollection<LoanGuarantor>;
   readonly applications: AsyncCollection<ApplicationGuarantor>;
+  readonly isExistingMember?: boolean | null;
+  readonly memberID?: string | null;
+  readonly lockedSavingsAmount?: number | null;
+  readonly collaterals: AsyncCollection<GuarantorCollateral>;
+  readonly customGuarantorDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
   readonly borrowerGuarantorsId?: string | null;
@@ -611,6 +656,7 @@ type EagerSecurity = {
   readonly value?: number | null;
   readonly status?: string | null;
   readonly borrower?: Borrower | null;
+  readonly customSecurityDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
   readonly borrowerSecuritiesId?: string | null;
@@ -628,6 +674,7 @@ type LazySecurity = {
   readonly value?: number | null;
   readonly status?: string | null;
   readonly borrower: AsyncItem<Borrower | undefined>;
+  readonly customSecurityDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
   readonly borrowerSecuritiesId?: string | null;
@@ -652,6 +699,7 @@ type EagerUserNotification = {
   readonly message?: string | null;
   readonly status?: string | null;
   readonly user?: User | null;
+  readonly customUserNotificationDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
   readonly userUserNotificationsId?: string | null;
@@ -670,6 +718,7 @@ type LazyUserNotification = {
   readonly message?: string | null;
   readonly status?: string | null;
   readonly user: AsyncItem<User | undefined>;
+  readonly customUserNotificationDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
   readonly userUserNotificationsId?: string | null;
@@ -717,6 +766,7 @@ type EagerLoanProduct = {
   readonly loanPenalties?: (LoanProductPenalty | null)[] | null;
   readonly applications?: (Application | null)[] | null;
   readonly loans?: (Loan | null)[] | null;
+  readonly customLoanProductDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
   readonly institutionLoanProductsId?: string | null;
@@ -758,6 +808,7 @@ type LazyLoanProduct = {
   readonly loanPenalties: AsyncCollection<LoanProductPenalty>;
   readonly applications: AsyncCollection<Application>;
   readonly loans: AsyncCollection<Loan>;
+  readonly customLoanProductDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
   readonly institutionLoanProductsId?: string | null;
@@ -782,11 +833,11 @@ type EagerCreditScore = {
   readonly scoreSource?: string | null;
   readonly scoreStatus?: string | null;
   readonly status?: string | null;
-  readonly approvedByEmployees?: (CreditScoreApprovedByEmployee | null)[] | null;
   readonly borrowerID?: string | null;
   readonly borrower?: Borrower | null;
   readonly createdByEmployeeID?: string | null;
   readonly createdByEmployee?: Employee | null;
+  readonly customCreditScoreDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
 }
@@ -804,11 +855,11 @@ type LazyCreditScore = {
   readonly scoreSource?: string | null;
   readonly scoreStatus?: string | null;
   readonly status?: string | null;
-  readonly approvedByEmployees: AsyncCollection<CreditScoreApprovedByEmployee>;
   readonly borrowerID?: string | null;
   readonly borrower: AsyncItem<Borrower | undefined>;
   readonly createdByEmployeeID?: string | null;
   readonly createdByEmployee: AsyncItem<Employee | undefined>;
+  readonly customCreditScoreDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
 }
@@ -844,6 +895,7 @@ type EagerDocument = {
   readonly moneyTransactions?: (MoneyTransactionDocument | null)[] | null;
   readonly createdByEmployeeID?: string | null;
   readonly createdByEmployee?: Employee | null;
+  readonly customDocumentDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
   readonly branchDocumentsId?: string | null;
@@ -874,6 +926,7 @@ type LazyDocument = {
   readonly moneyTransactions: AsyncCollection<MoneyTransactionDocument>;
   readonly createdByEmployeeID?: string | null;
   readonly createdByEmployee: AsyncItem<Employee | undefined>;
+  readonly customDocumentDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
   readonly branchDocumentsId?: string | null;
@@ -902,6 +955,7 @@ type EagerContract = {
   readonly collaterals?: (CollateralContract | null)[] | null;
   readonly documents?: (ContractDocument | null)[] | null;
   readonly loans?: (LoanContract | null)[] | null;
+  readonly customContractDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
   readonly borrowerContractsId?: string | null;
@@ -924,6 +978,7 @@ type LazyContract = {
   readonly collaterals: AsyncCollection<CollateralContract>;
   readonly documents: AsyncCollection<ContractDocument>;
   readonly loans: AsyncCollection<LoanContract>;
+  readonly customContractDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
   readonly borrowerContractsId?: string | null;
@@ -956,13 +1011,13 @@ type EagerApplication = {
   readonly contracts?: (ApplicationContract | null)[] | null;
   readonly expenses?: (ApplicationExpense | null)[] | null;
   readonly loans?: (LoanApplication | null)[] | null;
-  readonly approvedByEmployees?: (ApplicationApprovedByEmployee | null)[] | null;
   readonly documents?: (ApplicationDocument | null)[] | null;
   readonly loanProductID?: string | null;
   readonly loanProduct?: LoanProduct | null;
   readonly createdByEmployeeID?: string | null;
   readonly createdByEmployee?: Employee | null;
   readonly customFieldsData?: string | null;
+  readonly customApplicationDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
   readonly borrowerApplicationsId?: string | null;
@@ -989,13 +1044,13 @@ type LazyApplication = {
   readonly contracts: AsyncCollection<ApplicationContract>;
   readonly expenses: AsyncCollection<ApplicationExpense>;
   readonly loans: AsyncCollection<LoanApplication>;
-  readonly approvedByEmployees: AsyncCollection<ApplicationApprovedByEmployee>;
   readonly documents: AsyncCollection<ApplicationDocument>;
   readonly loanProductID?: string | null;
   readonly loanProduct: AsyncItem<LoanProduct | undefined>;
   readonly createdByEmployeeID?: string | null;
   readonly createdByEmployee: AsyncItem<Employee | undefined>;
   readonly customFieldsData?: string | null;
+  readonly customApplicationDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
   readonly borrowerApplicationsId?: string | null;
@@ -1030,6 +1085,8 @@ type EagerCollateral = {
   readonly loans?: (LoanCollateral | null)[] | null;
   readonly applications?: (ApplicationCollateral | null)[] | null;
   readonly contracts?: (CollateralContract | null)[] | null;
+  readonly guarantors?: (GuarantorCollateral | null)[] | null;
+  readonly customCollateralDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
   readonly borrowerCollateralsId?: string | null;
@@ -1058,6 +1115,8 @@ type LazyCollateral = {
   readonly loans: AsyncCollection<LoanCollateral>;
   readonly applications: AsyncCollection<ApplicationCollateral>;
   readonly contracts: AsyncCollection<CollateralContract>;
+  readonly guarantors: AsyncCollection<GuarantorCollateral>;
+  readonly customCollateralDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
   readonly borrowerCollateralsId?: string | null;
@@ -1076,8 +1135,6 @@ type EagerLoan = {
   };
   readonly id: string;
   readonly loanNumber?: string | null;
-  readonly approvalStatus?: string | null;
-  readonly approvalStatusEnum?: LoanApprovalStatus | keyof typeof LoanApprovalStatus | null;
   readonly approvedDate?: string | null;
   readonly principal?: number | null;
   readonly fees?: number | null;
@@ -1090,8 +1147,6 @@ type EagerLoan = {
   readonly durationInterval?: string | null;
   readonly loanType?: string | null;
   readonly rateInterval?: string | null;
-  readonly loanStatus?: string | null;
-  readonly loanStatusEnum?: LoanStatus | keyof typeof LoanStatus | null;
   readonly loanCurrency?: string | null;
   readonly loanPurpose?: string | null;
   readonly loanComputationRecord?: string | null;
@@ -1107,9 +1162,7 @@ type EagerLoan = {
   readonly branch?: Branch | null;
   readonly payments?: (Payment | null)[] | null;
   readonly installments?: (LoanInstallment | null)[] | null;
-  readonly disbursements?: (LoanDisbursement | null)[] | null;
   readonly events?: (LoanEvent | null)[] | null;
-  readonly balanceSnapshots?: (LoanBalanceSnapshot | null)[] | null;
   readonly loanFees?: (LoanFees | null)[] | null;
   readonly penalties?: (Penalty | null)[] | null;
   readonly applications?: (LoanApplication | null)[] | null;
@@ -1118,16 +1171,18 @@ type EagerLoan = {
   readonly collateral?: (LoanCollateral | null)[] | null;
   readonly contracts?: (LoanContract | null)[] | null;
   readonly expenses?: (LoanExpense | null)[] | null;
-  readonly approvedByEmployees?: (LoanApprovedByEmployee | null)[] | null;
   readonly documents?: (LoanDocument | null)[] | null;
   readonly moneyTransactions?: (MoneyTransaction | null)[] | null;
   readonly loanProductID?: string | null;
   readonly loanProduct?: LoanProduct | null;
   readonly createdByEmployeeID?: string | null;
   readonly createdByEmployee?: Employee | null;
+  readonly groupID?: string | null;
+  readonly group?: Group | null;
+  readonly relatedJournalEntries?: (JournalEntry | null)[] | null;
+  readonly customLoanDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
-  readonly borrowerLoansId?: string | null;
 }
 
 type LazyLoan = {
@@ -1137,8 +1192,6 @@ type LazyLoan = {
   };
   readonly id: string;
   readonly loanNumber?: string | null;
-  readonly approvalStatus?: string | null;
-  readonly approvalStatusEnum?: LoanApprovalStatus | keyof typeof LoanApprovalStatus | null;
   readonly approvedDate?: string | null;
   readonly principal?: number | null;
   readonly fees?: number | null;
@@ -1151,8 +1204,6 @@ type LazyLoan = {
   readonly durationInterval?: string | null;
   readonly loanType?: string | null;
   readonly rateInterval?: string | null;
-  readonly loanStatus?: string | null;
-  readonly loanStatusEnum?: LoanStatus | keyof typeof LoanStatus | null;
   readonly loanCurrency?: string | null;
   readonly loanPurpose?: string | null;
   readonly loanComputationRecord?: string | null;
@@ -1168,9 +1219,7 @@ type LazyLoan = {
   readonly branch: AsyncItem<Branch | undefined>;
   readonly payments: AsyncCollection<Payment>;
   readonly installments: AsyncCollection<LoanInstallment>;
-  readonly disbursements: AsyncCollection<LoanDisbursement>;
   readonly events: AsyncCollection<LoanEvent>;
-  readonly balanceSnapshots: AsyncCollection<LoanBalanceSnapshot>;
   readonly loanFees: AsyncCollection<LoanFees>;
   readonly penalties: AsyncCollection<Penalty>;
   readonly applications: AsyncCollection<LoanApplication>;
@@ -1179,16 +1228,18 @@ type LazyLoan = {
   readonly collateral: AsyncCollection<LoanCollateral>;
   readonly contracts: AsyncCollection<LoanContract>;
   readonly expenses: AsyncCollection<LoanExpense>;
-  readonly approvedByEmployees: AsyncCollection<LoanApprovedByEmployee>;
   readonly documents: AsyncCollection<LoanDocument>;
   readonly moneyTransactions: AsyncCollection<MoneyTransaction>;
   readonly loanProductID?: string | null;
   readonly loanProduct: AsyncItem<LoanProduct | undefined>;
   readonly createdByEmployeeID?: string | null;
   readonly createdByEmployee: AsyncItem<Employee | undefined>;
+  readonly groupID?: string | null;
+  readonly group: AsyncItem<Group | undefined>;
+  readonly relatedJournalEntries: AsyncCollection<JournalEntry>;
+  readonly customLoanDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
-  readonly borrowerLoansId?: string | null;
 }
 
 export declare type Loan = LazyLoading extends LazyLoadingDisabled ? EagerLoan : LazyLoan
@@ -1221,6 +1272,7 @@ type EagerLoanInstallment = {
   readonly events?: (LoanEvent | null)[] | null;
   readonly moneyTransactions?: (MoneyTransaction | null)[] | null;
   readonly payments?: (Payment | null)[] | null;
+  readonly customLoanInstallmentDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
 }
@@ -1249,6 +1301,7 @@ type LazyLoanInstallment = {
   readonly events: AsyncCollection<LoanEvent>;
   readonly moneyTransactions: AsyncCollection<MoneyTransaction>;
   readonly payments: AsyncCollection<Payment>;
+  readonly customLoanInstallmentDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
 }
@@ -1257,58 +1310,6 @@ export declare type LoanInstallment = LazyLoading extends LazyLoadingDisabled ? 
 
 export declare const LoanInstallment: (new (init: ModelInit<LoanInstallment>) => LoanInstallment) & {
   copyOf(source: LoanInstallment, mutator: (draft: MutableModel<LoanInstallment>) => MutableModel<LoanInstallment> | void): LoanInstallment;
-}
-
-type EagerLoanDisbursement = {
-  readonly [__modelMeta__]: {
-    identifier: ManagedIdentifier<LoanDisbursement, 'id'>;
-    readOnlyFields: 'createdAt' | 'updatedAt';
-  };
-  readonly id: string;
-  readonly loanID: string;
-  readonly loan?: Loan | null;
-  readonly disbursedAt: string;
-  readonly amount: number;
-  readonly status?: DisbursementStatus | keyof typeof DisbursementStatus | null;
-  readonly method?: string | null;
-  readonly reference?: string | null;
-  readonly accountID?: string | null;
-  readonly account?: Account | null;
-  readonly moneyTransactionID?: string | null;
-  readonly moneyTransaction?: MoneyTransaction | null;
-  readonly moneyTransactions?: (MoneyTransaction | null)[] | null;
-  readonly events?: (LoanEvent | null)[] | null;
-  readonly createdAt?: string | null;
-  readonly updatedAt?: string | null;
-}
-
-type LazyLoanDisbursement = {
-  readonly [__modelMeta__]: {
-    identifier: ManagedIdentifier<LoanDisbursement, 'id'>;
-    readOnlyFields: 'createdAt' | 'updatedAt';
-  };
-  readonly id: string;
-  readonly loanID: string;
-  readonly loan: AsyncItem<Loan | undefined>;
-  readonly disbursedAt: string;
-  readonly amount: number;
-  readonly status?: DisbursementStatus | keyof typeof DisbursementStatus | null;
-  readonly method?: string | null;
-  readonly reference?: string | null;
-  readonly accountID?: string | null;
-  readonly account: AsyncItem<Account | undefined>;
-  readonly moneyTransactionID?: string | null;
-  readonly moneyTransaction: AsyncItem<MoneyTransaction | undefined>;
-  readonly moneyTransactions: AsyncCollection<MoneyTransaction>;
-  readonly events: AsyncCollection<LoanEvent>;
-  readonly createdAt?: string | null;
-  readonly updatedAt?: string | null;
-}
-
-export declare type LoanDisbursement = LazyLoading extends LazyLoadingDisabled ? EagerLoanDisbursement : LazyLoanDisbursement
-
-export declare const LoanDisbursement: (new (init: ModelInit<LoanDisbursement>) => LoanDisbursement) & {
-  copyOf(source: LoanDisbursement, mutator: (draft: MutableModel<LoanDisbursement>) => MutableModel<LoanDisbursement> | void): LoanDisbursement;
 }
 
 type EagerLoanEvent = {
@@ -1328,8 +1329,7 @@ type EagerLoanEvent = {
   readonly payment?: Payment | null;
   readonly installmentID?: string | null;
   readonly installment?: LoanInstallment | null;
-  readonly disbursementID?: string | null;
-  readonly disbursement?: LoanDisbursement | null;
+  readonly customLoanEventDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
 }
@@ -1351,8 +1351,7 @@ type LazyLoanEvent = {
   readonly payment: AsyncItem<Payment | undefined>;
   readonly installmentID?: string | null;
   readonly installment: AsyncItem<LoanInstallment | undefined>;
-  readonly disbursementID?: string | null;
-  readonly disbursement: AsyncItem<LoanDisbursement | undefined>;
+  readonly customLoanEventDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
 }
@@ -1361,52 +1360,6 @@ export declare type LoanEvent = LazyLoading extends LazyLoadingDisabled ? EagerL
 
 export declare const LoanEvent: (new (init: ModelInit<LoanEvent>) => LoanEvent) & {
   copyOf(source: LoanEvent, mutator: (draft: MutableModel<LoanEvent>) => MutableModel<LoanEvent> | void): LoanEvent;
-}
-
-type EagerLoanBalanceSnapshot = {
-  readonly [__modelMeta__]: {
-    identifier: ManagedIdentifier<LoanBalanceSnapshot, 'id'>;
-    readOnlyFields: 'createdAt' | 'updatedAt';
-  };
-  readonly id: string;
-  readonly loanID: string;
-  readonly loan?: Loan | null;
-  readonly asOfAt: string;
-  readonly principalOutstanding?: number | null;
-  readonly interestOutstanding?: number | null;
-  readonly feesOutstanding?: number | null;
-  readonly penaltyOutstanding?: number | null;
-  readonly totalOutstanding?: number | null;
-  readonly daysPastDue?: number | null;
-  readonly snapshotRecord?: string | null;
-  readonly createdAt?: string | null;
-  readonly updatedAt?: string | null;
-}
-
-type LazyLoanBalanceSnapshot = {
-  readonly [__modelMeta__]: {
-    identifier: ManagedIdentifier<LoanBalanceSnapshot, 'id'>;
-    readOnlyFields: 'createdAt' | 'updatedAt';
-  };
-  readonly id: string;
-  readonly loanID: string;
-  readonly loan: AsyncItem<Loan | undefined>;
-  readonly asOfAt: string;
-  readonly principalOutstanding?: number | null;
-  readonly interestOutstanding?: number | null;
-  readonly feesOutstanding?: number | null;
-  readonly penaltyOutstanding?: number | null;
-  readonly totalOutstanding?: number | null;
-  readonly daysPastDue?: number | null;
-  readonly snapshotRecord?: string | null;
-  readonly createdAt?: string | null;
-  readonly updatedAt?: string | null;
-}
-
-export declare type LoanBalanceSnapshot = LazyLoading extends LazyLoadingDisabled ? EagerLoanBalanceSnapshot : LazyLoanBalanceSnapshot
-
-export declare const LoanBalanceSnapshot: (new (init: ModelInit<LoanBalanceSnapshot>) => LoanBalanceSnapshot) & {
-  copyOf(source: LoanBalanceSnapshot, mutator: (draft: MutableModel<LoanBalanceSnapshot>) => MutableModel<LoanBalanceSnapshot> | void): LoanBalanceSnapshot;
 }
 
 type EagerInvestment = {
@@ -1434,6 +1387,7 @@ type EagerInvestment = {
   readonly paymentFrequency?: number | null;
   readonly status?: string | null;
   readonly accounts?: (InvestmentAccount | null)[] | null;
+  readonly customInvestmentDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
 }
@@ -1463,6 +1417,7 @@ type LazyInvestment = {
   readonly paymentFrequency?: number | null;
   readonly status?: string | null;
   readonly accounts: AsyncCollection<InvestmentAccount>;
+  readonly customInvestmentDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
 }
@@ -1497,6 +1452,7 @@ type EagerLoanFees = {
   readonly accountID?: string | null;
   readonly account?: Account | null;
   readonly loanFeesConfigs?: (LoanFeesLoanFeesConfig | null)[] | null;
+  readonly customLoanFeesDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
   readonly loanLoanFeesId?: string | null;
@@ -1526,6 +1482,7 @@ type LazyLoanFees = {
   readonly accountID?: string | null;
   readonly account: AsyncItem<Account | undefined>;
   readonly loanFeesConfigs: AsyncCollection<LoanFeesLoanFeesConfig>;
+  readonly customLoanFeesDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
   readonly loanLoanFeesId?: string | null;
@@ -1560,6 +1517,7 @@ type EagerPenalty = {
   readonly loanProducts?: (LoanProductPenalty | null)[] | null;
   readonly accountID?: string | null;
   readonly account?: Account | null;
+  readonly customPenaltyDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
   readonly loanPenaltiesId?: string | null;
@@ -1588,6 +1546,7 @@ type LazyPenalty = {
   readonly loanProducts: AsyncCollection<LoanProductPenalty>;
   readonly accountID?: string | null;
   readonly account: AsyncItem<Account | undefined>;
+  readonly customPenaltyDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
   readonly loanPenaltiesId?: string | null;
@@ -1618,6 +1577,7 @@ type EagerPayroll = {
   readonly details?: string | null;
   readonly branch?: Branch | null;
   readonly employees?: (PayrollEmployee | null)[] | null;
+  readonly customPayrollDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
   readonly branchPayrollsId?: string | null;
@@ -1642,6 +1602,7 @@ type LazyPayroll = {
   readonly details?: string | null;
   readonly branch: AsyncItem<Branch | undefined>;
   readonly employees: AsyncCollection<PayrollEmployee>;
+  readonly customPayrollDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
   readonly branchPayrollsId?: string | null;
@@ -1683,10 +1644,10 @@ type EagerAccount = {
   readonly otherIncomes?: (OtherIncomeAccount | null)[] | null;
   readonly loanFees?: (LoanFees | null)[] | null;
   readonly payments?: (Payment | null)[] | null;
-  readonly disbursements?: (LoanDisbursement | null)[] | null;
   readonly penalties?: (Penalty | null)[] | null;
   readonly createdByEmployeeID?: string | null;
   readonly createdByEmployee?: Employee | null;
+  readonly customAccountDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
   readonly institutionAccountsId?: string | null;
@@ -1722,10 +1683,10 @@ type LazyAccount = {
   readonly otherIncomes: AsyncCollection<OtherIncomeAccount>;
   readonly loanFees: AsyncCollection<LoanFees>;
   readonly payments: AsyncCollection<Payment>;
-  readonly disbursements: AsyncCollection<LoanDisbursement>;
   readonly penalties: AsyncCollection<Penalty>;
   readonly createdByEmployeeID?: string | null;
   readonly createdByEmployee: AsyncItem<Employee | undefined>;
+  readonly customAccountDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
   readonly institutionAccountsId?: string | null;
@@ -1761,16 +1722,13 @@ type EagerMoneyTransaction = {
   readonly loan?: Loan | null;
   readonly paymentID?: string | null;
   readonly payment?: Payment | null;
-  readonly disbursementID?: string | null;
-  readonly disbursement?: LoanDisbursement | null;
   readonly installmentID?: string | null;
   readonly installment?: LoanInstallment | null;
-  readonly approvedByEmployees?: (MoneyTransactionApprovedByEmployee | null)[] | null;
   readonly documents?: (MoneyTransactionDocument | null)[] | null;
   readonly createdByEmployeeID?: string | null;
   readonly createdByEmployee?: Employee | null;
   readonly paymentsLink?: (Payment | null)[] | null;
-  readonly disbursementsLink?: (LoanDisbursement | null)[] | null;
+  readonly customMoneyTransactionDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
   readonly accountMoneyTransactionsId?: string | null;
@@ -1800,16 +1758,13 @@ type LazyMoneyTransaction = {
   readonly loan: AsyncItem<Loan | undefined>;
   readonly paymentID?: string | null;
   readonly payment: AsyncItem<Payment | undefined>;
-  readonly disbursementID?: string | null;
-  readonly disbursement: AsyncItem<LoanDisbursement | undefined>;
   readonly installmentID?: string | null;
   readonly installment: AsyncItem<LoanInstallment | undefined>;
-  readonly approvedByEmployees: AsyncCollection<MoneyTransactionApprovedByEmployee>;
   readonly documents: AsyncCollection<MoneyTransactionDocument>;
   readonly createdByEmployeeID?: string | null;
   readonly createdByEmployee: AsyncItem<Employee | undefined>;
   readonly paymentsLink: AsyncCollection<Payment>;
-  readonly disbursementsLink: AsyncCollection<LoanDisbursement>;
+  readonly customMoneyTransactionDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
   readonly accountMoneyTransactionsId?: string | null;
@@ -1846,10 +1801,15 @@ type EagerPayment = {
   readonly account?: Account | null;
   readonly receivingEmployeeID?: string | null;
   readonly receivingEmployee?: Employee | null;
-  readonly approvedByEmployees?: (PaymentApprovedByEmployee | null)[] | null;
   readonly documents?: (PaymentDocument | null)[] | null;
   readonly moneyTransactions?: (MoneyTransaction | null)[] | null;
   readonly events?: (LoanEvent | null)[] | null;
+  readonly amountAllocatedToPrincipal?: number | null;
+  readonly amountAllocatedToInterest?: number | null;
+  readonly amountAllocatedToFees?: number | null;
+  readonly amountAllocatedToPenalty?: number | null;
+  readonly relatedJournalEntries?: (JournalEntry | null)[] | null;
+  readonly customPaymentDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
 }
@@ -1879,10 +1839,15 @@ type LazyPayment = {
   readonly account: AsyncItem<Account | undefined>;
   readonly receivingEmployeeID?: string | null;
   readonly receivingEmployee: AsyncItem<Employee | undefined>;
-  readonly approvedByEmployees: AsyncCollection<PaymentApprovedByEmployee>;
   readonly documents: AsyncCollection<PaymentDocument>;
   readonly moneyTransactions: AsyncCollection<MoneyTransaction>;
   readonly events: AsyncCollection<LoanEvent>;
+  readonly amountAllocatedToPrincipal?: number | null;
+  readonly amountAllocatedToInterest?: number | null;
+  readonly amountAllocatedToFees?: number | null;
+  readonly amountAllocatedToPenalty?: number | null;
+  readonly relatedJournalEntries: AsyncCollection<JournalEntry>;
+  readonly customPaymentDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
 }
@@ -1915,10 +1880,11 @@ type EagerExpense = {
   readonly account?: Account | null;
   readonly loans?: (LoanExpense | null)[] | null;
   readonly applications?: (ApplicationExpense | null)[] | null;
-  readonly approvedByEmployees?: (ExpenseApprovedByEmployee | null)[] | null;
   readonly documents?: (ExpenseDocument | null)[] | null;
   readonly createdByEmployeeID?: string | null;
   readonly createdByEmployee?: Employee | null;
+  readonly relatedJournalEntries?: (JournalEntry | null)[] | null;
+  readonly customExpenseDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
   readonly accountExpensesId?: string | null;
@@ -1946,10 +1912,11 @@ type LazyExpense = {
   readonly account: AsyncItem<Account | undefined>;
   readonly loans: AsyncCollection<LoanExpense>;
   readonly applications: AsyncCollection<ApplicationExpense>;
-  readonly approvedByEmployees: AsyncCollection<ExpenseApprovedByEmployee>;
   readonly documents: AsyncCollection<ExpenseDocument>;
   readonly createdByEmployeeID?: string | null;
   readonly createdByEmployee: AsyncItem<Employee | undefined>;
+  readonly relatedJournalEntries: AsyncCollection<JournalEntry>;
+  readonly customExpenseDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
   readonly accountExpensesId?: string | null;
@@ -1974,6 +1941,7 @@ type EagerOtherIncome = {
   readonly incomeType?: string | null;
   readonly status?: string | null;
   readonly accounts?: (OtherIncomeAccount | null)[] | null;
+  readonly customOtherIncomeDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
 }
@@ -1991,6 +1959,7 @@ type LazyOtherIncome = {
   readonly incomeType?: string | null;
   readonly status?: string | null;
   readonly accounts: AsyncCollection<OtherIncomeAccount>;
+  readonly customOtherIncomeDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
 }
@@ -2015,6 +1984,7 @@ type EagerFinancialReport = {
   readonly reportData?: string | null;
   readonly status?: string | null;
   readonly branch?: Branch | null;
+  readonly customFinancialReportDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
   readonly branchFinancialReportsId?: string | null;
@@ -2034,6 +2004,7 @@ type LazyFinancialReport = {
   readonly reportData?: string | null;
   readonly status?: string | null;
   readonly branch: AsyncItem<Branch | undefined>;
+  readonly customFinancialReportDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
   readonly branchFinancialReportsId?: string | null;
@@ -2061,6 +2032,7 @@ type EagerCustomFormField = {
   readonly status?: string | null;
   readonly branch?: Branch | null;
   readonly institution?: Institution | null;
+  readonly customCustomFormFieldDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
   readonly institutionCustomFormFieldsId?: string | null;
@@ -2083,6 +2055,7 @@ type LazyCustomFormField = {
   readonly status?: string | null;
   readonly branch: AsyncItem<Branch | undefined>;
   readonly institution: AsyncItem<Institution | undefined>;
+  readonly customCustomFormFieldDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
   readonly institutionCustomFormFieldsId?: string | null;
@@ -2112,6 +2085,7 @@ type EagerLoanFeesConfig = {
   readonly branches?: (BranchLoanFeesConfig | null)[] | null;
   readonly loanFees?: (LoanFeesLoanFeesConfig | null)[] | null;
   readonly loanProducts?: (LoanProductLoanFeesConfig | null)[] | null;
+  readonly customLoanFeesConfigDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
   readonly institutionLoanFeesConfigsId?: string | null;
@@ -2134,6 +2108,7 @@ type LazyLoanFeesConfig = {
   readonly branches: AsyncCollection<BranchLoanFeesConfig>;
   readonly loanFees: AsyncCollection<LoanFeesLoanFeesConfig>;
   readonly loanProducts: AsyncCollection<LoanProductLoanFeesConfig>;
+  readonly customLoanFeesConfigDetails?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
   readonly institutionLoanFeesConfigsId?: string | null;
@@ -2159,6 +2134,7 @@ type EagerMessage = {
   readonly senderUserId: string;
   readonly recipient?: User | null;
   readonly recipientUserId: string;
+  readonly customMessageDetails?: string | null;
   readonly updatedAt?: string | null;
 }
 
@@ -2176,6 +2152,7 @@ type LazyMessage = {
   readonly senderUserId: string;
   readonly recipient: AsyncItem<User | undefined>;
   readonly recipientUserId: string;
+  readonly customMessageDetails?: string | null;
   readonly updatedAt?: string | null;
 }
 
@@ -2203,6 +2180,7 @@ type EagerNotification = {
   readonly recipient?: User | null;
   readonly recipientUserId: string;
   readonly institutionMessagesId?: string | null;
+  readonly customNotificationDetails?: string | null;
   readonly updatedAt?: string | null;
 }
 
@@ -2224,6 +2202,7 @@ type LazyNotification = {
   readonly recipient: AsyncItem<User | undefined>;
   readonly recipientUserId: string;
   readonly institutionMessagesId?: string | null;
+  readonly customNotificationDetails?: string | null;
   readonly updatedAt?: string | null;
 }
 
@@ -2231,6 +2210,546 @@ export declare type Notification = LazyLoading extends LazyLoadingDisabled ? Eag
 
 export declare const Notification: (new (init: ModelInit<Notification>) => Notification) & {
   copyOf(source: Notification, mutator: (draft: MutableModel<Notification>) => MutableModel<Notification> | void): Notification;
+}
+
+type EagerGroup = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<Group, 'id'>;
+    readOnlyFields: 'createdAt' | 'updatedAt';
+  };
+  readonly id: string;
+  readonly name?: string | null;
+  readonly groupNumber?: string | null;
+  readonly formationDate?: string | null;
+  readonly meetingDay?: string | null;
+  readonly meetingFrequency?: string | null;
+  readonly chairpersonID?: string | null;
+  readonly secretaryID?: string | null;
+  readonly viceChairpersonID?: string | null;
+  readonly treasurerID?: string | null;
+  readonly status?: string | null;
+  readonly branch?: Branch | null;
+  readonly members?: (Borrower | null)[] | null;
+  readonly loans?: (Loan | null)[] | null;
+  readonly groupSavingsAccount?: SavingsAccount | null;
+  readonly customGroupDetails?: string | null;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+  readonly branchGroupsId?: string | null;
+  readonly groupGroupSavingsAccountId?: string | null;
+}
+
+type LazyGroup = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<Group, 'id'>;
+    readOnlyFields: 'createdAt' | 'updatedAt';
+  };
+  readonly id: string;
+  readonly name?: string | null;
+  readonly groupNumber?: string | null;
+  readonly formationDate?: string | null;
+  readonly meetingDay?: string | null;
+  readonly meetingFrequency?: string | null;
+  readonly chairpersonID?: string | null;
+  readonly secretaryID?: string | null;
+  readonly viceChairpersonID?: string | null;
+  readonly treasurerID?: string | null;
+  readonly status?: string | null;
+  readonly branch: AsyncItem<Branch | undefined>;
+  readonly members: AsyncCollection<Borrower>;
+  readonly loans: AsyncCollection<Loan>;
+  readonly groupSavingsAccount: AsyncItem<SavingsAccount | undefined>;
+  readonly customGroupDetails?: string | null;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+  readonly branchGroupsId?: string | null;
+  readonly groupGroupSavingsAccountId?: string | null;
+}
+
+export declare type Group = LazyLoading extends LazyLoadingDisabled ? EagerGroup : LazyGroup
+
+export declare const Group: (new (init: ModelInit<Group>) => Group) & {
+  copyOf(source: Group, mutator: (draft: MutableModel<Group>) => MutableModel<Group> | void): Group;
+}
+
+type EagerSavingsProduct = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<SavingsProduct, 'id'>;
+    readOnlyFields: 'createdAt' | 'updatedAt';
+  };
+  readonly id: string;
+  readonly name?: string | null;
+  readonly type?: string | null;
+  readonly interestRate?: number | null;
+  readonly interestPostingFrequency?: string | null;
+  readonly minBalance?: number | null;
+  readonly institution?: Institution | null;
+  readonly savingsAccounts?: (SavingsAccount | null)[] | null;
+  readonly customSavingsProductDetails?: string | null;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+  readonly institutionSavingsProductsId?: string | null;
+}
+
+type LazySavingsProduct = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<SavingsProduct, 'id'>;
+    readOnlyFields: 'createdAt' | 'updatedAt';
+  };
+  readonly id: string;
+  readonly name?: string | null;
+  readonly type?: string | null;
+  readonly interestRate?: number | null;
+  readonly interestPostingFrequency?: string | null;
+  readonly minBalance?: number | null;
+  readonly institution: AsyncItem<Institution | undefined>;
+  readonly savingsAccounts: AsyncCollection<SavingsAccount>;
+  readonly customSavingsProductDetails?: string | null;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+  readonly institutionSavingsProductsId?: string | null;
+}
+
+export declare type SavingsProduct = LazyLoading extends LazyLoadingDisabled ? EagerSavingsProduct : LazySavingsProduct
+
+export declare const SavingsProduct: (new (init: ModelInit<SavingsProduct>) => SavingsProduct) & {
+  copyOf(source: SavingsProduct, mutator: (draft: MutableModel<SavingsProduct>) => MutableModel<SavingsProduct> | void): SavingsProduct;
+}
+
+type EagerSavingsAccount = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<SavingsAccount, 'id'>;
+    readOnlyFields: 'createdAt' | 'updatedAt';
+  };
+  readonly id: string;
+  readonly accountNumber?: string | null;
+  readonly balance?: number | null;
+  readonly status?: string | null;
+  readonly borrower?: Borrower | null;
+  readonly savingsProduct?: SavingsProduct | null;
+  readonly lockedAmount?: number | null;
+  readonly lockedForLoanID?: string | null;
+  readonly transactions?: (SavingsTransaction | null)[] | null;
+  readonly customSavingsAccountDetails?: string | null;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+  readonly borrowerSavingsAccountsId?: string | null;
+  readonly savingsProductSavingsAccountsId?: string | null;
+}
+
+type LazySavingsAccount = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<SavingsAccount, 'id'>;
+    readOnlyFields: 'createdAt' | 'updatedAt';
+  };
+  readonly id: string;
+  readonly accountNumber?: string | null;
+  readonly balance?: number | null;
+  readonly status?: string | null;
+  readonly borrower: AsyncItem<Borrower | undefined>;
+  readonly savingsProduct: AsyncItem<SavingsProduct | undefined>;
+  readonly lockedAmount?: number | null;
+  readonly lockedForLoanID?: string | null;
+  readonly transactions: AsyncCollection<SavingsTransaction>;
+  readonly customSavingsAccountDetails?: string | null;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+  readonly borrowerSavingsAccountsId?: string | null;
+  readonly savingsProductSavingsAccountsId?: string | null;
+}
+
+export declare type SavingsAccount = LazyLoading extends LazyLoadingDisabled ? EagerSavingsAccount : LazySavingsAccount
+
+export declare const SavingsAccount: (new (init: ModelInit<SavingsAccount>) => SavingsAccount) & {
+  copyOf(source: SavingsAccount, mutator: (draft: MutableModel<SavingsAccount>) => MutableModel<SavingsAccount> | void): SavingsAccount;
+}
+
+type EagerSavingsTransaction = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<SavingsTransaction, 'id'>;
+    readOnlyFields: 'createdAt' | 'updatedAt';
+  };
+  readonly id: string;
+  readonly amount?: number | null;
+  readonly type?: string | null;
+  readonly date?: string | null;
+  readonly savingsAccount?: SavingsAccount | null;
+  readonly initiatedBy?: Employee | null;
+  readonly customSavingsTransactionDetails?: string | null;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+  readonly employeeInitiatedSavingsTransactionsId?: string | null;
+  readonly savingsAccountTransactionsId?: string | null;
+}
+
+type LazySavingsTransaction = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<SavingsTransaction, 'id'>;
+    readOnlyFields: 'createdAt' | 'updatedAt';
+  };
+  readonly id: string;
+  readonly amount?: number | null;
+  readonly type?: string | null;
+  readonly date?: string | null;
+  readonly savingsAccount: AsyncItem<SavingsAccount | undefined>;
+  readonly initiatedBy: AsyncItem<Employee | undefined>;
+  readonly customSavingsTransactionDetails?: string | null;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+  readonly employeeInitiatedSavingsTransactionsId?: string | null;
+  readonly savingsAccountTransactionsId?: string | null;
+}
+
+export declare type SavingsTransaction = LazyLoading extends LazyLoadingDisabled ? EagerSavingsTransaction : LazySavingsTransaction
+
+export declare const SavingsTransaction: (new (init: ModelInit<SavingsTransaction>) => SavingsTransaction) & {
+  copyOf(source: SavingsTransaction, mutator: (draft: MutableModel<SavingsTransaction>) => MutableModel<SavingsTransaction> | void): SavingsTransaction;
+}
+
+type EagerShareAccount = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<ShareAccount, 'id'>;
+    readOnlyFields: 'createdAt' | 'updatedAt';
+  };
+  readonly id: string;
+  readonly numberOfShares?: number | null;
+  readonly shareValue?: number | null;
+  readonly totalValue?: number | null;
+  readonly borrower?: Borrower | null;
+  readonly transactions?: (ShareTransaction | null)[] | null;
+  readonly customShareAccountDetails?: string | null;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+  readonly shareAccountBorrowerId?: string | null;
+}
+
+type LazyShareAccount = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<ShareAccount, 'id'>;
+    readOnlyFields: 'createdAt' | 'updatedAt';
+  };
+  readonly id: string;
+  readonly numberOfShares?: number | null;
+  readonly shareValue?: number | null;
+  readonly totalValue?: number | null;
+  readonly borrower: AsyncItem<Borrower | undefined>;
+  readonly transactions: AsyncCollection<ShareTransaction>;
+  readonly customShareAccountDetails?: string | null;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+  readonly shareAccountBorrowerId?: string | null;
+}
+
+export declare type ShareAccount = LazyLoading extends LazyLoadingDisabled ? EagerShareAccount : LazyShareAccount
+
+export declare const ShareAccount: (new (init: ModelInit<ShareAccount>) => ShareAccount) & {
+  copyOf(source: ShareAccount, mutator: (draft: MutableModel<ShareAccount>) => MutableModel<ShareAccount> | void): ShareAccount;
+}
+
+type EagerShareTransaction = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<ShareTransaction, 'id'>;
+    readOnlyFields: 'createdAt' | 'updatedAt';
+  };
+  readonly id: string;
+  readonly type?: string | null;
+  readonly numberOfShares?: number | null;
+  readonly amount?: number | null;
+  readonly date?: string | null;
+  readonly shareAccount?: ShareAccount | null;
+  readonly customShareTransactionDetails?: string | null;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+  readonly shareAccountTransactionsId?: string | null;
+}
+
+type LazyShareTransaction = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<ShareTransaction, 'id'>;
+    readOnlyFields: 'createdAt' | 'updatedAt';
+  };
+  readonly id: string;
+  readonly type?: string | null;
+  readonly numberOfShares?: number | null;
+  readonly amount?: number | null;
+  readonly date?: string | null;
+  readonly shareAccount: AsyncItem<ShareAccount | undefined>;
+  readonly customShareTransactionDetails?: string | null;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+  readonly shareAccountTransactionsId?: string | null;
+}
+
+export declare type ShareTransaction = LazyLoading extends LazyLoadingDisabled ? EagerShareTransaction : LazyShareTransaction
+
+export declare const ShareTransaction: (new (init: ModelInit<ShareTransaction>) => ShareTransaction) & {
+  copyOf(source: ShareTransaction, mutator: (draft: MutableModel<ShareTransaction>) => MutableModel<ShareTransaction> | void): ShareTransaction;
+}
+
+type EagerChartOfAccounts = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<ChartOfAccounts, 'id'>;
+    readOnlyFields: 'createdAt' | 'updatedAt';
+  };
+  readonly id: string;
+  readonly code: string;
+  readonly name: string;
+  readonly type: string;
+  readonly subtype?: string | null;
+  readonly balance?: number | null;
+  readonly institution?: Institution | null;
+  readonly journalLines?: (JournalLine | null)[] | null;
+  readonly customChartOfAccountsDetails?: string | null;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+  readonly institutionChartOfAccountsId?: string | null;
+}
+
+type LazyChartOfAccounts = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<ChartOfAccounts, 'id'>;
+    readOnlyFields: 'createdAt' | 'updatedAt';
+  };
+  readonly id: string;
+  readonly code: string;
+  readonly name: string;
+  readonly type: string;
+  readonly subtype?: string | null;
+  readonly balance?: number | null;
+  readonly institution: AsyncItem<Institution | undefined>;
+  readonly journalLines: AsyncCollection<JournalLine>;
+  readonly customChartOfAccountsDetails?: string | null;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+  readonly institutionChartOfAccountsId?: string | null;
+}
+
+export declare type ChartOfAccounts = LazyLoading extends LazyLoadingDisabled ? EagerChartOfAccounts : LazyChartOfAccounts
+
+export declare const ChartOfAccounts: (new (init: ModelInit<ChartOfAccounts>) => ChartOfAccounts) & {
+  copyOf(source: ChartOfAccounts, mutator: (draft: MutableModel<ChartOfAccounts>) => MutableModel<ChartOfAccounts> | void): ChartOfAccounts;
+}
+
+type EagerJournalEntry = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<JournalEntry, 'id'>;
+    readOnlyFields: 'createdAt' | 'updatedAt';
+  };
+  readonly id: string;
+  readonly date?: string | null;
+  readonly description?: string | null;
+  readonly reference?: string | null;
+  readonly postedBy?: Employee | null;
+  readonly status?: string | null;
+  readonly lines?: (JournalLine | null)[] | null;
+  readonly relatedLoanID?: string | null;
+  readonly relatedLoan?: Loan | null;
+  readonly relatedPaymentID?: string | null;
+  readonly relatedPayment?: Payment | null;
+  readonly relatedExpenseID?: string | null;
+  readonly relatedExpense?: Expense | null;
+  readonly customJournalEntryDetails?: string | null;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+  readonly employeePostedJournalEntriesId?: string | null;
+}
+
+type LazyJournalEntry = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<JournalEntry, 'id'>;
+    readOnlyFields: 'createdAt' | 'updatedAt';
+  };
+  readonly id: string;
+  readonly date?: string | null;
+  readonly description?: string | null;
+  readonly reference?: string | null;
+  readonly postedBy: AsyncItem<Employee | undefined>;
+  readonly status?: string | null;
+  readonly lines: AsyncCollection<JournalLine>;
+  readonly relatedLoanID?: string | null;
+  readonly relatedLoan: AsyncItem<Loan | undefined>;
+  readonly relatedPaymentID?: string | null;
+  readonly relatedPayment: AsyncItem<Payment | undefined>;
+  readonly relatedExpenseID?: string | null;
+  readonly relatedExpense: AsyncItem<Expense | undefined>;
+  readonly customJournalEntryDetails?: string | null;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+  readonly employeePostedJournalEntriesId?: string | null;
+}
+
+export declare type JournalEntry = LazyLoading extends LazyLoadingDisabled ? EagerJournalEntry : LazyJournalEntry
+
+export declare const JournalEntry: (new (init: ModelInit<JournalEntry>) => JournalEntry) & {
+  copyOf(source: JournalEntry, mutator: (draft: MutableModel<JournalEntry>) => MutableModel<JournalEntry> | void): JournalEntry;
+}
+
+type EagerJournalLine = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<JournalLine, 'id'>;
+    readOnlyFields: 'createdAt' | 'updatedAt';
+  };
+  readonly id: string;
+  readonly journalEntry?: JournalEntry | null;
+  readonly chartOfAccounts?: ChartOfAccounts | null;
+  readonly debit?: number | null;
+  readonly credit?: number | null;
+  readonly description?: string | null;
+  readonly customJournalLineDetails?: string | null;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+  readonly chartOfAccountsJournalLinesId?: string | null;
+  readonly journalEntryLinesId?: string | null;
+}
+
+type LazyJournalLine = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<JournalLine, 'id'>;
+    readOnlyFields: 'createdAt' | 'updatedAt';
+  };
+  readonly id: string;
+  readonly journalEntry: AsyncItem<JournalEntry | undefined>;
+  readonly chartOfAccounts: AsyncItem<ChartOfAccounts | undefined>;
+  readonly debit?: number | null;
+  readonly credit?: number | null;
+  readonly description?: string | null;
+  readonly customJournalLineDetails?: string | null;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+  readonly chartOfAccountsJournalLinesId?: string | null;
+  readonly journalEntryLinesId?: string | null;
+}
+
+export declare type JournalLine = LazyLoading extends LazyLoadingDisabled ? EagerJournalLine : LazyJournalLine
+
+export declare const JournalLine: (new (init: ModelInit<JournalLine>) => JournalLine) & {
+  copyOf(source: JournalLine, mutator: (draft: MutableModel<JournalLine>) => MutableModel<JournalLine> | void): JournalLine;
+}
+
+type EagerMeeting = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<Meeting, 'id'>;
+    readOnlyFields: 'createdAt' | 'updatedAt';
+  };
+  readonly id: string;
+  readonly title?: string | null;
+  readonly date?: string | null;
+  readonly type?: string | null;
+  readonly status?: string | null;
+  readonly minutes?: string | null;
+  readonly attendanceRecord?: string | null;
+  readonly resolutionsRecord?: string | null;
+  readonly customMeetingDetails?: string | null;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+}
+
+type LazyMeeting = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<Meeting, 'id'>;
+    readOnlyFields: 'createdAt' | 'updatedAt';
+  };
+  readonly id: string;
+  readonly title?: string | null;
+  readonly date?: string | null;
+  readonly type?: string | null;
+  readonly status?: string | null;
+  readonly minutes?: string | null;
+  readonly attendanceRecord?: string | null;
+  readonly resolutionsRecord?: string | null;
+  readonly customMeetingDetails?: string | null;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+}
+
+export declare type Meeting = LazyLoading extends LazyLoadingDisabled ? EagerMeeting : LazyMeeting
+
+export declare const Meeting: (new (init: ModelInit<Meeting>) => Meeting) & {
+  copyOf(source: Meeting, mutator: (draft: MutableModel<Meeting>) => MutableModel<Meeting> | void): Meeting;
+}
+
+type EagerDividendDeclaration = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<DividendDeclaration, 'id'>;
+    readOnlyFields: 'createdAt' | 'updatedAt';
+  };
+  readonly id: string;
+  readonly fiscalYear?: number | null;
+  readonly distributableSurplus?: number | null;
+  readonly dividendRate?: number | null;
+  readonly interestRebateRate?: number | null;
+  readonly status?: string | null;
+  readonly institution?: Institution | null;
+  readonly customDividendDeclarationDetails?: string | null;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+  readonly institutionDividendDeclarationsId?: string | null;
+}
+
+type LazyDividendDeclaration = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<DividendDeclaration, 'id'>;
+    readOnlyFields: 'createdAt' | 'updatedAt';
+  };
+  readonly id: string;
+  readonly fiscalYear?: number | null;
+  readonly distributableSurplus?: number | null;
+  readonly dividendRate?: number | null;
+  readonly interestRebateRate?: number | null;
+  readonly status?: string | null;
+  readonly institution: AsyncItem<Institution | undefined>;
+  readonly customDividendDeclarationDetails?: string | null;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+  readonly institutionDividendDeclarationsId?: string | null;
+}
+
+export declare type DividendDeclaration = LazyLoading extends LazyLoadingDisabled ? EagerDividendDeclaration : LazyDividendDeclaration
+
+export declare const DividendDeclaration: (new (init: ModelInit<DividendDeclaration>) => DividendDeclaration) & {
+  copyOf(source: DividendDeclaration, mutator: (draft: MutableModel<DividendDeclaration>) => MutableModel<DividendDeclaration> | void): DividendDeclaration;
+}
+
+type EagerApproval = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<Approval, 'id'>;
+    readOnlyFields: 'createdAt' | 'updatedAt';
+  };
+  readonly id: string;
+  readonly approvalType: ApprovalType | keyof typeof ApprovalType;
+  readonly recordID: string;
+  readonly approvalDate?: string | null;
+  readonly status?: string | null;
+  readonly notes?: string | null;
+  readonly employee?: Employee | null;
+  readonly customApprovalDetails?: string | null;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+  readonly employeeApprovalsId?: string | null;
+}
+
+type LazyApproval = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<Approval, 'id'>;
+    readOnlyFields: 'createdAt' | 'updatedAt';
+  };
+  readonly id: string;
+  readonly approvalType: ApprovalType | keyof typeof ApprovalType;
+  readonly recordID: string;
+  readonly approvalDate?: string | null;
+  readonly status?: string | null;
+  readonly notes?: string | null;
+  readonly employee: AsyncItem<Employee | undefined>;
+  readonly customApprovalDetails?: string | null;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+  readonly employeeApprovalsId?: string | null;
+}
+
+export declare type Approval = LazyLoading extends LazyLoadingDisabled ? EagerApproval : LazyApproval
+
+export declare const Approval: (new (init: ModelInit<Approval>) => Approval) & {
+  copyOf(source: Approval, mutator: (draft: MutableModel<Approval>) => MutableModel<Approval> | void): Approval;
 }
 
 type EagerAccountBranch = {
@@ -2369,210 +2888,6 @@ export declare const PayrollEmployee: (new (init: ModelInit<PayrollEmployee>) =>
   copyOf(source: PayrollEmployee, mutator: (draft: MutableModel<PayrollEmployee>) => MutableModel<PayrollEmployee> | void): PayrollEmployee;
 }
 
-type EagerLoanApprovedByEmployee = {
-  readonly [__modelMeta__]: {
-    identifier: ManagedIdentifier<LoanApprovedByEmployee, 'id'>;
-    readOnlyFields: 'createdAt' | 'updatedAt';
-  };
-  readonly id: string;
-  readonly employeeId?: string | null;
-  readonly loanId?: string | null;
-  readonly employee: Employee;
-  readonly loan: Loan;
-  readonly createdAt?: string | null;
-  readonly updatedAt?: string | null;
-}
-
-type LazyLoanApprovedByEmployee = {
-  readonly [__modelMeta__]: {
-    identifier: ManagedIdentifier<LoanApprovedByEmployee, 'id'>;
-    readOnlyFields: 'createdAt' | 'updatedAt';
-  };
-  readonly id: string;
-  readonly employeeId?: string | null;
-  readonly loanId?: string | null;
-  readonly employee: AsyncItem<Employee>;
-  readonly loan: AsyncItem<Loan>;
-  readonly createdAt?: string | null;
-  readonly updatedAt?: string | null;
-}
-
-export declare type LoanApprovedByEmployee = LazyLoading extends LazyLoadingDisabled ? EagerLoanApprovedByEmployee : LazyLoanApprovedByEmployee
-
-export declare const LoanApprovedByEmployee: (new (init: ModelInit<LoanApprovedByEmployee>) => LoanApprovedByEmployee) & {
-  copyOf(source: LoanApprovedByEmployee, mutator: (draft: MutableModel<LoanApprovedByEmployee>) => MutableModel<LoanApprovedByEmployee> | void): LoanApprovedByEmployee;
-}
-
-type EagerExpenseApprovedByEmployee = {
-  readonly [__modelMeta__]: {
-    identifier: ManagedIdentifier<ExpenseApprovedByEmployee, 'id'>;
-    readOnlyFields: 'createdAt' | 'updatedAt';
-  };
-  readonly id: string;
-  readonly employeeId?: string | null;
-  readonly expenseId?: string | null;
-  readonly employee: Employee;
-  readonly expense: Expense;
-  readonly createdAt?: string | null;
-  readonly updatedAt?: string | null;
-}
-
-type LazyExpenseApprovedByEmployee = {
-  readonly [__modelMeta__]: {
-    identifier: ManagedIdentifier<ExpenseApprovedByEmployee, 'id'>;
-    readOnlyFields: 'createdAt' | 'updatedAt';
-  };
-  readonly id: string;
-  readonly employeeId?: string | null;
-  readonly expenseId?: string | null;
-  readonly employee: AsyncItem<Employee>;
-  readonly expense: AsyncItem<Expense>;
-  readonly createdAt?: string | null;
-  readonly updatedAt?: string | null;
-}
-
-export declare type ExpenseApprovedByEmployee = LazyLoading extends LazyLoadingDisabled ? EagerExpenseApprovedByEmployee : LazyExpenseApprovedByEmployee
-
-export declare const ExpenseApprovedByEmployee: (new (init: ModelInit<ExpenseApprovedByEmployee>) => ExpenseApprovedByEmployee) & {
-  copyOf(source: ExpenseApprovedByEmployee, mutator: (draft: MutableModel<ExpenseApprovedByEmployee>) => MutableModel<ExpenseApprovedByEmployee> | void): ExpenseApprovedByEmployee;
-}
-
-type EagerApplicationApprovedByEmployee = {
-  readonly [__modelMeta__]: {
-    identifier: ManagedIdentifier<ApplicationApprovedByEmployee, 'id'>;
-    readOnlyFields: 'createdAt' | 'updatedAt';
-  };
-  readonly id: string;
-  readonly employeeId?: string | null;
-  readonly applicationId?: string | null;
-  readonly employee: Employee;
-  readonly application: Application;
-  readonly createdAt?: string | null;
-  readonly updatedAt?: string | null;
-}
-
-type LazyApplicationApprovedByEmployee = {
-  readonly [__modelMeta__]: {
-    identifier: ManagedIdentifier<ApplicationApprovedByEmployee, 'id'>;
-    readOnlyFields: 'createdAt' | 'updatedAt';
-  };
-  readonly id: string;
-  readonly employeeId?: string | null;
-  readonly applicationId?: string | null;
-  readonly employee: AsyncItem<Employee>;
-  readonly application: AsyncItem<Application>;
-  readonly createdAt?: string | null;
-  readonly updatedAt?: string | null;
-}
-
-export declare type ApplicationApprovedByEmployee = LazyLoading extends LazyLoadingDisabled ? EagerApplicationApprovedByEmployee : LazyApplicationApprovedByEmployee
-
-export declare const ApplicationApprovedByEmployee: (new (init: ModelInit<ApplicationApprovedByEmployee>) => ApplicationApprovedByEmployee) & {
-  copyOf(source: ApplicationApprovedByEmployee, mutator: (draft: MutableModel<ApplicationApprovedByEmployee>) => MutableModel<ApplicationApprovedByEmployee> | void): ApplicationApprovedByEmployee;
-}
-
-type EagerCreditScoreApprovedByEmployee = {
-  readonly [__modelMeta__]: {
-    identifier: ManagedIdentifier<CreditScoreApprovedByEmployee, 'id'>;
-    readOnlyFields: 'createdAt' | 'updatedAt';
-  };
-  readonly id: string;
-  readonly employeeId?: string | null;
-  readonly creditScoreId?: string | null;
-  readonly employee: Employee;
-  readonly creditScore: CreditScore;
-  readonly createdAt?: string | null;
-  readonly updatedAt?: string | null;
-}
-
-type LazyCreditScoreApprovedByEmployee = {
-  readonly [__modelMeta__]: {
-    identifier: ManagedIdentifier<CreditScoreApprovedByEmployee, 'id'>;
-    readOnlyFields: 'createdAt' | 'updatedAt';
-  };
-  readonly id: string;
-  readonly employeeId?: string | null;
-  readonly creditScoreId?: string | null;
-  readonly employee: AsyncItem<Employee>;
-  readonly creditScore: AsyncItem<CreditScore>;
-  readonly createdAt?: string | null;
-  readonly updatedAt?: string | null;
-}
-
-export declare type CreditScoreApprovedByEmployee = LazyLoading extends LazyLoadingDisabled ? EagerCreditScoreApprovedByEmployee : LazyCreditScoreApprovedByEmployee
-
-export declare const CreditScoreApprovedByEmployee: (new (init: ModelInit<CreditScoreApprovedByEmployee>) => CreditScoreApprovedByEmployee) & {
-  copyOf(source: CreditScoreApprovedByEmployee, mutator: (draft: MutableModel<CreditScoreApprovedByEmployee>) => MutableModel<CreditScoreApprovedByEmployee> | void): CreditScoreApprovedByEmployee;
-}
-
-type EagerMoneyTransactionApprovedByEmployee = {
-  readonly [__modelMeta__]: {
-    identifier: ManagedIdentifier<MoneyTransactionApprovedByEmployee, 'id'>;
-    readOnlyFields: 'createdAt' | 'updatedAt';
-  };
-  readonly id: string;
-  readonly employeeId?: string | null;
-  readonly moneyTransactionId?: string | null;
-  readonly employee: Employee;
-  readonly moneyTransaction: MoneyTransaction;
-  readonly createdAt?: string | null;
-  readonly updatedAt?: string | null;
-}
-
-type LazyMoneyTransactionApprovedByEmployee = {
-  readonly [__modelMeta__]: {
-    identifier: ManagedIdentifier<MoneyTransactionApprovedByEmployee, 'id'>;
-    readOnlyFields: 'createdAt' | 'updatedAt';
-  };
-  readonly id: string;
-  readonly employeeId?: string | null;
-  readonly moneyTransactionId?: string | null;
-  readonly employee: AsyncItem<Employee>;
-  readonly moneyTransaction: AsyncItem<MoneyTransaction>;
-  readonly createdAt?: string | null;
-  readonly updatedAt?: string | null;
-}
-
-export declare type MoneyTransactionApprovedByEmployee = LazyLoading extends LazyLoadingDisabled ? EagerMoneyTransactionApprovedByEmployee : LazyMoneyTransactionApprovedByEmployee
-
-export declare const MoneyTransactionApprovedByEmployee: (new (init: ModelInit<MoneyTransactionApprovedByEmployee>) => MoneyTransactionApprovedByEmployee) & {
-  copyOf(source: MoneyTransactionApprovedByEmployee, mutator: (draft: MutableModel<MoneyTransactionApprovedByEmployee>) => MutableModel<MoneyTransactionApprovedByEmployee> | void): MoneyTransactionApprovedByEmployee;
-}
-
-type EagerPaymentApprovedByEmployee = {
-  readonly [__modelMeta__]: {
-    identifier: ManagedIdentifier<PaymentApprovedByEmployee, 'id'>;
-    readOnlyFields: 'createdAt' | 'updatedAt';
-  };
-  readonly id: string;
-  readonly employeeId?: string | null;
-  readonly paymentId?: string | null;
-  readonly employee: Employee;
-  readonly payment: Payment;
-  readonly createdAt?: string | null;
-  readonly updatedAt?: string | null;
-}
-
-type LazyPaymentApprovedByEmployee = {
-  readonly [__modelMeta__]: {
-    identifier: ManagedIdentifier<PaymentApprovedByEmployee, 'id'>;
-    readOnlyFields: 'createdAt' | 'updatedAt';
-  };
-  readonly id: string;
-  readonly employeeId?: string | null;
-  readonly paymentId?: string | null;
-  readonly employee: AsyncItem<Employee>;
-  readonly payment: AsyncItem<Payment>;
-  readonly createdAt?: string | null;
-  readonly updatedAt?: string | null;
-}
-
-export declare type PaymentApprovedByEmployee = LazyLoading extends LazyLoadingDisabled ? EagerPaymentApprovedByEmployee : LazyPaymentApprovedByEmployee
-
-export declare const PaymentApprovedByEmployee: (new (init: ModelInit<PaymentApprovedByEmployee>) => PaymentApprovedByEmployee) & {
-  copyOf(source: PaymentApprovedByEmployee, mutator: (draft: MutableModel<PaymentApprovedByEmployee>) => MutableModel<PaymentApprovedByEmployee> | void): PaymentApprovedByEmployee;
-}
-
 type EagerBorrowerLoanOfficer = {
   readonly [__modelMeta__]: {
     identifier: ManagedIdentifier<BorrowerLoanOfficer, 'id'>;
@@ -2707,6 +3022,40 @@ export declare type ApplicationGuarantor = LazyLoading extends LazyLoadingDisabl
 
 export declare const ApplicationGuarantor: (new (init: ModelInit<ApplicationGuarantor>) => ApplicationGuarantor) & {
   copyOf(source: ApplicationGuarantor, mutator: (draft: MutableModel<ApplicationGuarantor>) => MutableModel<ApplicationGuarantor> | void): ApplicationGuarantor;
+}
+
+type EagerGuarantorCollateral = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<GuarantorCollateral, 'id'>;
+    readOnlyFields: 'createdAt' | 'updatedAt';
+  };
+  readonly id: string;
+  readonly guarantorId?: string | null;
+  readonly collateralId?: string | null;
+  readonly guarantor: Guarantor;
+  readonly collateral: Collateral;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+}
+
+type LazyGuarantorCollateral = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<GuarantorCollateral, 'id'>;
+    readOnlyFields: 'createdAt' | 'updatedAt';
+  };
+  readonly id: string;
+  readonly guarantorId?: string | null;
+  readonly collateralId?: string | null;
+  readonly guarantor: AsyncItem<Guarantor>;
+  readonly collateral: AsyncItem<Collateral>;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+}
+
+export declare type GuarantorCollateral = LazyLoading extends LazyLoadingDisabled ? EagerGuarantorCollateral : LazyGuarantorCollateral
+
+export declare const GuarantorCollateral: (new (init: ModelInit<GuarantorCollateral>) => GuarantorCollateral) & {
+  copyOf(source: GuarantorCollateral, mutator: (draft: MutableModel<GuarantorCollateral>) => MutableModel<GuarantorCollateral> | void): GuarantorCollateral;
 }
 
 type EagerLoanProductLoanFees = {

@@ -78,19 +78,19 @@ const LIST_LOANS_DISPLAY_QUERY = `
           lastName
           email
         }
-        balanceSnapshots(limit: 1, sortDirection: DESC) {
+        installments(limit: 1000) {
           items {
-            principalOutstanding
-            interestOutstanding
-            feesOutstanding
-            penaltyOutstanding
-            totalOutstanding
+            principalDue
+            principalPaid
+            totalDue
+            totalPaid
           }
         }
         payments(limit: 1000) {
           items {
             amount
             status
+            paymentDate
             paymentStatusEnum
           }
         }
@@ -142,6 +142,15 @@ const fmtDate = (dateStr) => {
 };
 
 //  Helper: compute total paid from payments
+const normalizeMoneyValue = (value) => {
+  if (value == null) return 0;
+  const numericValue =
+    typeof value === "string"
+      ? Number(value.replace(/,/g, "").trim())
+      : Number(value);
+  return Number.isFinite(numericValue) ? numericValue : 0;
+};
+
 const computeTotalPaid = (payments) => {
   if (!payments?.items?.length) return 0;
   return payments.items
@@ -149,22 +158,53 @@ const computeTotalPaid = (payments) => {
       const st = (p.paymentStatusEnum || p.status || "").toUpperCase();
       return st !== "REVERSED" && st !== "VOIDED" && st !== "FAILED";
     })
-    .reduce((sum, p) => sum + (p.amount || 0), 0);
+    .reduce((sum, p) => sum + normalizeMoneyValue(p?.amount), 0);
 };
 
-//  Helper: get balance from latest snapshot or compute
+const getInstallmentBalance = (loan) => {
+  const installments = loan?.installments?.items ?? [];
+  if (!installments.length) return null;
+
+  return installments.reduce(
+    (sum, installment) =>
+      sum +
+      Math.max(
+        normalizeMoneyValue(installment?.totalDue) -
+          normalizeMoneyValue(installment?.totalPaid),
+        0,
+      ),
+    0,
+  );
+};
+
+const getPrincipalInstallmentBalance = (loan) => {
+  const installments = loan?.installments?.items ?? [];
+  if (!installments.length) return null;
+
+  return installments.reduce(
+    (sum, installment) =>
+      sum +
+      Math.max(
+        normalizeMoneyValue(installment?.principalDue) -
+          normalizeMoneyValue(installment?.principalPaid),
+        0,
+      ),
+    0,
+  );
+};
+
+//  Helper: get balance from installments or compute
 const getBalance = (loan) => {
-  const snapshot = loan.balanceSnapshots?.items?.[0];
-  if (snapshot) return snapshot.totalOutstanding ?? 0;
+  const installmentBalance = getInstallmentBalance(loan);
+  if (installmentBalance != null) return installmentBalance;
   const paid = computeTotalPaid(loan.payments);
   return (loan.principal || 0) - paid;
 };
 
 // --- Helper: get principal balance (remaining principal only) ---
 const getPrincipalBalance = (loan) => {
-  const snapshot = loan.balanceSnapshots?.items?.[0];
-  if (snapshot)
-    return snapshot.principalOutstanding ?? snapshot.totalOutstanding ?? 0;
+  const principalInstallmentBalance = getPrincipalInstallmentBalance(loan);
+  if (principalInstallmentBalance != null) return principalInstallmentBalance;
   const paid = computeTotalPaid(loan.payments);
   return Math.max((loan.principal || 0) - paid, 0);
 };
@@ -1290,6 +1330,7 @@ export default function LoansDisplay() {
           },
         })),
       );
+      console.log("Loans object from API:", processed);
     } catch (err) {
       console.error("LoansDisplay \u2013 Error fetching loans:", err);
       setLoans([]);

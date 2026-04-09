@@ -1,8 +1,5 @@
 - Create loans form. Also create from loan product.
   - Resume:
-    - Check users who have just joined, they should not have access until approved.
-    - the loan Id on the loans page is incorrect.
-    - In the payments popup, show the loan name, and then Id in small letters.
     - Work on payments
     - Work on Loan Statements.
     - Implement loan status

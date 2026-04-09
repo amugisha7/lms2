@@ -117,28 +117,6 @@ const GET_LOAN_FOR_STATEMENT = /* GraphQL */ `
           amountAllocatedToPenalty
         }
       }
-      disbursements(limit: 100) {
-        items {
-          id
-          disbursedAt
-          amount
-          status
-          method
-          reference
-        }
-      }
-      balanceSnapshots(limit: 1, sortDirection: DESC) {
-        items {
-          id
-          asOfAt
-          principalOutstanding
-          interestOutstanding
-          feesOutstanding
-          penaltyOutstanding
-          totalOutstanding
-          daysPastDue
-        }
-      }
     }
   }
 `;

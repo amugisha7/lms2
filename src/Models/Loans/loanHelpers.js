@@ -30,6 +30,8 @@ export const listLoans = /* GraphQL */ `
         }
         installments(limit: 1000) {
           items {
+            principalDue
+            principalPaid
             totalDue
             totalPaid
           }
@@ -39,11 +41,6 @@ export const listLoans = /* GraphQL */ `
             amount
             status
             paymentStatusEnum
-          }
-        }
-        balanceSnapshots(limit: 1, sortDirection: DESC) {
-          items {
-            totalOutstanding
           }
         }
       }
@@ -124,16 +121,6 @@ export const getLoan = /* GraphQL */ `
           paymentStatusEnum
         }
       }
-      disbursements(limit: 100) {
-        items {
-          id
-          disbursedAt
-          amount
-          status
-          method
-          reference
-        }
-      }
       events(limit: 100) {
         items {
           id
@@ -141,18 +128,6 @@ export const getLoan = /* GraphQL */ `
           eventType
           summary
           payload
-        }
-      }
-      balanceSnapshots(limit: 1, sortDirection: DESC) {
-        items {
-          id
-          asOfAt
-          principalOutstanding
-          interestOutstanding
-          feesOutstanding
-          penaltyOutstanding
-          totalOutstanding
-          daysPastDue
         }
       }
       loanProduct {
@@ -207,34 +182,12 @@ export const createLoanInstallment = /* GraphQL */ `
   }
 `;
 
-export const createLoanDisbursement = /* GraphQL */ `
-  mutation CreateLoanDisbursement(
-    $input: CreateLoanDisbursementInput!
-    $condition: ModelLoanDisbursementConditionInput
-  ) {
-    createLoanDisbursement(input: $input, condition: $condition) {
-      id
-    }
-  }
-`;
-
 export const createLoanEvent = /* GraphQL */ `
   mutation CreateLoanEvent(
     $input: CreateLoanEventInput!
     $condition: ModelLoanEventConditionInput
   ) {
     createLoanEvent(input: $input, condition: $condition) {
-      id
-    }
-  }
-`;
-
-export const createLoanBalanceSnapshot = /* GraphQL */ `
-  mutation CreateLoanBalanceSnapshot(
-    $input: CreateLoanBalanceSnapshotInput!
-    $condition: ModelLoanBalanceSnapshotConditionInput
-  ) {
-    createLoanBalanceSnapshot(input: $input, condition: $condition) {
       id
     }
   }

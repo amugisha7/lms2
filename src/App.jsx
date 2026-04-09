@@ -349,7 +349,10 @@ function App({ signOut, user }) {
                   <>
                     {!online && <NoInternet />}
                     <div style={{ display: online ? "block" : "none" }}>
-                      <AppRoutes userExists={userExists} />
+                      <AppRoutes
+                        userExists={userExists}
+                        userStatus={userDetails?.status}
+                      />
                     </div>
                   </>
                 )}

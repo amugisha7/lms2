@@ -120,6 +120,11 @@ const buildValidationSchema = (isReviewMode = false) => {
 
 const baseValidationSchema = buildValidationSchema(false);
 
+const normalizeStatusValue = (status) => {
+  if (!status) return "";
+  return String(status).toLowerCase();
+};
+
 const renderFormField = (field) => {
   const { hiddenInReview, ...rest } = field;
   switch (field.type) {
@@ -235,7 +240,7 @@ const CreateUser = forwardRef(
         stateProvince: dbData.stateProvince || "",
         postalCode: dbData.postalCode || "",
         userType: dbData.userType || "",
-        status: dbData.status || "",
+        status: normalizeStatusValue(dbData.status),
         description: dbData.description || "",
         branch: dbData.branchUsersId || "",
         // Handle custom fields if they exist
@@ -370,6 +375,9 @@ const CreateUser = forwardRef(
       if (isEditMode && propInitialValues) {
         processedValues.institutionUsersId =
           propInitialValues.institutionUsersId;
+        if (processedValues.status) {
+          processedValues.status = normalizeStatusValue(processedValues.status);
+        }
         // Map 'branch' field to 'branchUsersId' for database
         if (processedValues.branch) {
           processedValues.branchUsersId = processedValues.branch;
@@ -379,6 +387,9 @@ const CreateUser = forwardRef(
         }
       } else {
         // For create mode, also map branch to branchUsersId
+        if (processedValues.status) {
+          processedValues.status = normalizeStatusValue(processedValues.status);
+        }
         if (processedValues.branch) {
           processedValues.branchUsersId = processedValues.branch;
           delete processedValues.branch;

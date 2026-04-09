@@ -55,9 +55,10 @@ const createUserForm = [
     required: true,
     span: 6,
     options: [
-      { value: "Active", label: "Active" },
-      { value: "Inactive", label: "Inactive" },
-      { value: "Suspended", label: "Suspended" },
+      { value: "active", label: "Active" },
+      { value: "pending", label: "Pending" },
+      { value: "inactive", label: "Inactive" },
+      { value: "suspended", label: "Suspended" },
     ],
   },
   {

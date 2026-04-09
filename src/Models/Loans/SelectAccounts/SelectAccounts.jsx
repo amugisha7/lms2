@@ -14,6 +14,7 @@ import CreateFormButtons from "../../../ModelAssets/CreateFormButtons";
 import WorkingOverlay from "../../../ModelAssets/WorkingOverlay";
 import NotificationBar from "../../../ModelAssets/NotificationBar";
 import { useSnackbar } from "../../../ModelAssets/SnackbarContext";
+import { useNotification } from "../../../ModelAssets/NotificationContext";
 import { convertDraftToLoan } from "../LoanDrafts/loanDraftHelpers";
 import { CREATE_MONEY_TRANSACTION_MUTATION } from "../../Accounts/MoneyTransactions/moneyTransactionHelpes";
 import { createLoanDisbursement, createLoanEvent } from "../loanHelpers";
@@ -128,6 +129,7 @@ export function BranchLinkedAccountSelection({
 }) {
   const theme = useTheme();
   const hasLoanFees = totalLoanFee > 0;
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [principalAccountId, setPrincipalAccountId] = useState("");
   const [feesAccountId, setFeesAccountId] = useState("");
   const branchId = borrower?.branchBorrowersId || null;
@@ -146,27 +148,35 @@ export function BranchLinkedAccountSelection({
 
   const formikLike = useMemo(
     () => ({
-      isSubmitting: false,
+      isSubmitting,
       resetForm: () => {
         setPrincipalAccountId("");
         setFeesAccountId("");
       },
     }),
-    [],
+    [isSubmitting],
   );
 
   const submitDisabled =
-    accountsLoading || !principalAccountId || (hasLoanFees && !feesAccountId);
+    isSubmitting ||
+    accountsLoading ||
+    !principalAccountId ||
+    (hasLoanFees && !feesAccountId);
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     if (submitDisabled) return;
 
-    onConfirm?.({
-      principalAccountId,
-      feesAccountId: hasLoanFees ? feesAccountId : null,
-      totalLoanFee,
-    });
+    setIsSubmitting(true);
+    try {
+      await onConfirm?.({
+        principalAccountId,
+        feesAccountId: hasLoanFees ? feesAccountId : null,
+        totalLoanFee,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -183,6 +193,11 @@ export function BranchLinkedAccountSelection({
         border: `2px solid ${theme.palette.mode === "dark" ? "#76B1D3" : "#1976d2"}`,
       }}
     >
+      <WorkingOverlay
+        open={isSubmitting}
+        message="Creating loan and disbursing funds..."
+      />
+
       <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
         Account Selection (Required)
       </Typography>
@@ -258,6 +273,7 @@ export default function SelectAccounts({
   const theme = useTheme();
   const navigate = useNavigate();
   const { showSnackbar } = useSnackbar();
+  const { showNotification } = useNotification();
   const [overlayOpen, setOverlayOpen] = useState(false);
   const [overlayMessage, setOverlayMessage] = useState("Working...");
   const [notification, setNotification] = useState(null);
@@ -412,10 +428,17 @@ export default function SelectAccounts({
         hasLoanFees && values.feesAccountId
           ? `Loan ${loanNumber} created, principal disbursed, and loan fees recorded successfully.`
           : `Loan ${loanNumber} created and principal disbursed successfully.`;
-      showSnackbar(successMessage, "green");
 
       if (onSuccess) onSuccess(loan);
-      navigate("/loans");
+      showNotification(successMessage, "green");
+      navigate("/loans", {
+        state: {
+          notification: {
+            message: successMessage,
+            color: "green",
+          },
+        },
+      });
     } catch (err) {
       console.error("Error disbursing loan:", err);
       setOverlayOpen(false);

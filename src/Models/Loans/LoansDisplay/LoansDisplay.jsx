@@ -17,7 +17,7 @@ import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeft";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Formik, Form, useField } from "formik";
 import { UserContext } from "../../../App";
 import { listBranches } from "../../../graphql/queries";
@@ -25,6 +25,7 @@ import WorkingOverlay from "../../../ModelAssets/WorkingOverlay";
 import CustomDataGrid from "../../../ModelAssets/CustomDataGrid";
 import SF_ClickableText from "../../../ModelAssets/SF_ClickableText";
 import PlusButtonMain from "../../../ModelAssets/PlusButtonMain";
+import { useNotification } from "../../../ModelAssets/NotificationContext";
 import { useSnackbar } from "../../../ModelAssets/SnackbarContext";
 import MultipleDropDownSearchable from "../../../Resources/FormComponents/MultipleDropDownSearchable";
 import { formatMoneyParts } from "../../../Resources/formatting";
@@ -536,8 +537,10 @@ export default function LoansDisplay() {
   const topScrollInnerRef = React.useRef(null);
   const { userDetails } = React.useContext(UserContext);
   const { showSnackbar } = useSnackbar();
+  const { showNotification } = useNotification();
   const theme = useTheme();
   const sf = theme.palette.sf;
+  const location = useLocation();
   const navigate = useNavigate();
   const currencyCode =
     userDetails?.institution?.currencyCode || userDetails?.currencyCode;
@@ -579,6 +582,24 @@ export default function LoansDisplay() {
     ),
     [],
   );
+
+  React.useEffect(() => {
+    const routeNotification = location.state?.notification;
+    if (!routeNotification?.message) return;
+
+    showNotification(
+      routeNotification.message,
+      routeNotification.color || "blue",
+    );
+
+    const nextState = { ...(location.state || {}) };
+    delete nextState.notification;
+
+    navigate(location.pathname, {
+      replace: true,
+      state: Object.keys(nextState).length > 0 ? nextState : null,
+    });
+  }, [location.pathname, location.state, navigate, showNotification]);
 
   React.useEffect(() => {
     const el = gridDragContainerRef.current;

@@ -559,12 +559,39 @@ export default function UserManagement() {
     );
   }
 
+  const isPendingUser = (user?.status || "").toLowerCase() === "pending";
+  const isActiveUser = (user?.status || "").toLowerCase() === "active";
+
   return (
     <>
       <NotificationBar
         message={notification.message}
         color={notification.color}
       />
+
+      {isPendingUser && (
+        <Box
+          sx={{
+            mb: 2,
+            p: 2,
+            borderRadius: 2,
+            border: "1px solid",
+            borderColor: "warning.main",
+            backgroundColor: (theme) =>
+              theme.palette.mode === "dark"
+                ? "rgba(237, 108, 2, 0.12)"
+                : "rgba(237, 108, 2, 0.08)",
+          }}
+        >
+          <Typography
+            variant="body2"
+            sx={{ color: "warning.main", fontWeight: 600 }}
+          >
+            This User is pending access. Assign an "Active" status, a "User
+            Type", and a "Branch" before they can access features.
+          </Typography>
+        </Box>
+      )}
 
       {/* Edit Popup */}
       <EditContentPopup
@@ -792,64 +819,67 @@ export default function UserManagement() {
                 canEdit={canEditUser}
               />
 
-              {/* Employee Record Section */}
-              <Box sx={{ mt: 2 }}>
-                <Divider sx={{ mb: 2 }} />
-                <Typography
-                  variant="subtitle1"
-                  sx={{
-                    fontWeight: 600,
-                    mb: 1,
-                    color: theme.palette.text.primary,
-                  }}
-                >
-                  Employee Record
-                </Typography>
-                {employeeLoading ? (
-                  <CircularProgress size={20} />
-                ) : (
-                  <Box
+              {isActiveUser && (
+                <Box sx={{ mt: 2 }}>
+                  <Divider sx={{ mb: 2 }} />
+                  <Typography
+                    variant="subtitle1"
                     sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 2,
-                      flexWrap: "wrap",
+                      fontWeight: 600,
+                      mb: 1,
+                      color: theme.palette.text.primary,
                     }}
                   >
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={!!linkedEmployee}
-                          onChange={handleToggleEmployee}
-                          disabled={
-                            !!linkedEmployee || employeeToggling || !canEditUser
-                          }
-                        />
-                      }
-                      label={
-                        linkedEmployee
-                          ? `${[linkedEmployee.firstName, linkedEmployee.lastName].filter(Boolean).join(" ") || linkedEmployee.email || "Employee"}`
-                          : "Set as employee"
-                      }
-                    />
-                    {employeeToggling && <CircularProgress size={18} />}
-                    {linkedEmployee && (
-                      <ClickableText
-                        onClick={() =>
-                          navigate(`/employees/id/${linkedEmployee.id}/view`)
+                    Employee Record
+                  </Typography>
+                  {employeeLoading ? (
+                    <CircularProgress size={20} />
+                  ) : (
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 2,
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      <FormControlLabel
+                        control={
+                          <Switch
+                            checked={!!linkedEmployee}
+                            onChange={handleToggleEmployee}
+                            disabled={
+                              !!linkedEmployee ||
+                              employeeToggling ||
+                              !canEditUser
+                            }
+                          />
                         }
-                        sx={{
-                          color: theme.palette.blueText.main,
-                          fontSize: "0.9rem",
-                        }}
-                        className="pdf-hide"
-                      >
-                        View Employee Profile
-                      </ClickableText>
-                    )}
-                  </Box>
-                )}
-              </Box>
+                        label={
+                          linkedEmployee
+                            ? `${[linkedEmployee.firstName, linkedEmployee.lastName].filter(Boolean).join(" ") || linkedEmployee.email || "Employee"}`
+                            : "Set as employee"
+                        }
+                      />
+                      {employeeToggling && <CircularProgress size={18} />}
+                      {linkedEmployee && (
+                        <ClickableText
+                          onClick={() =>
+                            navigate(`/employees/id/${linkedEmployee.id}/view`)
+                          }
+                          sx={{
+                            color: theme.palette.blueText.main,
+                            fontSize: "0.9rem",
+                          }}
+                          className="pdf-hide"
+                        >
+                          View Employee Profile
+                        </ClickableText>
+                      )}
+                    </Box>
+                  )}
+                </Box>
+              )}
             </div>
           </TabPanel>
 

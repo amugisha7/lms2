@@ -86,6 +86,13 @@ const USER_TYPE_LABELS = {
   Viewer: "Viewer",
 };
 
+const STATUS_LABELS = {
+  active: "Active",
+  pending: "Pending",
+  inactive: "Inactive",
+  suspended: "Suspended",
+};
+
 export default function Users() {
   const theme = useTheme();
   const navigate = useNavigate();
@@ -327,6 +334,8 @@ export default function Users() {
       field: "status",
       headerName: "Status",
       width: 100,
+      renderCell: (params) =>
+        STATUS_LABELS[params.row.status] || params.row.status || "",
     },
   ];
 

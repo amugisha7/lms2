@@ -47,13 +47,28 @@ import LoanCalculator from "./Models/Loans/LoanCalculator/LoanCalculator";
 import LoansDisplay from "./Models/Loans/LoansDisplay/LoansDisplay";
 import LoanDetailPage from "./Models/Loans/LoanDetailPage";
 import LoanStatementScreen from "./Models/Loans/LoanStatements/LoanStatementScreen";
+import InactiveUserPage from "./Screens/Auth/InactiveUserPage";
 
-export default function AppRoutes({ userExists }) {
+export default function AppRoutes({ userExists, userStatus }) {
+  const normalizedStatus = (userStatus || "").toLowerCase();
+  const hasActiveAccess = userExists && normalizedStatus === "active";
+
   return (
     <Router>
       <Routes>
-        <Route path="/" element={userExists ? <Dashboard /> : <Onboarding />}>
-          {userExists && (
+        <Route
+          path="/"
+          element={
+            !userExists ? (
+              <Onboarding />
+            ) : hasActiveAccess ? (
+              <Dashboard />
+            ) : (
+              <InactiveUserPage />
+            )
+          }
+        >
+          {hasActiveAccess && (
             <>
               <Route index element={<MainGrid />} />
               <Route path="reports" element={<MainGrid />} />

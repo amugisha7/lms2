@@ -1,13 +1,13 @@
 - Create loans form. Also create from loan product.
   - Resume:
-    - Loan creation confirmations. also change the buttons for creation.
-    - enable creation of employee from user with relationship
     - Check users who have just joined, they should not have access until approved.
     - the loan Id on the loans page is incorrect.
+    - In the payments popup, show the loan name, and then Id in small letters.
     - Work on payments
     - Work on Loan Statements.
     - Implement loan status
     - Check validity of loan statements.
+    - Check the customer portal routing and viewing of loans.
 
     Put the contracts, collateral and gurantors, other incomes and expenses as tabs on loan drafts and loans.
     i Enable loan contracts

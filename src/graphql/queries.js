@@ -515,6 +515,10 @@ export const getEmployee = /* GraphQL */ `
         nextToken
         __typename
       }
+      loanComments {
+        nextToken
+        __typename
+      }
       moneyTransactions {
         nextToken
         __typename
@@ -1968,6 +1972,10 @@ export const getLoan = /* GraphQL */ `
         nextToken
         __typename
       }
+      comments {
+        nextToken
+        __typename
+      }
       loanFees {
         nextToken
         __typename
@@ -2158,6 +2166,129 @@ export const listLoans = /* GraphQL */ `
         createdByEmployeeID
         groupID
         customLoanDetails
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const getLoanComment = /* GraphQL */ `
+  query GetLoanComment($id: ID!) {
+    getLoanComment(id: $id) {
+      id
+      loanID
+      loan {
+        id
+        loanNumber
+        approvedDate
+        principal
+        fees
+        interestRate
+        startDate
+        maturityDate
+        stopDate
+        extensionPeriod
+        duration
+        durationInterval
+        loanType
+        rateInterval
+        loanCurrency
+        loanPurpose
+        loanComputationRecord
+        loanAttribute1
+        loanAttribute2
+        numberOfPayments
+        paymentFrequency
+        customFieldsData
+        status
+        borrowerID
+        branchID
+        loanProductID
+        createdByEmployeeID
+        groupID
+        customLoanDetails
+        createdAt
+        updatedAt
+        __typename
+      }
+      commentAt
+      body
+      attachments
+      createdByEmployeeID
+      createdByEmployee {
+        id
+        firstName
+        lastName
+        middleName
+        dateOfBirth
+        phoneNumber1
+        phoneNumber2
+        email
+        title
+        addressLine1
+        addressLine2
+        city
+        stateProvince
+        postalCode
+        nextOfKinName
+        nextOfKinPhoneNumber
+        nextOfKinEmail
+        nextOfKinRelationship
+        nextOfKinAddress
+        nationalID
+        passportNumber
+        nationality
+        status
+        employmentType
+        employmentStatus
+        employmentStartDate
+        employmentEndDate
+        employmentPosition
+        employmentDepartment
+        employmentGrade
+        employmentLocation
+        grossSalary
+        bankAccountNumber
+        bankName
+        bankBranchCode
+        socialSecurityNumber
+        taxIdentificationNumber
+        taxExemptStatus
+        customFieldsData
+        relatedUserID
+        relatedBorrowerID
+        supervisorID
+        customEmployeeDetails
+        createdAt
+        updatedAt
+        branchEmployeesId
+        __typename
+      }
+      customLoanCommentDetails
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const listLoanComments = /* GraphQL */ `
+  query ListLoanComments(
+    $filter: ModelLoanCommentFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listLoanComments(filter: $filter, limit: $limit, nextToken: $nextToken) {
+      items {
+        id
+        loanID
+        commentAt
+        body
+        attachments
+        createdByEmployeeID
+        customLoanCommentDetails
         createdAt
         updatedAt
         __typename
@@ -8179,6 +8310,72 @@ export const loansByGroupID = /* GraphQL */ `
         createdByEmployeeID
         groupID
         customLoanDetails
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const loanCommentsByLoanIDAndCommentAt = /* GraphQL */ `
+  query LoanCommentsByLoanIDAndCommentAt(
+    $loanID: ID!
+    $commentAt: ModelStringKeyConditionInput
+    $sortDirection: ModelSortDirection
+    $filter: ModelLoanCommentFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    loanCommentsByLoanIDAndCommentAt(
+      loanID: $loanID
+      commentAt: $commentAt
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        loanID
+        commentAt
+        body
+        attachments
+        createdByEmployeeID
+        customLoanCommentDetails
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const loanCommentsByCreatedByEmployeeID = /* GraphQL */ `
+  query LoanCommentsByCreatedByEmployeeID(
+    $createdByEmployeeID: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelLoanCommentFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    loanCommentsByCreatedByEmployeeID(
+      createdByEmployeeID: $createdByEmployeeID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        loanID
+        commentAt
+        body
+        attachments
+        createdByEmployeeID
+        customLoanCommentDetails
         createdAt
         updatedAt
         __typename

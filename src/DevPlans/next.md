@@ -1,6 +1,6 @@
 - Create loans form. Also create from loan product.
   - Resume:
-    - Work on Loan Statements.
+    - Work on Loan Statements, status, days left being red
     - Implement loan status
     - Check validity of loan statements.
     - Check the customer portal routing and viewing of loans.

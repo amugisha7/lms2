@@ -1139,9 +1139,7 @@ export default function LoansDisplay() {
             <Box sx={STACKED_CELL_SX}>
               <MoneyText
                 value={principalBal}
-                numberSx={getMoneyTextSx(
-                  principalBal > 0 ? sf.sf_error : sf.sf_success,
-                )}
+                numberSx={getMoneyTextSx(sf.sf_textPrimary)}
               />
               <SFClickableText
                 onClick={(e) => {

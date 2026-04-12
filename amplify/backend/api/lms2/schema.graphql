@@ -248,6 +248,8 @@ type Employee @model {
   payments: [Payment]
     @hasMany(indexName: "byReceivingEmployeeID", fields: ["id"])
   loans: [Loan] @hasMany(indexName: "byCreatedByEmployeeID", fields: ["id"])
+  loanComments: [LoanComment]
+    @hasMany(indexName: "byCreatedByEmployeeID", fields: ["id"])
   moneyTransactions: [MoneyTransaction]
     @hasMany(indexName: "byCreatedByEmployeeID", fields: ["id"])
   accounts: [Account]
@@ -596,7 +598,7 @@ type LoanComment @model {
   commentAt: AWSDateTime!
   body: String!
   attachments: AWSJSON
-  createdByEmployeeID: ID
+  createdByEmployeeID: ID @index(name: "byCreatedByEmployeeID")
   createdByEmployee: Employee @belongsTo(fields: ["createdByEmployeeID"])
 
   customLoanCommentDetails: AWSJSON

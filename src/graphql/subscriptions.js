@@ -938,6 +938,10 @@ export const onCreateEmployee = /* GraphQL */ `
         nextToken
         __typename
       }
+      loanComments {
+        nextToken
+        __typename
+      }
       moneyTransactions {
         nextToken
         __typename
@@ -1108,6 +1112,10 @@ export const onUpdateEmployee = /* GraphQL */ `
         nextToken
         __typename
       }
+      loanComments {
+        nextToken
+        __typename
+      }
       moneyTransactions {
         nextToken
         __typename
@@ -1275,6 +1283,10 @@ export const onDeleteEmployee = /* GraphQL */ `
         __typename
       }
       loans {
+        nextToken
+        __typename
+      }
+      loanComments {
         nextToken
         __typename
       }
@@ -4266,6 +4278,10 @@ export const onCreateLoan = /* GraphQL */ `
         nextToken
         __typename
       }
+      comments {
+        nextToken
+        __typename
+      }
       loanFees {
         nextToken
         __typename
@@ -4505,6 +4521,10 @@ export const onUpdateLoan = /* GraphQL */ `
         __typename
       }
       events {
+        nextToken
+        __typename
+      }
+      comments {
         nextToken
         __typename
       }
@@ -4750,6 +4770,10 @@ export const onDeleteLoan = /* GraphQL */ `
         nextToken
         __typename
       }
+      comments {
+        nextToken
+        __typename
+      }
       loanFees {
         nextToken
         __typename
@@ -4897,6 +4921,309 @@ export const onDeleteLoan = /* GraphQL */ `
         __typename
       }
       customLoanDetails
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onCreateLoanComment = /* GraphQL */ `
+  subscription OnCreateLoanComment(
+    $filter: ModelSubscriptionLoanCommentFilterInput
+  ) {
+    onCreateLoanComment(filter: $filter) {
+      id
+      loanID
+      loan {
+        id
+        loanNumber
+        approvedDate
+        principal
+        fees
+        interestRate
+        startDate
+        maturityDate
+        stopDate
+        extensionPeriod
+        duration
+        durationInterval
+        loanType
+        rateInterval
+        loanCurrency
+        loanPurpose
+        loanComputationRecord
+        loanAttribute1
+        loanAttribute2
+        numberOfPayments
+        paymentFrequency
+        customFieldsData
+        status
+        borrowerID
+        branchID
+        loanProductID
+        createdByEmployeeID
+        groupID
+        customLoanDetails
+        createdAt
+        updatedAt
+        __typename
+      }
+      commentAt
+      body
+      attachments
+      createdByEmployeeID
+      createdByEmployee {
+        id
+        firstName
+        lastName
+        middleName
+        dateOfBirth
+        phoneNumber1
+        phoneNumber2
+        email
+        title
+        addressLine1
+        addressLine2
+        city
+        stateProvince
+        postalCode
+        nextOfKinName
+        nextOfKinPhoneNumber
+        nextOfKinEmail
+        nextOfKinRelationship
+        nextOfKinAddress
+        nationalID
+        passportNumber
+        nationality
+        status
+        employmentType
+        employmentStatus
+        employmentStartDate
+        employmentEndDate
+        employmentPosition
+        employmentDepartment
+        employmentGrade
+        employmentLocation
+        grossSalary
+        bankAccountNumber
+        bankName
+        bankBranchCode
+        socialSecurityNumber
+        taxIdentificationNumber
+        taxExemptStatus
+        customFieldsData
+        relatedUserID
+        relatedBorrowerID
+        supervisorID
+        customEmployeeDetails
+        createdAt
+        updatedAt
+        branchEmployeesId
+        __typename
+      }
+      customLoanCommentDetails
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onUpdateLoanComment = /* GraphQL */ `
+  subscription OnUpdateLoanComment(
+    $filter: ModelSubscriptionLoanCommentFilterInput
+  ) {
+    onUpdateLoanComment(filter: $filter) {
+      id
+      loanID
+      loan {
+        id
+        loanNumber
+        approvedDate
+        principal
+        fees
+        interestRate
+        startDate
+        maturityDate
+        stopDate
+        extensionPeriod
+        duration
+        durationInterval
+        loanType
+        rateInterval
+        loanCurrency
+        loanPurpose
+        loanComputationRecord
+        loanAttribute1
+        loanAttribute2
+        numberOfPayments
+        paymentFrequency
+        customFieldsData
+        status
+        borrowerID
+        branchID
+        loanProductID
+        createdByEmployeeID
+        groupID
+        customLoanDetails
+        createdAt
+        updatedAt
+        __typename
+      }
+      commentAt
+      body
+      attachments
+      createdByEmployeeID
+      createdByEmployee {
+        id
+        firstName
+        lastName
+        middleName
+        dateOfBirth
+        phoneNumber1
+        phoneNumber2
+        email
+        title
+        addressLine1
+        addressLine2
+        city
+        stateProvince
+        postalCode
+        nextOfKinName
+        nextOfKinPhoneNumber
+        nextOfKinEmail
+        nextOfKinRelationship
+        nextOfKinAddress
+        nationalID
+        passportNumber
+        nationality
+        status
+        employmentType
+        employmentStatus
+        employmentStartDate
+        employmentEndDate
+        employmentPosition
+        employmentDepartment
+        employmentGrade
+        employmentLocation
+        grossSalary
+        bankAccountNumber
+        bankName
+        bankBranchCode
+        socialSecurityNumber
+        taxIdentificationNumber
+        taxExemptStatus
+        customFieldsData
+        relatedUserID
+        relatedBorrowerID
+        supervisorID
+        customEmployeeDetails
+        createdAt
+        updatedAt
+        branchEmployeesId
+        __typename
+      }
+      customLoanCommentDetails
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onDeleteLoanComment = /* GraphQL */ `
+  subscription OnDeleteLoanComment(
+    $filter: ModelSubscriptionLoanCommentFilterInput
+  ) {
+    onDeleteLoanComment(filter: $filter) {
+      id
+      loanID
+      loan {
+        id
+        loanNumber
+        approvedDate
+        principal
+        fees
+        interestRate
+        startDate
+        maturityDate
+        stopDate
+        extensionPeriod
+        duration
+        durationInterval
+        loanType
+        rateInterval
+        loanCurrency
+        loanPurpose
+        loanComputationRecord
+        loanAttribute1
+        loanAttribute2
+        numberOfPayments
+        paymentFrequency
+        customFieldsData
+        status
+        borrowerID
+        branchID
+        loanProductID
+        createdByEmployeeID
+        groupID
+        customLoanDetails
+        createdAt
+        updatedAt
+        __typename
+      }
+      commentAt
+      body
+      attachments
+      createdByEmployeeID
+      createdByEmployee {
+        id
+        firstName
+        lastName
+        middleName
+        dateOfBirth
+        phoneNumber1
+        phoneNumber2
+        email
+        title
+        addressLine1
+        addressLine2
+        city
+        stateProvince
+        postalCode
+        nextOfKinName
+        nextOfKinPhoneNumber
+        nextOfKinEmail
+        nextOfKinRelationship
+        nextOfKinAddress
+        nationalID
+        passportNumber
+        nationality
+        status
+        employmentType
+        employmentStatus
+        employmentStartDate
+        employmentEndDate
+        employmentPosition
+        employmentDepartment
+        employmentGrade
+        employmentLocation
+        grossSalary
+        bankAccountNumber
+        bankName
+        bankBranchCode
+        socialSecurityNumber
+        taxIdentificationNumber
+        taxExemptStatus
+        customFieldsData
+        relatedUserID
+        relatedBorrowerID
+        supervisorID
+        customEmployeeDetails
+        createdAt
+        updatedAt
+        branchEmployeesId
+        __typename
+      }
+      customLoanCommentDetails
       createdAt
       updatedAt
       __typename

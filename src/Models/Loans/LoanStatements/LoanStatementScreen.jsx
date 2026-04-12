@@ -129,7 +129,6 @@ function LedgerTable({
   visibleColumns: vc,
   currency,
   currencyCode,
-  startIndex,
 }) {
   const M = ({ value }) => (
     <Money value={value} currency={currency} currencyCode={currencyCode} />
@@ -154,9 +153,6 @@ function LedgerTable({
       >
         <TableHead>
           <TableRow sx={{ backgroundColor: "#eeeeee" }}>
-            <TableCell sx={{ ...HEADER_CELL, width: "28px", color: "#000" }}>
-              #
-            </TableCell>
             {vc.date && (
               <TableCell sx={{ ...HEADER_CELL, width: "78px", color: "#000" }}>
                 Date
@@ -228,14 +224,9 @@ function LedgerTable({
         </TableHead>
         <TableBody>
           {rows.map((row, idx) => {
-            const rowNum = startIndex + idx + 1;
-
             if (row.rowType === "disbursement") {
               return (
                 <TableRow key={row.key} sx={{ bgcolor: "#e8f4e8" }}>
-                  <TableCell sx={{ ...CELL_BASE, color: "#000" }}>
-                    {rowNum}
-                  </TableCell>
                   {vc.date && (
                     <TableCell sx={{ ...CELL_BASE, color: "#000" }}>
                       {fmtDate(row.date)}
@@ -301,9 +292,6 @@ function LedgerTable({
                   key={row.key}
                   sx={{ bgcolor: idx % 2 === 0 ? "#fff" : "#fafafa" }}
                 >
-                  <TableCell sx={{ ...CELL_BASE, color: "#000" }}>
-                    {rowNum}
-                  </TableCell>
                   {vc.date && (
                     <TableCell sx={{ ...CELL_BASE, color: "#000" }}>
                       {fmtDate(row.date)}
@@ -314,9 +302,6 @@ function LedgerTable({
                       sx={{ ...CELL_BASE, color: "#000", fontWeight: 500 }}
                     >
                       Installment {row.installmentNumber}
-                      {row.status && row.status !== "DUE"
-                        ? ` (${row.status})`
-                        : ""}
                     </TableCell>
                   )}
                   {vc.scheduledPrincipal && (
@@ -389,9 +374,6 @@ function LedgerTable({
             if (row.rowType === "penalty") {
               return (
                 <TableRow key={row.key} sx={{ bgcolor: "#fff4e5" }}>
-                  <TableCell sx={{ ...CELL_BASE, color: "#000" }}>
-                    {rowNum}
-                  </TableCell>
                   {vc.date && (
                     <TableCell sx={{ ...CELL_BASE, color: "#000" }}>
                       {fmtDate(row.date)}
@@ -460,9 +442,6 @@ function LedgerTable({
             if (row.rowType === "payment") {
               return (
                 <TableRow key={row.key} sx={{ bgcolor: "#e8f0fe" }}>
-                  <TableCell sx={{ ...CELL_BASE, color: "#000" }}>
-                    {rowNum}
-                  </TableCell>
                   {vc.date && (
                     <TableCell sx={{ ...CELL_BASE, color: "#000" }}>
                       {fmtDate(row.date)}
@@ -732,7 +711,10 @@ export default function LoanStatementScreen({
   // -------------------------------------------------------------------------
   // Build ledger
   // -------------------------------------------------------------------------
-  const { rows } = React.useMemo(() => buildStatementLedger(loan), [loan]);
+  const { rows, totals } = React.useMemo(
+    () => buildStatementLedger(loan),
+    [loan],
+  );
 
   const pages = React.useMemo(() => chunk(rows, ROWS_PER_PAGE), [rows]);
   const totalPages = Math.max(pages.length, 1);
@@ -1126,7 +1108,6 @@ export default function LoanStatementScreen({
       >
         {pages.length > 0 ? (
           pages.map((pageRows, pageIdx) => {
-            const startIndex = pageIdx * ROWS_PER_PAGE;
             return (
               <A4Page key={`page-${pageIdx}`} pageNumber={pageIdx + 1}>
                 {pageIdx === 0 ? renderSummaryBlock() : null}
@@ -1135,7 +1116,6 @@ export default function LoanStatementScreen({
                   visibleColumns={visibleColumns}
                   currency={currency}
                   currencyCode={currencyCode}
-                  startIndex={startIndex}
                 />
               </A4Page>
             );

@@ -4133,6 +4133,22 @@ export const schema = {
                         ]
                     }
                 },
+                "comments": {
+                    "name": "comments",
+                    "isArray": true,
+                    "type": {
+                        "model": "LoanComment"
+                    },
+                    "isRequired": false,
+                    "attributes": [],
+                    "isArrayNullable": true,
+                    "association": {
+                        "connectionType": "HAS_MANY",
+                        "associatedWith": [
+                            "loan"
+                        ]
+                    }
+                },
                 "loanFees": {
                     "name": "loanFees",
                     "isArray": true,
@@ -4459,6 +4475,117 @@ export const schema = {
                         "name": "byGroupLoan",
                         "fields": [
                             "groupID"
+                        ]
+                    }
+                }
+            ]
+        },
+        "LoanComment": {
+            "name": "LoanComment",
+            "fields": {
+                "id": {
+                    "name": "id",
+                    "isArray": false,
+                    "type": "ID",
+                    "isRequired": true,
+                    "attributes": []
+                },
+                "loanID": {
+                    "name": "loanID",
+                    "isArray": false,
+                    "type": "ID",
+                    "isRequired": true,
+                    "attributes": []
+                },
+                "loan": {
+                    "name": "loan",
+                    "isArray": false,
+                    "type": {
+                        "model": "Loan"
+                    },
+                    "isRequired": false,
+                    "attributes": [],
+                    "association": {
+                        "connectionType": "BELONGS_TO",
+                        "targetNames": [
+                            "loanID"
+                        ]
+                    }
+                },
+                "commentAt": {
+                    "name": "commentAt",
+                    "isArray": false,
+                    "type": "AWSDateTime",
+                    "isRequired": true,
+                    "attributes": []
+                },
+                "body": {
+                    "name": "body",
+                    "isArray": false,
+                    "type": "String",
+                    "isRequired": true,
+                    "attributes": []
+                },
+                "createdByEmployeeID": {
+                    "name": "createdByEmployeeID",
+                    "isArray": false,
+                    "type": "ID",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "createdByEmployee": {
+                    "name": "createdByEmployee",
+                    "isArray": false,
+                    "type": {
+                        "model": "Employee"
+                    },
+                    "isRequired": false,
+                    "attributes": [],
+                    "association": {
+                        "connectionType": "BELONGS_TO",
+                        "targetNames": [
+                            "createdByEmployeeID"
+                        ]
+                    }
+                },
+                "customLoanCommentDetails": {
+                    "name": "customLoanCommentDetails",
+                    "isArray": false,
+                    "type": "AWSJSON",
+                    "isRequired": false,
+                    "attributes": []
+                },
+                "createdAt": {
+                    "name": "createdAt",
+                    "isArray": false,
+                    "type": "AWSDateTime",
+                    "isRequired": false,
+                    "attributes": [],
+                    "isReadOnly": true
+                },
+                "updatedAt": {
+                    "name": "updatedAt",
+                    "isArray": false,
+                    "type": "AWSDateTime",
+                    "isRequired": false,
+                    "attributes": [],
+                    "isReadOnly": true
+                }
+            },
+            "syncable": true,
+            "pluralName": "LoanComments",
+            "attributes": [
+                {
+                    "type": "model",
+                    "properties": {}
+                },
+                {
+                    "type": "key",
+                    "properties": {
+                        "name": "byLoan",
+                        "fields": [
+                            "loanID",
+                            "commentAt"
                         ]
                     }
                 }

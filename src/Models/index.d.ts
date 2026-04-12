@@ -1155,6 +1155,7 @@ type EagerLoan = {
   readonly branch?: Branch | null;
   readonly payments?: (Payment | null)[] | null;
   readonly events?: (LoanEvent | null)[] | null;
+  readonly comments?: (LoanComment | null)[] | null;
   readonly loanFees?: (LoanFees | null)[] | null;
   readonly penalties?: (Penalty | null)[] | null;
   readonly applications?: (LoanApplication | null)[] | null;
@@ -1211,6 +1212,7 @@ type LazyLoan = {
   readonly branch: AsyncItem<Branch | undefined>;
   readonly payments: AsyncCollection<Payment>;
   readonly events: AsyncCollection<LoanEvent>;
+  readonly comments: AsyncCollection<LoanComment>;
   readonly loanFees: AsyncCollection<LoanFees>;
   readonly penalties: AsyncCollection<Penalty>;
   readonly applications: AsyncCollection<LoanApplication>;
@@ -1237,6 +1239,46 @@ export declare type Loan = LazyLoading extends LazyLoadingDisabled ? EagerLoan :
 
 export declare const Loan: (new (init: ModelInit<Loan>) => Loan) & {
   copyOf(source: Loan, mutator: (draft: MutableModel<Loan>) => MutableModel<Loan> | void): Loan;
+}
+
+type EagerLoanComment = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<LoanComment, 'id'>;
+    readOnlyFields: 'createdAt' | 'updatedAt';
+  };
+  readonly id: string;
+  readonly loanID: string;
+  readonly loan?: Loan | null;
+  readonly commentAt: string;
+  readonly body: string;
+  readonly createdByEmployeeID?: string | null;
+  readonly createdByEmployee?: Employee | null;
+  readonly customLoanCommentDetails?: string | null;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+}
+
+type LazyLoanComment = {
+  readonly [__modelMeta__]: {
+    identifier: ManagedIdentifier<LoanComment, 'id'>;
+    readOnlyFields: 'createdAt' | 'updatedAt';
+  };
+  readonly id: string;
+  readonly loanID: string;
+  readonly loan: AsyncItem<Loan | undefined>;
+  readonly commentAt: string;
+  readonly body: string;
+  readonly createdByEmployeeID?: string | null;
+  readonly createdByEmployee: AsyncItem<Employee | undefined>;
+  readonly customLoanCommentDetails?: string | null;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+}
+
+export declare type LoanComment = LazyLoading extends LazyLoadingDisabled ? EagerLoanComment : LazyLoanComment
+
+export declare const LoanComment: (new (init: ModelInit<LoanComment>) => LoanComment) & {
+  copyOf(source: LoanComment, mutator: (draft: MutableModel<LoanComment>) => MutableModel<LoanComment> | void): LoanComment;
 }
 
 type EagerLoanEvent = {

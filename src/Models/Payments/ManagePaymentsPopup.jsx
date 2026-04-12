@@ -61,16 +61,66 @@ const TABS = [
   { key: 1, label: "Payment History" },
 ];
 
-const paymentValidationSchema = Yup.object().shape({
-  accountID: Yup.string().required("Please select an account"),
-  amount: Yup.string()
-    .required("Payment amount is required")
-    .test("is-positive", "Must be a positive number", (val) => {
-      const num = Number(String(val).replace(/,/g, ""));
-      return !isNaN(num) && num > 0;
-    }),
-  paymentDate: Yup.date().required("Payment date is required"),
+const toDateInputValue = (value) => {
+  if (!value) return "";
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (/^\d{4}-\d{2}-\d{2}/.test(trimmed)) {
+      return trimmed.slice(0, 10);
+    }
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+const getTodayDate = () => toDateInputValue(new Date());
+
+const getPaymentDateBounds = (loan) => ({
+  minDate: toDateInputValue(loan?.startDate),
+  maxDate: getTodayDate(),
 });
+
+const isDateOutsideBounds = (dateValue, minDate, maxDate) => {
+  if (!dateValue) {
+    return false;
+  }
+
+  if (minDate && dateValue < minDate) {
+    return true;
+  }
+
+  if (maxDate && dateValue > maxDate) {
+    return true;
+  }
+
+  return false;
+};
+
+const createPaymentValidationSchema = ({ minDate, maxDate }) =>
+  Yup.object().shape({
+    accountID: Yup.string().required("Please select an account"),
+    amount: Yup.string()
+      .required("Payment amount is required")
+      .test("is-positive", "Must be a positive number", (val) => {
+        const num = Number(String(val).replace(/,/g, ""));
+        return !isNaN(num) && num > 0;
+      }),
+    paymentDate: Yup.string()
+      .required("Payment date is required")
+      .test(
+        "within-loan-payment-window",
+        `Payment date must be between ${fmtDate(minDate)} and ${fmtDate(maxDate)}.`,
+        (value) => !isDateOutsideBounds(value, minDate, maxDate),
+      ),
+  });
 
 const fmtDate = (dateStr) => {
   if (!dateStr) return "N/A";
@@ -239,6 +289,10 @@ function AddPaymentForm({
     userDetails,
     assignedEmployeeId,
   );
+  const { minDate: earliestPaymentDate, maxDate: latestPaymentDate } = useMemo(
+    () => getPaymentDateBounds(loan),
+    [loan],
+  );
 
   const activeAccounts = useMemo(
     () =>
@@ -279,6 +333,14 @@ function AddPaymentForm({
     ],
     [employees],
   );
+  const paymentValidationSchema = useMemo(
+    () =>
+      createPaymentValidationSchema({
+        minDate: earliestPaymentDate,
+        maxDate: latestPaymentDate,
+      }),
+    [earliestPaymentDate, latestPaymentDate],
+  );
 
   return (
     <Formik
@@ -293,6 +355,25 @@ function AddPaymentForm({
       validationSchema={paymentValidationSchema}
       onSubmit={async (values, formikHelpers) => {
         try {
+          if (
+            isDateOutsideBounds(
+              values.paymentDate,
+              earliestPaymentDate,
+              latestPaymentDate,
+            )
+          ) {
+            showSnackbar(
+              `Payment date must be between ${fmtDate(earliestPaymentDate)} and ${fmtDate(latestPaymentDate)}.`,
+              "red",
+            );
+            formikHelpers.setFieldTouched("paymentDate", true, false);
+            formikHelpers.setFieldError(
+              "paymentDate",
+              `Payment date must be between ${fmtDate(earliestPaymentDate)} and ${fmtDate(latestPaymentDate)}.`,
+            );
+            return;
+          }
+
           const actorEmployeeId = await resolveEmployeeIdForUser({
             userDetails,
             branchId,
@@ -315,7 +396,8 @@ function AddPaymentForm({
             },
           });
 
-          const newPaymentId = paymentResult?.data?.createPayment?.id;
+          const createdPayment = paymentResult?.data?.createPayment || null;
+          const newPaymentId = createdPayment?.id;
 
           await client.graphql({
             query: createMoneyTransaction,
@@ -346,7 +428,11 @@ function AddPaymentForm({
               description: "",
             },
           });
-          onPaymentSaved?.();
+          onPaymentSaved?.({
+            loanId: loan.id,
+            payment: createdPayment,
+            mode: "create",
+          });
         } catch (error) {
           console.error("Failed to record payment:", error);
           showSnackbar("Failed to record payment. Please try again.", "red");
@@ -403,6 +489,9 @@ function AddPaymentForm({
               name="paymentDate"
               required={true}
               editing={true}
+              min={earliestPaymentDate}
+              max={latestPaymentDate}
+              helperText={`Allowed range: ${fmtDate(earliestPaymentDate)} to ${fmtDate(latestPaymentDate)}`}
             />
             <DropDownSearchable
               label="Receiving Employee"
@@ -494,6 +583,10 @@ function PaymentHistoryGrid({
     description: "",
   });
   const [savingRowId, setSavingRowId] = useState(null);
+  const { minDate: earliestPaymentDate, maxDate: latestPaymentDate } = useMemo(
+    () => getPaymentDateBounds(loan),
+    [loan],
+  );
 
   const canEditPayments = useHasPermission("update", "payment");
 
@@ -572,9 +665,23 @@ function PaymentHistoryGrid({
         return;
       }
 
+      if (
+        isDateOutsideBounds(
+          editDraft.paymentDate,
+          earliestPaymentDate,
+          latestPaymentDate,
+        )
+      ) {
+        showSnackbar(
+          `Payment date must be between ${fmtDate(earliestPaymentDate)} and ${fmtDate(latestPaymentDate)}.`,
+          "red",
+        );
+        return;
+      }
+
       setSavingRowId(row.id);
       try {
-        await client.graphql({
+        const result = await client.graphql({
           query: updatePayment,
           variables: {
             input: {
@@ -590,7 +697,11 @@ function PaymentHistoryGrid({
         setEditingRowId(null);
         setEditDraft({ amount: "", paymentDate: "", description: "" });
         await fetchPayments();
-        onPaymentUpdated?.();
+        onPaymentUpdated?.({
+          loanId: loan.id,
+          payment: result?.data?.updatePayment || null,
+          mode: "update",
+        });
       } catch (error) {
         console.error("Failed to update payment:", error);
         showSnackbar("Failed to update payment.", "red");
@@ -598,7 +709,14 @@ function PaymentHistoryGrid({
         setSavingRowId(null);
       }
     },
-    [editDraft, fetchPayments, onPaymentUpdated, showSnackbar],
+    [
+      earliestPaymentDate,
+      editDraft,
+      fetchPayments,
+      latestPaymentDate,
+      onPaymentUpdated,
+      showSnackbar,
+    ],
   );
 
   const columns = useMemo(
@@ -621,6 +739,12 @@ function PaymentHistoryGrid({
                   paymentDate: e.target.value,
                 }))
               }
+              slotProps={{
+                htmlInput: {
+                  min: earliestPaymentDate,
+                  max: latestPaymentDate,
+                },
+              }}
               sx={{
                 width: "100%",
                 "& .MuiOutlinedInput-root": { borderRadius: 0 },
@@ -904,15 +1028,21 @@ export default function ManagePaymentsPopup({
     }
   }, [open, loan?.id]);
 
-  const handlePaymentSaved = useCallback(() => {
-    setRefreshSignal((prev) => prev + 1);
-    setActiveTab(1);
-    onPaymentSuccess?.();
-  }, [onPaymentSuccess]);
+  const handlePaymentSaved = useCallback(
+    (payload) => {
+      setRefreshSignal((prev) => prev + 1);
+      setActiveTab(1);
+      onPaymentSuccess?.(payload);
+    },
+    [onPaymentSuccess],
+  );
 
-  const handlePaymentUpdated = useCallback(() => {
-    onPaymentSuccess?.();
-  }, [onPaymentSuccess]);
+  const handlePaymentUpdated = useCallback(
+    (payload) => {
+      onPaymentSuccess?.(payload);
+    },
+    [onPaymentSuccess],
+  );
 
   if (!loan) return null;
 

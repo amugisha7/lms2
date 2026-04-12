@@ -18,9 +18,9 @@ import LoanStatementPopup from "./LoanStatements/LoanStatementPopup";
 import NotificationBar from "../../ModelAssets/NotificationBar";
 import CustomSlider from "../../ModelAssets/CustomSlider";
 import ClickableText from "../../ModelAssets/ClickableText";
-import { getLoanById } from "./loanHelpers";
 import { UserContext } from "../../App";
 import { buildLoanDisplayName } from "./loanDisplayHelpers";
+import { LoanExplorerContext } from "./LoansDisplay/LoanExplorerContext";
 
 const parseLoanRecord = (loan) => {
   const record = loan?.draftRecord ?? loan?.loanComputationRecord;
@@ -82,64 +82,141 @@ export default function LoanDetailPage() {
   const location = useLocation();
   const theme = useTheme();
 
-  const [loading, setLoading] = React.useState(true);
-  const [loan, setLoan] = React.useState(null);
-  const [initialValues, setInitialValues] = React.useState(null);
+  const { userDetails } = React.useContext(UserContext);
+  const {
+    ensureLoanRecord,
+    getLoanRecord,
+    mergeCachedLoanPatch,
+    applyLoanPaymentMutation,
+  } = React.useContext(LoanExplorerContext);
+  const loan = getLoanRecord(loanId);
+  const [loading, setLoading] = React.useState(() => Boolean(loanId && !loan));
+  const [missingLoan, setMissingLoan] = React.useState(false);
   const [notification, setNotification] = React.useState(null);
   const [tabValue, setTabValue] = React.useState(0);
   const [editSliderOpen, setEditSliderOpen] = React.useState(false);
   const [paymentsPopupOpen, setPaymentsPopupOpen] = React.useState(false);
   const [statementPopupOpen, setStatementPopupOpen] = React.useState(false);
-  const { userDetails } = React.useContext(UserContext);
 
-  const backPath = location.state?.from || "/loans";
+  const branchLoansNavigation = React.useMemo(() => {
+    const branchId =
+      location.state?.selectedBranchId ||
+      location.state?.branchId ||
+      loan?.branchID ||
+      loan?.branch?.id ||
+      null;
 
-  const load = React.useCallback(async () => {
-    if (!loanId) return;
-    setLoading(true);
+    return {
+      pathname: "/loans",
+      state: branchId ? { selectedBranchId: branchId } : null,
+    };
+  }, [loan?.branch?.id, loan?.branchID, location.state]);
 
-    try {
-      const loanRecord = await getLoanById(loanId);
-      if (!loanRecord) {
-        setLoan(null);
-        setInitialValues(null);
+  const navigateToBranchLoans = React.useCallback(() => {
+    if (branchLoansNavigation.state) {
+      navigate(branchLoansNavigation.pathname, {
+        state: branchLoansNavigation.state,
+      });
+      return;
+    }
+
+    navigate(branchLoansNavigation.pathname);
+  }, [branchLoansNavigation, navigate]);
+
+  const handleLoanEditSuccess = React.useCallback(
+    async (updated, { closeSlider = false } = {}) => {
+      if (closeSlider) {
+        setEditSliderOpen(false);
+      }
+
+      try {
+        if (updated) {
+          mergeCachedLoanPatch(loanId, updated);
+        }
+
+        await ensureLoanRecord(loanId, { force: true });
+      } catch (err) {
+        console.error("Failed to refresh edited loan:", err);
+      }
+
+      setNotification({
+        type: "success",
+        message: "Loan updated successfully",
+      });
+    },
+    [ensureLoanRecord, loanId, mergeCachedLoanPatch],
+  );
+
+  React.useEffect(() => {
+    let active = true;
+
+    const loadLoan = async () => {
+      if (!loanId) {
         return;
       }
 
-      const draftRecord = parseLoanRecord(loanRecord);
-      const loanProductName =
-        loanRecord?.loanProduct?.name ||
-        (loanRecord?.loanProductID ? "Unknown" : "N/A");
+      if (loan) {
+        setMissingLoan(false);
+        setLoading(false);
+        return;
+      }
 
-      setLoan(loanRecord);
-      setInitialValues({
-        ...draftRecord,
-        borrowerName: formatBorrowerName(loanRecord.borrower),
-        loanProductName,
-        loanProduct:
-          loanRecord.loanProductID || draftRecord.loanProduct || "N/A",
-        employeeId:
-          draftRecord.employeeId ||
-          loanRecord.createdByEmployeeID ||
-          loanRecord.createdByEmployee?.id ||
-          "",
-      });
-    } catch (err) {
-      console.error("Failed to load loan:", err);
-      setNotification({
-        type: "error",
-        message: err?.message || "Failed to load loan",
-      });
-      setLoan(null);
-      setInitialValues(null);
-    } finally {
-      setLoading(false);
+      setLoading(true);
+
+      try {
+        const loanRecord = await ensureLoanRecord(loanId);
+
+        if (!active) {
+          return;
+        }
+
+        setMissingLoan(!loanRecord);
+      } catch (err) {
+        if (!active) {
+          return;
+        }
+
+        console.error("Failed to load loan:", err);
+        setNotification({
+          type: "error",
+          message: err?.message || "Failed to load loan",
+        });
+        setMissingLoan(true);
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadLoan();
+
+    return () => {
+      active = false;
+    };
+  }, [ensureLoanRecord, loan, loanId]);
+
+  const initialValues = React.useMemo(() => {
+    if (!loan) {
+      return null;
     }
-  }, [loanId]);
 
-  React.useEffect(() => {
-    load();
-  }, [load]);
+    const draftRecord = parseLoanRecord(loan);
+    const loanProductName =
+      loan?.loanProduct?.name || (loan?.loanProductID ? "Unknown" : "N/A");
+
+    return {
+      ...draftRecord,
+      borrowerName: formatBorrowerName(loan.borrower),
+      loanProductName,
+      loanProduct: loan.loanProductID || draftRecord.loanProduct || "N/A",
+      employeeId:
+        draftRecord.employeeId ||
+        loan.createdByEmployeeID ||
+        loan.createdByEmployee?.id ||
+        "",
+    };
+  }, [loan]);
 
   const currencyCode =
     userDetails?.institution?.currencyCode || userDetails?.currencyCode || "";
@@ -157,7 +234,7 @@ export default function LoanDetailPage() {
     );
   }
 
-  if (!loan) {
+  if (!loan || missingLoan) {
     return (
       <Box sx={{ p: 2 }}>
         {notification && (
@@ -169,7 +246,7 @@ export default function LoanDetailPage() {
         <Typography variant="h6">Loan not found</Typography>
         <ClickableText
           sx={{ mt: 2, color: theme.palette.blueText.main }}
-          onClick={() => navigate(backPath)}
+          onClick={navigateToBranchLoans}
         >
           Back to Loans
         </ClickableText>
@@ -199,14 +276,9 @@ export default function LoanDetailPage() {
           <EditLoan
             loanDraft={loan}
             initialValues={initialValues}
-            onEditSuccess={() => {
-              setEditSliderOpen(false);
-              setNotification({
-                type: "success",
-                message: "Loan updated successfully",
-              });
-              load();
-            }}
+            onEditSuccess={(updated) =>
+              handleLoanEditSuccess(updated, { closeSlider: true })
+            }
             isEditMode={true}
             onCancel={() => setEditSliderOpen(false)}
             allowEditingOverride={true}
@@ -221,7 +293,14 @@ export default function LoanDetailPage() {
         open={paymentsPopupOpen}
         onClose={() => setPaymentsPopupOpen(false)}
         loan={loan}
-        onPaymentSuccess={() => load()}
+        onPaymentSuccess={(payload) => {
+          if (payload?.payment) {
+            applyLoanPaymentMutation({
+              loanId: payload.loanId || loanId,
+              payment: payload.payment,
+            });
+          }
+        }}
       />
 
       <LoanStatementPopup
@@ -244,7 +323,7 @@ export default function LoanDetailPage() {
         >
           <Box sx={{ display: "flex", alignItems: "flex-start" }}>
             <IconButton
-              onClick={() => navigate(backPath)}
+              onClick={navigateToBranchLoans}
               sx={{
                 mr: 1,
                 mt: 0.5,
@@ -262,7 +341,7 @@ export default function LoanDetailPage() {
               >
                 <Typography
                   variant="caption"
-                  onClick={() => navigate("/loans")}
+                  onClick={navigateToBranchLoans}
                   sx={{
                     color: theme.palette.blueText.main,
                     cursor: "pointer",
@@ -396,13 +475,7 @@ export default function LoanDetailPage() {
               <EditLoan
                 loanDraft={loan}
                 initialValues={initialValues}
-                onEditSuccess={() => {
-                  setNotification({
-                    type: "success",
-                    message: "Loan updated successfully",
-                  });
-                  load();
-                }}
+                onEditSuccess={handleLoanEditSuccess}
                 isEditMode={false}
                 readOnlyFields={["loanProduct", "borrower"]}
                 allowEditingOverride={false}

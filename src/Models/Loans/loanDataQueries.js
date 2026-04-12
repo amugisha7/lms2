@@ -7,6 +7,8 @@ export const LOAN_STATEMENT_READY_FIELDS = `
   interestRate
   startDate
   maturityDate
+  stopDate
+  extensionPeriod
   duration
   durationInterval
   loanType
@@ -79,6 +81,15 @@ export const LOAN_STATEMENT_READY_FIELDS = `
       amountAllocatedToInterest
       amountAllocatedToFees
       amountAllocatedToPenalty
+    }
+  }
+  events(limit: 100) {
+    items {
+      id
+      eventAt
+      eventType
+      summary
+      payload
     }
   }
 `;

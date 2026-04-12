@@ -100,7 +100,6 @@ export default function StatementLedger({
   visibleColumns = DEFAULT_VISIBLE_COLUMNS,
   currency = "$",
   currencyCode,
-  startIndex = 0,
 }) {
   const theme = useTheme();
 
@@ -135,7 +134,6 @@ export default function StatementLedger({
       >
         <TableHead>
           <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
-            <TableCell sx={{ ...HEADER_CELL, width: "28px" }}>#</TableCell>
             {vc.date && (
               <TableCell sx={{ ...HEADER_CELL, width: "80px" }}>Date</TableCell>
             )}
@@ -203,11 +201,9 @@ export default function StatementLedger({
         </TableHead>
         <TableBody>
           {rows.map((row, idx) => {
-            const rowNum = startIndex + idx + 1;
             if (row.rowType === "disbursement") {
               return (
                 <TableRow key={row.key} sx={{ backgroundColor: "#e8f4e8" }}>
-                  <TableCell sx={CELL_BASE}>{rowNum}</TableCell>
                   {vc.date && (
                     <TableCell sx={CELL_BASE}>{fmtDate(row.date)}</TableCell>
                   )}
@@ -245,16 +241,12 @@ export default function StatementLedger({
                   key={row.key}
                   sx={{ backgroundColor: idx % 2 === 0 ? "#fff" : "#fafafa" }}
                 >
-                  <TableCell sx={CELL_BASE}>{rowNum}</TableCell>
                   {vc.date && (
                     <TableCell sx={CELL_BASE}>{fmtDate(row.date)}</TableCell>
                   )}
                   {vc.description && (
                     <TableCell sx={{ ...CELL_BASE, fontWeight: 500 }}>
                       Installment {row.installmentNumber}
-                      {row.status && row.status !== "DUE"
-                        ? ` (${row.status})`
-                        : ""}
                     </TableCell>
                   )}
                   {vc.scheduledPrincipal && (
@@ -299,7 +291,6 @@ export default function StatementLedger({
             if (row.rowType === "payment") {
               return (
                 <TableRow key={row.key} sx={{ backgroundColor: "#e8f0fe" }}>
-                  <TableCell sx={CELL_BASE}>{rowNum}</TableCell>
                   {vc.date && (
                     <TableCell sx={CELL_BASE}>{fmtDate(row.date)}</TableCell>
                   )}

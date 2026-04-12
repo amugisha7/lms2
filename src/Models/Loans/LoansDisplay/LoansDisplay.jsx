@@ -1,5 +1,4 @@
 import React from "react";
-import { generateClient } from "aws-amplify/api";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import IconButton from "@mui/material/IconButton";
@@ -19,7 +18,6 @@ import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeft";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import { useLocation, useNavigate } from "react-router-dom";
 import { UserContext } from "../../../App";
-import { listBranches } from "../../../graphql/queries";
 import AdminBranchScopeSelector from "../../../ModelAssets/AdminBranchScopeSelector";
 import WorkingOverlay from "../../../ModelAssets/WorkingOverlay";
 import CustomDataGrid from "../../../ModelAssets/CustomDataGrid";
@@ -33,8 +31,7 @@ import LoanInfoPopup from "./LoanInfoPopup";
 import ManagePaymentsPopup from "../../Payments/ManagePaymentsPopup";
 import LoanStatementPopup from "../LoanStatements/LoanStatementPopup";
 import { buildLoanDisplayName } from "../loanDisplayHelpers";
-import { buildStatementLedger } from "../LoanStatements/statementHelpers";
-import { BRANCH_LOANS_STATEMENT_READY_QUERY } from "../loanDataQueries";
+import { LoanExplorerContext } from "./LoanExplorerContext";
 
 const LOANS_PAGE_SIZE = 25;
 
@@ -95,29 +92,6 @@ const computeTotalPaid = (payments) => {
       return st !== "REVERSED" && st !== "VOIDED" && st !== "FAILED";
     })
     .reduce((sum, p) => sum + normalizeMoneyValue(p?.amount), 0);
-};
-
-const attachDerivedLoanData = (loan) => {
-  const normalizedLoan = {
-    ...loan,
-    payments: {
-      ...(loan?.payments || {}),
-      items: (loan?.payments?.items || []).filter(Boolean),
-    },
-    penalties: {
-      ...(loan?.penalties || {}),
-      items: (loan?.penalties?.items || []).filter(Boolean),
-    },
-  };
-  const derivedStatement = buildStatementLedger(normalizedLoan);
-
-  return {
-    ...normalizedLoan,
-    derivedStatement,
-    totalPaidComputed: derivedStatement?.totals?.totalPaymentsApplied || 0,
-    amountDueComputed: derivedStatement?.totals?.totalRemaining || 0,
-    loanBalanceComputed: derivedStatement?.totals?.remainingPrincipal || 0,
-  };
 };
 
 const getBalance = (loan) => {
@@ -444,31 +418,31 @@ const parseLoanRecord = (loan) => {
 //  Main LoansDisplay Component
 //
 export default function LoansDisplay() {
-  const [loans, setLoans] = React.useState([]);
-  const [loading, setLoading] = React.useState(true);
-  const [loadingMore, setLoadingMore] = React.useState(false);
-  const [hasMoreLoans, setHasMoreLoans] = React.useState(false);
-  const [workingOverlayOpen, setWorkingOverlayOpen] = React.useState(false);
-  const [workingOverlayMessage, setWorkingOverlayMessage] =
-    React.useState("Working...");
   const [searchTerm, setSearchTerm] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState("all");
-  const [branches, setBranches] = React.useState([]);
   const [selectedBranchId, setSelectedBranchId] = React.useState("");
   const [paymentPopupOpen, setPaymentPopupOpen] = React.useState(false);
-  const [paymentLoanRow, setPaymentLoanRow] = React.useState(null);
+  const [paymentLoanId, setPaymentLoanId] = React.useState(null);
   const [statementPopupOpen, setStatementPopupOpen] = React.useState(false);
-  const [statementLoanRow, setStatementLoanRow] = React.useState(null);
-  const hasFetchedRef = React.useRef();
-  const pagingStateRef = React.useRef({
-    branchIds: [],
-    branchIndex: 0,
-    nextTokens: {},
-  });
+  const [statementLoanId, setStatementLoanId] = React.useState(null);
   const gridDragContainerRef = React.useRef(null);
   const topScrollRef = React.useRef(null);
   const topScrollInnerRef = React.useRef(null);
   const { userDetails } = React.useContext(UserContext);
+  const {
+    branches,
+    loadBranches,
+    loanDisplayRows: loans,
+    loanDisplayLoading: loading,
+    loanDisplayLoadingMore: loadingMore,
+    loanDisplayHasMore: hasMoreLoans,
+    workingOverlayOpen,
+    workingOverlayMessage,
+    loadLoanDisplayPage,
+    refreshLoanDisplayPage,
+    getLoanRecord,
+    applyLoanPaymentMutation,
+  } = React.useContext(LoanExplorerContext);
   const { showSnackbar } = useSnackbar();
   const { showNotification } = useNotification();
   const theme = useTheme();
@@ -481,9 +455,10 @@ export default function LoansDisplay() {
   const normalizedUserType = (userDetails?.userType || "").toLowerCase();
   const isAdminUser = normalizedUserType === "admin";
   const shouldShowLoansView = !isAdminUser || Boolean(selectedBranchId);
-  const activeBranchId = userDetails?.branchUsersId || userDetails?.branch?.id;
-  const activeInstitutionId =
-    userDetails?.institution?.id || userDetails?.institutionUsersId;
+  const paymentLoanRow = paymentLoanId ? getLoanRecord(paymentLoanId) : null;
+  const statementLoanRow = statementLoanId
+    ? getLoanRecord(statementLoanId)
+    : null;
   const MoneyText = React.useCallback(
     ({ value, numberSx = {}, prefixSx = {} }) => (
       <CurrencyText
@@ -534,6 +509,38 @@ export default function LoansDisplay() {
       state: Object.keys(nextState).length > 0 ? nextState : null,
     });
   }, [location.pathname, location.state, navigate, showNotification]);
+
+  React.useEffect(() => {
+    if (!isAdminUser) {
+      return;
+    }
+
+    const routeBranchId =
+      location.state?.selectedBranchId || location.state?.branchId || "";
+
+    if (!routeBranchId) {
+      return;
+    }
+
+    if (routeBranchId !== selectedBranchId) {
+      setSelectedBranchId(routeBranchId);
+    }
+
+    const nextState = { ...(location.state || {}) };
+    delete nextState.selectedBranchId;
+    delete nextState.branchId;
+
+    navigate(location.pathname, {
+      replace: true,
+      state: Object.keys(nextState).length > 0 ? nextState : null,
+    });
+  }, [
+    isAdminUser,
+    location.pathname,
+    location.state,
+    navigate,
+    selectedBranchId,
+  ]);
 
   React.useEffect(() => {
     const el = gridDragContainerRef.current;
@@ -626,7 +633,7 @@ export default function LoansDisplay() {
 
   const openStatementPopup = React.useCallback((loan) => {
     if (!loan?.id) return;
-    setStatementLoanRow(loan);
+    setStatementLoanId(loan.id);
     setStatementPopupOpen(true);
   }, []);
 
@@ -720,7 +727,14 @@ export default function LoansDisplay() {
                 onNavigate={() =>
                   loan.id &&
                   navigate(`/loans/id/${loan.id}/view`, {
-                    state: { from: "/loans" },
+                    state: {
+                      from: "/loans",
+                      selectedBranchId:
+                        selectedBranchId ||
+                        loan.branchID ||
+                        loan.branch?.id ||
+                        "",
+                    },
                   })
                 }
                 onBorrowerClick={() =>
@@ -734,7 +748,7 @@ export default function LoansDisplay() {
                 }
                 onPaymentsClick={() => {
                   if (loan.id) {
-                    setPaymentLoanRow(loan);
+                    setPaymentLoanId(loan.id);
                     setPaymentPopupOpen(true);
                   }
                 }}
@@ -1019,7 +1033,7 @@ export default function LoansDisplay() {
                   showSnackbar("Loan details unavailable.", "red");
                   return;
                 }
-                setPaymentLoanRow(params.row);
+                setPaymentLoanId(params.row.id);
                 setPaymentPopupOpen(true);
               }}
             >
@@ -1182,177 +1196,29 @@ export default function LoansDisplay() {
     return counts;
   }, [loans]);
 
-  //  Fetch loans
-  const loadLoansPage = React.useCallback(
-    async ({ reset = false } = {}) => {
-      const effectiveBranchId = isAdminUser ? selectedBranchId : activeBranchId;
-
-      if (!effectiveBranchId) {
-        pagingStateRef.current = {
-          branchIds: [],
-          branchIndex: 0,
-          nextTokens: {},
-        };
-        setLoans([]);
-        setLoading(false);
-        setLoadingMore(false);
-        setHasMoreLoans(false);
-        return;
-      }
-
-      if (reset) {
-        setLoading(true);
-        setWorkingOverlayOpen(true);
-        setWorkingOverlayMessage("Loading Loans...");
-      } else {
-        setLoadingMore(true);
-      }
-
-      try {
-        const client = generateClient();
-        let branchIds = pagingStateRef.current.branchIds;
-        let branchIndex = pagingStateRef.current.branchIndex;
-        let nextTokens = { ...(pagingStateRef.current.nextTokens || {}) };
-
-        if (reset) {
-          branchIds = [effectiveBranchId];
-
-          branchIndex = 0;
-          nextTokens = {};
-        }
-
-        const collected = [];
-
-        while (
-          collected.length < LOANS_PAGE_SIZE &&
-          branchIndex < branchIds.length
-        ) {
-          const currentBranchId = branchIds[branchIndex];
-          const result = await client.graphql({
-            query: BRANCH_LOANS_STATEMENT_READY_QUERY,
-            variables: {
-              branchID: currentBranchId,
-              sortDirection: "DESC",
-              limit: LOANS_PAGE_SIZE - collected.length,
-              nextToken: nextTokens[currentBranchId] || null,
-            },
-          });
-
-          const listResult = result?.data?.loansByBranchIDAndStartDate || {};
-          const batch = Array.isArray(listResult.items)
-            ? listResult.items.filter(Boolean)
-            : [];
-
-          collected.push(...batch);
-
-          if (listResult.nextToken) {
-            nextTokens[currentBranchId] = listResult.nextToken;
-          } else {
-            delete nextTokens[currentBranchId];
-            branchIndex += 1;
-          }
-        }
-
-        const processed = Array.from(
-          new Map(
-            collected.map((loan) => [loan.id, attachDerivedLoanData(loan)]),
-          ).values(),
-        ).filter((loan) => {
-          const st = (loan.status || "").toLowerCase();
-          return (
-            !st.includes("draft") &&
-            !st.includes("review") &&
-            !st.includes("rejected")
-          );
-        });
-
-        setLoans((prev) => {
-          const merged = reset ? processed : [...prev, ...processed];
-          return Array.from(
-            new Map(merged.map((loan) => [loan.id, loan])).values(),
-          );
-        });
-
-        const hasMore =
-          branchIndex < branchIds.length || Object.keys(nextTokens).length > 0;
-
-        pagingStateRef.current = {
-          branchIds,
-          branchIndex,
-          nextTokens,
-        };
-        setHasMoreLoans(hasMore);
-      } catch (err) {
-        console.error("LoansDisplay - Error fetching loans:", err);
-        if (reset) setLoans([]);
-        setHasMoreLoans(false);
-      } finally {
-        setLoading(false);
-        setLoadingMore(false);
-        setWorkingOverlayOpen(false);
-      }
-    },
-    [activeBranchId, isAdminUser, selectedBranchId],
-  );
-
   React.useEffect(() => {
     if (!userDetails) return;
-    const fetchKey = isAdminUser ? selectedBranchId : activeBranchId;
-    if (fetchKey && fetchKey !== hasFetchedRef.current) {
-      loadLoansPage({ reset: true });
-      hasFetchedRef.current = fetchKey;
-    } else if (isAdminUser && !selectedBranchId) {
-      setLoans([]);
-      setLoading(false);
-      setHasMoreLoans(false);
-      hasFetchedRef.current = null;
-    }
-  }, [
-    activeBranchId,
-    loadLoansPage,
-    isAdminUser,
-    selectedBranchId,
-    userDetails,
-  ]);
 
-  // Fetch branches list for admin branch filter UI
-  React.useEffect(() => {
-    const fetchBranchesForAdmin = async () => {
-      const isAdmin = isAdminUser;
-      const institutionId = activeInstitutionId;
-      console.log(
-        "[LoansDisplay] userType:",
-        userDetails?.userType,
-        "isAdmin:",
-        isAdmin,
-        "institutionId:",
-        institutionId,
-      );
-      if (!isAdmin || !institutionId) {
-        setBranches([]);
-        setSelectedBranchId("");
-        return;
-      }
-      try {
-        const client = generateClient();
-        const branchData = await client.graphql({
-          query: listBranches,
-          variables: {
-            limit: 1000,
-            filter: { institutionBranchesId: { eq: institutionId } },
-          },
+    if (isAdminUser) {
+      if (selectedBranchId) {
+        loadLoanDisplayPage({
+          reset: true,
+          branchIdOverride: selectedBranchId,
         });
-        const items = branchData?.data?.listBranches?.items || [];
-        console.log("[LoansDisplay] branches fetched:", items.length, items);
-        setBranches(items);
-        setSelectedBranchId("");
-      } catch (err) {
-        console.error("LoansDisplay - Error fetching branches:", err);
-        setBranches([]);
       }
-    };
-    if (userDetails) fetchBranchesForAdmin();
-  }, [activeInstitutionId, isAdminUser]);
+      return;
+    }
+
+    loadLoanDisplayPage({ reset: true });
+  }, [isAdminUser, loadLoanDisplayPage, selectedBranchId, userDetails]);
+
+  React.useEffect(() => {
+    if (!userDetails || !isAdminUser) {
+      return;
+    }
+
+    loadBranches();
+  }, [isAdminUser, loadBranches, userDetails]);
 
   return (
     <>
@@ -1403,8 +1269,9 @@ export default function LoansDisplay() {
           <Tooltip title="Refresh data" placement="top">
             <IconButton
               onClick={() => {
-                hasFetchedRef.current = null;
-                loadLoansPage({ reset: true });
+                refreshLoanDisplayPage({
+                  branchIdOverride: isAdminUser ? selectedBranchId : undefined,
+                });
               }}
               disabled={loading || loadingMore}
               sx={{
@@ -1700,7 +1567,13 @@ export default function LoansDisplay() {
             <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
               <Button
                 variant="outlined"
-                onClick={() => loadLoansPage()}
+                onClick={() =>
+                  loadLoanDisplayPage({
+                    branchIdOverride: isAdminUser
+                      ? selectedBranchId
+                      : undefined,
+                  })
+                }
                 disabled={loading || loadingMore}
                 sx={{ borderRadius: 0 }}
               >
@@ -1718,12 +1591,16 @@ export default function LoansDisplay() {
           open={paymentPopupOpen}
           onClose={() => {
             setPaymentPopupOpen(false);
-            setPaymentLoanRow(null);
+            setPaymentLoanId(null);
           }}
           loan={paymentLoanRow}
-          onPaymentSuccess={() => {
-            hasFetchedRef.current = null;
-            loadLoansPage({ reset: true });
+          onPaymentSuccess={(payload) => {
+            if (payload?.payment) {
+              applyLoanPaymentMutation({
+                loanId: payload.loanId || paymentLoanId,
+                payment: payload.payment,
+              });
+            }
           }}
         />
       )}
@@ -1732,7 +1609,7 @@ export default function LoansDisplay() {
         open={statementPopupOpen}
         onClose={() => {
           setStatementPopupOpen(false);
-          setStatementLoanRow(null);
+          setStatementLoanId(null);
         }}
         loan={statementLoanRow}
       />

@@ -559,6 +559,7 @@ type Loan @model {
   branch: Branch @belongsTo(fields: ["branchID"])
   payments: [Payment] @hasMany(indexName: "byLoan", fields: ["id"])
   events: [LoanEvent] @hasMany(indexName: "byLoan", fields: ["id"])
+  comments: [LoanComment] @hasMany(indexName: "byLoan", fields: ["id"])
   loanFees: [LoanFees] @hasMany
   penalties: [Penalty] @hasMany
   applications: [Application] @manyToMany(relationName: "LoanApplication")
@@ -586,6 +587,19 @@ type Loan @model {
     @hasMany(indexName: "byRelatedLoanID", fields: ["id"])
 
   customLoanDetails: AWSJSON
+}
+
+type LoanComment @model {
+  id: ID!
+  loanID: ID! @index(name: "byLoan", sortKeyFields: ["commentAt"])
+  loan: Loan @belongsTo(fields: ["loanID"])
+  commentAt: AWSDateTime!
+  body: String!
+  attachments: AWSJSON
+  createdByEmployeeID: ID
+  createdByEmployee: Employee @belongsTo(fields: ["createdByEmployeeID"])
+
+  customLoanCommentDetails: AWSJSON
 }
 
 type LoanEvent @model {

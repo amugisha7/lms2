@@ -18,9 +18,7 @@ const buildDescription = (row) => {
   }
 
   if (row.rowType === "installment") {
-    return `Installment ${row.installmentNumber}${
-      row.status && row.status !== "DUE" ? ` (${row.status})` : ""
-    }`;
+    return `Installment ${row.installmentNumber}`;
   }
 
   if (row.rowType === "penalty") {

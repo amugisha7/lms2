@@ -12,6 +12,7 @@ import ErrorLoadingWorkspace from "./Resources/ErrorLoadingWorkspace";
 import NoInternet from "./Resources/NoInternet";
 import { ColorModeContext, useMode } from "./theme";
 import { ThemeProvider } from "@mui/material";
+import { LoanExplorerProvider } from "./Models/Loans/LoansDisplay/LoanExplorerContext";
 import {
   LIST_NOTIFICATIONS_QUERY,
   SUBSCRIBE_TO_NEW_NOTIFICATIONS,
@@ -343,19 +344,21 @@ function App({ signOut, user }) {
           {!checking && (
             <SnackbarProvider>
               <NotificationProvider>
-                {error ? (
-                  <ErrorLoadingWorkspace onSignOut={signOut} />
-                ) : (
-                  <>
-                    {!online && <NoInternet />}
-                    <div style={{ display: online ? "block" : "none" }}>
-                      <AppRoutes
-                        userExists={userExists}
-                        userStatus={userDetails?.status}
-                      />
-                    </div>
-                  </>
-                )}
+                <LoanExplorerProvider userDetails={userDetails}>
+                  {error ? (
+                    <ErrorLoadingWorkspace onSignOut={signOut} />
+                  ) : (
+                    <>
+                      {!online && <NoInternet />}
+                      <div style={{ display: online ? "block" : "none" }}>
+                        <AppRoutes
+                          userExists={userExists}
+                          userStatus={userDetails?.status}
+                        />
+                      </div>
+                    </>
+                  )}
+                </LoanExplorerProvider>
               </NotificationProvider>
             </SnackbarProvider>
           )}

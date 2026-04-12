@@ -34,7 +34,7 @@ import ManagePaymentsPopup from "../../Payments/ManagePaymentsPopup";
 import LoanStatementPopup from "../LoanStatements/LoanStatementPopup";
 import { buildLoanDisplayName } from "../loanDisplayHelpers";
 import { buildStatementLedger } from "../LoanStatements/statementHelpers";
-import { LIST_LOANS_STATEMENT_READY_QUERY } from "../loanDataQueries";
+import { BRANCH_LOANS_STATEMENT_READY_QUERY } from "../loanDataQueries";
 
 const LOANS_PAGE_SIZE = 25;
 
@@ -1229,15 +1229,16 @@ export default function LoansDisplay() {
         ) {
           const currentBranchId = branchIds[branchIndex];
           const result = await client.graphql({
-            query: LIST_LOANS_STATEMENT_READY_QUERY,
+            query: BRANCH_LOANS_STATEMENT_READY_QUERY,
             variables: {
+              branchID: currentBranchId,
+              sortDirection: "DESC",
               limit: LOANS_PAGE_SIZE - collected.length,
               nextToken: nextTokens[currentBranchId] || null,
-              filter: { branchID: { eq: currentBranchId } },
             },
           });
 
-          const listResult = result?.data?.listLoans || {};
+          const listResult = result?.data?.loansByBranchIDAndStartDate || {};
           const batch = Array.isArray(listResult.items)
             ? listResult.items.filter(Boolean)
             : [];

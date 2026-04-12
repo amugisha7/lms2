@@ -644,14 +644,19 @@ const GET_LOAN_QUERY = `
   }
 `;
 
-// Simpler query for listing loans by branch without requiring startDate key condition
-const LIST_LOANS_BY_BRANCH_QUERY = `
-  query ListLoans(
+const LOANS_BY_BRANCH_QUERY = `
+  query LoansByBranchIDAndStartDate(
+    $branchID: ID!
+    $startDate: ModelStringKeyConditionInput
+    $sortDirection: ModelSortDirection
     $filter: ModelLoanFilterInput
     $limit: Int
     $nextToken: String
   ) {
-    listLoans(
+    loansByBranchIDAndStartDate(
+      branchID: $branchID
+      startDate: $startDate
+      sortDirection: $sortDirection
       filter: $filter
       limit: $limit
       nextToken: $nextToken
@@ -792,21 +797,19 @@ export const listLoanDraftsByBranch = async ({
   let nextToken = null;
   const items = [];
 
-  // Use simpler listLoans query that filters by branchID directly
-  // This avoids requiring startDate as part of the key condition
   do {
     const result = await client.graphql({
-      query: LIST_LOANS_BY_BRANCH_QUERY,
+      query: LOANS_BY_BRANCH_QUERY,
       variables: {
-        filter: {
-          branchID: { eq: branchID },
-        },
+        branchID,
+        sortDirection: "DESC",
+        ...(status ? { filter: { status: { eq: status } } } : {}),
         limit,
         nextToken,
       },
     });
 
-    const batch = result?.data?.listLoans?.items || [];
+    const batch = result?.data?.loansByBranchIDAndStartDate?.items || [];
     // Transform to draft-like structure
     const transformed = batch.map((loan) => {
       const computationRecord = parseAwsJson(loan?.loanComputationRecord) || {};
@@ -820,7 +823,7 @@ export const listLoanDraftsByBranch = async ({
       };
     });
     items.push(...transformed);
-    nextToken = result?.data?.listLoans?.nextToken || null;
+    nextToken = result?.data?.loansByBranchIDAndStartDate?.nextToken || null;
   } while (nextToken);
 
   return items;

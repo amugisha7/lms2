@@ -1,4 +1,47 @@
 // GraphQL queries for Borrowers
+export const GET_BRANCH_BORROWERS_QUERY = `
+  query GetBranchBorrowers($id: ID!, $limit: Int, $nextToken: String) {
+    getBranch(id: $id) {
+      id
+      borrowers(limit: $limit, nextToken: $nextToken) {
+        items {
+          id
+          firstname
+          othername
+          businessName
+          typeOfBusiness
+          uniqueIdNumber
+          phoneNumber
+          otherPhoneNumber
+          email
+          gender
+          dateOfBirth
+          nationality
+          address
+          city
+          state
+          title
+          zipcode
+          employmentStatus
+          employerName
+          creditScore
+          customFieldsData
+          status
+          branchBorrowersId
+          branch {
+            id
+            name
+            institutionBranchesId
+          }
+          createdAt
+          updatedAt
+        }
+        nextToken
+      }
+    }
+  }
+`;
+
 export const LIST_BORROWERS_QUERY = `
   query ListBorrowers($filter: ModelBorrowerFilterInput, $limit: Int, $nextToken: String) {
     listBorrowers(

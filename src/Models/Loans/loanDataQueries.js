@@ -105,3 +105,28 @@ export const LIST_LOANS_STATEMENT_READY_QUERY = `
     }
   }
 `;
+
+export const BRANCH_LOANS_STATEMENT_READY_QUERY = `
+  query BranchLoansStatementReady(
+    $branchID: ID!
+    $startDate: ModelStringKeyConditionInput
+    $sortDirection: ModelSortDirection
+    $filter: ModelLoanFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    loansByBranchIDAndStartDate(
+      branchID: $branchID
+      startDate: $startDate
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        ${LOAN_STATEMENT_READY_FIELDS}
+      }
+      nextToken
+    }
+  }
+`;

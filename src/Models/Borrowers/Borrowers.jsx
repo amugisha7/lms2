@@ -27,6 +27,7 @@ import {
 
 // GraphQL queries
 import {
+  GET_BRANCH_BORROWERS_QUERY,
   LIST_BORROWERS_QUERY,
   CREATE_BORROWER_MUTATION,
   UPDATE_BORROWER_MUTATION,
@@ -96,33 +97,22 @@ export default function Borrowers() {
       let allBorrowers = [];
       let nextToken = null;
 
-      const variables = {
-        limit: 100,
-        ...(nextToken && { nextToken }),
-        filter: {
-          branchBorrowersId: { eq: effectiveBranchId },
-        },
-      };
-
       do {
         console.log("API Call: Fetching borrowers"); // <-- Added
         const result = await client.graphql({
-          query: LIST_BORROWERS_QUERY,
+          query: GET_BRANCH_BORROWERS_QUERY,
           variables: {
-            ...variables,
+            id: effectiveBranchId,
+            limit: 100,
             ...(nextToken && { nextToken }),
           },
         });
 
-        const batch = result?.data?.listBorrowers?.items || [];
+        const batch = result?.data?.getBranch?.borrowers?.items || [];
         allBorrowers.push(...batch);
-        nextToken = result?.data?.listBorrowers?.nextToken;
+        nextToken = result?.data?.getBranch?.borrowers?.nextToken;
       } while (nextToken);
 
-      // Process borrowers
-      // Admin View: Filter by Institution
-      // Since we don't have a direct query for "Borrowers by Institution", we are fetching all (or scanned)
-      // and filtering client-side. We updated the query to include branch info.
       let processed = allBorrowers.map((borrower) => ({
         ...borrower,
         displayName: getBorrowerDisplayName(borrower),

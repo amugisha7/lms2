@@ -1,5 +1,6 @@
 - Create loans form. Also create from loan product.
   - Resume:
+    - Move branch gating to the top level of the app.
     - Work on Loan Statements.
     - Implement loan status
     - Check validity of loan statements.
@@ -17,3 +18,4 @@
 
 - Finish the loan module then return to the begining via the Loan Progress gdoc
 - Upon login, redirect to tutorials with option of go to platform.
+- Identify which functionality is core for admin to view all branches.

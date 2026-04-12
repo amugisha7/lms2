@@ -31,6 +31,7 @@ import LoanInfoPopup from "./LoanInfoPopup";
 import ManagePaymentsPopup from "../../Payments/ManagePaymentsPopup";
 import LoanStatementPopup from "../LoanStatements/LoanStatementPopup";
 import { buildLoanDisplayName } from "../loanDisplayHelpers";
+import { LOAN_DISPLAY_STATUS } from "../loanSummaryProjection";
 import { LoanExplorerContext } from "./LoanExplorerContext";
 
 const LOANS_PAGE_SIZE = 25;
@@ -152,20 +153,94 @@ const formatDurationFull = (duration, durationInterval) => {
   return plural("Month", n);
 };
 
+const DISPLAY_STATUS_BY_CODE = Object.values(LOAN_DISPLAY_STATUS).reduce(
+  (accumulator, meta) => {
+    accumulator[meta.code] = meta;
+    return accumulator;
+  },
+  {},
+);
+
+const normalizeStatusCode = (value) =>
+  String(value || "")
+    .trim()
+    .toUpperCase()
+    .replace(/\s+/g, "_");
+
+const getLoanStatusMeta = (loan) => {
+  const computedCode = normalizeStatusCode(loan?.uiStatusCode);
+  if (DISPLAY_STATUS_BY_CODE[computedCode]) {
+    return DISPLAY_STATUS_BY_CODE[computedCode];
+  }
+
+  const rawStatus = normalizeStatusCode(loan?.status);
+  if (rawStatus === "WRITTEN_OFF") return LOAN_DISPLAY_STATUS.WRITTEN_OFF;
+  if (rawStatus === "VOIDED") return LOAN_DISPLAY_STATUS.VOIDED;
+  if (["CLOSED", "CLEARED", "PAID"].includes(rawStatus)) {
+    return LOAN_DISPLAY_STATUS.CLOSED;
+  }
+  if (["PAYMENT_DUE", "PAST_DUE"].includes(rawStatus)) {
+    return LOAN_DISPLAY_STATUS.MISSED_PAYMENT;
+  }
+  if (rawStatus === "OVERDUE") {
+    return LOAN_DISPLAY_STATUS.OVERDUE;
+  }
+  if (["ACTIVE", "CURRENT"].includes(rawStatus)) {
+    return LOAN_DISPLAY_STATUS.CURRENT;
+  }
+
+  return {
+    code: rawStatus || "UNKNOWN",
+    label: loan?.uiStatusLabel || loan?.status || "N/A",
+    filterKey: "all",
+    rank: 999,
+  };
+};
+
 //  Status pill color mapping
-const getStatusColor = (status, sf) => {
-  const s = (status || "").toUpperCase();
-  if (["ACTIVE", "CURRENT"].includes(s))
-    return { bg: sf.sf_pillSuccessBg, text: sf.sf_pillSuccessText };
-  if (["PAYMENT_DUE", "PAST_DUE", "OVERDUE"].includes(s))
-    return { bg: sf.sf_pillErrorBg, text: sf.sf_pillErrorText };
-  if (["CLOSED", "CLEARED", "PAID"].includes(s))
-    return { bg: sf.sf_pillInfoBg, text: sf.sf_pillInfoText };
-  if (s === "WRITTEN_OFF")
-    return { bg: sf.sf_pillWarningBg, text: sf.sf_pillWarningText };
-  if (s === "VOIDED")
-    return { bg: sf.sf_pillNeutralBg, text: sf.sf_pillNeutralText };
-  return { bg: sf.sf_pillNeutralBg, text: sf.sf_pillNeutralText };
+const getStatusColor = (statusMeta, sf) => {
+  const statusKey = statusMeta?.filterKey;
+  if (statusKey === "current")
+    return {
+      bg: sf.sf_pillSuccessBg,
+      text: sf.sf_pillSuccessText,
+      accent: sf.sf_success,
+    };
+  if (statusKey === "missed_payment")
+    return {
+      bg: sf.sf_pillWarningBg,
+      text: sf.sf_pillWarningText,
+      accent: sf.sf_warning,
+    };
+  if (statusKey === "overdue")
+    return {
+      bg: sf.sf_pillErrorBg,
+      text: sf.sf_pillErrorText,
+      accent: sf.sf_error,
+    };
+  if (statusKey === "closed")
+    return {
+      bg: sf.sf_pillInfoBg,
+      text: sf.sf_pillInfoText,
+      accent: sf.sf_info,
+    };
+  if (statusKey === "written_off")
+    return {
+      bg: sf.sf_pillWarningBg,
+      text: sf.sf_pillWarningText,
+      accent: sf.sf_warning,
+    };
+  if (statusKey === "voided")
+    return {
+      bg: sf.sf_pillNeutralBg,
+      text: sf.sf_pillNeutralText,
+      accent: sf.sf_textTertiary,
+    };
+  return {
+    bg: sf.sf_pillNeutralBg,
+    text: sf.sf_pillNeutralText,
+    accent: sf.sf_textLink,
+  };
 };
 
 //  Days until a date (negative = past due)
@@ -198,14 +273,12 @@ const computeMaturityDate = (loan) => {
 //  Status filter tabs config
 const STATUS_TABS = [
   { key: "all", label: "All" },
-  { key: "active", label: "Active", match: ["ACTIVE", "CURRENT"] },
-  {
-    key: "overdue",
-    label: "Overdue",
-    match: ["PAYMENT_DUE", "PAST_DUE", "OVERDUE"],
-  },
-  { key: "closed", label: "Closed", match: ["CLOSED", "CLEARED", "PAID"] },
-  { key: "written_off", label: "Written Off", match: ["WRITTEN_OFF"] },
+  { key: "current", label: "Current" },
+  { key: "missed_payment", label: "Missed Payment" },
+  { key: "overdue", label: "Overdue" },
+  { key: "closed", label: "Closed" },
+  { key: "written_off", label: "Written Off" },
+  { key: "voided", label: "Voided" },
 ];
 
 const STACKED_CELL_SX = {
@@ -650,7 +723,8 @@ export default function LoansDisplay() {
         renderCell: (params) => {
           const loan = params.row;
           const loanName = buildLoanDisplayName(loan, currency);
-          const statusColors = getStatusColor(loan.status, sf);
+          const statusMeta = getLoanStatusMeta(loan);
+          const statusColors = getStatusColor(statusMeta, sf);
           const borrower = loan.borrower || {};
           const officer = loan.createdByEmployee || {};
           const loanId = loan.loanNumber || loan.id || "\u2014";
@@ -708,7 +782,7 @@ export default function LoansDisplay() {
                 loanIdDisplay={loanIdDisplay}
                 borrowerName={borrowerName}
                 principal={loan.principal}
-                status={loan.status || "N/A"}
+                status={statusMeta.label}
                 startDateDisplay={fmtDate(loan.startDate)}
                 maturityDateDisplay={fmtDate(maturityDate)}
                 durationDisplay={durationDisplay}
@@ -859,6 +933,7 @@ export default function LoansDisplay() {
           const loan = params.row;
           const maturityDate = computeMaturityDate(loan);
           const daysLeft = daysUntil(maturityDate);
+          const daysLeftIsOverdue = daysLeft != null && daysLeft < 0;
           return (
             <Box sx={STACKED_CELL_SX}>
               <Typography
@@ -887,7 +962,7 @@ export default function LoansDisplay() {
                     mt: 0.4,
 
                     ml: 0.4,
-                    color: sf.sf_textTertiary,
+                    color: daysLeftIsOverdue ? sf.sf_error : sf.sf_textTertiary,
                   }}
                 >
                   {daysLeft ?? "N/A"}
@@ -980,8 +1055,8 @@ export default function LoansDisplay() {
         type: "number",
         valueGetter: (value, row) => getBalance(row),
         renderCell: (params) => {
-          const status = params.row.status || "N/A";
-          const statusColors = getStatusColor(status, sf);
+          const statusMeta = getLoanStatusMeta(params.row);
+          const statusColors = getStatusColor(statusMeta, sf);
           const balance = params.value;
           return (
             <Box sx={STACKED_CELL_SX}>
@@ -992,18 +1067,24 @@ export default function LoansDisplay() {
                 )}
               />
               <Chip
-                label={status}
+                label={statusMeta.label}
                 size="small"
                 sx={{
                   alignSelf: "flex-start",
                   mt: 0.3,
                   height: 18,
-                  fontSize: "0.62rem",
+                  fontSize: "0.56rem",
                   fontWeight: 700,
                   bgcolor: statusColors.bg,
                   color: statusColors.text,
                   borderRadius: 0,
-                  "& .MuiChip-label": { px: 0.7 },
+                  "& .MuiChip-label": {
+                    px: 0.7,
+                    py: 0.2,
+                    whiteSpace: "pre-line",
+                    textAlign: "center",
+                    lineHeight: 1.1,
+                  },
                 }}
               />
             </Box>
@@ -1127,12 +1208,9 @@ export default function LoansDisplay() {
 
     // Status filter
     if (statusFilter !== "all") {
-      const tab = STATUS_TABS.find((t) => t.key === statusFilter);
-      if (tab?.match) {
-        result = result.filter((loan) =>
-          tab.match.includes((loan.status || "").toUpperCase()),
-        );
-      }
+      result = result.filter(
+        (loan) => getLoanStatusMeta(loan).filterKey === statusFilter,
+      );
     }
 
     // Search filter
@@ -1147,6 +1225,7 @@ export default function LoansDisplay() {
           loan.loanNumber,
           loan.id,
           loan.status,
+          loan.uiStatusLabel,
           loan.loanProduct?.name,
           loan.createdByEmployee?.firstName,
           loan.createdByEmployee?.lastName,
@@ -1164,19 +1243,21 @@ export default function LoansDisplay() {
 
   //  KPI computations
   const kpis = React.useMemo(() => {
-    const active = loans.filter((l) =>
-      ["ACTIVE", "CURRENT"].includes((l.status || "").toUpperCase()),
+    const current = loans.filter(
+      (loan) => getLoanStatusMeta(loan).filterKey === "current",
     );
-    const overdue = loans.filter((l) =>
-      ["PAYMENT_DUE", "PAST_DUE", "OVERDUE"].includes(
-        (l.status || "").toUpperCase(),
-      ),
+    const missedPayment = loans.filter(
+      (loan) => getLoanStatusMeta(loan).filterKey === "missed_payment",
+    );
+    const overdue = loans.filter(
+      (loan) => getLoanStatusMeta(loan).filterKey === "overdue",
     );
     const totalPrincipal = loans.reduce((s, l) => s + (l.principal || 0), 0);
     const totalOutstanding = loans.reduce((s, l) => s + getBalance(l), 0);
     return {
       total: loans.length,
-      active: active.length,
+      current: current.length,
+      missedPayment: missedPayment.length,
       overdue: overdue.length,
       totalPrincipal,
       totalOutstanding,
@@ -1188,8 +1269,8 @@ export default function LoansDisplay() {
     const counts = { all: loans.length };
     STATUS_TABS.forEach((tab) => {
       if (tab.key !== "all") {
-        counts[tab.key] = loans.filter((l) =>
-          tab.match.includes((l.status || "").toUpperCase()),
+        counts[tab.key] = loans.filter(
+          (loan) => getLoanStatusMeta(loan).filterKey === tab.key,
         ).length;
       }
     });
@@ -1318,9 +1399,16 @@ export default function LoansDisplay() {
               />
               <KpiCard
                 icon={CheckCircleOutlineIcon}
-                label="Active"
-                value={kpis.active}
+                label="Current"
+                value={kpis.current}
                 accent={sf.sf_successBg}
+                sf={sf}
+              />
+              <KpiCard
+                icon={InfoOutlinedIcon}
+                label="Missed Payment"
+                value={kpis.missedPayment}
+                accent={sf.sf_warningBg}
                 sf={sf}
               />
               <KpiCard

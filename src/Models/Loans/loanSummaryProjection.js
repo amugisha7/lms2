@@ -13,7 +13,7 @@ export const LOAN_DISPLAY_STATUS = Object.freeze({
   },
   MISSED_PAYMENT: {
     code: "CURRENT_WITH_MISSED_PAYMENT",
-    label: "Current with missed payment",
+    label: "Current with\nMissed Payment",
     filterKey: "missed_payment",
     rank: 20,
   },

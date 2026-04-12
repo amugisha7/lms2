@@ -179,7 +179,7 @@ export default function LoanInfoPopup({
             display: "inline-block",
             fontSize: "0.82rem",
             fontWeight: 600,
-            color: sf.sf_textLink,
+            color: statusColors?.accent || sf.sf_textLink,
             cursor: "pointer",
             whiteSpace: "normal",
             wordBreak: "break-word",
@@ -189,7 +189,7 @@ export default function LoanInfoPopup({
             p: 0,
             textDecoration: "underline",
             "&:hover": {
-              color: sf.sf_textLinkHover,
+              opacity: 0.85,
             },
           }}
         >
@@ -225,11 +225,14 @@ export default function LoanInfoPopup({
                 display: "block",
                 fontSize: "1rem",
                 fontWeight: 700,
-                color: sf.sf_textLink,
+                color: statusColors?.accent || sf.sf_textLink,
                 lineHeight: 1.3,
                 mb: 0.5,
                 wordBreak: "break-word",
                 justifyContent: "center",
+                "&:hover": {
+                  opacity: 0.85,
+                },
               }}
             >
               {loanName}
@@ -337,7 +340,12 @@ export default function LoanInfoPopup({
                     bgcolor: statusColors.bg,
                     color: statusColors.text,
                     borderRadius: 0,
-                    "& .MuiChip-label": { px: 0.7 },
+                    "& .MuiChip-label": {
+                      px: 0.7,
+                      whiteSpace: "pre-line",
+                      textAlign: "center",
+                      lineHeight: 1.1,
+                    },
                   }}
                 />
               </DetailCell>

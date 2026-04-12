@@ -1,0 +1,11 @@
+{
+  "name": "loan-summary-scheduled-refresh",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.726.1",
+    "@aws-sdk/util-dynamodb": "^3.726.1",
+    "dayjs": "^1.11.13"
+  }
+}

@@ -3,12 +3,11 @@ import { Box, Typography, Tabs, Tab } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { generateClient } from "aws-amplify/api";
-import { Formik, Form, useField } from "formik";
 import { UserContext } from "../../App";
 import { listBranches } from "../../graphql/queries";
-import MultipleDropDownSearchable from "../../Resources/FormComponents/MultipleDropDownSearchable";
 
 // Reusable components
+import AdminBranchScopeSelector from "../../ModelAssets/AdminBranchScopeSelector";
 import CustomDataGrid from "../../ModelAssets/CustomDataGrid";
 import CustomSlider from "../../ModelAssets/CustomSlider";
 import DeleteDialog from "../../ModelAssets/DeleteDialog";
@@ -35,46 +34,6 @@ import {
 } from "./borrowerQueries";
 
 import { useHasPermission } from "../../ModelAssets/Permissions/permissions";
-
-// Effect component that can be used inside Formik to sync values
-function FormikEffect({ onChange, fieldName }) {
-  const [field] = useField(fieldName);
-  const prevValueRef = React.useRef(field.value);
-
-  React.useEffect(() => {
-    if (JSON.stringify(field.value) !== JSON.stringify(prevValueRef.current)) {
-      prevValueRef.current = field.value;
-      onChange(field.value);
-    }
-  }, [field.value, onChange]);
-
-  return null;
-}
-
-// Wrapper component for branch filter
-function BranchFilterWrapper({ branches, onFilterChange, selectedCount }) {
-  return (
-    <Box sx={{ mb: 3, width: "100%" }}>
-      <Formik initialValues={{ branchFilter: [] }} enableReinitialize>
-        <Form>
-          <FormikEffect onChange={onFilterChange} fieldName="branchFilter" />
-          <MultipleDropDownSearchable
-            label="Filter by Branch"
-            name="branchFilter"
-            options={branches.map((b) => ({ value: b.id, label: b.name }))}
-            placeholder={selectedCount === 0 ? "All Branches" : ""}
-            editing={true}
-            helperText={
-              selectedCount === 0
-                ? "Showing all branches"
-                : `Showing ${selectedCount} branch(es)`
-            }
-          />
-        </Form>
-      </Formik>
-    </Box>
-  );
-}
 
 export default function Borrowers() {
   const theme = useTheme();
@@ -110,16 +69,25 @@ export default function Borrowers() {
   // Selection for applicant approval
   const [selectedApprovalIds, setSelectedApprovalIds] = useState([]);
 
-  // Branch filter state (for Admin users)
+  // Branch scope state (for Admin users)
   const [branches, setBranches] = useState([]);
-  const [selectedBranchFilter, setSelectedBranchFilter] = useState([]); // Array for multi-select
+  const [selectedBranchId, setSelectedBranchId] = useState("");
 
   // Ref to track fetched branch ID
   const hasFetchedRef = React.useRef();
 
   // Fetch borrowers
   const fetchBorrowers = async () => {
-    // if (!userDetails?.branchUsersId) return; // COMMENTED OUT limitation
+    const isAdminUser = userDetails?.userType === "Admin";
+    const effectiveBranchId = isAdminUser
+      ? selectedBranchId
+      : userDetails?.branchUsersId;
+
+    if (!effectiveBranchId) {
+      setBorrowers([]);
+      setLoading(false);
+      return;
+    }
 
     setLoading(true);
     setWorkingOverlayOpen(true);
@@ -131,20 +99,10 @@ export default function Borrowers() {
       const variables = {
         limit: 100,
         ...(nextToken && { nextToken }),
+        filter: {
+          branchBorrowersId: { eq: effectiveBranchId },
+        },
       };
-
-      // For Admin: fetch all borrowers (will be filtered by institution client-side)
-      // For non-Admin: always filter by their branch
-      if (userDetails.userType !== "Admin") {
-        variables.filter = {
-          branchBorrowersId: { eq: userDetails.branchUsersId },
-        };
-      }
-      // Admin users: no branch filter in API call, fetch all and filter client-side
-      // Note: For Admin, we are currently fetching all borrowers.
-      // Ideally we would filter by institution, but Borrower model might not have direct institution link
-      // except through branch. If DynamoDB scan is issue, we might need a GSI.
-      // For now, consistent with "retrieve correctly".
 
       do {
         console.log("API Call: Fetching borrowers"); // <-- Added
@@ -169,13 +127,6 @@ export default function Borrowers() {
         ...borrower,
         displayName: getBorrowerDisplayName(borrower),
       }));
-
-      // If Admin, filter by institution
-      if (userDetails.userType === "Admin" && userDetails.institution?.id) {
-        processed = processed.filter(
-          (b) => b.branch?.institutionBranchesId === userDetails.institution.id,
-        );
-      }
 
       setBorrowers(processed);
     } catch (error) {
@@ -493,8 +444,7 @@ export default function Borrowers() {
           });
           const items = branchData.data.listBranches.items || [];
           setBranches(items);
-          // Default to empty array for "All Branches"
-          setSelectedBranchFilter([]);
+          setSelectedBranchId("");
         } catch (e) {
           console.error("Error fetching branches", e);
         }
@@ -503,7 +453,7 @@ export default function Borrowers() {
     if (userDetails) {
       fetchBranchesForAdmin();
     }
-  }, [userDetails, client]);
+  }, [client, userDetails?.institution?.id, userDetails?.userType]);
 
   // Effects - fetch data once, filter client-side
   useEffect(() => {
@@ -511,16 +461,22 @@ export default function Borrowers() {
 
     const fetchKey =
       userDetails.userType === "Admin"
-        ? userDetails.institution?.id || "admin"
+        ? selectedBranchId
         : userDetails.branchUsersId;
 
     if (fetchKey && fetchKey !== hasFetchedRef.current) {
       fetchBorrowers();
       hasFetchedRef.current = fetchKey;
+    } else if (userDetails.userType === "Admin" && !selectedBranchId) {
+      setBorrowers([]);
+      setLoading(false);
+      hasFetchedRef.current = null;
     }
-  }, [userDetails]);
+  }, [selectedBranchId, userDetails]);
 
   const canCreateBorrower = useHasPermission("create", "borrower");
+  const shouldShowBorrowersView =
+    userDetails?.userType !== "Admin" || Boolean(selectedBranchId);
 
   // Tab change handler
   const handleTabChange = (event, newValue) => {
@@ -539,13 +495,6 @@ export default function Borrowers() {
   const filteredBorrowers = React.useMemo(() => {
     let filtered = borrowers;
 
-    // Apply branch filter for Admin users (client-side)
-    if (userDetails?.userType === "Admin" && selectedBranchFilter.length > 0) {
-      filtered = filtered.filter((b) =>
-        selectedBranchFilter.includes(b.branchBorrowersId),
-      );
-    }
-
     // Apply tab filter
     if (selectedTab === "pending") {
       return filtered.filter((b) => b.status === "pending");
@@ -555,7 +504,7 @@ export default function Borrowers() {
     }
     // "all" tab shows all borrowers in scope
     return filtered;
-  }, [borrowers, selectedTab, selectedBranchFilter, userDetails]);
+  }, [borrowers, selectedTab]);
 
   // Count pending borrowers for tab badge
   const pendingCount = React.useMemo(() => {
@@ -651,138 +600,142 @@ export default function Borrowers() {
         </Typography>
 
         {/* Branch Filter - Admin Only */}
-        {userDetails?.userType === "Admin" && branches.length > 0 && (
-          <BranchFilterWrapper
+        {userDetails?.userType === "Admin" && (
+          <AdminBranchScopeSelector
             branches={branches}
-            onFilterChange={setSelectedBranchFilter}
-            selectedCount={selectedBranchFilter.length}
+            selectedBranchId={selectedBranchId}
+            onBranchChange={setSelectedBranchId}
+            helperText="Choose a branch before viewing borrowers."
+            emptyMessage="Please select a branch above to view borrowers."
           />
         )}
 
-        {/* Tabs */}
-        <Box sx={{ width: "100%", mb: 2 }}>
-          <Box
-            sx={{
-              borderBottom: 1,
-              borderColor: theme.palette.divider,
-              backgroundColor: theme.palette.background.paper,
-              borderRadius: "8px 8px 0 0",
-            }}
-          >
-            <Tabs
-              value={selectedTab}
-              onChange={handleTabChange}
-              aria-label="borrower filter tabs"
-              variant="scrollable"
-              scrollButtons
-              allowScrollButtonsMobile
-              sx={{
-                "& .MuiTabs-indicator": {
-                  backgroundColor: theme.palette.blueText.main,
-                  height: 3,
-                  borderRadius: "1.5px",
-                },
-                "& .MuiTab-root": {
-                  fontFamily: theme.typography.fontFamily,
-                  fontSize: "0.875rem",
-                  fontWeight: 500,
-                  textTransform: "none",
-                  letterSpacing: "0.02em",
-                  color: theme.palette.text.secondary,
-                  minHeight: 48,
-                  padding: "12px 24px",
-                  transition: "all 0.2s ease-in-out",
-                  "&:hover": {
-                    color: theme.palette.blueText.main,
-                  },
-                  "&.Mui-selected": {
-                    color: theme.palette.blueText.main,
-                    fontWeight: 600,
-                  },
-                  "&.Mui-focusVisible": {
-                    backgroundColor: theme.palette.action.focus,
-                  },
-                },
-                "& .MuiTabs-flexContainer": {
-                  gap: 1,
-                },
-              }}
-            >
-              <Tab label="All Borrowers" value="all" />
-              <Tab
-                label={`Approved Borrowers${approvedCount > 0 ? ` (${approvedCount})` : ""}`}
-                value="approved"
-              />
-              <Tab
-                label={`Pending Approval${pendingCount > 0 ? ` (${pendingCount})` : ""}`}
-                value="pending"
-              />
-            </Tabs>
-          </Box>
-        </Box>
+        {shouldShowBorrowersView && (
+          <>
+            {/* Tabs */}
+            <Box sx={{ width: "100%", mb: 2 }}>
+              <Box
+                sx={{
+                  borderBottom: 1,
+                  borderColor: theme.palette.divider,
+                  backgroundColor: theme.palette.background.paper,
+                  borderRadius: "8px 8px 0 0",
+                }}
+              >
+                <Tabs
+                  value={selectedTab}
+                  onChange={handleTabChange}
+                  aria-label="borrower filter tabs"
+                  variant="scrollable"
+                  scrollButtons
+                  allowScrollButtonsMobile
+                  sx={{
+                    "& .MuiTabs-indicator": {
+                      backgroundColor: theme.palette.blueText.main,
+                      height: 3,
+                      borderRadius: "1.5px",
+                    },
+                    "& .MuiTab-root": {
+                      fontFamily: theme.typography.fontFamily,
+                      fontSize: "0.875rem",
+                      fontWeight: 500,
+                      textTransform: "none",
+                      letterSpacing: "0.02em",
+                      color: theme.palette.text.secondary,
+                      minHeight: 48,
+                      padding: "12px 24px",
+                      transition: "all 0.2s ease-in-out",
+                      "&:hover": {
+                        color: theme.palette.blueText.main,
+                      },
+                      "&.Mui-selected": {
+                        color: theme.palette.blueText.main,
+                        fontWeight: 600,
+                      },
+                      "&.Mui-focusVisible": {
+                        backgroundColor: theme.palette.action.focus,
+                      },
+                    },
+                    "& .MuiTabs-flexContainer": {
+                      gap: 1,
+                    },
+                  }}
+                >
+                  <Tab label="All Borrowers" value="all" />
+                  <Tab
+                    label={`Approved Borrowers${approvedCount > 0 ? ` (${approvedCount})` : ""}`}
+                    value="approved"
+                  />
+                  <Tab
+                    label={`Pending Approval${pendingCount > 0 ? ` (${pendingCount})` : ""}`}
+                    value="pending"
+                  />
+                </Tabs>
+              </Box>
+            </Box>
 
-        {selectedTab === "pending" && (
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "flex-end",
-              mb: 1,
-            }}
-          >
-            <PlusButtonSmall
-              label="APPROVE SELECTED"
-              // variant="contained"
-              disabled={selectedApprovalIds.length === 0 || approveLoading}
-              onClick={handleApproveSelected}
+            {selectedTab === "pending" && (
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  mb: 1,
+                }}
+              >
+                <PlusButtonSmall
+                  label="APPROVE SELECTED"
+                  disabled={selectedApprovalIds.length === 0 || approveLoading}
+                  onClick={handleApproveSelected}
+                />
+              </Box>
+            )}
+
+            <CustomDataGrid
+              rows={filteredBorrowers}
+              columns={columns}
+              loading={loading}
+              getRowId={(row) => row.id}
+              pageSize={25}
+              pageSizeOptions={[25, 50, 100]}
+              checkboxSelection={selectedTab === "pending"}
+              rowSelectionModel={
+                selectedTab === "pending" ? approvalSelectionModel : undefined
+              }
+              onRowSelectionModelChange={
+                selectedTab === "pending"
+                  ? (newSelection) =>
+                      setSelectedApprovalIds(
+                        Array.from(newSelection?.ids || []),
+                      )
+                  : undefined
+              }
             />
-          </Box>
+
+            <CustomSlider
+              open={editDialogOpen}
+              onClose={() => setEditDialogOpen(false)}
+              title={selectedBorrower?.displayName || "Edit Borrower"}
+              showEdit={false}
+              showDelete={false}
+            >
+              <CreateBorrower
+                initialValues={selectedBorrower}
+                onUpdateBorrowerAPI={handleUpdate}
+                onClose={() => setEditDialogOpen(false)}
+                isEditMode={true}
+                forceEditMode={true}
+              />
+            </CustomSlider>
+
+            <DeleteDialog
+              open={deleteDialogOpen}
+              onClose={() => setDeleteDialogOpen(false)}
+              onConfirm={handleDelete}
+              loading={deleteLoading}
+              name={borrowerToDelete?.displayName}
+            />
+          </>
         )}
-
-        {/* Data Grid */}
-        <CustomDataGrid
-          rows={filteredBorrowers}
-          columns={columns}
-          loading={loading}
-          getRowId={(row) => row.id}
-          pageSize={25}
-          pageSizeOptions={[25, 50, 100]}
-          checkboxSelection={selectedTab === "pending"}
-          rowSelectionModel={
-            selectedTab === "pending" ? approvalSelectionModel : undefined
-          }
-          onRowSelectionModelChange={
-            selectedTab === "pending"
-              ? (newSelection) =>
-                  setSelectedApprovalIds(Array.from(newSelection?.ids || []))
-              : undefined
-          }
-        />
-
-        {/* Edit Dialog */}
-        <CustomSlider
-          open={editDialogOpen}
-          onClose={() => setEditDialogOpen(false)}
-          title={selectedBorrower?.displayName || "Edit Borrower"}
-          showEdit={false}
-          showDelete={false}
-        >
-          <CreateBorrower
-            initialValues={selectedBorrower}
-            onUpdateBorrowerAPI={handleUpdate}
-            onClose={() => setEditDialogOpen(false)}
-            isEditMode={true}
-            forceEditMode={true}
-          />
-        </CustomSlider>
-
-        {/* Delete Dialog */}
-        <DeleteDialog
-          open={deleteDialogOpen}
-          onClose={() => setDeleteDialogOpen(false)}
-          onConfirm={handleDelete}
-          loading={deleteLoading}
-          name={borrowerToDelete?.displayName}
-        />
       </Box>
     </>
   );

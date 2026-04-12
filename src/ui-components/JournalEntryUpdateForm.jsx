@@ -35,9 +35,6 @@ export default function JournalEntryUpdateForm(props) {
     description: "",
     reference: "",
     status: "",
-    relatedLoanID: "",
-    relatedPaymentID: "",
-    relatedExpenseID: "",
     customJournalEntryDetails: "",
   };
   const [date, setDate] = React.useState(initialValues.date);
@@ -46,15 +43,6 @@ export default function JournalEntryUpdateForm(props) {
   );
   const [reference, setReference] = React.useState(initialValues.reference);
   const [status, setStatus] = React.useState(initialValues.status);
-  const [relatedLoanID, setRelatedLoanID] = React.useState(
-    initialValues.relatedLoanID
-  );
-  const [relatedPaymentID, setRelatedPaymentID] = React.useState(
-    initialValues.relatedPaymentID
-  );
-  const [relatedExpenseID, setRelatedExpenseID] = React.useState(
-    initialValues.relatedExpenseID
-  );
   const [customJournalEntryDetails, setCustomJournalEntryDetails] =
     React.useState(initialValues.customJournalEntryDetails);
   const [errors, setErrors] = React.useState({});
@@ -66,9 +54,6 @@ export default function JournalEntryUpdateForm(props) {
     setDescription(cleanValues.description);
     setReference(cleanValues.reference);
     setStatus(cleanValues.status);
-    setRelatedLoanID(cleanValues.relatedLoanID);
-    setRelatedPaymentID(cleanValues.relatedPaymentID);
-    setRelatedExpenseID(cleanValues.relatedExpenseID);
     setCustomJournalEntryDetails(
       typeof cleanValues.customJournalEntryDetails === "string" ||
         cleanValues.customJournalEntryDetails === null
@@ -100,9 +85,6 @@ export default function JournalEntryUpdateForm(props) {
     description: [],
     reference: [],
     status: [],
-    relatedLoanID: [],
-    relatedPaymentID: [],
-    relatedExpenseID: [],
     customJournalEntryDetails: [{ type: "JSON" }],
   };
   const runValidationTasks = async (
@@ -135,9 +117,6 @@ export default function JournalEntryUpdateForm(props) {
           description: description ?? null,
           reference: reference ?? null,
           status: status ?? null,
-          relatedLoanID: relatedLoanID ?? null,
-          relatedPaymentID: relatedPaymentID ?? null,
-          relatedExpenseID: relatedExpenseID ?? null,
           customJournalEntryDetails: customJournalEntryDetails ?? null,
         };
         const validationResponses = await Promise.all(
@@ -204,9 +183,6 @@ export default function JournalEntryUpdateForm(props) {
               description,
               reference,
               status,
-              relatedLoanID,
-              relatedPaymentID,
-              relatedExpenseID,
               customJournalEntryDetails,
             };
             const result = onChange(modelFields);
@@ -235,9 +211,6 @@ export default function JournalEntryUpdateForm(props) {
               description: value,
               reference,
               status,
-              relatedLoanID,
-              relatedPaymentID,
-              relatedExpenseID,
               customJournalEntryDetails,
             };
             const result = onChange(modelFields);
@@ -266,9 +239,6 @@ export default function JournalEntryUpdateForm(props) {
               description,
               reference: value,
               status,
-              relatedLoanID,
-              relatedPaymentID,
-              relatedExpenseID,
               customJournalEntryDetails,
             };
             const result = onChange(modelFields);
@@ -297,9 +267,6 @@ export default function JournalEntryUpdateForm(props) {
               description,
               reference,
               status: value,
-              relatedLoanID,
-              relatedPaymentID,
-              relatedExpenseID,
               customJournalEntryDetails,
             };
             const result = onChange(modelFields);
@@ -315,99 +282,6 @@ export default function JournalEntryUpdateForm(props) {
         hasError={errors.status?.hasError}
         {...getOverrideProps(overrides, "status")}
       ></TextField>
-      <TextField
-        label="Related loan id"
-        isRequired={false}
-        isReadOnly={false}
-        value={relatedLoanID}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              date,
-              description,
-              reference,
-              status,
-              relatedLoanID: value,
-              relatedPaymentID,
-              relatedExpenseID,
-              customJournalEntryDetails,
-            };
-            const result = onChange(modelFields);
-            value = result?.relatedLoanID ?? value;
-          }
-          if (errors.relatedLoanID?.hasError) {
-            runValidationTasks("relatedLoanID", value);
-          }
-          setRelatedLoanID(value);
-        }}
-        onBlur={() => runValidationTasks("relatedLoanID", relatedLoanID)}
-        errorMessage={errors.relatedLoanID?.errorMessage}
-        hasError={errors.relatedLoanID?.hasError}
-        {...getOverrideProps(overrides, "relatedLoanID")}
-      ></TextField>
-      <TextField
-        label="Related payment id"
-        isRequired={false}
-        isReadOnly={false}
-        value={relatedPaymentID}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              date,
-              description,
-              reference,
-              status,
-              relatedLoanID,
-              relatedPaymentID: value,
-              relatedExpenseID,
-              customJournalEntryDetails,
-            };
-            const result = onChange(modelFields);
-            value = result?.relatedPaymentID ?? value;
-          }
-          if (errors.relatedPaymentID?.hasError) {
-            runValidationTasks("relatedPaymentID", value);
-          }
-          setRelatedPaymentID(value);
-        }}
-        onBlur={() => runValidationTasks("relatedPaymentID", relatedPaymentID)}
-        errorMessage={errors.relatedPaymentID?.errorMessage}
-        hasError={errors.relatedPaymentID?.hasError}
-        {...getOverrideProps(overrides, "relatedPaymentID")}
-      ></TextField>
-      <TextField
-        label="Related expense id"
-        isRequired={false}
-        isReadOnly={false}
-        value={relatedExpenseID}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              date,
-              description,
-              reference,
-              status,
-              relatedLoanID,
-              relatedPaymentID,
-              relatedExpenseID: value,
-              customJournalEntryDetails,
-            };
-            const result = onChange(modelFields);
-            value = result?.relatedExpenseID ?? value;
-          }
-          if (errors.relatedExpenseID?.hasError) {
-            runValidationTasks("relatedExpenseID", value);
-          }
-          setRelatedExpenseID(value);
-        }}
-        onBlur={() => runValidationTasks("relatedExpenseID", relatedExpenseID)}
-        errorMessage={errors.relatedExpenseID?.errorMessage}
-        hasError={errors.relatedExpenseID?.hasError}
-        {...getOverrideProps(overrides, "relatedExpenseID")}
-      ></TextField>
       <TextAreaField
         label="Custom journal entry details"
         isRequired={false}
@@ -421,9 +295,6 @@ export default function JournalEntryUpdateForm(props) {
               description,
               reference,
               status,
-              relatedLoanID,
-              relatedPaymentID,
-              relatedExpenseID,
               customJournalEntryDetails: value,
             };
             const result = onChange(modelFields);

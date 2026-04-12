@@ -1,19 +1,19 @@
 import React from "react";
 import { Box, Tabs, Tab, Typography } from "@mui/material";
+import { generateClient } from "aws-amplify/api";
 import EditIcon from "@mui/icons-material/Edit";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import { UserContext } from "../../../App";
+import { listBranches } from "../../../graphql/queries";
+import AdminBranchScopeSelector from "../../../ModelAssets/AdminBranchScopeSelector";
 import CollectionsTemplate from "../../../ModelAssets/CollectionsTemplate";
 import ClickableText from "../../../ModelAssets/ClickableText";
 import NotificationBar from "../../../ModelAssets/NotificationBar";
 import PlusButtonMain from "../../../ModelAssets/PlusButtonMain";
 import { formatMoney, formatMoneyParts } from "../../../Resources/formatting";
 import { useTheme } from "@mui/material/styles";
-import {
-  listLoanDraftsByBranch,
-  listLoanDraftsByInstitution,
-} from "./loanDraftHelpers";
+import { listLoanDraftsByBranch } from "./loanDraftHelpers";
 
 export default function LoanDrafts() {
   const navigate = useNavigate();
@@ -23,32 +23,26 @@ export default function LoanDrafts() {
   const [rows, setRows] = React.useState([]);
   const [notification, setNotification] = React.useState(null);
   const [selectedTab, setSelectedTab] = React.useState("all");
+  const [branches, setBranches] = React.useState([]);
+  const [selectedBranchId, setSelectedBranchId] = React.useState("");
+
+  const isAdmin = userDetails?.userType === "Admin";
+  const activeBranchId = userDetails?.branchUsersId || null;
+  const institutionId =
+    userDetails?.institution?.id || userDetails?.institutionUsersId || null;
+  const shouldShowLoanDraftsView = !isAdmin || Boolean(selectedBranchId);
 
   const refresh = React.useCallback(async () => {
     setLoading(true);
     try {
-      const branchID = userDetails?.branchUsersId || null;
-      const institutionID = userDetails?.institutionUsersId || null;
-      const isAdmin = userDetails?.userType === "Admin";
+      const branchID = isAdmin ? selectedBranchId : activeBranchId;
 
-      if (!branchID && !institutionID) {
+      if (!branchID) {
         setRows([]);
-        setNotification({
-          type: "error",
-          message: "Missing institution/branch context for drafts.",
-        });
         return;
       }
 
-      // Fetch drafts based on user type:
-      // - Admin: fetch from all branches in the institution
-      // - Non-admin: fetch from the user's branch
-      let drafts = [];
-      if (isAdmin && institutionID) {
-        drafts = await listLoanDraftsByInstitution({ institutionID });
-      } else if (branchID) {
-        drafts = await listLoanDraftsByBranch({ branchID });
-      }
+      const drafts = await listLoanDraftsByBranch({ branchID });
 
       console.log("Fetched loan drafts:", drafts);
       setRows(Array.isArray(drafts) ? drafts : []);
@@ -62,15 +56,46 @@ export default function LoanDrafts() {
     } finally {
       setLoading(false);
     }
-  }, [
-    userDetails?.branchUsersId,
-    userDetails?.institutionUsersId,
-    userDetails?.userType,
-  ]);
+  }, [activeBranchId, isAdmin, selectedBranchId]);
 
   React.useEffect(() => {
+    const fetchBranchesForAdmin = async () => {
+      if (!isAdmin || !institutionId) {
+        setBranches([]);
+        setSelectedBranchId("");
+        return;
+      }
+
+      try {
+        const client = generateClient();
+        const branchData = await client.graphql({
+          query: listBranches,
+          variables: {
+            limit: 1000,
+            filter: { institutionBranchesId: { eq: institutionId } },
+          },
+        });
+        const items = branchData?.data?.listBranches?.items || [];
+        setBranches(items);
+        setSelectedBranchId("");
+      } catch (error) {
+        console.error("Failed to load branches for loan drafts:", error);
+        setBranches([]);
+      }
+    };
+
+    fetchBranchesForAdmin();
+  }, [institutionId, isAdmin]);
+
+  React.useEffect(() => {
+    if (isAdmin && !selectedBranchId) {
+      setRows([]);
+      setLoading(false);
+      return;
+    }
+
     refresh();
-  }, [refresh]);
+  }, [isAdmin, refresh, selectedBranchId]);
 
   const handleTabChange = (event, newValue) => {
     setSelectedTab(newValue);
@@ -394,71 +419,83 @@ export default function LoanDrafts() {
         />
       </Box>
 
-      {/* Tabs */}
-      <Box sx={{ width: "100%", mb: 2 }}>
-        <Box
-          sx={{
-            borderBottom: 1,
-            borderColor: theme.palette.divider,
-            backgroundColor: theme.palette.background.paper,
-            borderRadius: "8px 8px 0 0",
-          }}
-        >
-          <Tabs
-            value={selectedTab}
-            onChange={handleTabChange}
-            aria-label="loan drafts filter tabs"
-            variant="scrollable"
-            scrollButtons
-            allowScrollButtonsMobile
-            sx={{
-              "& .MuiTabs-indicator": {
-                backgroundColor: theme.palette.blueText.main,
-                height: 3,
-                borderRadius: "1.5px",
-              },
-              "& .MuiTab-root": {
-                fontFamily: theme.typography.fontFamily,
-                fontSize: "0.875rem",
-                fontWeight: 500,
-                textTransform: "none",
-                letterSpacing: "0.02em",
-                color: theme.palette.text.secondary,
-                minHeight: 48,
-                padding: "12px 24px",
-                transition: "all 0.2s ease-in-out",
-                "&:hover": {
-                  color: theme.palette.blueText.main,
-                },
-                "&.Mui-selected": {
-                  color: theme.palette.blueText.main,
-                  fontWeight: 600,
-                },
-                "&.Mui-focusVisible": {
-                  backgroundColor: theme.palette.action.focus,
-                },
-              },
-              "& .MuiTabs-flexContainer": {
-                gap: 1,
-              },
-            }}
-          >
-            <Tab label="All" value="all" />
-            <Tab label="Drafts" value="drafts" />
-            <Tab label="In Review" value="in_review" />
-            <Tab label="Rejected" value="rejected" />
-          </Tabs>
-        </Box>
-      </Box>
+      {isAdmin && (
+        <AdminBranchScopeSelector
+          branches={branches}
+          selectedBranchId={selectedBranchId}
+          onBranchChange={setSelectedBranchId}
+          helperText="Choose a branch before viewing loan drafts."
+          emptyMessage="Please select a branch above to view loan drafts."
+        />
+      )}
 
-      {/* Data Grid */}
-      <CollectionsTemplate
-        items={filteredRows}
-        loading={loading}
-        columns={columns}
-        enableSearch={false}
-        noDataMessage="No loan drafts found."
-      />
+      {shouldShowLoanDraftsView && (
+        <>
+          <Box sx={{ width: "100%", mb: 2 }}>
+            <Box
+              sx={{
+                borderBottom: 1,
+                borderColor: theme.palette.divider,
+                backgroundColor: theme.palette.background.paper,
+                borderRadius: "8px 8px 0 0",
+              }}
+            >
+              <Tabs
+                value={selectedTab}
+                onChange={handleTabChange}
+                aria-label="loan drafts filter tabs"
+                variant="scrollable"
+                scrollButtons
+                allowScrollButtonsMobile
+                sx={{
+                  "& .MuiTabs-indicator": {
+                    backgroundColor: theme.palette.blueText.main,
+                    height: 3,
+                    borderRadius: "1.5px",
+                  },
+                  "& .MuiTab-root": {
+                    fontFamily: theme.typography.fontFamily,
+                    fontSize: "0.875rem",
+                    fontWeight: 500,
+                    textTransform: "none",
+                    letterSpacing: "0.02em",
+                    color: theme.palette.text.secondary,
+                    minHeight: 48,
+                    padding: "12px 24px",
+                    transition: "all 0.2s ease-in-out",
+                    "&:hover": {
+                      color: theme.palette.blueText.main,
+                    },
+                    "&.Mui-selected": {
+                      color: theme.palette.blueText.main,
+                      fontWeight: 600,
+                    },
+                    "&.Mui-focusVisible": {
+                      backgroundColor: theme.palette.action.focus,
+                    },
+                  },
+                  "& .MuiTabs-flexContainer": {
+                    gap: 1,
+                  },
+                }}
+              >
+                <Tab label="All" value="all" />
+                <Tab label="Drafts" value="drafts" />
+                <Tab label="In Review" value="in_review" />
+                <Tab label="Rejected" value="rejected" />
+              </Tabs>
+            </Box>
+          </Box>
+
+          <CollectionsTemplate
+            items={filteredRows}
+            loading={loading}
+            columns={columns}
+            enableSearch={false}
+            noDataMessage="No loan drafts found."
+          />
+        </>
+      )}
     </Box>
   );
 }

@@ -18,16 +18,15 @@ import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeft";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Formik, Form, useField } from "formik";
 import { UserContext } from "../../../App";
 import { listBranches } from "../../../graphql/queries";
+import AdminBranchScopeSelector from "../../../ModelAssets/AdminBranchScopeSelector";
 import WorkingOverlay from "../../../ModelAssets/WorkingOverlay";
 import CustomDataGrid from "../../../ModelAssets/CustomDataGrid";
 import SFClickableText from "../../../ModelAssets/SF_ClickableText";
 import PlusButtonMain from "../../../ModelAssets/PlusButtonMain";
 import { useNotification } from "../../../ModelAssets/NotificationContext";
 import { useSnackbar } from "../../../ModelAssets/SnackbarContext";
-import MultipleDropDownSearchable from "../../../Resources/FormComponents/MultipleDropDownSearchable";
 import { formatMoneyParts } from "../../../Resources/formatting";
 import { Button } from "@mui/material";
 import LoanInfoPopup from "./LoanInfoPopup";
@@ -441,47 +440,6 @@ const parseLoanRecord = (loan) => {
   }
 };
 
-// --- FormikEffect: sync formik field value changes to a callback ---
-function FormikEffect({ onChange, fieldName }) {
-  const [field] = useField(fieldName);
-  const prevValueRef = React.useRef(field.value);
-  React.useEffect(() => {
-    if (JSON.stringify(field.value) !== JSON.stringify(prevValueRef.current)) {
-      prevValueRef.current = field.value;
-      onChange(field.value);
-    }
-  }, [field.value, onChange]);
-  return null;
-}
-
-// --- Branch filter wrapper (admin only) ---
-function BranchFilterWrapper({ branches, onFilterChange, selectedCount }) {
-  return (
-    <Box sx={{ mb: 2, width: "100%" }}>
-      <Formik initialValues={{ branchFilter: [] }} enableReinitialize>
-        <Form>
-          <FormikEffect onChange={onFilterChange} fieldName="branchFilter" />
-          <MultipleDropDownSearchable
-            label="Filter by Branch"
-            name="branchFilter"
-            options={branches.map((branch) => ({
-              value: branch.id,
-              label: branch.name,
-            }))}
-            placeholder={selectedCount === 0 ? "All Branches" : ""}
-            editing={true}
-            helperText={
-              selectedCount === 0
-                ? "Showing all branches"
-                : `Showing ${selectedCount} branch(es)`
-            }
-          />
-        </Form>
-      </Formik>
-    </Box>
-  );
-}
-
 //
 //  Main LoansDisplay Component
 //
@@ -496,7 +454,7 @@ export default function LoansDisplay() {
   const [searchTerm, setSearchTerm] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState("all");
   const [branches, setBranches] = React.useState([]);
-  const [selectedBranchFilter, setSelectedBranchFilter] = React.useState([]);
+  const [selectedBranchId, setSelectedBranchId] = React.useState("");
   const [paymentPopupOpen, setPaymentPopupOpen] = React.useState(false);
   const [paymentLoanRow, setPaymentLoanRow] = React.useState(null);
   const [statementPopupOpen, setStatementPopupOpen] = React.useState(false);
@@ -522,6 +480,7 @@ export default function LoansDisplay() {
   const currency = currencyCode || "$";
   const normalizedUserType = (userDetails?.userType || "").toLowerCase();
   const isAdminUser = normalizedUserType === "admin";
+  const shouldShowLoansView = !isAdminUser || Boolean(selectedBranchId);
   const activeBranchId = userDetails?.branchUsersId || userDetails?.branch?.id;
   const activeInstitutionId =
     userDetails?.institution?.id || userDetails?.institutionUsersId;
@@ -859,7 +818,6 @@ export default function LoansDisplay() {
                   sx={{
                     fontSize: "0.6rem",
                     mt: 0.4,
-
                     ml: 0.4,
                     color: sf.sf_textTertiary,
                   }}
@@ -1153,13 +1111,6 @@ export default function LoansDisplay() {
   const filteredLoans = React.useMemo(() => {
     let result = loans;
 
-    // Branch filter (admin only)
-    if (isAdminUser && selectedBranchFilter.length > 0) {
-      result = result.filter((loan) =>
-        selectedBranchFilter.includes(loan.branchID),
-      );
-    }
-
     // Status filter
     if (statusFilter !== "all") {
       const tab = STATUS_TABS.find((t) => t.key === statusFilter);
@@ -1195,7 +1146,7 @@ export default function LoansDisplay() {
     }
 
     return result;
-  }, [isAdminUser, loans, searchTerm, selectedBranchFilter, statusFilter]);
+  }, [loans, searchTerm, statusFilter]);
 
   //  KPI computations
   const kpis = React.useMemo(() => {
@@ -1234,11 +1185,15 @@ export default function LoansDisplay() {
   //  Fetch loans
   const loadLoansPage = React.useCallback(
     async ({ reset = false } = {}) => {
-      const isAdmin = isAdminUser;
-      const branchId = activeBranchId;
-      const institutionId = activeInstitutionId;
+      const effectiveBranchId = isAdminUser ? selectedBranchId : activeBranchId;
 
-      if ((!isAdmin && !branchId) || (isAdmin && !institutionId)) {
+      if (!effectiveBranchId) {
+        pagingStateRef.current = {
+          branchIds: [],
+          branchIndex: 0,
+          nextTokens: {},
+        };
+        setLoans([]);
         setLoading(false);
         setLoadingMore(false);
         setHasMoreLoans(false);
@@ -1260,28 +1215,7 @@ export default function LoansDisplay() {
         let nextTokens = { ...(pagingStateRef.current.nextTokens || {}) };
 
         if (reset) {
-          if (isAdmin) {
-            let institutionBranchIds = [];
-            let branchesNextToken = null;
-            do {
-              const branchData = await client.graphql({
-                query: listBranches,
-                variables: {
-                  limit: 1000,
-                  nextToken: branchesNextToken,
-                  filter: { institutionBranchesId: { eq: institutionId } },
-                },
-              });
-              const branchItems = branchData?.data?.listBranches?.items || [];
-              institutionBranchIds.push(
-                ...branchItems.map((branch) => branch.id),
-              );
-              branchesNextToken = branchData?.data?.listBranches?.nextToken;
-            } while (branchesNextToken);
-            branchIds = [...new Set(institutionBranchIds)];
-          } else {
-            branchIds = [branchId];
-          }
+          branchIds = [effectiveBranchId];
 
           branchIndex = 0;
           nextTokens = {};
@@ -1357,23 +1291,26 @@ export default function LoansDisplay() {
         setWorkingOverlayOpen(false);
       }
     },
-    [activeBranchId, activeInstitutionId, isAdminUser],
+    [activeBranchId, isAdminUser, selectedBranchId],
   );
 
   React.useEffect(() => {
     if (!userDetails) return;
-    const fetchKey = isAdminUser
-      ? activeInstitutionId || "admin"
-      : activeBranchId;
+    const fetchKey = isAdminUser ? selectedBranchId : activeBranchId;
     if (fetchKey && fetchKey !== hasFetchedRef.current) {
       loadLoansPage({ reset: true });
       hasFetchedRef.current = fetchKey;
+    } else if (isAdminUser && !selectedBranchId) {
+      setLoans([]);
+      setLoading(false);
+      setHasMoreLoans(false);
+      hasFetchedRef.current = null;
     }
   }, [
     activeBranchId,
-    activeInstitutionId,
     loadLoansPage,
     isAdminUser,
+    selectedBranchId,
     userDetails,
   ]);
 
@@ -1392,7 +1329,7 @@ export default function LoansDisplay() {
       );
       if (!isAdmin || !institutionId) {
         setBranches([]);
-        setSelectedBranchFilter([]);
+        setSelectedBranchId("");
         return;
       }
       try {
@@ -1407,14 +1344,14 @@ export default function LoansDisplay() {
         const items = branchData?.data?.listBranches?.items || [];
         console.log("[LoansDisplay] branches fetched:", items.length, items);
         setBranches(items);
-        setSelectedBranchFilter([]);
+        setSelectedBranchId("");
       } catch (err) {
         console.error("LoansDisplay - Error fetching branches:", err);
         setBranches([]);
       }
     };
     if (userDetails) fetchBranchesForAdmin();
-  }, [activeInstitutionId, isAdminUser, userDetails]);
+  }, [activeInstitutionId, isAdminUser]);
 
   return (
     <>
@@ -1484,286 +1421,295 @@ export default function LoansDisplay() {
       </Box>
 
       {/* Branch Filter (Admin only) */}
-      {isAdminUser && branches.length > 0 && (
-        <BranchFilterWrapper
+      {isAdminUser && (
+        <AdminBranchScopeSelector
           branches={branches}
-          onFilterChange={setSelectedBranchFilter}
-          selectedCount={selectedBranchFilter.length}
+          selectedBranchId={selectedBranchId}
+          onBranchChange={setSelectedBranchId}
+          helperText="Choose a branch before viewing loans."
+          emptyMessage="Please select a branch above to view loans."
         />
       )}
 
-      {/*  KPI Cards  */}
-      {!loading && (
-        <Box
-          sx={{
-            display: "flex",
-            gap: "14px",
-            mb: "18px",
-            flexWrap: "wrap",
-          }}
-        >
-          <KpiCard
-            icon={AssignmentOutlinedIcon}
-            label="Total Loans"
-            value={kpis.total}
-            sf={sf}
-          />
-          <KpiCard
-            icon={CheckCircleOutlineIcon}
-            label="Active"
-            value={kpis.active}
-            accent={sf.sf_successBg}
-            sf={sf}
-          />
-          <KpiCard
-            icon={WarningAmberIcon}
-            label="Overdue"
-            value={kpis.overdue}
-            accent={sf.sf_errorBg}
-            sf={sf}
-          />
-          <KpiCard
-            icon={AccountBalanceWalletOutlinedIcon}
-            label="Portfolio"
-            value={
-              <MoneyText
-                value={kpis.totalPrincipal}
-                numberSx={{ ...KPI_MONEY_SX, color: sf.sf_textPrimary }}
-                prefixSx={KPI_MONEY_PREFIX_SX}
+      {shouldShowLoansView && (
+        <>
+          {!loading && (
+            <Box
+              sx={{
+                display: "flex",
+                gap: "14px",
+                mb: "18px",
+                flexWrap: "wrap",
+              }}
+            >
+              <KpiCard
+                icon={AssignmentOutlinedIcon}
+                label="Total Loans"
+                value={kpis.total}
+                sf={sf}
               />
-            }
-            sf={sf}
-          />
-          <KpiCard
-            icon={TrendingUpIcon}
-            label="Outstanding"
-            value={
-              <MoneyText
-                value={kpis.totalOutstanding}
-                numberSx={{ ...KPI_MONEY_SX, color: sf.sf_textPrimary }}
-                prefixSx={KPI_MONEY_PREFIX_SX}
+              <KpiCard
+                icon={CheckCircleOutlineIcon}
+                label="Active"
+                value={kpis.active}
+                accent={sf.sf_successBg}
+                sf={sf}
               />
-            }
-            subValue={
-              kpis.totalPrincipal > 0
-                ? `${((kpis.totalOutstanding / kpis.totalPrincipal) * 100).toFixed(1)}% of portfolio`
-                : undefined
-            }
-            accent={sf.sf_warningBg}
-            sf={sf}
-          />
-        </Box>
-      )}
+              <KpiCard
+                icon={WarningAmberIcon}
+                label="Overdue"
+                value={kpis.overdue}
+                accent={sf.sf_errorBg}
+                sf={sf}
+              />
+              <KpiCard
+                icon={AccountBalanceWalletOutlinedIcon}
+                label="Portfolio"
+                value={
+                  <MoneyText
+                    value={kpis.totalPrincipal}
+                    numberSx={{ ...KPI_MONEY_SX, color: sf.sf_textPrimary }}
+                    prefixSx={KPI_MONEY_PREFIX_SX}
+                  />
+                }
+                sf={sf}
+              />
+              <KpiCard
+                icon={TrendingUpIcon}
+                label="Outstanding"
+                value={
+                  <MoneyText
+                    value={kpis.totalOutstanding}
+                    numberSx={{ ...KPI_MONEY_SX, color: sf.sf_textPrimary }}
+                    prefixSx={KPI_MONEY_PREFIX_SX}
+                  />
+                }
+                subValue={
+                  kpis.totalPrincipal > 0
+                    ? `${((kpis.totalOutstanding / kpis.totalPrincipal) * 100).toFixed(1)}% of portfolio`
+                    : undefined
+                }
+                accent={sf.sf_warningBg}
+                sf={sf}
+              />
+            </Box>
+          )}
 
-      {/*  Search + Status Tabs  */}
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 2,
-          mb: "14px",
-          flexWrap: "wrap",
-        }}
-      >
-        {/* Search */}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            bgcolor: sf.sf_searchBg,
-            border: `1px solid ${sf.sf_searchBorder}`,
-            borderRadius: 0,
-            px: 1.2,
-            py: 0.4,
-            minWidth: 240,
-            maxWidth: 340,
-            flex: "1 1 240px",
-            transition: "border-color 0.15s",
-            "&:focus-within": { borderColor: sf.sf_searchFocusBorder },
-          }}
-        >
-          <SearchIcon
-            sx={{ fontSize: 18, color: sf.sf_textTertiary, mr: 0.8 }}
-          />
-          <InputBase
-            placeholder="Search borrower, loan #, officer..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+          <Box
             sx={{
-              flex: 1,
-              fontSize: "0.8rem",
-              color: sf.sf_textPrimary,
-              "& ::placeholder": {
-                color: sf.sf_searchPlaceholder,
-                opacity: 1,
-              },
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 2,
+              mb: "14px",
+              flexWrap: "wrap",
             }}
-          />
-        </Box>
-
-        {/* Status filter tabs */}
-        <Box sx={{ display: "flex", gap: 0.6, flexWrap: "wrap" }}>
-          {STATUS_TABS.map((tab) => {
-            const isActive = statusFilter === tab.key;
-            const count = tabCounts[tab.key] ?? 0;
-            return (
-              <Chip
-                key={tab.key}
-                label={`${tab.label} (${count})`}
-                size="small"
-                onClick={() => setStatusFilter(tab.key)}
+          >
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                bgcolor: sf.sf_searchBg,
+                border: `1px solid ${sf.sf_searchBorder}`,
+                borderRadius: 0,
+                px: 1.2,
+                py: 0.4,
+                minWidth: 240,
+                maxWidth: 340,
+                flex: "1 1 240px",
+                transition: "border-color 0.15s",
+                "&:focus-within": { borderColor: sf.sf_searchFocusBorder },
+              }}
+            >
+              <SearchIcon
+                sx={{ fontSize: 18, color: sf.sf_textTertiary, mr: 0.8 }}
+              />
+              <InputBase
+                placeholder="Search borrower, loan #, officer..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 sx={{
-                  height: 26,
-                  fontSize: "0.72rem",
-                  fontWeight: isActive ? 700 : 500,
-                  cursor: "pointer",
-                  bgcolor: isActive ? sf.sf_tabActiveBg : sf.sf_tabInactiveBg,
-                  color: isActive ? sf.sf_tabActiveText : sf.sf_tabInactiveText,
-                  borderRadius: 0,
-                  transition: "all 0.12s",
-                  "&:hover": {
-                    bgcolor: isActive ? sf.sf_tabActiveBg : sf.sf_tabHoverBg,
+                  flex: 1,
+                  fontSize: "0.8rem",
+                  color: sf.sf_textPrimary,
+                  "& ::placeholder": {
+                    color: sf.sf_searchPlaceholder,
+                    opacity: 1,
                   },
-                  "& .MuiChip-label": { px: 1.2 },
                 }}
               />
-            );
-          })}
-        </Box>
-      </Box>
+            </Box>
 
-      {/*  DataGrid with click-and-drag horizontal scroll  */}
-      <Box
-        sx={{
-          boxShadow: sf.sf_shadowSm,
-          transition: "box-shadow 0.15s, transform 0.15s",
-          "&:hover": {
-            boxShadow: sf.sf_shadowMd,
-            transform: "translateY(-1px)",
-          },
-        }}
-      >
-        {/* Synchronized top scrollbar */}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 0.5,
-            px: 0.5,
-            py: 0,
-            minHeight: 24,
-            bgcolor: sf.sf_tableHeaderBg,
-            borderBottom: `1px solid ${sf.sf_borderLight}`,
-          }}
-        >
-          <Button
-            onClick={() => scrollTopBarBy(-220)}
-            variant="outlined"
-            sx={{
-              minWidth: 22,
-              width: 22,
-              height: 18,
-              p: 0,
-              bgcolor: sf.sf_actionHoverBg,
-              borderRadius: 0,
-              "&:hover": { bgcolor: sf.sf_brandPrimary },
-              mt: 0.5,
-            }}
-          >
-            <KeyboardArrowLeftIcon sx={{ fontSize: 16 }} />
-          </Button>
-          <Box
-            ref={topScrollRef}
-            sx={{
-              overflowX: "auto",
-              overflowY: "hidden",
-              flex: 1,
-              height: 14,
-              "&::-webkit-scrollbar": { height: 10 },
-              "&::-webkit-scrollbar-track": {
-                bgcolor: sf.sf_borderLight,
-                borderRadius: 0,
-              },
-              "&::-webkit-scrollbar-thumb": {
-                bgcolor: sf.sf_textTertiary,
-                borderRadius: 0,
-                "&:hover": { bgcolor: sf.sf_brandPrimary },
-              },
-            }}
-          >
-            <Box ref={topScrollInnerRef} sx={{ height: 1, minWidth: "100%" }} />
+            <Box sx={{ display: "flex", gap: 0.6, flexWrap: "wrap" }}>
+              {STATUS_TABS.map((tab) => {
+                const isActive = statusFilter === tab.key;
+                const count = tabCounts[tab.key] ?? 0;
+                return (
+                  <Chip
+                    key={tab.key}
+                    label={`${tab.label} (${count})`}
+                    size="small"
+                    onClick={() => setStatusFilter(tab.key)}
+                    sx={{
+                      height: 26,
+                      fontSize: "0.72rem",
+                      fontWeight: isActive ? 700 : 500,
+                      cursor: "pointer",
+                      bgcolor: isActive
+                        ? sf.sf_tabActiveBg
+                        : sf.sf_tabInactiveBg,
+                      color: isActive
+                        ? sf.sf_tabActiveText
+                        : sf.sf_tabInactiveText,
+                      borderRadius: 0,
+                      transition: "all 0.12s",
+                      "&:hover": {
+                        bgcolor: isActive
+                          ? sf.sf_tabActiveBg
+                          : sf.sf_tabHoverBg,
+                      },
+                      "& .MuiChip-label": { px: 1.2 },
+                    }}
+                  />
+                );
+              })}
+            </Box>
           </Box>
-          <Button
-            onClick={() => scrollTopBarBy(220)}
-            variant="outlined"
-            sx={{
-              minWidth: 22,
-              width: 22,
-              height: 18,
-              p: 0,
-              bgcolor: sf.sf_actionHoverBg,
-              borderRadius: 0,
-              "&:hover": { bgcolor: sf.sf_brandPrimary },
-              mt: 0.5,
-            }}
-          >
-            <KeyboardArrowRightIcon sx={{ fontSize: 16 }} />
-          </Button>
-        </Box>
-        <Box ref={gridDragContainerRef} sx={{ cursor: "grab" }}>
-          <CustomDataGrid
-            rows={filteredLoans}
-            columns={columns}
-            loading={loading}
-            getRowId={(row) => row.id}
-            pageSize={50}
-            pageSizeOptions={[25, 50, 100]}
-            getRowHeight={() => "auto"}
-            getEstimatedRowHeight={() => 72}
-            showToolbar={false}
-            sx={{
-              borderRadius: 0,
-              "& .MuiDataGrid-columnHeaderTitle": {
-                fontSize: "0.74rem",
-              },
-              "& .MuiDataGrid-cell": {
-                cursor: "default",
-                pt: 0.5,
-                pb: 0.5,
-                display: "flex",
-                alignItems: "flex-start",
-                justifyContent: "center",
-                textAlign: "center",
-                minHeight: "60px !important",
-              },
-              "& .MuiDataGrid-cell[data-field='borrower']": {
-                justifyContent: "flex-start",
-                textAlign: "left",
-              },
-              "& .MuiDataGrid-cell[data-field='amountDue']": {
-                justifyContent: "flex-start",
-                textAlign: "left",
-              },
-            }}
-          />
-        </Box>
-      </Box>
 
-      {(hasMoreLoans || loadingMore) && (
-        <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
-          <Button
-            variant="outlined"
-            onClick={() => loadLoansPage()}
-            disabled={loading || loadingMore}
-            sx={{ borderRadius: 0 }}
+          <Box
+            sx={{
+              boxShadow: sf.sf_shadowSm,
+              transition: "box-shadow 0.15s, transform 0.15s",
+              "&:hover": {
+                boxShadow: sf.sf_shadowMd,
+                transform: "translateY(-1px)",
+              },
+            }}
           >
-            {loadingMore
-              ? "LOADING MORE..."
-              : `LOAD ${LOANS_PAGE_SIZE} MORE LOANS`}
-          </Button>
-        </Box>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 0.5,
+                px: 0.5,
+                py: 0,
+                minHeight: 24,
+                bgcolor: sf.sf_tableHeaderBg,
+                borderBottom: `1px solid ${sf.sf_borderLight}`,
+              }}
+            >
+              <Button
+                onClick={() => scrollTopBarBy(-220)}
+                variant="outlined"
+                sx={{
+                  minWidth: 22,
+                  width: 22,
+                  height: 18,
+                  p: 0,
+                  bgcolor: sf.sf_actionHoverBg,
+                  borderRadius: 0,
+                  "&:hover": { bgcolor: sf.sf_brandPrimary },
+                  mt: 0.5,
+                }}
+              >
+                <KeyboardArrowLeftIcon sx={{ fontSize: 16 }} />
+              </Button>
+              <Box
+                ref={topScrollRef}
+                sx={{
+                  overflowX: "auto",
+                  overflowY: "hidden",
+                  flex: 1,
+                  height: 14,
+                  "&::-webkit-scrollbar": { height: 10 },
+                  "&::-webkit-scrollbar-track": {
+                    bgcolor: sf.sf_borderLight,
+                    borderRadius: 0,
+                  },
+                  "&::-webkit-scrollbar-thumb": {
+                    bgcolor: sf.sf_textTertiary,
+                    borderRadius: 0,
+                    "&:hover": { bgcolor: sf.sf_brandPrimary },
+                  },
+                }}
+              >
+                <Box
+                  ref={topScrollInnerRef}
+                  sx={{ height: 1, minWidth: "100%" }}
+                />
+              </Box>
+              <Button
+                onClick={() => scrollTopBarBy(220)}
+                variant="outlined"
+                sx={{
+                  minWidth: 22,
+                  width: 22,
+                  height: 18,
+                  p: 0,
+                  bgcolor: sf.sf_actionHoverBg,
+                  borderRadius: 0,
+                  "&:hover": { bgcolor: sf.sf_brandPrimary },
+                  mt: 0.5,
+                }}
+              >
+                <KeyboardArrowRightIcon sx={{ fontSize: 16 }} />
+              </Button>
+            </Box>
+            <Box ref={gridDragContainerRef} sx={{ cursor: "grab" }}>
+              <CustomDataGrid
+                rows={filteredLoans}
+                columns={columns}
+                loading={loading}
+                getRowId={(row) => row.id}
+                pageSize={50}
+                pageSizeOptions={[25, 50, 100]}
+                getRowHeight={() => "auto"}
+                getEstimatedRowHeight={() => 72}
+                showToolbar={false}
+                sx={{
+                  borderRadius: 0,
+                  "& .MuiDataGrid-columnHeaderTitle": {
+                    fontSize: "0.74rem",
+                  },
+                  "& .MuiDataGrid-cell": {
+                    cursor: "default",
+                    pt: 0.5,
+                    pb: 0.5,
+                    display: "flex",
+                    alignItems: "flex-start",
+                    justifyContent: "center",
+                    textAlign: "center",
+                    minHeight: "60px !important",
+                  },
+                  "& .MuiDataGrid-cell[data-field='borrower']": {
+                    justifyContent: "flex-start",
+                    textAlign: "left",
+                  },
+                  "& .MuiDataGrid-cell[data-field='amountDue']": {
+                    justifyContent: "flex-start",
+                    textAlign: "left",
+                  },
+                }}
+              />
+            </Box>
+          </Box>
+
+          {(hasMoreLoans || loadingMore) && (
+            <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+              <Button
+                variant="outlined"
+                onClick={() => loadLoansPage()}
+                disabled={loading || loadingMore}
+                sx={{ borderRadius: 0 }}
+              >
+                {loadingMore
+                  ? "LOADING MORE..."
+                  : `LOAD ${LOANS_PAGE_SIZE} MORE LOANS`}
+              </Button>
+            </Box>
+          )}
+        </>
       )}
 
       {paymentPopupOpen && paymentLoanRow && (

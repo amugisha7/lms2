@@ -24,6 +24,20 @@ export type AmplifyDependentResourcesAttributes = {
       "LambdaExecutionRoleArn": "string",
       "Name": "string",
       "Region": "string"
+    },
+    "loanSummaryScheduledRefresh": {
+      "Arn": "string",
+      "LambdaExecutionRole": "string",
+      "LambdaExecutionRoleArn": "string",
+      "Name": "string",
+      "Region": "string"
+    },
+    "loanSummaryStreamHandler": {
+      "Arn": "string",
+      "LambdaExecutionRole": "string",
+      "LambdaExecutionRoleArn": "string",
+      "Name": "string",
+      "Region": "string"
     }
   },
   "storage": {

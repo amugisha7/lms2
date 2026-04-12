@@ -71,6 +71,38 @@
           "resourceName": "S3Trigger3f2463e0"
         }
       ]
+    },
+    "AMPLIFY_function_loanSummaryScheduledRefresh_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "loanSummaryScheduledRefresh"
+        }
+      ]
+    },
+    "AMPLIFY_function_loanSummaryScheduledRefresh_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "loanSummaryScheduledRefresh"
+        }
+      ]
+    },
+    "AMPLIFY_function_loanSummaryStreamHandler_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "loanSummaryStreamHandler"
+        }
+      ]
+    },
+    "AMPLIFY_function_loanSummaryStreamHandler_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "loanSummaryStreamHandler"
+        }
+      ]
     }
   },
   "storage": {

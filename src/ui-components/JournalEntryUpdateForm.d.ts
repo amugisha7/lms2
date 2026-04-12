@@ -26,9 +26,6 @@ export declare type JournalEntryUpdateFormInputValues = {
     description?: string;
     reference?: string;
     status?: string;
-    relatedLoanID?: string;
-    relatedPaymentID?: string;
-    relatedExpenseID?: string;
     customJournalEntryDetails?: string;
 };
 export declare type JournalEntryUpdateFormValidationValues = {
@@ -36,9 +33,6 @@ export declare type JournalEntryUpdateFormValidationValues = {
     description?: ValidationFunction<string>;
     reference?: ValidationFunction<string>;
     status?: ValidationFunction<string>;
-    relatedLoanID?: ValidationFunction<string>;
-    relatedPaymentID?: ValidationFunction<string>;
-    relatedExpenseID?: ValidationFunction<string>;
     customJournalEntryDetails?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
@@ -48,9 +42,6 @@ export declare type JournalEntryUpdateFormOverridesProps = {
     description?: PrimitiveOverrideProps<TextFieldProps>;
     reference?: PrimitiveOverrideProps<TextFieldProps>;
     status?: PrimitiveOverrideProps<TextFieldProps>;
-    relatedLoanID?: PrimitiveOverrideProps<TextFieldProps>;
-    relatedPaymentID?: PrimitiveOverrideProps<TextFieldProps>;
-    relatedExpenseID?: PrimitiveOverrideProps<TextFieldProps>;
     customJournalEntryDetails?: PrimitiveOverrideProps<TextAreaFieldProps>;
 } & EscapeHatchProps;
 export declare type JournalEntryUpdateFormProps = React.PropsWithChildren<{

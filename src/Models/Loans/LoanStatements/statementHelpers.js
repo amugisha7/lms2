@@ -34,13 +34,18 @@ export function safeParseJson(value) {
   }
 }
 
+function parseLoanComputationEnvelope(loan) {
+  const raw = loan?.loanComputationRecord ?? loan?.draftRecord;
+  const parsed = safeParseJson(raw);
+  return parsed && typeof parsed === "object" ? parsed : {};
+}
+
 /**
  * Extract the computation record from a loan, unwrapping nested draftRecord
  * layers the same way loanComputations.js does.
  */
 export function parseLoanComputationRecord(loan) {
-  const raw = loan?.loanComputationRecord ?? loan?.draftRecord;
-  const parsed = safeParseJson(raw);
+  const parsed = parseLoanComputationEnvelope(loan);
   if (!parsed || typeof parsed !== "object") return {};
 
   // Handle doubly-nested draftRecord
@@ -51,6 +56,73 @@ export function parseLoanComputationRecord(loan) {
     if (typeof nested === "object") return nested;
   }
   return parsed;
+}
+
+const hasMeaningfulValue = (value) => {
+  if (value == null) return false;
+  if (typeof value === "string") return value.trim() !== "";
+  return true;
+};
+
+const pickFirstMeaningful = (...values) =>
+  values.find((value) => hasMeaningfulValue(value));
+
+const normalizeBooleanSetting = (value) => {
+  if (typeof value === "boolean") return value;
+  const normalized = String(value || "").trim().toLowerCase();
+  if (["yes", "true", "1"].includes(normalized)) return true;
+  if (["no", "false", "0"].includes(normalized)) return false;
+  return false;
+};
+
+function resolveStatementTermSettings(loan) {
+  const computationEnvelope = parseLoanComputationEnvelope(loan);
+  const computationRecord = parseLoanComputationRecord(loan);
+  const termsSnapshot = safeParseJson(computationEnvelope?.termsSnapshot);
+  const loanProduct = loan?.loanProduct || {};
+
+  return {
+    repaymentOrder: pickFirstMeaningful(
+      computationRecord?.repaymentOrder,
+      computationEnvelope?.repaymentOrder,
+      termsSnapshot?.repaymentOrder,
+      loanProduct?.repaymentOrder,
+    ),
+    extendLoanAfterMaturity: normalizeBooleanSetting(
+      pickFirstMeaningful(
+        computationRecord?.extendLoanAfterMaturity,
+        computationEnvelope?.extendLoanAfterMaturity,
+        termsSnapshot?.extendLoanAfterMaturity,
+        loanProduct?.extendLoanAfterMaturity,
+      ),
+    ),
+    interestTypeMaturity:
+      pickFirstMeaningful(
+        computationRecord?.interestTypeMaturity,
+        computationEnvelope?.interestTypeMaturity,
+        termsSnapshot?.interestTypeMaturity,
+        loanProduct?.interestTypeMaturity,
+      ) || "percentage",
+    calculateInterestOn:
+      pickFirstMeaningful(
+        computationRecord?.calculateInterestOn,
+        computationEnvelope?.calculateInterestOn,
+        termsSnapshot?.calculateInterestOn,
+        loanProduct?.calculateInterestOn,
+      ) || "Overdue Principal Amount",
+    loanInterestRateAfterMaturity: pickFirstMeaningful(
+      computationRecord?.loanInterestRateAfterMaturity,
+      computationEnvelope?.loanInterestRateAfterMaturity,
+      termsSnapshot?.loanInterestRateAfterMaturity,
+      loanProduct?.loanInterestRateAfterMaturity,
+    ),
+    recurringPeriodAfterMaturityUnit: pickFirstMeaningful(
+      computationRecord?.recurringPeriodAfterMaturityUnit,
+      computationEnvelope?.recurringPeriodAfterMaturityUnit,
+      termsSnapshot?.recurringPeriodAfterMaturityUnit,
+      loanProduct?.recurringPeriodAfterMaturityUnit,
+    ),
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -111,6 +183,14 @@ function isActivePenalty(penalty) {
 // ---------------------------------------------------------------------------
 
 const DEFAULT_REPAYMENT_ORDER = ["penalty", "fees", "interest", "principal"];
+const AFTER_MATURITY_PREFIX = "Maturity Date Installment Only - ";
+const CLOSED_LIFECYCLE_STATUSES = new Set([
+  "CLOSED",
+  "CLEARED",
+  "PAID",
+  "VOIDED",
+  "WRITTEN_OFF",
+]);
 
 /**
  * Resolve the effective repayment order from a loan product's repaymentOrder
@@ -118,7 +198,7 @@ const DEFAULT_REPAYMENT_ORDER = ["penalty", "fees", "interest", "principal"];
  * Falls back to the default order.
  */
 export function resolveRepaymentOrder(loanProduct) {
-  const raw = loanProduct?.repaymentOrder;
+  const raw = loanProduct?.repaymentOrder ?? loanProduct;
   if (!raw) return DEFAULT_REPAYMENT_ORDER;
 
   const arr =
@@ -133,6 +213,227 @@ export function resolveRepaymentOrder(loanProduct) {
     );
 
   return cleaned.length > 0 ? cleaned : DEFAULT_REPAYMENT_ORDER;
+}
+
+function toDayjsDate(value) {
+  const parsed = dayjs(value);
+  return parsed.isValid() ? parsed.startOf("day") : null;
+}
+
+function normalizeAfterMaturityPeriod(unit) {
+  const raw = String(unit || "").trim().toLowerCase();
+
+  if (!raw) return null;
+  if (raw === "daily") return { kind: "interval", unit: "day", count: 1, label: "Daily" };
+  if (raw === "weekly") return { kind: "interval", unit: "week", count: 1, label: "Weekly" };
+  if (raw === "every 2 weeks") {
+    return { kind: "interval", unit: "week", count: 2, label: "Every 2 weeks" };
+  }
+  if (raw === "monthly") return { kind: "interval", unit: "month", count: 1, label: "Monthly" };
+  if (raw === "every 2 months") {
+    return { kind: "interval", unit: "month", count: 2, label: "Every 2 Months" };
+  }
+  if (raw === "every 3 months") {
+    return { kind: "interval", unit: "month", count: 3, label: "Every 3 Months" };
+  }
+  if (raw === "every 4 months") {
+    return { kind: "interval", unit: "month", count: 4, label: "Every 4 Months" };
+  }
+  if (raw === "every 6 months") {
+    return { kind: "interval", unit: "month", count: 6, label: "Every 6 Months" };
+  }
+  if (raw === "every 9 months") {
+    return { kind: "interval", unit: "month", count: 9, label: "Every 9 Months" };
+  }
+  if (raw === "yearly") return { kind: "interval", unit: "year", count: 1, label: "Yearly" };
+  if (raw === "one-off / lump-sum") {
+    return { kind: "one-off", unit: null, count: 1, label: "One-off / Lump-Sum" };
+  }
+
+  return null;
+}
+
+function buildMaturityInstallmentSnapshot(schedule, maturityDate) {
+  const maturityDay = toDayjsDate(maturityDate);
+  if (!maturityDay || !Array.isArray(schedule) || schedule.length === 0) {
+    return { principal: 0, interest: 0, fees: 0, penalty: 0 };
+  }
+
+  let matches = schedule.filter((inst) => {
+    const dueDate = toDayjsDate(inst?.dueDate);
+    return dueDate && dueDate.isSame(maturityDay, "day");
+  });
+
+  if (matches.length === 0) {
+    const datedInstallments = schedule
+      .map((inst) => ({ inst, dueDate: toDayjsDate(inst?.dueDate) }))
+      .filter(({ dueDate }) => dueDate && (dueDate.isBefore(maturityDay, "day") || dueDate.isSame(maturityDay, "day")))
+      .sort((left, right) => right.dueDate.valueOf() - left.dueDate.valueOf());
+
+    const fallbackDate = datedInstallments[0]?.dueDate;
+    if (fallbackDate) {
+      matches = datedInstallments
+        .filter(({ dueDate }) => dueDate.isSame(fallbackDate, "day"))
+        .map(({ inst }) => inst);
+    }
+  }
+
+  return matches.reduce(
+    (accumulator, installment) => ({
+      principal: round2(accumulator.principal + Number(installment?.principalDue || 0)),
+      interest: round2(accumulator.interest + Number(installment?.interestDue || 0)),
+      fees: round2(accumulator.fees + Number(installment?.feesDue || 0)),
+      penalty: round2(accumulator.penalty + Number(installment?.penaltyDue || 0)),
+    }),
+    { principal: 0, interest: 0, fees: 0, penalty: 0 },
+  );
+}
+
+function resolveAfterMaturityBaseAmount({
+  calculateInterestOn,
+  balanceState,
+  maturitySnapshot,
+  principalReleased,
+}) {
+  const rawMetric = String(calculateInterestOn || "Overdue Principal Amount").trim();
+  const usesMaturitySnapshot = rawMetric.startsWith(AFTER_MATURITY_PREFIX);
+  const metric = usesMaturitySnapshot
+    ? rawMetric.slice(AFTER_MATURITY_PREFIX.length).trim()
+    : rawMetric;
+  const buckets = usesMaturitySnapshot
+    ? maturitySnapshot
+    : {
+        principal: round2(balanceState?.principal || 0),
+        interest: round2(balanceState?.interest || 0),
+        fees: round2(balanceState?.fees || 0),
+        penalty: round2(balanceState?.penalty || 0),
+      };
+
+  switch (metric) {
+    case "Overdue Principal Amount":
+      return round2(buckets.principal);
+    case "Overdue Interest Amount":
+      return round2(buckets.interest);
+    case "Overdue (Principal + Interest) Amount":
+      return round2(buckets.principal + buckets.interest);
+    case "Overdue (Principal + Interest + Fees) Amount":
+      return round2(buckets.principal + buckets.interest + buckets.fees);
+    case "Overdue (Principal + Interest + Penalty) Amount":
+      return round2(buckets.principal + buckets.interest + buckets.penalty);
+    case "Overdue (Principal + Interest + Fees + Penalty) Amount":
+      return round2(
+        buckets.principal + buckets.interest + buckets.fees + buckets.penalty,
+      );
+    case "Overdue (Interest + Fees) Amount":
+      return round2(buckets.interest + buckets.fees);
+    case "Total Principal Amount Released":
+      return round2(principalReleased);
+    case "Total Principal Balance Amount":
+      return round2(balanceState?.principal || 0);
+    default:
+      return round2(buckets.principal);
+  }
+}
+
+function resolveAfterMaturityEndDate({
+  loan,
+  validPayments,
+  maturityDate,
+  recurringPeriod,
+}) {
+  const stopDate = toDayjsDate(loan?.stopDate);
+  if (stopDate) return stopDate;
+
+  const extensionPeriods = Number(loan?.extensionPeriod);
+  if (
+    Number.isFinite(extensionPeriods) &&
+    extensionPeriods > 0 &&
+    recurringPeriod?.kind === "interval"
+  ) {
+    return maturityDate.add(
+      recurringPeriod.count * extensionPeriods,
+      recurringPeriod.unit,
+    );
+  }
+
+  const normalizedStatus = String(loan?.status || "")
+    .trim()
+    .toUpperCase()
+    .replace(/\s+/g, "_");
+  if (CLOSED_LIFECYCLE_STATUSES.has(normalizedStatus) && validPayments.length > 0) {
+    const lastPayment = validPayments[validPayments.length - 1];
+    const lastPaymentDate = toDayjsDate(
+      lastPayment?.paymentDate || lastPayment?.createdAt,
+    );
+    if (lastPaymentDate) return lastPaymentDate;
+  }
+
+  return dayjs().startOf("day");
+}
+
+function buildAfterMaturityEvents({ loan, schedule, validPayments, settings }) {
+  if (!settings?.extendLoanAfterMaturity) {
+    return [];
+  }
+
+  const rate = Number(settings.loanInterestRateAfterMaturity);
+  if (!Number.isFinite(rate) || rate <= 0) {
+    return [];
+  }
+
+  const maturityDate =
+    toDayjsDate(loan?.maturityDate) ||
+    toDayjsDate(schedule?.[schedule.length - 1]?.dueDate);
+  if (!maturityDate) {
+    return [];
+  }
+
+  const recurringPeriod = normalizeAfterMaturityPeriod(
+    settings.recurringPeriodAfterMaturityUnit,
+  );
+  if (!recurringPeriod) {
+    return [];
+  }
+
+  const accrualEndDate = resolveAfterMaturityEndDate({
+    loan,
+    validPayments,
+    maturityDate,
+    recurringPeriod,
+  });
+  if (!accrualEndDate || !accrualEndDate.isAfter(maturityDate, "day")) {
+    return [];
+  }
+
+  const maturitySnapshot = buildMaturityInstallmentSnapshot(schedule, maturityDate);
+  const accrualDates = [];
+
+  if (recurringPeriod.kind === "one-off") {
+    const firstChargeDate = maturityDate.add(1, "day");
+    if (
+      firstChargeDate.isBefore(accrualEndDate, "day") ||
+      firstChargeDate.isSame(accrualEndDate, "day")
+    ) {
+      accrualDates.push(firstChargeDate);
+    }
+  } else {
+    let cursor = maturityDate.add(recurringPeriod.count, recurringPeriod.unit);
+    while (cursor.isBefore(accrualEndDate, "day") || cursor.isSame(accrualEndDate, "day")) {
+      accrualDates.push(cursor);
+      cursor = cursor.add(recurringPeriod.count, recurringPeriod.unit);
+    }
+  }
+
+  return accrualDates.map((date, index) => ({
+    id: `after-maturity-${index + 1}`,
+    date: date.format("YYYY-MM-DD"),
+    description: "Post-Maturity Interest",
+    cadenceLabel: recurringPeriod.label,
+    calculateInterestOn: settings.calculateInterestOn,
+    interestTypeMaturity: settings.interestTypeMaturity,
+    loanInterestRateAfterMaturity: rate,
+    maturitySnapshot,
+  }));
 }
 
 // ---------------------------------------------------------------------------
@@ -379,7 +680,8 @@ export function buildStatementLedger(loan) {
     };
   }
 
-  const repaymentOrder = resolveRepaymentOrder(loan.loanProduct);
+  const statementSettings = resolveStatementTermSettings(loan);
+  const repaymentOrder = resolveRepaymentOrder(statementSettings.repaymentOrder);
 
   // 1. Resolve schedule
   const persistedInstallments = resolvePersistedInstallments(loan);
@@ -417,6 +719,12 @@ export function buildStatementLedger(loan) {
       const db = new Date(b.paymentDate || 0);
       return da - db;
     });
+  const afterMaturityEvents = buildAfterMaturityEvents({
+    loan,
+    schedule,
+    validPayments,
+    settings: statementSettings,
+  });
 
   // 4. Build chronological ledger with running balances
   //    Track: principal, interest, fees, penalty outstanding separately
@@ -468,12 +776,19 @@ export function buildStatementLedger(loan) {
       data: penalty,
     });
   }
+  for (const extension of afterMaturityEvents) {
+    events.push({
+      _date: new Date(extension.date || 0),
+      _type: "extension",
+      data: extension,
+    });
+  }
   for (const p of validPayments) {
     events.push({ _date: new Date(p.paymentDate || 0), _type: "payment", data: p });
   }
 
   // Sort chronologically; installments before same-day payments
-  const typeOrder = { installment: 0, penalty: 1, payment: 2 };
+  const typeOrder = { installment: 0, extension: 1, penalty: 2, payment: 3 };
   events.sort((a, b) => {
     const dt = a._date - b._date;
     if (dt !== 0) return dt;
@@ -487,6 +802,7 @@ export function buildStatementLedger(loan) {
   let totalInterestPaid = 0;
   let totalFeesPaid = 0;
   let totalPenaltyPaid = 0;
+  let totalAfterMaturityInterest = 0;
 
   for (const ev of events) {
     if (ev._type === "installment") {
@@ -524,6 +840,41 @@ export function buildStatementLedger(loan) {
         description: penalty.description,
         status: penalty.status,
         notes: penalty.notes,
+        runningBalance: runningTotal(),
+      });
+    } else if (ev._type === "extension") {
+      const extension = ev.data;
+      const baseAmount = resolveAfterMaturityBaseAmount({
+        calculateInterestOn: extension.calculateInterestOn,
+        balanceState,
+        maturitySnapshot: extension.maturitySnapshot,
+        principalReleased: principal,
+      });
+
+      if (baseAmount <= 0) {
+        continue;
+      }
+
+      const chargeAmount =
+        String(extension.interestTypeMaturity || "percentage").toLowerCase() === "fixed"
+          ? round2(extension.loanInterestRateAfterMaturity)
+          : round2((baseAmount * Number(extension.loanInterestRateAfterMaturity || 0)) / 100);
+
+      if (chargeAmount <= 0) {
+        continue;
+      }
+
+      balanceState.interest = round2(balanceState.interest + chargeAmount);
+      totalAfterMaturityInterest = round2(totalAfterMaturityInterest + chargeAmount);
+
+      rows.push({
+        rowType: "extension",
+        key: extension.id,
+        date: extension.date,
+        description: extension.description,
+        status: extension.cadenceLabel,
+        interestDue: chargeAmount,
+        totalDue: chargeAmount,
         runningBalance: runningTotal(),
       });
     } else if (ev._type === "payment") {
@@ -590,7 +941,7 @@ export function buildStatementLedger(loan) {
   const scheduledPrincipal = round2(
     schedule.reduce((s, i) => s + (i.principalDue || 0), 0)
   );
-  const scheduledInterest = totalScheduledInterest;
+  const scheduledInterest = round2(totalScheduledInterest + totalAfterMaturityInterest);
   const scheduledFees = totalScheduledFees;
   const scheduledPenalty = totalScheduledPenalty;
   const totalScheduled = round2(
@@ -624,6 +975,7 @@ export function buildStatementLedger(loan) {
     totals: {
       scheduledPrincipal,
       scheduledInterest,
+      afterMaturityInterest: totalAfterMaturityInterest,
       scheduledFees,
       scheduledPenalty,
       assessedPenalty,

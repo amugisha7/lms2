@@ -490,6 +490,13 @@ const applyLoanProductTemplateToFormik = (loanProduct, formik) => {
     }
   }
 
+  if (
+    loanProduct.repaymentOrder !== null &&
+    loanProduct.repaymentOrder !== undefined
+  ) {
+    nextValues.repaymentOrder = loanProduct.repaymentOrder;
+  }
+
   // Loan Fees Config template
   // LoanProduct -> loanFeesConfigs is an association (LoanProductLoanFeesConfig)
   // We default to the first active associated config.
@@ -514,9 +521,8 @@ const applyLoanProductTemplateToFormik = (loanProduct, formik) => {
     nextValues.customLoanFeeAmount = "";
   }
 
-  // Repayment order exists on the product but is not a field in the loan create form currently.
-  // Keep it on values only if the loan form expects it later.
-  // (No-op here by design.)
+  // Keep repayment order on form state even though it has no visible field,
+  // so created loans and statements can reuse the original product setting.
 
   formik.setValues(nextValues);
 };

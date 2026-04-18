@@ -481,6 +481,16 @@ export const createLoanWithSchedule = async (values, userDetails) => {
       interestCalculationMethod: values?.interestMethod || null,
       interestType: values?.interestType || "percentage",
       interestPeriod: values?.interestPeriod || "per_month",
+      extendLoanAfterMaturity: values?.extendLoanAfterMaturity ?? null,
+      interestTypeMaturity: values?.interestTypeMaturity || null,
+      calculateInterestOn: values?.calculateInterestOn || null,
+      loanInterestRateAfterMaturity:
+        values?.loanInterestRateAfterMaturity != null
+          ? Number(values.loanInterestRateAfterMaturity)
+          : null,
+      recurringPeriodAfterMaturityUnit:
+        values?.recurringPeriodAfterMaturityUnit || null,
+      repaymentOrder: values?.repaymentOrder ?? null,
       loanStartDate: startDate,
       startDate,
       maturityDate,

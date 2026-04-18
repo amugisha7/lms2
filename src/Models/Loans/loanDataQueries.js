@@ -47,6 +47,11 @@ export const LOAN_STATEMENT_READY_FIELDS = `
     name
     interestCalculationMethod
     repaymentOrder
+    extendLoanAfterMaturity
+    interestTypeMaturity
+    calculateInterestOn
+    loanInterestRateAfterMaturity
+    recurringPeriodAfterMaturityUnit
   }
   penalties(limit: 1000) {
     items {

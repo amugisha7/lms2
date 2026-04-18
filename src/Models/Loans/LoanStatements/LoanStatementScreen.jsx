@@ -435,6 +435,74 @@ function LedgerTable({ rows, visibleColumns: vc, currency, currencyCode }) {
               );
             }
 
+            if (row.rowType === "extension") {
+              return (
+                <TableRow key={row.key} sx={{ bgcolor: "#fff7e6" }}>
+                  {vc.date && (
+                    <TableCell sx={{ ...CELL_BASE, color: "#000" }}>
+                      {fmtDate(row.date)}
+                    </TableCell>
+                  )}
+                  {vc.description && (
+                    <TableCell
+                      sx={{ ...CELL_BASE, color: "#000", fontStyle: "italic" }}
+                    >
+                      {row.description}
+                      {row.status ? ` (${row.status})` : ""}
+                    </TableCell>
+                  )}
+                  {vc.scheduledPrincipal && (
+                    <TableCell sx={{ ...CELL_BASE, color: "#000" }} />
+                  )}
+                  {vc.scheduledInterest && (
+                    <TableCell
+                      sx={{ ...CELL_BASE, color: "#000", fontWeight: 600 }}
+                      align="right"
+                    >
+                      <M value={row.interestDue} />
+                    </TableCell>
+                  )}
+                  {vc.scheduledFees && (
+                    <TableCell sx={{ ...CELL_BASE, color: "#000" }} />
+                  )}
+                  {vc.scheduledPenalty && (
+                    <TableCell sx={{ ...CELL_BASE, color: "#000" }} />
+                  )}
+                  {vc.scheduledTotal && (
+                    <TableCell
+                      sx={{ ...CELL_BASE, color: "#000", fontWeight: 600 }}
+                      align="right"
+                    >
+                      <M value={row.totalDue} />
+                    </TableCell>
+                  )}
+                  {vc.paymentAmount && (
+                    <TableCell sx={{ ...CELL_BASE, color: "#000" }} />
+                  )}
+                  {vc.allocPrincipal && (
+                    <TableCell sx={{ ...CELL_BASE, color: "#000" }} />
+                  )}
+                  {vc.allocInterest && (
+                    <TableCell sx={{ ...CELL_BASE, color: "#000" }} />
+                  )}
+                  {vc.allocFees && (
+                    <TableCell sx={{ ...CELL_BASE, color: "#000" }} />
+                  )}
+                  {vc.allocPenalty && (
+                    <TableCell sx={{ ...CELL_BASE, color: "#000" }} />
+                  )}
+                  {vc.runningBalance && (
+                    <TableCell
+                      sx={{ ...CELL_BASE, color: "#000", fontWeight: 600 }}
+                      align="right"
+                    >
+                      <M value={row.runningBalance} />
+                    </TableCell>
+                  )}
+                </TableRow>
+              );
+            }
+
             if (row.rowType === "payment") {
               return (
                 <TableRow key={row.key} sx={{ bgcolor: "#e8f0fe" }}>

@@ -21,6 +21,12 @@ const buildDescription = (row) => {
     return `Installment ${row.installmentNumber}`;
   }
 
+  if (row.rowType === "extension") {
+    return `${row.description || "Post-Maturity Interest"}${
+      row.status ? ` (${row.status})` : ""
+    }`;
+  }
+
   if (row.rowType === "penalty") {
     return `${row.description || "Penalty"}${
       row.status ? ` (${row.status})` : ""
@@ -72,7 +78,7 @@ const buildStatementBody = (rows, columns, currency, currencyCode) =>
           break;
         case "scheduledInterest":
           record.scheduledInterest =
-            row.rowType === "installment"
+            row.rowType === "installment" || row.rowType === "extension"
               ? formatCurrencyText(row.interestDue, currency, currencyCode)
               : "";
           break;
@@ -90,7 +96,9 @@ const buildStatementBody = (rows, columns, currency, currencyCode) =>
           break;
         case "scheduledTotal":
           record.scheduledTotal =
-            row.rowType === "installment" || row.rowType === "penalty"
+            row.rowType === "installment" ||
+            row.rowType === "penalty" ||
+            row.rowType === "extension"
               ? formatCurrencyText(row.totalDue, currency, currencyCode)
               : "";
           break;
@@ -295,6 +303,11 @@ export async function exportStatementPdf({
 
       if (rowType === "disbursement") {
         data.cell.styles.fillColor = [232, 244, 232];
+        if (data.column.dataKey === "description") {
+          data.cell.styles.fontStyle = "italic";
+        }
+      } else if (rowType === "extension") {
+        data.cell.styles.fillColor = [255, 247, 230];
         if (data.column.dataKey === "description") {
           data.cell.styles.fontStyle = "italic";
         }

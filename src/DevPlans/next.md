@@ -21,3 +21,4 @@
 - Upon login, redirect to tutorials with option of go to platform.
 - Identify which functionality is core for admin to view all branches.
 - Move branch gating to the top level of the app.
+- redo the side menu similar to Khoros with slide out arrow pointer in the center.

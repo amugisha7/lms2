@@ -160,8 +160,10 @@ export async function exportStatementPdf({
   showCustomHeaderFirstPageOnly = true,
   showInstitutionName = true,
   showBranchName = true,
+  showStatus = true,
   borrowerLabel = "",
   officerLabel = "",
+  statusLabel = "",
   interestRateLabel = "",
   interestMethodLabel = "",
   showLoanOfficer = false,
@@ -200,7 +202,7 @@ export async function exportStatementPdf({
     { label: "Loan #", value: loan?.loanNumber || loan?.id || "N/A" },
     { label: "Borrower", value: borrowerLabel || "N/A" },
     showLoanOfficer ? { label: "Loan Officer", value: officerLabel } : null,
-    { label: "Status", value: loan?.status || "N/A" },
+    showStatus ? { label: "Status", value: statusLabel || loan?.status || "N/A" } : null,
     showLoanProduct
       ? { label: "Loan Product", value: loan?.loanProduct?.name || "N/A" }
       : null,

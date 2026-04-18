@@ -71,6 +71,7 @@ export const DEFAULT_VISIBLE_COLUMNS = {
 export const AVAILABLE_COLUMNS = [
   { key: "scheduledTotal", label: "Total Due" },
   { key: "allocPrincipal", label: "Paid Principal" },
+  { key: "allocInterest", label: "Paid Interest" },
   { key: "runningBalance", label: "Balance" },
 ];
 

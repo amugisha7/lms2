@@ -37,6 +37,7 @@ import {
 import { DEFAULT_VISIBLE_COLUMNS, AVAILABLE_COLUMNS } from "./StatementLedger";
 import { exportStatementPdf } from "./statementExportHelpers";
 import { GET_LOAN_STATEMENT_READY_QUERY } from "../loanDataQueries";
+import { attachDerivedLoanData } from "../loanSummaryProjection";
 
 // ---------------------------------------------------------------------------
 // Date / money helpers
@@ -124,12 +125,7 @@ const HEADER_CELL = {
 // ---------------------------------------------------------------------------
 // LedgerTable – renders one page-slice of rows
 // ---------------------------------------------------------------------------
-function LedgerTable({
-  rows,
-  visibleColumns: vc,
-  currency,
-  currencyCode,
-}) {
+function LedgerTable({ rows, visibleColumns: vc, currency, currencyCode }) {
   const M = ({ value }) => (
     <Money value={value} currency={currency} currencyCode={currencyCode} />
   );
@@ -560,6 +556,7 @@ export default function LoanStatementScreen({
     React.useState(true);
   const [showInstitutionName, setShowInstitutionName] = React.useState(true);
   const [showBranchName, setShowBranchName] = React.useState(true);
+  const [showStatus, setShowStatus] = React.useState(true);
   const [showLoanOfficer, setShowLoanOfficer] = React.useState(false);
   const [showLoanProduct, setShowLoanProduct] = React.useState(false);
   const [showInterestRate, setShowInterestRate] = React.useState(false);
@@ -711,10 +708,23 @@ export default function LoanStatementScreen({
   // -------------------------------------------------------------------------
   // Build ledger
   // -------------------------------------------------------------------------
-  const { rows, totals } = React.useMemo(
+  const derivedStatement = React.useMemo(
     () => buildStatementLedger(loan),
     [loan],
   );
+  const { rows, totals } = derivedStatement;
+  const loanWithDisplayStatus = React.useMemo(() => {
+    if (!loan) {
+      return null;
+    }
+
+    return attachDerivedLoanData({
+      ...loan,
+      derivedStatement,
+    });
+  }, [derivedStatement, loan]);
+  const statementStatusLabel =
+    loanWithDisplayStatus?.uiStatusLabel || loan?.status || "N/A";
 
   const pages = React.useMemo(() => chunk(rows, ROWS_PER_PAGE), [rows]);
   const totalPages = Math.max(pages.length, 1);
@@ -765,8 +775,10 @@ export default function LoanStatementScreen({
         showCustomHeaderFirstPageOnly,
         showInstitutionName,
         showBranchName,
+        showStatus,
         borrowerLabel,
         officerLabel,
+        statusLabel: statementStatusLabel,
         interestRateLabel,
         interestMethodLabel: interestMethodLabel(interestMethod),
         showLoanOfficer,
@@ -924,9 +936,17 @@ export default function LoanStatementScreen({
               <strong>Loan Officer:</strong> {officerLabel}
             </Typography>
           )}
-          <Typography variant="body2" sx={{ color: "#000", fontSize: "11px" }}>
-            <strong>Status:</strong> {loan?.status || "N/A"}
-          </Typography>
+          {showStatus && (
+            <Typography
+              variant="body2"
+              sx={{ color: "#000", fontSize: "11px" }}
+            >
+              <strong>Status:</strong>{" "}
+              <Box component="span" sx={{ whiteSpace: "pre-line" }}>
+                {statementStatusLabel}
+              </Box>
+            </Typography>
+          )}
           {showLoanProduct && (
             <Typography
               variant="body2"
@@ -1033,6 +1053,12 @@ export default function LoanStatementScreen({
             key: "details",
             label: "Details",
             checkboxes: [
+              {
+                key: "status",
+                label: "Status",
+                checked: showStatus,
+                onChange: setShowStatus,
+              },
               {
                 key: "loanOfficer",
                 label: "Loan Officer",

@@ -544,7 +544,7 @@ export default function CustomerLoans() {
                   openLoanStatementPreview(loan);
                 }}
               >
-                Preview Statement
+                Loan Statement
               </SFClickableText>
             </Box>
           );
@@ -777,7 +777,7 @@ export default function CustomerLoans() {
                 openLoanStatementPreview(params.row);
               }}
             >
-              Preview Statement
+              Loan Statement
             </SFClickableText>
           </Box>
         ),

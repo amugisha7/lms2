@@ -1,14 +1,13 @@
 import React from "react";
 import CustomPopUp from "../../ModelAssets/CustomPopUp";
 import { buildLoanDisplayName } from "../../Models/Loans/loanDisplayHelpers";
-import CustomerLoanStatementView from "./CustomerLoanStatementView";
+import LoanStatementScreen from "../../Models/Loans/LoanStatements/LoanStatementScreen";
 
 export default function CustomerLoanStatementPopup({
   open,
   onClose,
   loan,
   institution,
-  onOpenFullStatement,
 }) {
   if (!loan) {
     return null;
@@ -24,13 +23,14 @@ export default function CustomerLoanStatementPopup({
       title={title}
       showEdit={false}
       showDelete={false}
-      maxWidth="lg"
+      maxWidth="xl"
     >
-      <CustomerLoanStatementView
+      <LoanStatementScreen
         loan={loan}
-        institution={institution}
-        preview
-        onOpenFullStatement={onOpenFullStatement}
+        embedded
+        institutionOverride={institution}
+        showHeaderControls={false}
+        showDetailControls={false}
       />
     </CustomPopUp>
   );

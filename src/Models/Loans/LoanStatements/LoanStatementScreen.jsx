@@ -604,13 +604,17 @@ export default function LoanStatementScreen({
   loan: loanProp,
   loanId: loanIdProp,
   embedded = false,
+  institutionOverride = null,
+  currencyCodeOverride,
+  showHeaderControls = true,
+  showDetailControls = true,
 }) {
   const params = useParams();
   const loanId = loanIdProp || params.loanId;
   const navigate = useNavigate();
   const theme = useTheme();
-  const { userDetails } = React.useContext(UserContext);
-  const { showSnackbar } = useSnackbar();
+  const { userDetails } = React.useContext(UserContext) || {};
+  const { showSnackbar = () => {} } = useSnackbar() || {};
 
   const [fetchedLoan, setFetchedLoan] = React.useState(null);
   const [loading, setLoading] = React.useState(!loanProp);
@@ -636,11 +640,15 @@ export default function LoanStatementScreen({
     DEFAULT_VISIBLE_COLUMNS,
   );
 
+  const effectiveInstitution = institutionOverride || userDetails?.institution;
   const currencyCode =
-    userDetails?.institution?.currencyCode || userDetails?.currencyCode;
+    currencyCodeOverride ||
+    effectiveInstitution?.currencyCode ||
+    userDetails?.currencyCode ||
+    loan?.loanCurrency;
   const currency = currencyCode || "$";
 
-  const institutionName = userDetails?.institution?.name || "";
+  const institutionName = effectiveInstitution?.name || "";
   const branchName = React.useMemo(() => {
     if (loan?.branch?.name) return loan.branch.name;
     return userDetails?.branch?.name || "";
@@ -662,8 +670,8 @@ export default function LoanStatementScreen({
   React.useEffect(() => {
     let cancelled = false;
     const fetchHeaderImage = async () => {
-      if (!userDetails?.institution) return;
-      let docHeader = userDetails.institution.customDocumentHeader;
+      if (!effectiveInstitution) return;
+      let docHeader = effectiveInstitution.customDocumentHeader;
       if (typeof docHeader === "string") {
         try {
           docHeader = JSON.parse(docHeader);
@@ -723,7 +731,7 @@ export default function LoanStatementScreen({
     return () => {
       cancelled = true;
     };
-  }, [userDetails?.institution, revokeObjectUrl]);
+  }, [effectiveInstitution, revokeObjectUrl]);
 
   React.useEffect(() => {
     return () => {
@@ -1109,6 +1117,7 @@ export default function LoanStatementScreen({
         hasCustomHeader={!!headerImageSignedUrl}
         showCustomHeaderFirstPageOnly={showCustomHeaderFirstPageOnly}
         onCustomHeaderFirstPageOnlyChange={setShowCustomHeaderFirstPageOnly}
+        showHeaderControls={showHeaderControls}
         showInstitutionName={showInstitutionName}
         onInstitutionNameChange={setShowInstitutionName}
         showBranchName={showBranchName}
@@ -1116,44 +1125,48 @@ export default function LoanStatementScreen({
         visibleColumns={visibleColumns}
         onColumnVisibilityChange={setVisibleColumns}
         availableColumns={AVAILABLE_COLUMNS}
-        checkboxRows={[
-          {
-            key: "details",
-            label: "Details",
-            checkboxes: [
-              {
-                key: "status",
-                label: "Status",
-                checked: showStatus,
-                onChange: setShowStatus,
-              },
-              {
-                key: "loanOfficer",
-                label: "Loan Officer",
-                checked: showLoanOfficer,
-                onChange: setShowLoanOfficer,
-              },
-              {
-                key: "loanProduct",
-                label: "Loan Product",
-                checked: showLoanProduct,
-                onChange: setShowLoanProduct,
-              },
-              {
-                key: "interestRate",
-                label: "Interest Rate",
-                checked: showInterestRate,
-                onChange: setShowInterestRate,
-              },
-              {
-                key: "interestMethod",
-                label: "Interest Method",
-                checked: showInterestMethod,
-                onChange: setShowInterestMethod,
-              },
-            ],
-          },
-        ]}
+        checkboxRows={
+          showDetailControls
+            ? [
+                {
+                  key: "details",
+                  label: "Details",
+                  checkboxes: [
+                    {
+                      key: "status",
+                      label: "Status",
+                      checked: showStatus,
+                      onChange: setShowStatus,
+                    },
+                    {
+                      key: "loanOfficer",
+                      label: "Loan Officer",
+                      checked: showLoanOfficer,
+                      onChange: setShowLoanOfficer,
+                    },
+                    {
+                      key: "loanProduct",
+                      label: "Loan Product",
+                      checked: showLoanProduct,
+                      onChange: setShowLoanProduct,
+                    },
+                    {
+                      key: "interestRate",
+                      label: "Interest Rate",
+                      checked: showInterestRate,
+                      onChange: setShowInterestRate,
+                    },
+                    {
+                      key: "interestMethod",
+                      label: "Interest Method",
+                      checked: showInterestMethod,
+                      onChange: setShowInterestMethod,
+                    },
+                  ],
+                },
+              ]
+            : []
+        }
         actions={[
           !embedded
             ? {

@@ -21,6 +21,7 @@ export default function DraftHeader({
   hasCustomHeader = false,
   showCustomHeaderFirstPageOnly = true,
   onCustomHeaderFirstPageOnlyChange,
+  showHeaderControls = true,
 
   // Institution display options
   showInstitutionName = true,
@@ -108,120 +109,122 @@ export default function DraftHeader({
         }}
       >
         {/* Header Row */}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: { xs: 1, sm: 2 },
-            flexWrap: "wrap",
-          }}
-        >
-          <Typography
-            variant="body2"
-            sx={{ fontWeight: 600, minWidth: "80px" }}
-          >
-            Header:
-          </Typography>
+        {showHeaderControls && (
           <Box
-            sx={{ display: "flex", gap: { xs: 1, sm: 2 }, flexWrap: "wrap" }}
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: { xs: 1, sm: 2 },
+              flexWrap: "wrap",
+            }}
           >
-            <FormControlLabel
-              sx={{
-                m: 0,
-                "& .MuiFormControlLabel-label": {
-                  fontSize: theme.typography.caption.fontSize,
-                },
-              }}
-              control={
-                <Checkbox
-                  size="small"
-                  checked={showCustomHeader}
-                  onChange={(e) => {
-                    if (onCustomHeaderChange) {
-                      onCustomHeaderChange(e.target.checked);
-                    }
-                  }}
-                  disabled={readOnly || !hasCustomHeader}
-                />
-              }
-              label="Custom Header"
-            />
-            <FormControlLabel
-              sx={{
-                m: 0,
-                "& .MuiFormControlLabel-label": {
-                  fontSize: theme.typography.caption.fontSize,
-                },
-              }}
-              control={
-                <Checkbox
-                  size="small"
-                  checked={showCustomHeaderFirstPageOnly}
-                  onChange={(e) => {
-                    if (onCustomHeaderFirstPageOnlyChange) {
-                      onCustomHeaderFirstPageOnlyChange(e.target.checked);
-                    }
-                  }}
-                  disabled={readOnly || !showCustomHeader}
-                />
-              }
-              label="First Page Only"
-            />
-            <FormControlLabel
-              sx={{
-                m: 0,
-                "& .MuiFormControlLabel-label": {
-                  fontSize: theme.typography.caption.fontSize,
-                },
-              }}
-              control={
-                <Checkbox
-                  size="small"
-                  checked={showInstitutionName}
-                  onChange={(e) => {
-                    if (onInstitutionNameChange) {
-                      onInstitutionNameChange(e.target.checked);
-                    }
-                  }}
-                  disabled={readOnly}
-                />
-              }
-              label="Institution Name"
-            />
-            <FormControlLabel
-              sx={{
-                m: 0,
-                "& .MuiFormControlLabel-label": {
-                  fontSize: theme.typography.caption.fontSize,
-                },
-              }}
-              control={
-                <Checkbox
-                  size="small"
-                  checked={showBranchName}
-                  onChange={(e) => {
-                    if (onBranchNameChange) {
-                      onBranchNameChange(e.target.checked);
-                    }
-                  }}
-                  disabled={readOnly}
-                />
-              }
-              label="Branch Name"
-            />
-            <FormLinkText
-              icon={SettingsIcon}
-              linkText="Custom Header"
-              linkUrl="/settings?tab=2"
-              sx={{
-                ml: { xs: 1, sm: 2 },
-                "& .MuiLink-root": {
-                  fontSize: theme.typography.caption.fontSize,
-                },
-              }}
-            />
+            <Typography
+              variant="body2"
+              sx={{ fontWeight: 600, minWidth: "80px" }}
+            >
+              Header:
+            </Typography>
+            <Box
+              sx={{ display: "flex", gap: { xs: 1, sm: 2 }, flexWrap: "wrap" }}
+            >
+              <FormControlLabel
+                sx={{
+                  m: 0,
+                  "& .MuiFormControlLabel-label": {
+                    fontSize: theme.typography.caption.fontSize,
+                  },
+                }}
+                control={
+                  <Checkbox
+                    size="small"
+                    checked={showCustomHeader}
+                    onChange={(e) => {
+                      if (onCustomHeaderChange) {
+                        onCustomHeaderChange(e.target.checked);
+                      }
+                    }}
+                    disabled={readOnly || !hasCustomHeader}
+                  />
+                }
+                label="Custom Header"
+              />
+              <FormControlLabel
+                sx={{
+                  m: 0,
+                  "& .MuiFormControlLabel-label": {
+                    fontSize: theme.typography.caption.fontSize,
+                  },
+                }}
+                control={
+                  <Checkbox
+                    size="small"
+                    checked={showCustomHeaderFirstPageOnly}
+                    onChange={(e) => {
+                      if (onCustomHeaderFirstPageOnlyChange) {
+                        onCustomHeaderFirstPageOnlyChange(e.target.checked);
+                      }
+                    }}
+                    disabled={readOnly || !showCustomHeader}
+                  />
+                }
+                label="First Page Only"
+              />
+              <FormControlLabel
+                sx={{
+                  m: 0,
+                  "& .MuiFormControlLabel-label": {
+                    fontSize: theme.typography.caption.fontSize,
+                  },
+                }}
+                control={
+                  <Checkbox
+                    size="small"
+                    checked={showInstitutionName}
+                    onChange={(e) => {
+                      if (onInstitutionNameChange) {
+                        onInstitutionNameChange(e.target.checked);
+                      }
+                    }}
+                    disabled={readOnly}
+                  />
+                }
+                label="Institution Name"
+              />
+              <FormControlLabel
+                sx={{
+                  m: 0,
+                  "& .MuiFormControlLabel-label": {
+                    fontSize: theme.typography.caption.fontSize,
+                  },
+                }}
+                control={
+                  <Checkbox
+                    size="small"
+                    checked={showBranchName}
+                    onChange={(e) => {
+                      if (onBranchNameChange) {
+                        onBranchNameChange(e.target.checked);
+                      }
+                    }}
+                    disabled={readOnly}
+                  />
+                }
+                label="Branch Name"
+              />
+              <FormLinkText
+                icon={SettingsIcon}
+                linkText="Custom Header"
+                linkUrl="/settings?tab=2"
+                sx={{
+                  ml: { xs: 1, sm: 2 },
+                  "& .MuiLink-root": {
+                    fontSize: theme.typography.caption.fontSize,
+                  },
+                }}
+              />
+            </Box>
           </Box>
-        </Box>
+        )}
 
         {/* Configurable Checkbox Rows */}
         {checkboxRows.map((row, rowIndex) => (
@@ -268,7 +271,7 @@ export default function DraftHeader({
         ))}
 
         {/* Show Columns Row */}
-        {availableColumns.length > 0 && (
+        {availableColumns?.length > 0 && (
           <Box
             sx={{
               display: "flex",

@@ -4,7 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { CustomerContext } from "../../CustomerApp";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { fetchCustomerLoanById } from "./customerLoanData";
-import CustomerLoanStatementView from "./CustomerLoanStatementView";
+import LoanStatementScreen from "../../Models/Loans/LoanStatements/LoanStatementScreen";
 
 export default function CustomerLoanDetail() {
   const { loanId, institutionId } = useParams();
@@ -118,7 +118,13 @@ export default function CustomerLoanDetail() {
         available in the customer portal.
       </Alert>
 
-      <CustomerLoanStatementView loan={loan} institution={institution} />
+      <LoanStatementScreen
+        loan={loan}
+        embedded
+        institutionOverride={institution}
+        showHeaderControls={false}
+        showDetailControls={false}
+      />
     </Box>
   );
 }

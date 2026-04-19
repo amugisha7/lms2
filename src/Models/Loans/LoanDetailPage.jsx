@@ -14,6 +14,7 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import EditLoan from "./EditLoan/EditLoan";
 import ManagePaymentsPopup from "../Payments/ManagePaymentsPopup";
 import LoanFiles from "./LoanFiles/LoanFiles";
+import LoanComments from "./LoanComments/LoanComments";
 import LoanStatementPopup from "./LoanStatements/LoanStatementPopup";
 import NotificationBar from "../../ModelAssets/NotificationBar";
 import CustomSlider from "../../ModelAssets/CustomSlider";
@@ -76,6 +77,12 @@ const formatOfficerName = (employee) => {
   );
 };
 
+const getRequestedLoanTab = (state) => {
+  const requestedTab = state?.initialTab;
+
+  return Number.isInteger(requestedTab) && requestedTab >= 0 ? requestedTab : 0;
+};
+
 export default function LoanDetailPage() {
   const { loanId } = useParams();
   const navigate = useNavigate();
@@ -93,10 +100,16 @@ export default function LoanDetailPage() {
   const [loading, setLoading] = React.useState(() => Boolean(loanId && !loan));
   const [missingLoan, setMissingLoan] = React.useState(false);
   const [notification, setNotification] = React.useState(null);
-  const [tabValue, setTabValue] = React.useState(0);
+  const [tabValue, setTabValue] = React.useState(() =>
+    getRequestedLoanTab(location.state),
+  );
   const [editSliderOpen, setEditSliderOpen] = React.useState(false);
   const [paymentsPopupOpen, setPaymentsPopupOpen] = React.useState(false);
   const [statementPopupOpen, setStatementPopupOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    setTabValue(getRequestedLoanTab(location.state));
+  }, [location.state]);
 
   const branchLoansNavigation = React.useMemo(() => {
     const branchId =
@@ -435,6 +448,7 @@ export default function LoanDetailPage() {
             >
               <Tab label="Details" id="loan-tab-0" />
               <Tab label="Files" id="loan-tab-1" />
+              <Tab label="Comments" id="loan-tab-2" />
             </Tabs>
           </Box>
 
@@ -505,6 +519,18 @@ export default function LoanDetailPage() {
           {/* Files Tab */}
           <TabPanel value={tabValue} index={1}>
             <LoanFiles
+              loan={loan}
+              setNotification={(n) =>
+                setNotification({
+                  type: n.color === "green" ? "success" : "error",
+                  message: n.message,
+                })
+              }
+            />
+          </TabPanel>
+
+          <TabPanel value={tabValue} index={2}>
+            <LoanComments
               loan={loan}
               setNotification={(n) =>
                 setNotification({

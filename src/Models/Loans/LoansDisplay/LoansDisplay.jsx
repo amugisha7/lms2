@@ -710,6 +710,29 @@ export default function LoansDisplay() {
     setStatementPopupOpen(true);
   }, []);
 
+  const buildLoanDetailState = React.useCallback(
+    (loan, initialTab = 0) => ({
+      from: "/loans",
+      initialTab,
+      selectedBranchId:
+        selectedBranchId || loan?.branchID || loan?.branch?.id || "",
+    }),
+    [selectedBranchId],
+  );
+
+  const openLoanDetail = React.useCallback(
+    (loan, initialTab = 0) => {
+      if (!loan?.id) {
+        return;
+      }
+
+      navigate(`/loans/id/${loan.id}/view`, {
+        state: buildLoanDetailState(loan, initialTab),
+      });
+    },
+    [buildLoanDetailState, navigate],
+  );
+
   //  DataGrid column definitions
   const columns = React.useMemo(
     () => [
@@ -798,19 +821,7 @@ export default function LoansDisplay() {
                 statusColors={statusColors}
                 MoneyText={MoneyText}
                 getMoneyTextSx={getMoneyTextSx}
-                onNavigate={() =>
-                  loan.id &&
-                  navigate(`/loans/id/${loan.id}/view`, {
-                    state: {
-                      from: "/loans",
-                      selectedBranchId:
-                        selectedBranchId ||
-                        loan.branchID ||
-                        loan.branch?.id ||
-                        "",
-                    },
-                  })
-                }
+                onNavigate={() => openLoanDetail(loan)}
                 onBorrowerClick={() =>
                   loan.borrower?.id &&
                   navigate(`/borrowers/id/${loan.borrower.id}/view`)
@@ -826,6 +837,7 @@ export default function LoansDisplay() {
                     setPaymentPopupOpen(true);
                   }
                 }}
+                onCommentsClick={() => openLoanDetail(loan, 2)}
               />
             </Box>
           );
@@ -1183,7 +1195,14 @@ export default function LoansDisplay() {
               >
                 {officerName}
               </Typography>
-              <SFClickableText>Loan Comments</SFClickableText>
+              <SFClickableText
+                onClick={(event) => {
+                  event.stopPropagation();
+                  openLoanDetail(params.row, 2);
+                }}
+              >
+                Loan Comments
+              </SFClickableText>
             </Box>
           );
         },
@@ -1195,6 +1214,7 @@ export default function LoansDisplay() {
       navigate,
       MoneyText,
       currency,
+      openLoanDetail,
       openStatementPopup,
       showSnackbar,
     ],

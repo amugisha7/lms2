@@ -1,9 +1,8 @@
 - Create loans form. Also create from loan product.
   - Resume:
     - Check validity of loan statements.
-    - Check the customer portal routing and viewing of loans.
-    - Activate loan comments.
-    - Add collections sheets/plans.
+    - Work on the LoansDisplay tabs and filtering; Add collections sheets/plans.
+    - Deploy reports.
     - What happens if a customer logs in on the main portal?
 
     Put the contracts, collateral and gurantors, other incomes and expenses as tabs on loan drafts and loans.

@@ -30,7 +30,9 @@ export default function LoanDrafts() {
   const activeBranchId = userDetails?.branchUsersId || null;
   const institutionId =
     userDetails?.institution?.id || userDetails?.institutionUsersId || null;
+  const hasMultipleAdminBranches = isAdmin && branches.length > 1;
   const shouldShowLoanDraftsView = !isAdmin || Boolean(selectedBranchId);
+  const hasNoLoanDrafts = !loading && filteredRows.length === 0;
 
   const refresh = React.useCallback(async () => {
     setLoading(true);
@@ -77,7 +79,11 @@ export default function LoanDrafts() {
         });
         const items = branchData?.data?.listBranches?.items || [];
         setBranches(items);
-        setSelectedBranchId("");
+        if (items.length === 1 && items[0]?.id) {
+          setSelectedBranchId(items[0].id);
+        } else {
+          setSelectedBranchId("");
+        }
       } catch (error) {
         console.error("Failed to load branches for loan drafts:", error);
         setBranches([]);
@@ -419,7 +425,7 @@ export default function LoanDrafts() {
         />
       </Box>
 
-      {isAdmin && (
+      {hasMultipleAdminBranches && (
         <AdminBranchScopeSelector
           branches={branches}
           selectedBranchId={selectedBranchId}
@@ -431,69 +437,108 @@ export default function LoanDrafts() {
 
       {shouldShowLoanDraftsView && (
         <>
-          <Box sx={{ width: "100%", mb: 2 }}>
+          {hasNoLoanDrafts ? (
             <Box
               sx={{
-                borderBottom: 1,
-                borderColor: theme.palette.divider,
-                backgroundColor: theme.palette.background.paper,
-                borderRadius: "8px 8px 0 0",
+                px: 3,
+                py: 4,
+                textAlign: "center",
+                border: `1px solid ${theme.palette.divider}`,
+                borderRadius: 1,
+                bgcolor: theme.palette.background.paper,
               }}
             >
-              <Tabs
-                value={selectedTab}
-                onChange={handleTabChange}
-                aria-label="loan drafts filter tabs"
-                variant="scrollable"
-                scrollButtons
-                allowScrollButtonsMobile
+              <Typography
                 sx={{
-                  "& .MuiTabs-indicator": {
-                    backgroundColor: theme.palette.blueText.main,
-                    height: 3,
-                    borderRadius: "1.5px",
-                  },
-                  "& .MuiTab-root": {
-                    fontFamily: theme.typography.fontFamily,
-                    fontSize: "0.875rem",
-                    fontWeight: 500,
-                    textTransform: "none",
-                    letterSpacing: "0.02em",
-                    color: theme.palette.text.secondary,
-                    minHeight: 48,
-                    padding: "12px 24px",
-                    transition: "all 0.2s ease-in-out",
-                    "&:hover": {
-                      color: theme.palette.blueText.main,
-                    },
-                    "&.Mui-selected": {
-                      color: theme.palette.blueText.main,
-                      fontWeight: 600,
-                    },
-                    "&.Mui-focusVisible": {
-                      backgroundColor: theme.palette.action.focus,
-                    },
-                  },
-                  "& .MuiTabs-flexContainer": {
-                    gap: 1,
-                  },
+                  fontSize: "1rem",
+                  fontWeight: 600,
+                  color: theme.palette.text.primary,
+                  mb: 0.8,
                 }}
               >
-                <Tab label="All" value="all" />
-                <Tab label="Drafts" value="drafts" />
-                <Tab label="In Review" value="in_review" />
-                <Tab label="Rejected" value="rejected" />
-              </Tabs>
+                No loan drafts found.
+              </Typography>
+              <Typography
+                sx={{
+                  fontSize: "0.82rem",
+                  color: theme.palette.text.secondary,
+                  mb: 2,
+                }}
+              >
+                Create a loan to start building draft applications.
+              </Typography>
+              <PlusButtonMain
+                onClick={() => navigate("/add-loan")}
+                buttonText="CREATE LOAN"
+              />
             </Box>
-          </Box>
+          ) : (
+            <>
+              <Box sx={{ width: "100%", mb: 2 }}>
+                <Box
+                  sx={{
+                    borderBottom: 1,
+                    borderColor: theme.palette.divider,
+                    backgroundColor: theme.palette.background.paper,
+                    borderRadius: "8px 8px 0 0",
+                  }}
+                >
+                  <Tabs
+                    value={selectedTab}
+                    onChange={handleTabChange}
+                    aria-label="loan drafts filter tabs"
+                    variant="scrollable"
+                    scrollButtons
+                    allowScrollButtonsMobile
+                    sx={{
+                      "& .MuiTabs-indicator": {
+                        backgroundColor: theme.palette.blueText.main,
+                        height: 3,
+                        borderRadius: "1.5px",
+                      },
+                      "& .MuiTab-root": {
+                        fontFamily: theme.typography.fontFamily,
+                        fontSize: "0.875rem",
+                        fontWeight: 500,
+                        textTransform: "none",
+                        letterSpacing: "0.02em",
+                        color: theme.palette.text.secondary,
+                        minHeight: 48,
+                        padding: "12px 24px",
+                        transition: "all 0.2s ease-in-out",
+                        "&:hover": {
+                          color: theme.palette.blueText.main,
+                        },
+                        "&.Mui-selected": {
+                          color: theme.palette.blueText.main,
+                          fontWeight: 600,
+                        },
+                        "&.Mui-focusVisible": {
+                          backgroundColor: theme.palette.action.focus,
+                        },
+                      },
+                      "& .MuiTabs-flexContainer": {
+                        gap: 1,
+                      },
+                    }}
+                  >
+                    <Tab label="All" value="all" />
+                    <Tab label="Drafts" value="drafts" />
+                    <Tab label="In Review" value="in_review" />
+                    <Tab label="Rejected" value="rejected" />
+                  </Tabs>
+                </Box>
+              </Box>
 
-          <CollectionsTemplate
-            items={filteredRows}
-            loading={loading}
-            columns={columns}
-            enableSearch={false}
-            noDataMessage="No loan drafts found."
-          />
+              <CollectionsTemplate
+                items={filteredRows}
+                loading={loading}
+                columns={columns}
+                enableSearch={false}
+                noDataMessage="No loan drafts found."
+              />
+            </>
+          )}
         </>
       )}
     </Box>

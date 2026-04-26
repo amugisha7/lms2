@@ -9,14 +9,36 @@ export default function AdminBranchScopeSelector({
   helperText = "Choose a branch before viewing records.",
   emptyMessage = "Please select a branch above to continue.",
 }) {
+  const normalizedBranches = Array.isArray(branches) ? branches : [];
+  const hasSingleBranch = normalizedBranches.length === 1;
+  const singleBranchId = hasSingleBranch ? normalizedBranches[0]?.id || "" : "";
+
+  React.useEffect(() => {
+    if (
+      !hasSingleBranch ||
+      !singleBranchId ||
+      typeof onBranchChange !== "function"
+    ) {
+      return;
+    }
+
+    if (selectedBranchId !== singleBranchId) {
+      onBranchChange(singleBranchId);
+    }
+  }, [hasSingleBranch, onBranchChange, selectedBranchId, singleBranchId]);
+
   const branchOptions = React.useMemo(
     () =>
-      (branches || []).map((branch) => ({
+      normalizedBranches.map((branch) => ({
         value: branch.id,
         label: branch.name,
       })),
-    [branches],
+    [normalizedBranches],
   );
+
+  if (hasSingleBranch) {
+    return null;
+  }
 
   return (
     <>

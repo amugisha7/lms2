@@ -48,6 +48,18 @@ import LoansDisplay from "./Models/Loans/LoansDisplay/LoansDisplay";
 import LoanDetailPage from "./Models/Loans/LoanDetailPage";
 import LoanStatementScreen from "./Models/Loans/LoanStatements/LoanStatementScreen";
 import InactiveUserPage from "./Screens/Auth/InactiveUserPage";
+import ReportsLanding from "./Screens/Reports/ReportsLanding";
+import PortfolioOverview from "./Screens/Reports/PortfolioOverview";
+import DelinquencyReport from "./Screens/Reports/DelinquencyReport";
+import AgingAnalysis from "./Screens/Reports/AgingAnalysis";
+import PARSummary from "./Screens/Reports/PARSummary";
+import ProvisionsReport from "./Screens/Reports/ProvisionsReport";
+import DisbursementReport from "./Screens/Reports/DisbursementReport";
+import RepaymentSchedulesReport from "./Screens/Reports/RepaymentSchedulesReport";
+import ActiveLoansByOfficerReport from "./Screens/Reports/ActiveLoansByOfficerReport";
+import ConcentrationsReport from "./Screens/Reports/ConcentrationsReport";
+import InterestAndPenaltyReport from "./Screens/Reports/InterestAndPenaltyReport";
+import WriteOffAndRecoveryReport from "./Screens/Reports/WriteOffAndRecoveryReport";
 
 export default function AppRoutes({ userExists, userStatus }) {
   const normalizedStatus = (userStatus || "").toLowerCase();
@@ -71,7 +83,45 @@ export default function AppRoutes({ userExists, userStatus }) {
           {hasActiveAccess && (
             <>
               <Route index element={<MainGrid />} />
-              <Route path="reports" element={<MainGrid />} />
+              <Route path="reports" element={<ReportsLanding />} />
+              <Route
+                path="reports/portfolio-overview"
+                element={<PortfolioOverview />}
+              />
+              <Route
+                path="reports/delinquency"
+                element={<DelinquencyReport />}
+              />
+              <Route
+                path="reports/aging-analysis"
+                element={<AgingAnalysis />}
+              />
+              <Route path="reports/par-summary" element={<PARSummary />} />
+              <Route path="reports/provisions" element={<ProvisionsReport />} />
+              <Route
+                path="reports/disbursement"
+                element={<DisbursementReport />}
+              />
+              <Route
+                path="reports/repayment-schedules"
+                element={<RepaymentSchedulesReport />}
+              />
+              <Route
+                path="reports/active-loans-by-officer"
+                element={<ActiveLoansByOfficerReport />}
+              />
+              <Route
+                path="reports/concentrations"
+                element={<ConcentrationsReport />}
+              />
+              <Route
+                path="reports/interest-and-penalty"
+                element={<InterestAndPenaltyReport />}
+              />
+              <Route
+                path="reports/write-off-and-recovery"
+                element={<WriteOffAndRecoveryReport />}
+              />
               <Route path="settings" element={<SettingsWrapper />} />
               <Route
                 path="notifications"

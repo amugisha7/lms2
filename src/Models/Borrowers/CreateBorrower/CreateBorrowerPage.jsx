@@ -58,9 +58,15 @@ export default function CreateBorrowerPage() {
         if (cancelled) return;
 
         const items = branchData?.data?.listBranches?.items || [];
-        setBranches(
-          items.map((branch) => ({ value: branch.id, label: branch.name })),
-        );
+        const mappedBranches = items.map((branch) => ({
+          value: branch.id,
+          label: branch.name,
+        }));
+        setBranches(mappedBranches);
+
+        if (mappedBranches.length === 1 && mappedBranches[0]?.value) {
+          setSelectedBranchId(mappedBranches[0].value);
+        }
       } catch (error) {
         console.error("Error fetching branches", error);
       }
@@ -74,6 +80,7 @@ export default function CreateBorrowerPage() {
   }, [client, isAdmin, userDetails?.institution?.id]);
 
   const branchOptions = React.useMemo(() => branches, [branches]);
+  const hasMultipleAdminBranches = isAdmin && branchOptions.length > 1;
   const effectiveBranchId =
     selectedBranchId ||
     userDetails?.branchUsersId ||
@@ -207,7 +214,7 @@ export default function CreateBorrowerPage() {
           Create New Borrower
         </Typography>
 
-        {isAdmin && (
+        {hasMultipleAdminBranches && (
           <Box sx={{ width: "100%", mb: 2 }}>
             <DropDownSearchable
               label="Select Branch"

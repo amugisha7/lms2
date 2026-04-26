@@ -501,6 +501,7 @@ export default function LoansDisplay() {
   const gridDragContainerRef = React.useRef(null);
   const topScrollRef = React.useRef(null);
   const topScrollInnerRef = React.useRef(null);
+  const loadLoanDisplayPageRef = React.useRef(null);
   const { userDetails } = React.useContext(UserContext);
   const {
     branches,
@@ -527,6 +528,7 @@ export default function LoansDisplay() {
   const currency = currencyCode || "$";
   const normalizedUserType = (userDetails?.userType || "").toLowerCase();
   const isAdminUser = normalizedUserType === "admin";
+  const hasMultipleAdminBranches = isAdminUser && branches.length > 1;
   const shouldShowLoansView = !isAdminUser || Boolean(selectedBranchId);
   const paymentLoanRow = paymentLoanId ? getLoanRecord(paymentLoanId) : null;
   const statementLoanRow = statementLoanId
@@ -564,6 +566,10 @@ export default function LoansDisplay() {
     ),
     [],
   );
+
+  React.useEffect(() => {
+    loadLoanDisplayPageRef.current = loadLoanDisplayPage;
+  }, [loadLoanDisplayPage]);
 
   React.useEffect(() => {
     const routeNotification = location.state?.notification;
@@ -1259,6 +1265,9 @@ export default function LoansDisplay() {
     return result;
   }, [loans, searchTerm, statusFilter]);
 
+  const hasNoLoans =
+    !loading && !loadingMore && filteredLoans.length === 0 && !hasMoreLoans;
+
   //  KPI computations
   const kpis = React.useMemo(() => {
     const current = loans.filter(
@@ -1300,7 +1309,7 @@ export default function LoansDisplay() {
 
     if (isAdminUser) {
       if (selectedBranchId) {
-        loadLoanDisplayPage({
+        loadLoanDisplayPageRef.current?.({
           reset: true,
           branchIdOverride: selectedBranchId,
         });
@@ -1308,8 +1317,8 @@ export default function LoansDisplay() {
       return;
     }
 
-    loadLoanDisplayPage({ reset: true });
-  }, [isAdminUser, loadLoanDisplayPage, selectedBranchId, userDetails]);
+    loadLoanDisplayPageRef.current?.({ reset: true });
+  }, [isAdminUser, selectedBranchId, userDetails]);
 
   React.useEffect(() => {
     if (!userDetails || !isAdminUser) {
@@ -1318,6 +1327,29 @@ export default function LoansDisplay() {
 
     loadBranches();
   }, [isAdminUser, loadBranches, userDetails]);
+
+  React.useEffect(() => {
+    if (!isAdminUser) {
+      return;
+    }
+
+    if (branches.length === 1) {
+      const onlyBranchId = branches[0]?.id || "";
+      if (onlyBranchId && selectedBranchId !== onlyBranchId) {
+        setSelectedBranchId(onlyBranchId);
+      }
+      return;
+    }
+
+    if (branches.length > 1 && selectedBranchId) {
+      const selectedBranchExists = branches.some(
+        (branch) => branch?.id === selectedBranchId,
+      );
+      if (!selectedBranchExists) {
+        setSelectedBranchId("");
+      }
+    }
+  }, [branches, isAdminUser, selectedBranchId]);
 
   return (
     <>
@@ -1388,7 +1420,7 @@ export default function LoansDisplay() {
       </Box>
 
       {/* Branch Filter (Admin only) */}
-      {isAdminUser && (
+      {hasMultipleAdminBranches && (
         <AdminBranchScopeSelector
           branches={branches}
           selectedBranchId={selectedBranchId}
@@ -1560,113 +1592,152 @@ export default function LoansDisplay() {
               },
             }}
           >
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 0.5,
-                px: 0.5,
-                py: 0,
-                minHeight: 24,
-                bgcolor: sf.sf_tableHeaderBg,
-                borderBottom: `1px solid ${sf.sf_borderLight}`,
-              }}
-            >
-              <Button
-                onClick={() => scrollTopBarBy(-220)}
-                variant="outlined"
-                sx={{
-                  minWidth: 22,
-                  width: 22,
-                  height: 18,
-                  p: 0,
-                  bgcolor: sf.sf_actionHoverBg,
-                  borderRadius: 0,
-                  "&:hover": { bgcolor: sf.sf_brandPrimary },
-                  mt: 0.5,
-                }}
-              >
-                <KeyboardArrowLeftIcon sx={{ fontSize: 16 }} />
-              </Button>
+            {hasNoLoans ? (
               <Box
-                ref={topScrollRef}
                 sx={{
-                  overflowX: "auto",
-                  overflowY: "hidden",
-                  flex: 1,
-                  height: 14,
-                  "&::-webkit-scrollbar": { height: 10 },
-                  "&::-webkit-scrollbar-track": {
-                    bgcolor: sf.sf_borderLight,
-                    borderRadius: 0,
-                  },
-                  "&::-webkit-scrollbar-thumb": {
-                    bgcolor: sf.sf_textTertiary,
-                    borderRadius: 0,
-                    "&:hover": { bgcolor: sf.sf_brandPrimary },
-                  },
+                  px: 3,
+                  py: 4,
+                  textAlign: "center",
+                  border: `1px solid ${sf.sf_borderLight}`,
+                  bgcolor: sf.sf_kpiCardBg,
                 }}
               >
-                <Box
-                  ref={topScrollInnerRef}
-                  sx={{ height: 1, minWidth: "100%" }}
+                <Typography
+                  sx={{
+                    fontSize: "1rem",
+                    fontWeight: 600,
+                    color: sf.sf_textPrimary,
+                    mb: 0.8,
+                  }}
+                >
+                  No loans found.
+                </Typography>
+                <Typography
+                  sx={{
+                    fontSize: "0.82rem",
+                    color: sf.sf_textSecondary,
+                    mb: 2,
+                  }}
+                >
+                  Create your first loan to start tracking repayments and
+                  portfolio performance.
+                </Typography>
+                <PlusButtonMain
+                  onClick={() => navigate("/add-loan")}
+                  buttonText="CREATE LOAN"
                 />
               </Box>
-              <Button
-                onClick={() => scrollTopBarBy(220)}
-                variant="outlined"
-                sx={{
-                  minWidth: 22,
-                  width: 22,
-                  height: 18,
-                  p: 0,
-                  bgcolor: sf.sf_actionHoverBg,
-                  borderRadius: 0,
-                  "&:hover": { bgcolor: sf.sf_brandPrimary },
-                  mt: 0.5,
-                }}
-              >
-                <KeyboardArrowRightIcon sx={{ fontSize: 16 }} />
-              </Button>
-            </Box>
-            <Box ref={gridDragContainerRef} sx={{ cursor: "grab" }}>
-              <CustomDataGrid
-                rows={filteredLoans}
-                columns={columns}
-                loading={loading}
-                getRowId={(row) => row.id}
-                pageSize={50}
-                pageSizeOptions={[25, 50, 100]}
-                getRowHeight={() => "auto"}
-                getEstimatedRowHeight={() => 72}
-                showToolbar={false}
-                sx={{
-                  borderRadius: 0,
-                  "& .MuiDataGrid-columnHeaderTitle": {
-                    fontSize: "0.74rem",
-                  },
-                  "& .MuiDataGrid-cell": {
-                    cursor: "default",
-                    pt: 0.5,
-                    pb: 0.5,
+            ) : (
+              <>
+                <Box
+                  sx={{
                     display: "flex",
-                    alignItems: "flex-start",
+                    alignItems: "center",
                     justifyContent: "center",
-                    textAlign: "center",
-                    minHeight: "60px !important",
-                  },
-                  "& .MuiDataGrid-cell[data-field='borrower']": {
-                    justifyContent: "flex-start",
-                    textAlign: "left",
-                  },
-                  "& .MuiDataGrid-cell[data-field='amountDue']": {
-                    justifyContent: "flex-start",
-                    textAlign: "left",
-                  },
-                }}
-              />
-            </Box>
+                    gap: 0.5,
+                    px: 0.5,
+                    py: 0,
+                    minHeight: 24,
+                    bgcolor: sf.sf_tableHeaderBg,
+                    borderBottom: `1px solid ${sf.sf_borderLight}`,
+                  }}
+                >
+                  <Button
+                    onClick={() => scrollTopBarBy(-220)}
+                    variant="outlined"
+                    sx={{
+                      minWidth: 22,
+                      width: 22,
+                      height: 18,
+                      p: 0,
+                      bgcolor: sf.sf_actionHoverBg,
+                      borderRadius: 0,
+                      "&:hover": { bgcolor: sf.sf_brandPrimary },
+                      mt: 0.5,
+                    }}
+                  >
+                    <KeyboardArrowLeftIcon sx={{ fontSize: 16 }} />
+                  </Button>
+                  <Box
+                    ref={topScrollRef}
+                    sx={{
+                      overflowX: "auto",
+                      overflowY: "hidden",
+                      flex: 1,
+                      height: 14,
+                      "&::-webkit-scrollbar": { height: 10 },
+                      "&::-webkit-scrollbar-track": {
+                        bgcolor: sf.sf_borderLight,
+                        borderRadius: 0,
+                      },
+                      "&::-webkit-scrollbar-thumb": {
+                        bgcolor: sf.sf_textTertiary,
+                        borderRadius: 0,
+                        "&:hover": { bgcolor: sf.sf_brandPrimary },
+                      },
+                    }}
+                  >
+                    <Box
+                      ref={topScrollInnerRef}
+                      sx={{ height: 1, minWidth: "100%" }}
+                    />
+                  </Box>
+                  <Button
+                    onClick={() => scrollTopBarBy(220)}
+                    variant="outlined"
+                    sx={{
+                      minWidth: 22,
+                      width: 22,
+                      height: 18,
+                      p: 0,
+                      bgcolor: sf.sf_actionHoverBg,
+                      borderRadius: 0,
+                      "&:hover": { bgcolor: sf.sf_brandPrimary },
+                      mt: 0.5,
+                    }}
+                  >
+                    <KeyboardArrowRightIcon sx={{ fontSize: 16 }} />
+                  </Button>
+                </Box>
+                <Box ref={gridDragContainerRef} sx={{ cursor: "grab" }}>
+                  <CustomDataGrid
+                    rows={filteredLoans}
+                    columns={columns}
+                    loading={loading}
+                    getRowId={(row) => row.id}
+                    pageSize={50}
+                    pageSizeOptions={[25, 50, 100]}
+                    getRowHeight={() => "auto"}
+                    getEstimatedRowHeight={() => 72}
+                    showToolbar={false}
+                    sx={{
+                      borderRadius: 0,
+                      "& .MuiDataGrid-columnHeaderTitle": {
+                        fontSize: "0.74rem",
+                      },
+                      "& .MuiDataGrid-cell": {
+                        cursor: "default",
+                        pt: 0.5,
+                        pb: 0.5,
+                        display: "flex",
+                        alignItems: "flex-start",
+                        justifyContent: "center",
+                        textAlign: "center",
+                        minHeight: "60px !important",
+                      },
+                      "& .MuiDataGrid-cell[data-field='borrower']": {
+                        justifyContent: "flex-start",
+                        textAlign: "left",
+                      },
+                      "& .MuiDataGrid-cell[data-field='amountDue']": {
+                        justifyContent: "flex-start",
+                        textAlign: "left",
+                      },
+                    }}
+                  />
+                </Box>
+              </>
+            )}
           </Box>
 
           {(hasMoreLoans || loadingMore) && (

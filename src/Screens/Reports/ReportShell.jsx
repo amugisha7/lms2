@@ -53,6 +53,9 @@ export default function ReportShell({
   // children (report body)
   children,
 }) {
+  const requiresBranchSelection =
+    isAdmin && branches.length > 1 && !selectedBranchId;
+
   return (
     <Box sx={{ width: "100%" }}>
       {/* Header */}
@@ -105,7 +108,7 @@ export default function ReportShell({
           size="small"
           startIcon={loading ? <CircularProgress size={14} /> : <RefreshIcon />}
           onClick={onRefresh}
-          disabled={loading}
+          disabled={loading || requiresBranchSelection}
         >
           {loading ? "Loading…" : "Refresh"}
         </Button>
@@ -116,7 +119,7 @@ export default function ReportShell({
             size="small"
             startIcon={saving ? <CircularProgress size={14} /> : <SaveIcon />}
             onClick={onSaveSnapshot}
-            disabled={saving || loading}
+            disabled={saving || loading || requiresBranchSelection}
           >
             {saving ? "Saving…" : "Save Snapshot"}
           </Button>
@@ -128,7 +131,7 @@ export default function ReportShell({
             size="small"
             startIcon={<DownloadIcon />}
             onClick={onExportCsv}
-            disabled={loading}
+            disabled={loading || requiresBranchSelection}
           >
             Export CSV
           </Button>
@@ -140,7 +143,7 @@ export default function ReportShell({
             size="small"
             startIcon={<DownloadIcon />}
             onClick={onExportJson}
-            disabled={loading}
+            disabled={loading || requiresBranchSelection}
           >
             Export JSON
           </Button>
@@ -162,6 +165,11 @@ export default function ReportShell({
 
       {/* Status messages */}
       <Stack spacing={1} sx={{ mb: 2 }}>
+        {requiresBranchSelection && (
+          <Alert severity="info">
+            Please select a branch above to view report data.
+          </Alert>
+        )}
         {loadError && <Alert severity="error">{loadError}</Alert>}
         {saveError && <Alert severity="error">{saveError}</Alert>}
         {lastSavedAt && (
@@ -174,7 +182,7 @@ export default function ReportShell({
       <Divider sx={{ mb: 3 }} />
 
       {/* Report body */}
-      {children}
+      {!requiresBranchSelection && children}
     </Box>
   );
 }

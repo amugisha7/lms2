@@ -1,7 +1,6 @@
 - Create loans form. Also create from loan product.
   - Resume:
     - Check validity of loan statements.
-    - Work on the LoansDisplay tabs and filtering; Add collections sheets/plans.
     - Deploy reports.
     - What happens if a customer logs in on the main portal?
 

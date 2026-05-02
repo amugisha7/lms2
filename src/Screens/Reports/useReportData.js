@@ -8,10 +8,7 @@
 import { useState, useEffect, useCallback, useContext } from "react";
 import { generateClient } from "aws-amplify/api";
 import { listBranches } from "../../graphql/queries";
-import {
-  fetchAllLoanSummariesForBranches,
-  fetchAllLoanSummariesForScope,
-} from "../../Models/Loans/loanSummaryHelpers";
+import { fetchAllLoanSummariesForScope } from "../../Models/Loans/loanSummaryHelpers";
 import { resolveReportScope } from "./reportUtils";
 import { UserContext } from "../../App";
 
@@ -28,16 +25,13 @@ export function useReportData({ selectedBranchId = null } = {}) {
 
   const scope = resolveReportScope(userDetails);
 
-  // Admin can override to a specific branch; non-admins are always their branch.
-  const effectiveInstitutionId = scope.isAdmin && !selectedBranchId
-    ? scope.institutionId
-    : null;
+  // Mirror LoansDisplay behavior: reports only load once an effective branch exists.
   const effectiveBranchId = scope.isAdmin
     ? (selectedBranchId || null)
     : scope.branchId;
 
   const fetchData = useCallback(async () => {
-    if (!effectiveInstitutionId && !effectiveBranchId) {
+    if (!effectiveBranchId) {
       setSummaries([]);
       return;
     }
@@ -45,24 +39,11 @@ export function useReportData({ selectedBranchId = null } = {}) {
     setError(null);
     try {
       const client = generateClient();
-      const shouldFanOutByBranch =
-        scope.isAdmin &&
-        !selectedBranchId &&
-        !effectiveBranchId &&
-        branches.length > 0;
-
-      const items = shouldFanOutByBranch
-        ? await fetchAllLoanSummariesForBranches({
-            branchIds: branches.map((branch) => branch?.id).filter(Boolean),
-            pageSize: PAGE_SIZE,
-            client,
-          })
-        : await fetchAllLoanSummariesForScope({
-            institutionId: effectiveInstitutionId,
-            branchId: effectiveBranchId,
-            pageSize: PAGE_SIZE,
-            client,
-          });
+      const items = await fetchAllLoanSummariesForScope({
+        branchId: effectiveBranchId,
+        pageSize: PAGE_SIZE,
+        client,
+      });
 
       setSummaries(items);
       setLastFetchedAt(Date.now());
@@ -73,11 +54,7 @@ export function useReportData({ selectedBranchId = null } = {}) {
       setLoading(false);
     }
   }, [
-    branches,
-    effectiveInstitutionId,
     effectiveBranchId,
-    scope.isAdmin,
-    selectedBranchId,
   ]);
 
   // Load branches for admin users

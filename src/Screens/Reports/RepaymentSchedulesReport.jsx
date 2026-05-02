@@ -9,7 +9,7 @@
  *             KPIs and the near-term forecast. This is always available and fast.
  *   Extended: For the installment-detail table, the report fetches the raw
  *             `loanComputationRecord` for each active loan via the
- *             GET_LOAN_SUMMARY_SOURCE_QUERY and calls `resolveLoanSchedule` from
+ *             GET_REPORT_LOAN_SOURCE_QUERY and calls `resolveLoanSchedule` from
  *             statementHelpers. Installments with a dueDate beyond today are kept
  *             as the forward-looking schedule rows. This enrichment is isolated to
  *             this component and not spread to other screens.
@@ -61,7 +61,7 @@ import {
 import { REPORT_TYPES } from "./reportRegistry";
 import { LOAN_DISPLAY_STATUS } from "../../Models/Loans/loanSummaryProjection";
 import { resolveLoanSchedule } from "../../Models/Loans/LoanStatements/statementHelpers";
-import { GET_LOAN_SUMMARY_SOURCE_QUERY } from "../../Models/Loans/loanSummaryHelpers";
+import { GET_REPORT_LOAN_SOURCE_QUERY } from "./reportLoanData";
 
 const ACTIVE_STATUSES = new Set([
   LOAN_DISPLAY_STATUS.CURRENT.code,
@@ -306,7 +306,7 @@ export default function RepaymentSchedulesReport() {
       for (const summary of toFetch) {
         try {
           const result = await client.graphql({
-            query: GET_LOAN_SUMMARY_SOURCE_QUERY,
+            query: GET_REPORT_LOAN_SOURCE_QUERY,
             variables: { id: summary.loanID || summary.id },
           });
           const loan = result?.data?.getLoan;

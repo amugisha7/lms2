@@ -1,14 +1,14 @@
 /**
  * useReportData – hook for fetching all LoanSummary rows for a report scope.
  *
- * Wraps fetchAllLoanSummariesForScope with loading state and refresh support.
+ * Builds report summaries from branch-scoped loan reads with loading state and refresh support.
  * Also loads the branch list for admin users.
  */
 
 import { useState, useEffect, useCallback, useContext } from "react";
 import { generateClient } from "aws-amplify/api";
 import { listBranches } from "../../graphql/queries";
-import { fetchAllLoanSummariesForScope } from "../../Models/Loans/loanSummaryHelpers";
+import { fetchAllReportLoanSummariesForBranch } from "./reportLoanData";
 import { resolveReportScope } from "./reportUtils";
 import { UserContext } from "../../App";
 
@@ -39,8 +39,10 @@ export function useReportData({ selectedBranchId = null } = {}) {
     setError(null);
     try {
       const client = generateClient();
-      const items = await fetchAllLoanSummariesForScope({
+      const items = await fetchAllReportLoanSummariesForBranch({
         branchId: effectiveBranchId,
+        institutionId: scope.institutionId,
+        currencyCode: scope.currencyCode,
         pageSize: PAGE_SIZE,
         client,
       });
@@ -54,7 +56,7 @@ export function useReportData({ selectedBranchId = null } = {}) {
       setLoading(false);
     }
   }, [
-    effectiveBranchId,
+    effectiveBranchId, scope.currencyCode, scope.institutionId,
   ]);
 
   // Load branches for admin users

@@ -5,7 +5,7 @@
  *
  * Data sources:
  *   - LoanSummary: scope, loan metadata, product/officer/branch groupings
- *   - Raw loan read (GET_LOAN_SUMMARY_SOURCE_QUERY): payment records with
+ *   - Raw loan read (GET_REPORT_LOAN_SOURCE_QUERY): payment records with
  *     amountAllocatedToInterest / amountAllocatedToPenalty, and penalty records
  *   - Payment validity: isValidPayment() from statementHelpers (excludes REVERSED/VOIDED/FAILED)
  *   - Penalty validity: penaltyStatus not in VOIDED/CANCELLED/REVERSED (mirrors repo logic)
@@ -62,7 +62,7 @@ import {
 import { REPORT_TYPES } from "./reportRegistry";
 import { LOAN_DISPLAY_STATUS } from "../../Models/Loans/loanSummaryProjection";
 import { isValidPayment } from "../../Models/Loans/LoanStatements/statementHelpers";
-import { GET_LOAN_SUMMARY_SOURCE_QUERY } from "../../Models/Loans/loanSummaryHelpers";
+import { GET_REPORT_LOAN_SOURCE_QUERY } from "./reportLoanData";
 
 const EXCLUDED_PENALTY_STATUSES = new Set(["VOIDED", "CANCELLED", "REVERSED"]);
 
@@ -196,7 +196,7 @@ export default function InterestAndPenaltyReport() {
       for (const summary of relevantSummaries) {
         try {
           const result = await client.graphql({
-            query: GET_LOAN_SUMMARY_SOURCE_QUERY,
+            query: GET_REPORT_LOAN_SOURCE_QUERY,
             variables: { id: summary.loanID || summary.id },
           });
           const loan = result?.data?.getLoan;

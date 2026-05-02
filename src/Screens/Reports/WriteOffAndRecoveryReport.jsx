@@ -6,7 +6,7 @@
  * Data sources:
  *   - LoanSummary: identifies written-off loans via displayStatus === "WRITTEN_OFF"
  *     No raw reads needed for basic written-off metrics (count, balance, officer, branch).
- *   - Raw loan read (GET_LOAN_SUMMARY_SOURCE_QUERY): payment records on written-off loans
+ *   - Raw loan read (GET_REPORT_LOAN_SOURCE_QUERY): payment records on written-off loans
  *     to infer recovery amounts in the selected date window.
  *   - Recovery = valid payment (isValidPayment) on a WRITTEN_OFF loan in the date window.
  *   - Payment validity: isValidPayment() from statementHelpers (excludes REVERSED/VOIDED/FAILED).
@@ -58,7 +58,7 @@ import {
 import { REPORT_TYPES } from "./reportRegistry";
 import { LOAN_DISPLAY_STATUS } from "../../Models/Loans/loanSummaryProjection";
 import { isValidPayment } from "../../Models/Loans/LoanStatements/statementHelpers";
-import { GET_LOAN_SUMMARY_SOURCE_QUERY } from "../../Models/Loans/loanSummaryHelpers";
+import { GET_REPORT_LOAN_SOURCE_QUERY } from "./reportLoanData";
 
 const WO_STATUS = LOAN_DISPLAY_STATUS.WRITTEN_OFF?.code || "WRITTEN_OFF";
 
@@ -196,7 +196,7 @@ export default function WriteOffAndRecoveryReport() {
       for (const summary of woSummaries) {
         try {
           const result = await client.graphql({
-            query: GET_LOAN_SUMMARY_SOURCE_QUERY,
+            query: GET_REPORT_LOAN_SOURCE_QUERY,
             variables: { id: summary.loanID || summary.id },
           });
           const loan = result?.data?.getLoan;

@@ -14,8 +14,8 @@ jest.mock("../../graphql/queries", () => ({
   listBranches: "LIST_BRANCHES",
 }));
 
-jest.mock("../../Models/Loans/loanSummaryHelpers", () => ({
-  fetchAllLoanSummariesForScope: jest.fn(),
+jest.mock("./reportLoanData", () => ({
+  fetchAllReportLoanSummariesForBranch: jest.fn(),
 }));
 
 jest.mock("../../App", () => {
@@ -52,30 +52,30 @@ function renderWithUser(ui, userDetails) {
 
 const { generateClient: mockGenerateClient } = require("aws-amplify/api");
 const {
-  fetchAllLoanSummariesForScope: mockFetchAllLoanSummariesForScope,
-} = require("../../Models/Loans/loanSummaryHelpers");
+  fetchAllReportLoanSummariesForBranch:
+    mockFetchAllReportLoanSummariesForBranch,
+} = require("./reportLoanData");
 
 describe("reports data loading", () => {
   beforeEach(() => {
     mockGraphql.mockReset();
     mockGenerateClient.mockReset();
     mockGenerateClient.mockReturnValue({ graphql: mockGraphql });
-    mockFetchAllLoanSummariesForScope.mockReset();
+    mockFetchAllReportLoanSummariesForBranch.mockReset();
   });
 
   it("loads report data for branch users using their branch scope", async () => {
-    mockFetchAllLoanSummariesForScope.mockResolvedValue([{ id: "loan-1" }]);
+    mockFetchAllReportLoanSummariesForBranch.mockResolvedValue([
+      { id: "loan-1" },
+    ]);
 
-    renderWithUser(
-      <HookHarness />,
-      {
-        userType: "LoanOfficer",
-        branchUsersId: "branch-1",
-      },
-    );
+    renderWithUser(<HookHarness />, {
+      userType: "LoanOfficer",
+      branchUsersId: "branch-1",
+    });
 
     await waitFor(() =>
-      expect(mockFetchAllLoanSummariesForScope).toHaveBeenCalledWith(
+      expect(mockFetchAllReportLoanSummariesForBranch).toHaveBeenCalledWith(
         expect.objectContaining({
           branchId: "branch-1",
           pageSize: 500,
@@ -100,19 +100,16 @@ describe("reports data loading", () => {
       },
     });
 
-    renderWithUser(
-      <HookHarness />,
-      {
-        userType: "Admin",
-        institution: { id: "inst-1" },
-      },
-    );
+    renderWithUser(<HookHarness />, {
+      userType: "Admin",
+      institution: { id: "inst-1" },
+    });
 
     await waitFor(() =>
       expect(screen.getByText(/branches:\s*2/)).toBeInTheDocument(),
     );
 
-    expect(mockFetchAllLoanSummariesForScope).not.toHaveBeenCalled();
+    expect(mockFetchAllReportLoanSummariesForBranch).not.toHaveBeenCalled();
     expect(screen.getByText(/summaries:\s*0/)).toBeInTheDocument();
   });
 
@@ -124,18 +121,17 @@ describe("reports data loading", () => {
         },
       },
     });
-    mockFetchAllLoanSummariesForScope.mockResolvedValue([{ id: "loan-2" }]);
+    mockFetchAllReportLoanSummariesForBranch.mockResolvedValue([
+      { id: "loan-2" },
+    ]);
 
-    renderWithUser(
-      <HookHarness selectedBranchId="branch-2" />,
-      {
-        userType: "Admin",
-        institution: { id: "inst-1" },
-      },
-    );
+    renderWithUser(<HookHarness selectedBranchId="branch-2" />, {
+      userType: "Admin",
+      institution: { id: "inst-1" },
+    });
 
     await waitFor(() =>
-      expect(mockFetchAllLoanSummariesForScope).toHaveBeenCalledWith(
+      expect(mockFetchAllReportLoanSummariesForBranch).toHaveBeenCalledWith(
         expect.objectContaining({
           branchId: "branch-2",
           pageSize: 500,

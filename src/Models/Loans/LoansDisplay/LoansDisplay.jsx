@@ -4,15 +4,13 @@ import Typography from "@mui/material/Typography";
 import IconButton from "@mui/material/IconButton";
 import Chip from "@mui/material/Chip";
 import Tooltip from "@mui/material/Tooltip";
+import InputAdornment from "@mui/material/InputAdornment";
 import InputBase from "@mui/material/InputBase";
 import { useTheme } from "@mui/material/styles";
+import dayjs from "dayjs";
 import SearchIcon from "@mui/icons-material/Search";
+import CancelIcon from "@mui/icons-material/Cancel";
 import RefreshIcon from "@mui/icons-material/Refresh";
-import AccountBalanceWalletOutlinedIcon from "@mui/icons-material/AccountBalanceWalletOutlined";
-import TrendingUpIcon from "@mui/icons-material/TrendingUp";
-import WarningAmberIcon from "@mui/icons-material/WarningAmber";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
-import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeft";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
@@ -22,7 +20,9 @@ import AdminBranchScopeSelector from "../../../ModelAssets/AdminBranchScopeSelec
 import WorkingOverlay from "../../../ModelAssets/WorkingOverlay";
 import CustomDataGrid from "../../../ModelAssets/CustomDataGrid";
 import SFClickableText from "../../../ModelAssets/SF_ClickableText";
+import DateFilters from "../../../ModelAssets/DateFilters";
 import PlusButtonMain from "../../../ModelAssets/PlusButtonMain";
+import SFTabs from "../../../ModelAssets/SF_Tabs";
 import { useNotification } from "../../../ModelAssets/NotificationContext";
 import { useSnackbar } from "../../../ModelAssets/SnackbarContext";
 import { formatMoneyParts } from "../../../Resources/formatting";
@@ -50,30 +50,11 @@ const getCurrencyParts = (value, currency = "$", currencyCode) => {
 
 const fmtDate = (dateStr) => {
   if (!dateStr) return "N/A";
-  try {
-    const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return dateStr;
-    const months = [
-      "Jan",
-      "Feb",
-      "Mar",
-      "Apr",
-      "May",
-      "Jun",
-      "Jul",
-      "Aug",
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dec",
-    ];
-    const day = String(d.getDate()).padStart(2, "0");
-    const mon = months[d.getMonth()];
-    const year = String(d.getFullYear()).slice(-2);
-    return `${day}-${mon}-${year}`;
-  } catch {
+  const parsedDate = dayjs(dateStr);
+  if (!parsedDate.isValid()) {
     return dateStr;
   }
+  return parsedDate.format("DD-MMM-YY");
 };
 
 const normalizeMoneyValue = (value) => {
@@ -246,12 +227,9 @@ const getStatusColor = (statusMeta, sf) => {
 //  Days until a date (negative = past due)
 const daysUntil = (dateStr) => {
   if (!dateStr) return null;
-  const target = new Date(dateStr);
-  if (isNaN(target.getTime())) return null;
-  const now = new Date();
-  now.setHours(0, 0, 0, 0);
-  target.setHours(0, 0, 0, 0);
-  return Math.round((target - now) / 86400000);
+  const target = dayjs(dateStr).startOf("day");
+  if (!target.isValid()) return null;
+  return target.diff(dayjs().startOf("day"), "day");
 };
 
 //  Compute maturity date from startDate + duration when stored value is absent
@@ -259,15 +237,19 @@ const computeMaturityDate = (loan) => {
   if (loan.maturityDate) return loan.maturityDate;
   const { startDate, duration, durationInterval } = loan;
   if (!startDate || !duration || !durationInterval) return null;
-  const d = new Date(startDate);
   const n = Number(duration);
   const interval = String(durationInterval).toLowerCase();
-  if (interval.includes("day")) d.setDate(d.getDate() + n);
-  else if (interval.includes("week")) d.setDate(d.getDate() + n * 7);
-  else if (interval.includes("month")) d.setMonth(d.getMonth() + n);
-  else if (interval.includes("year")) d.setFullYear(d.getFullYear() + n);
-  else return null;
-  return d.toISOString().slice(0, 10);
+  const start = dayjs(startDate).startOf("day");
+  if (!start.isValid()) return null;
+
+  if (interval.includes("day")) return start.add(n, "day").format("YYYY-MM-DD");
+  if (interval.includes("week"))
+    return start.add(n, "week").format("YYYY-MM-DD");
+  if (interval.includes("month"))
+    return start.add(n, "month").format("YYYY-MM-DD");
+  if (interval.includes("year"))
+    return start.add(n, "year").format("YYYY-MM-DD");
+  return null;
 };
 
 //  Status filter tabs config
@@ -311,55 +293,30 @@ const getMoneyTextSx = (color, fontWeight = 600) => ({
 
 // (Grid column template removed – using MUI DataGrid columns instead)
 
-//  KPI Card
-function KpiCard({ icon: Icon, label, value, subValue, accent, sf }) {
+function KpiTextItem({ label, value, subValue, sf }) {
+  const hasPrimitiveValue =
+    typeof value === "string" || typeof value === "number";
+
   return (
     <Box
       sx={{
-        flex: "1 1 0",
+        flex: "1 1 170px",
         minWidth: 170,
-        bgcolor: sf.sf_kpiCardBg,
-        border: `1px solid ${sf.sf_borderLight}`,
-        borderRadius: 0,
-        p: "16px",
-        display: "flex",
-        alignItems: "center",
-        gap: "14px",
-        boxShadow: sf.sf_shadowSm,
-        transition: "box-shadow 0.15s, transform 0.15s",
-        "&:hover": {
-          boxShadow: sf.sf_shadowMd,
-          transform: "translateY(-1px)",
-        },
       }}
     >
-      <Box
+      <Typography
         sx={{
-          width: 40,
-          height: 40,
-          borderRadius: 0,
-          bgcolor: accent || sf.sf_kpiIconBg,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexShrink: 0,
+          fontSize: "0.68rem",
+          fontWeight: 600,
+          color: sf.sf_textTertiary,
+          textTransform: "uppercase",
+          letterSpacing: "0.04em",
+          lineHeight: 1.2,
         }}
       >
-        <Icon sx={{ fontSize: 20, color: sf.sf_kpiIconColor }} />
-      </Box>
-      <Box sx={{ minWidth: 0 }}>
-        <Typography
-          sx={{
-            fontSize: "0.68rem",
-            fontWeight: 600,
-            color: sf.sf_textTertiary,
-            textTransform: "uppercase",
-            letterSpacing: "0.04em",
-            lineHeight: 1.2,
-          }}
-        >
-          {label}
-        </Typography>
+        {label}
+      </Typography>
+      {hasPrimitiveValue ? (
         <Typography
           sx={{
             fontSize: "1.15rem",
@@ -371,19 +328,21 @@ function KpiCard({ icon: Icon, label, value, subValue, accent, sf }) {
         >
           {value}
         </Typography>
-        {subValue && (
-          <Typography
-            sx={{
-              fontSize: "0.68rem",
-              color: sf.sf_textTertiary,
-              lineHeight: 1.2,
-              mt: 0.15,
-            }}
-          >
-            {subValue}
-          </Typography>
-        )}
-      </Box>
+      ) : (
+        <Box sx={{ mt: 0.15, lineHeight: 1.3 }}>{value}</Box>
+      )}
+      {subValue && (
+        <Typography
+          sx={{
+            fontSize: "0.68rem",
+            color: sf.sf_textTertiary,
+            lineHeight: 1.2,
+            mt: 0.15,
+          }}
+        >
+          {subValue}
+        </Typography>
+      )}
     </Box>
   );
 }
@@ -492,6 +451,8 @@ const parseLoanRecord = (loan) => {
 //
 export default function LoansDisplay() {
   const [searchTerm, setSearchTerm] = React.useState("");
+  const [dateFrom, setDateFrom] = React.useState("");
+  const [dateTo, setDateTo] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState("all");
   const [selectedBranchId, setSelectedBranchId] = React.useState("");
   const [paymentPopupOpen, setPaymentPopupOpen] = React.useState(false);
@@ -895,7 +856,7 @@ export default function LoansDisplay() {
         flex: 0.65,
         minWidth: 95,
         valueGetter: (value, row) =>
-          row.startDate ? new Date(row.startDate).getTime() : 0,
+          row.startDate ? dayjs(row.startDate).valueOf() : 0,
         renderCell: (params) => {
           const loan = params.row;
           return (
@@ -945,7 +906,7 @@ export default function LoansDisplay() {
         minWidth: 110,
         valueGetter: (value, row) => {
           const md = computeMaturityDate(row);
-          return md ? new Date(md).getTime() : 0;
+          return md ? dayjs(md).valueOf() : 0;
         },
         renderCell: (params) => {
           const loan = params.row;
@@ -1226,83 +1187,105 @@ export default function LoansDisplay() {
     ],
   );
 
-  //  Filtered + sorted loans
+  const loanMatchesSearch = React.useCallback((loan, query) => {
+    if (!query) return true;
+    const b = loan.borrower || {};
+    const searchable = [
+      b.firstname,
+      b.othername,
+      b.businessName,
+      loan.loanNumber,
+      loan.id,
+      loan.status,
+      loan.uiStatusLabel,
+      loan.loanProduct?.name,
+      loan.createdByEmployee?.firstName,
+      loan.createdByEmployee?.lastName,
+      loan.createdByEmployee?.email,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+    return searchable.includes(query);
+  }, []);
+
+  const loanInDateRange = React.useCallback((loan, from, to) => {
+    if (!from && !to) return true;
+    if (!loan?.startDate) return false;
+
+    const loanDate = dayjs(loan.startDate).startOf("day");
+    if (!loanDate.isValid()) return false;
+
+    if (from) {
+      const fromDate = dayjs(from).startOf("day");
+      if (fromDate.isValid()) {
+        if (loanDate.isBefore(fromDate, "day")) return false;
+      }
+    }
+
+    if (to) {
+      const toDate = dayjs(to).startOf("day");
+      if (toDate.isValid()) {
+        if (loanDate.isAfter(toDate, "day")) return false;
+      }
+    }
+
+    return true;
+  }, []);
+
+  //  Base filtered set (search + date range)
+  const baseFilteredLoans = React.useMemo(() => {
+    const q = searchTerm.toLowerCase().trim();
+    return loans.filter(
+      (loan) =>
+        loanInDateRange(loan, dateFrom, dateTo) && loanMatchesSearch(loan, q),
+    );
+  }, [dateFrom, dateTo, loanInDateRange, loanMatchesSearch, loans, searchTerm]);
+
+  //  Final table set (base filters + status tab)
   const filteredLoans = React.useMemo(() => {
-    let result = loans;
-
-    // Status filter
-    if (statusFilter !== "all") {
-      result = result.filter(
-        (loan) => getLoanStatusMeta(loan).filterKey === statusFilter,
-      );
+    if (statusFilter === "all") {
+      return baseFilteredLoans;
     }
 
-    // Search filter
-    if (searchTerm.trim()) {
-      const q = searchTerm.toLowerCase().trim();
-      result = result.filter((loan) => {
-        const b = loan.borrower || {};
-        const searchable = [
-          b.firstname,
-          b.othername,
-          b.businessName,
-          loan.loanNumber,
-          loan.id,
-          loan.status,
-          loan.uiStatusLabel,
-          loan.loanProduct?.name,
-          loan.createdByEmployee?.firstName,
-          loan.createdByEmployee?.lastName,
-          loan.createdByEmployee?.email,
-        ]
-          .filter(Boolean)
-          .join(" ")
-          .toLowerCase();
-        return searchable.includes(q);
-      });
-    }
-
-    return result;
-  }, [loans, searchTerm, statusFilter]);
+    return baseFilteredLoans.filter(
+      (loan) => getLoanStatusMeta(loan).filterKey === statusFilter,
+    );
+  }, [baseFilteredLoans, statusFilter]);
 
   const hasNoLoans =
     !loading && !loadingMore && filteredLoans.length === 0 && !hasMoreLoans;
 
   //  KPI computations
   const kpis = React.useMemo(() => {
-    const current = loans.filter(
-      (loan) => getLoanStatusMeta(loan).filterKey === "current",
+    const sourceLoans = filteredLoans;
+    const totalPrincipal = sourceLoans.reduce(
+      (s, l) => s + (l.principal || 0),
+      0,
     );
-    const missedPayment = loans.filter(
-      (loan) => getLoanStatusMeta(loan).filterKey === "missed_payment",
-    );
-    const overdue = loans.filter(
-      (loan) => getLoanStatusMeta(loan).filterKey === "overdue",
-    );
-    const totalPrincipal = loans.reduce((s, l) => s + (l.principal || 0), 0);
-    const totalOutstanding = loans.reduce((s, l) => s + getBalance(l), 0);
+    const totalOutstanding = sourceLoans.reduce((s, l) => s + getBalance(l), 0);
+    const totalPayments = sourceLoans.reduce((s, l) => s + getTotalPaid(l), 0);
+
     return {
-      total: loans.length,
-      current: current.length,
-      missedPayment: missedPayment.length,
-      overdue: overdue.length,
+      total: sourceLoans.length,
       totalPrincipal,
       totalOutstanding,
+      totalPayments,
     };
-  }, [loans]);
+  }, [filteredLoans]);
 
   //  Status tab counts
   const tabCounts = React.useMemo(() => {
-    const counts = { all: loans.length };
+    const counts = { all: baseFilteredLoans.length };
     STATUS_TABS.forEach((tab) => {
       if (tab.key !== "all") {
-        counts[tab.key] = loans.filter(
+        counts[tab.key] = baseFilteredLoans.filter(
           (loan) => getLoanStatusMeta(loan).filterKey === tab.key,
         ).length;
       }
     });
     return counts;
-  }, [loans]);
+  }, [baseFilteredLoans]);
 
   React.useEffect(() => {
     if (!userDetails) return;
@@ -1432,6 +1415,97 @@ export default function LoansDisplay() {
 
       {shouldShowLoansView && (
         <>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "flex-start",
+              gap: 2,
+              mb: "10px",
+              flexWrap: "wrap",
+            }}
+          >
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+                flexWrap: "wrap",
+              }}
+            >
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  bgcolor: sf.sf_searchBg,
+                  border: `1px solid ${sf.sf_searchBorder}`,
+                  borderRadius: 0,
+                  px: 1.2,
+                  py: 0.4,
+                  minWidth: 240,
+                  maxWidth: 340,
+                  flex: "1 1 240px",
+                  transition: "border-color 0.15s",
+                  "&:focus-within": { borderColor: sf.sf_searchFocusBorder },
+                }}
+              >
+                <InputBase
+                  placeholder="Search borrower, loan #, officer..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  sx={{
+                    flex: 1,
+                    fontSize: "0.8rem",
+                    color: sf.sf_textPrimary,
+                    "& ::placeholder": {
+                      color: sf.sf_searchPlaceholder,
+                      opacity: 1,
+                    },
+                  }}
+                  startAdornment={
+                    <InputAdornment position="start">
+                      <SearchIcon
+                        sx={{ fontSize: 18, color: sf.sf_textTertiary }}
+                      />
+                    </InputAdornment>
+                  }
+                  endAdornment={
+                    searchTerm ? (
+                      <InputAdornment position="end">
+                        <IconButton
+                          aria-label="Clear search"
+                          onClick={() => setSearchTerm("")}
+                          edge="end"
+                          size="small"
+                          sx={{
+                            color: sf.sf_textTertiary,
+                            mr: -0.5,
+                            "&:hover": { color: sf.sf_brandPrimary },
+                          }}
+                        >
+                          <CancelIcon sx={{ fontSize: 18 }} />
+                        </IconButton>
+                      </InputAdornment>
+                    ) : null
+                  }
+                />
+              </Box>
+              <DateFilters
+                dateFrom={dateFrom}
+                dateTo={dateTo}
+                onDateFromChange={setDateFrom}
+                onDateToChange={setDateTo}
+              />
+            </Box>
+          </Box>
+
+          <SFTabs
+            tabs={STATUS_TABS}
+            activeKey={statusFilter}
+            onChange={setStatusFilter}
+            counts={tabCounts}
+            ariaLabel="Loan status filters"
+          />
+
           {!loading && (
             <Box
               sx={{
@@ -1441,36 +1515,9 @@ export default function LoansDisplay() {
                 flexWrap: "wrap",
               }}
             >
-              <KpiCard
-                icon={AssignmentOutlinedIcon}
-                label="Total Loans"
-                value={kpis.total}
-                sf={sf}
-              />
-              <KpiCard
-                icon={CheckCircleOutlineIcon}
-                label="Current"
-                value={kpis.current}
-                accent={sf.sf_successBg}
-                sf={sf}
-              />
-              <KpiCard
-                icon={InfoOutlinedIcon}
-                label="Missed Payment"
-                value={kpis.missedPayment}
-                accent={sf.sf_warningBg}
-                sf={sf}
-              />
-              <KpiCard
-                icon={WarningAmberIcon}
-                label="Overdue"
-                value={kpis.overdue}
-                accent={sf.sf_errorBg}
-                sf={sf}
-              />
-              <KpiCard
-                icon={AccountBalanceWalletOutlinedIcon}
-                label="Portfolio"
+              <KpiTextItem label="Total Loans" value={kpis.total} sf={sf} />
+              <KpiTextItem
+                label="Pricipal Released"
                 value={
                   <MoneyText
                     value={kpis.totalPrincipal}
@@ -1480,9 +1527,19 @@ export default function LoansDisplay() {
                 }
                 sf={sf}
               />
-              <KpiCard
-                icon={TrendingUpIcon}
-                label="Outstanding"
+              <KpiTextItem
+                label="Total Payments"
+                value={
+                  <MoneyText
+                    value={kpis.totalPayments}
+                    numberSx={{ ...KPI_MONEY_SX, color: sf.sf_textPrimary }}
+                    prefixSx={KPI_MONEY_PREFIX_SX}
+                  />
+                }
+                sf={sf}
+              />
+              <KpiTextItem
+                label="Total Due"
                 value={
                   <MoneyText
                     value={kpis.totalOutstanding}
@@ -1490,97 +1547,10 @@ export default function LoansDisplay() {
                     prefixSx={KPI_MONEY_PREFIX_SX}
                   />
                 }
-                subValue={
-                  kpis.totalPrincipal > 0
-                    ? `${((kpis.totalOutstanding / kpis.totalPrincipal) * 100).toFixed(1)}% of portfolio`
-                    : undefined
-                }
-                accent={sf.sf_warningBg}
                 sf={sf}
               />
             </Box>
           )}
-
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: 2,
-              mb: "14px",
-              flexWrap: "wrap",
-            }}
-          >
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                bgcolor: sf.sf_searchBg,
-                border: `1px solid ${sf.sf_searchBorder}`,
-                borderRadius: 0,
-                px: 1.2,
-                py: 0.4,
-                minWidth: 240,
-                maxWidth: 340,
-                flex: "1 1 240px",
-                transition: "border-color 0.15s",
-                "&:focus-within": { borderColor: sf.sf_searchFocusBorder },
-              }}
-            >
-              <SearchIcon
-                sx={{ fontSize: 18, color: sf.sf_textTertiary, mr: 0.8 }}
-              />
-              <InputBase
-                placeholder="Search borrower, loan #, officer..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                sx={{
-                  flex: 1,
-                  fontSize: "0.8rem",
-                  color: sf.sf_textPrimary,
-                  "& ::placeholder": {
-                    color: sf.sf_searchPlaceholder,
-                    opacity: 1,
-                  },
-                }}
-              />
-            </Box>
-
-            <Box sx={{ display: "flex", gap: 0.6, flexWrap: "wrap" }}>
-              {STATUS_TABS.map((tab) => {
-                const isActive = statusFilter === tab.key;
-                const count = tabCounts[tab.key] ?? 0;
-                return (
-                  <Chip
-                    key={tab.key}
-                    label={`${tab.label} (${count})`}
-                    size="small"
-                    onClick={() => setStatusFilter(tab.key)}
-                    sx={{
-                      height: 26,
-                      fontSize: "0.72rem",
-                      fontWeight: isActive ? 700 : 500,
-                      cursor: "pointer",
-                      bgcolor: isActive
-                        ? sf.sf_tabActiveBg
-                        : sf.sf_tabInactiveBg,
-                      color: isActive
-                        ? sf.sf_tabActiveText
-                        : sf.sf_tabInactiveText,
-                      borderRadius: 0,
-                      transition: "all 0.12s",
-                      "&:hover": {
-                        bgcolor: isActive
-                          ? sf.sf_tabActiveBg
-                          : sf.sf_tabHoverBg,
-                      },
-                      "& .MuiChip-label": { px: 1.2 },
-                    }}
-                  />
-                );
-              })}
-            </Box>
-          </Box>
 
           <Box
             sx={{

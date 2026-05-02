@@ -11,6 +11,7 @@ import dayjs from "dayjs";
 import SearchIcon from "@mui/icons-material/Search";
 import CancelIcon from "@mui/icons-material/Cancel";
 import RefreshIcon from "@mui/icons-material/Refresh";
+import DownloadIcon from "@mui/icons-material/Download";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeft";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
@@ -33,6 +34,7 @@ import LoanStatementPopup from "../LoanStatements/LoanStatementPopup";
 import { buildLoanDisplayName } from "../loanDisplayHelpers";
 import { LOAN_DISPLAY_STATUS } from "../loanSummaryProjection";
 import { LoanExplorerContext } from "./LoanExplorerContext";
+import { downloadFile, toCsv } from "../../../Screens/Reports/reportUtils";
 
 const LOANS_PAGE_SIZE = 25;
 
@@ -291,6 +293,8 @@ const getMoneyTextSx = (color, fontWeight = 600) => ({
   lineHeight: 1.2,
 });
 
+const formatCsvMoney = (value) => normalizeMoneyValue(value).toFixed(2);
+
 // (Grid column template removed – using MUI DataGrid columns instead)
 
 function KpiTextItem({ label, value, subValue, sf }) {
@@ -414,6 +418,25 @@ const truncateWithEllipsis = (text, limit = 30) => {
   return text.length > limit ? `${text.slice(0, limit)}...` : text;
 };
 
+const getLoanOfficerMeta = (loan) => {
+  const officer = loan?.createdByEmployee;
+  const label =
+    [officer?.firstName, officer?.lastName].filter(Boolean).join(" ").trim() ||
+    officer?.email ||
+    "";
+  const key =
+    officer?.id ||
+    loan?.createdByEmployeeID ||
+    officer?.email ||
+    (label ? `name:${label.toLowerCase()}` : "");
+
+  if (!label || !key) {
+    return null;
+  }
+
+  return { key, label };
+};
+
 const parseLoanRecord = (loan) => {
   const record = loan?.draftRecord ?? loan?.loanComputationRecord;
   if (!record) return {};
@@ -453,6 +476,10 @@ export default function LoansDisplay() {
   const [searchTerm, setSearchTerm] = React.useState("");
   const [dateFrom, setDateFrom] = React.useState("");
   const [dateTo, setDateTo] = React.useState("");
+  const [showLoanOfficerFilters, setShowLoanOfficerFilters] =
+    React.useState(false);
+  const [selectedLoanOfficerKey, setSelectedLoanOfficerKey] =
+    React.useState("");
   const [statusFilter, setStatusFilter] = React.useState("all");
   const [selectedBranchId, setSelectedBranchId] = React.useState("");
   const [paymentPopupOpen, setPaymentPopupOpen] = React.useState(false);
@@ -633,37 +660,6 @@ export default function LoansDisplay() {
       el.removeEventListener("mousemove", onMouseMove);
     };
   }, []);
-
-  // Sync top scrollbar width and scroll position with DataGrid's virtual scroller
-  React.useEffect(() => {
-    if (loading) return;
-    const frame = requestAnimationFrame(() => {
-      const gridEl = gridDragContainerRef.current;
-      const topEl = topScrollRef.current;
-      const innerEl = topScrollInnerRef.current;
-      if (!gridEl || !topEl || !innerEl) return;
-      const scroller = gridEl.querySelector(".MuiDataGrid-virtualScroller");
-      if (!scroller) return;
-
-      innerEl.style.width = scroller.scrollWidth + "px";
-
-      const onTopScroll = () => {
-        scroller.scrollLeft = topEl.scrollLeft;
-      };
-      const onGridScroll = () => {
-        topEl.scrollLeft = scroller.scrollLeft;
-      };
-
-      topEl.addEventListener("scroll", onTopScroll);
-      scroller.addEventListener("scroll", onGridScroll);
-
-      return () => {
-        topEl.removeEventListener("scroll", onTopScroll);
-        scroller.removeEventListener("scroll", onGridScroll);
-      };
-    });
-    return () => cancelAnimationFrame(frame);
-  }, [loading, loans]);
 
   const scrollTopBarBy = React.useCallback((delta) => {
     const topEl = topScrollRef.current;
@@ -1242,19 +1238,155 @@ export default function LoansDisplay() {
     );
   }, [dateFrom, dateTo, loanInDateRange, loanMatchesSearch, loans, searchTerm]);
 
+  const { tabs: loanOfficerFilterTabs, counts: loanOfficerTabCounts } =
+    React.useMemo(() => {
+      const counts = {};
+      const labelsByKey = {};
+
+      baseFilteredLoans.forEach((loan) => {
+        const officerMeta = getLoanOfficerMeta(loan);
+        if (!officerMeta) {
+          return;
+        }
+
+        labelsByKey[officerMeta.key] = officerMeta.label;
+        counts[officerMeta.key] = (counts[officerMeta.key] || 0) + 1;
+      });
+
+      const tabs = Object.entries(labelsByKey)
+        .map(([key, label]) => ({ key, label }))
+        .sort((left, right) => left.label.localeCompare(right.label));
+
+      return { tabs, counts };
+    }, [baseFilteredLoans]);
+
+  const clearLoanOfficerFilter = React.useCallback(() => {
+    setSelectedLoanOfficerKey("");
+    setShowLoanOfficerFilters(false);
+  }, []);
+
+  const isLoanOfficerFilterActive = Boolean(selectedLoanOfficerKey);
+
   //  Final table set (base filters + status tab)
   const filteredLoans = React.useMemo(() => {
-    if (statusFilter === "all") {
-      return baseFilteredLoans;
+    return baseFilteredLoans.filter((loan) => {
+      if (selectedLoanOfficerKey) {
+        const officerMeta = getLoanOfficerMeta(loan);
+        if (!officerMeta || officerMeta.key !== selectedLoanOfficerKey) {
+          return false;
+        }
+      }
+
+      if (statusFilter !== "all") {
+        return getLoanStatusMeta(loan).filterKey === statusFilter;
+      }
+
+      return true;
+    });
+  }, [baseFilteredLoans, selectedLoanOfficerKey, statusFilter]);
+
+  // Sync top scrollbar width and scroll position with DataGrid's virtual scroller
+  React.useEffect(() => {
+    if (loading || !shouldShowLoansView || filteredLoans.length === 0) return;
+    const frame = requestAnimationFrame(() => {
+      const gridEl = gridDragContainerRef.current;
+      const topEl = topScrollRef.current;
+      const innerEl = topScrollInnerRef.current;
+      if (!gridEl || !topEl || !innerEl) return;
+      const scroller = gridEl.querySelector(".MuiDataGrid-virtualScroller");
+      if (!scroller) return;
+
+      innerEl.style.width = scroller.scrollWidth + "px";
+
+      const onTopScroll = () => {
+        scroller.scrollLeft = topEl.scrollLeft;
+      };
+      const onGridScroll = () => {
+        topEl.scrollLeft = scroller.scrollLeft;
+      };
+
+      topEl.addEventListener("scroll", onTopScroll);
+      scroller.addEventListener("scroll", onGridScroll);
+
+      return () => {
+        topEl.removeEventListener("scroll", onTopScroll);
+        scroller.removeEventListener("scroll", onGridScroll);
+      };
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [filteredLoans.length, loading, loans, shouldShowLoansView]);
+
+  const handleExportCsv = React.useCallback(() => {
+    if (!filteredLoans.length) {
+      showSnackbar("No loan rows available to export.", "red");
+      return;
     }
 
-    return baseFilteredLoans.filter(
-      (loan) => getLoanStatusMeta(loan).filterKey === statusFilter,
-    );
-  }, [baseFilteredLoans, statusFilter]);
+    const exportRows = filteredLoans.map((loan) => {
+      const borrower = loan.borrower || {};
+      const officer = loan.createdByEmployee || {};
+      const maturityDate = computeMaturityDate(loan);
+      const statusMeta = getLoanStatusMeta(loan);
+      const computationRecord = parseLoanRecord(loan);
+      const loanId = loan.loanNumber || loan.id || "N/A";
+
+      return {
+        loanName: buildLoanDisplayName(loan, currency),
+        borrowerName:
+          [borrower.firstname, borrower.othername, borrower.businessName]
+            .filter(Boolean)
+            .join(" ")
+            .trim() || "N/A",
+        loanId,
+        principal: formatCsvMoney(loan.principal),
+        startDate: fmtDate(loan.startDate),
+        maturityDate: fmtDate(maturityDate),
+        duration: formatDurationFull(loan.duration, loan.durationInterval),
+        interestRate:
+          loan.interestRate != null
+            ? `${loan.interestRate}% / ${formatRateInterval(loan.rateInterval)}`
+            : "N/A",
+        interestMethod:
+          computationRecord?.interestMethod ||
+          computationRecord?.interestCalculationMethod ||
+          loan.loanProduct?.interestCalculationMethod ||
+          loan.loanType ||
+          "N/A",
+        amountDue: formatCsvMoney(getBalance(loan)),
+        status: statusMeta.label,
+        totalPaid: formatCsvMoney(getTotalPaid(loan)),
+        loanBalance: formatCsvMoney(getPrincipalBalance(loan)),
+        loanOfficer:
+          [officer.firstName, officer.lastName].filter(Boolean).join(" ") ||
+          officer.email ||
+          "N/A",
+      };
+    });
+
+    const csv = toCsv(exportRows, [
+      { key: "loanName", label: "Loan" },
+      { key: "borrowerName", label: "Borrower" },
+      { key: "loanId", label: "Loan ID" },
+      { key: "principal", label: "Principal" },
+      { key: "startDate", label: "Date Taken" },
+      { key: "maturityDate", label: "Maturity Date" },
+      { key: "duration", label: "Duration" },
+      { key: "interestRate", label: "Interest" },
+      { key: "interestMethod", label: "Interest Method" },
+      { key: "amountDue", label: "Amount Due" },
+      { key: "status", label: "Status" },
+      { key: "totalPaid", label: "Total Paid" },
+      { key: "loanBalance", label: "Loan Balance" },
+      { key: "loanOfficer", label: "Loan Officer" },
+    ]);
+
+    downloadFile(csv, `loans_${dayjs().format("YYYY-MM-DD")}.csv`, "text/csv");
+  }, [currency, filteredLoans, showSnackbar]);
 
   const hasNoLoans =
     !loading && !loadingMore && filteredLoans.length === 0 && !hasMoreLoans;
+  const hasNoBranchLoans =
+    !loading && !loadingMore && loans.length === 0 && !hasMoreLoans;
 
   //  KPI computations
   const kpis = React.useMemo(() => {
@@ -1334,6 +1466,20 @@ export default function LoansDisplay() {
     }
   }, [branches, isAdminUser, selectedBranchId]);
 
+  React.useEffect(() => {
+    if (!selectedLoanOfficerKey) {
+      return;
+    }
+
+    const selectedOfficerStillAvailable = loanOfficerFilterTabs.some(
+      (tab) => tab.key === selectedLoanOfficerKey,
+    );
+
+    if (!selectedOfficerStillAvailable) {
+      setSelectedLoanOfficerKey("");
+    }
+  }, [loanOfficerFilterTabs, selectedLoanOfficerKey]);
+
   return (
     <>
       <WorkingOverlay
@@ -1379,6 +1525,11 @@ export default function LoansDisplay() {
           <PlusButtonMain
             onClick={() => navigate("/add-loan")}
             buttonText="NEW LOAN"
+          />
+          <PlusButtonMain
+            buttonText="EXPORT"
+            // startIcon={<DownloadIcon />}
+            onClick={handleExportCsv}
           />
           <Tooltip title="Refresh data" placement="top">
             <IconButton
@@ -1495,8 +1646,128 @@ export default function LoansDisplay() {
                 onDateFromChange={setDateFrom}
                 onDateToChange={setDateTo}
               />
+              {!showLoanOfficerFilters && (
+                <SFClickableText
+                  onClick={() => setShowLoanOfficerFilters(true)}
+                >
+                  Filter by Loan Officer
+                </SFClickableText>
+              )}
+              {(showLoanOfficerFilters || isLoanOfficerFilterActive) && (
+                <SFClickableText
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    clearLoanOfficerFilter();
+                  }}
+                >
+                  Clear Loan Officer Filter
+                </SFClickableText>
+              )}
             </Box>
           </Box>
+
+          {showLoanOfficerFilters &&
+            (loanOfficerFilterTabs.length > 0 ? (
+              <Box
+                role="tablist"
+                aria-label="Loan officer filters"
+                sx={{
+                  display: "grid",
+                  gap: 1,
+                  width: "100%",
+                  mb: "18px",
+                  gridTemplateColumns: {
+                    xs: "repeat(2, minmax(0, 1fr))",
+                    sm: "repeat(auto-fit, minmax(180px, max-content))",
+                  },
+                  alignItems: "stretch",
+                }}
+              >
+                {loanOfficerFilterTabs.map((officerTab) => {
+                  const isActive = selectedLoanOfficerKey === officerTab.key;
+                  const count = loanOfficerTabCounts[officerTab.key] ?? 0;
+
+                  return (
+                    <SFClickableText
+                      key={officerTab.key}
+                      onClick={() => setSelectedLoanOfficerKey(officerTab.key)}
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        minHeight: 33,
+                        px: 1,
+                        mt: 0,
+                        gap: 0.5,
+                        border: `1px solid ${isActive ? sf.sf_brandPrimary : sf.sf_searchBorder}`,
+                        bgcolor: isActive ? sf.sf_brandPrimary : sf.sf_searchBg,
+                        color: isActive
+                          ? sf.sf_whiteMain || "#fff"
+                          : sf.sf_textLink,
+                        textDecoration: "none",
+                        textAlign: "center",
+                        lineHeight: 1.2,
+                        borderRadius: 0,
+                        transition:
+                          "background-color 0.15s, color 0.15s, border-color 0.15s",
+                        "&:hover": {
+                          color: isActive
+                            ? sf.sf_whiteMain || "#fff"
+                            : sf.sf_textLinkHover,
+                          bgcolor: isActive
+                            ? sf.sf_brandPrimary
+                            : sf.sf_actionHoverBg,
+                          borderColor: sf.sf_brandPrimary,
+                        },
+                      }}
+                    >
+                      <Typography
+                        component="span"
+                        sx={{
+                          fontSize: "0.8rem",
+                          fontWeight: 500,
+                          color: "inherit",
+                          lineHeight: 1.2,
+                        }}
+                      >
+                        {officerTab.label}
+                      </Typography>
+                      <Typography
+                        component="span"
+                        sx={{
+                          fontSize: "0.7rem",
+                          fontWeight: 600,
+                          color: "inherit",
+                          lineHeight: 1,
+                          opacity: 0.88,
+                        }}
+                      >
+                        {count}
+                      </Typography>
+                    </SFClickableText>
+                  );
+                })}
+              </Box>
+            ) : (
+              <Box
+                sx={{
+                  mb: "18px",
+                  px: 1,
+                  py: 1.25,
+                  borderBottom: `1px solid ${sf.sf_borderLight}`,
+                  bgcolor: sf.sf_cardBg,
+                }}
+              >
+                <Typography
+                  sx={{
+                    fontSize: "0.8rem",
+                    color: sf.sf_textTertiary,
+                  }}
+                >
+                  No loan officers found for the current loan results.
+                </Typography>
+              </Box>
+            ))}
 
           <SFTabs
             tabs={STATUS_TABS}
@@ -1566,7 +1837,7 @@ export default function LoansDisplay() {
               <Box
                 sx={{
                   px: 3,
-                  py: 4,
+                  py: hasNoBranchLoans ? 4 : 3,
                   textAlign: "center",
                   border: `1px solid ${sf.sf_borderLight}`,
                   bgcolor: sf.sf_kpiCardBg,
@@ -1582,20 +1853,24 @@ export default function LoansDisplay() {
                 >
                   No loans found.
                 </Typography>
-                <Typography
-                  sx={{
-                    fontSize: "0.82rem",
-                    color: sf.sf_textSecondary,
-                    mb: 2,
-                  }}
-                >
-                  Create your first loan to start tracking repayments and
-                  portfolio performance.
-                </Typography>
-                <PlusButtonMain
-                  onClick={() => navigate("/add-loan")}
-                  buttonText="CREATE LOAN"
-                />
+                {hasNoBranchLoans && (
+                  <>
+                    <Typography
+                      sx={{
+                        fontSize: "0.82rem",
+                        color: sf.sf_textSecondary,
+                        mb: 2,
+                      }}
+                    >
+                      Create your first loan to start tracking repayments and
+                      portfolio performance.
+                    </Typography>
+                    <PlusButtonMain
+                      onClick={() => navigate("/add-loan")}
+                      buttonText="CREATE LOAN"
+                    />
+                  </>
+                )}
               </Box>
             ) : (
               <>

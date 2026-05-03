@@ -1,8 +1,11 @@
 import React from "react";
 import { render, screen, waitFor } from "@testing-library/react";
+import { ThemeProvider, createTheme } from "@mui/material/styles";
+import dayjs from "dayjs";
 import { useReportData } from "./useReportData";
 import ReportShell from "./ReportShell";
 import { UserContext } from "../../App";
+import { themeSettings } from "../../theme";
 
 const mockGraphql = jest.fn();
 
@@ -45,8 +48,12 @@ function HookHarness({ selectedBranchId = null }) {
 }
 
 function renderWithUser(ui, userDetails) {
+  const theme = createTheme(themeSettings("light"));
+
   return render(
-    <UserContext.Provider value={{ userDetails }}>{ui}</UserContext.Provider>,
+    <ThemeProvider theme={theme}>
+      <UserContext.Provider value={{ userDetails }}>{ui}</UserContext.Provider>
+    </ThemeProvider>,
   );
 }
 
@@ -144,8 +151,67 @@ describe("reports data loading", () => {
     );
   });
 
-  it("hides report content until an admin selects a branch", () => {
-    render(
+  it("loads admin report data automatically when the institution has one branch", async () => {
+    mockGraphql.mockResolvedValue({
+      data: {
+        listBranches: {
+          items: [{ id: "branch-9", name: "Only Branch" }],
+        },
+      },
+    });
+    mockFetchAllReportLoanSummariesForBranch.mockResolvedValue([
+      { id: "loan-9" },
+    ]);
+
+    renderWithUser(<HookHarness />, {
+      userType: "Admin",
+      institution: { id: "inst-1" },
+    });
+
+    await waitFor(() =>
+      expect(mockFetchAllReportLoanSummariesForBranch).toHaveBeenCalledWith(
+        expect.objectContaining({
+          branchId: "branch-9",
+          pageSize: 500,
+        }),
+      ),
+    );
+
+    await waitFor(() =>
+      expect(screen.getByText(/summaries:\s*1/)).toBeInTheDocument(),
+    );
+  });
+
+  it("retries branch loading when the admin branch list is empty", async () => {
+    mockGraphql
+      .mockResolvedValueOnce({
+        data: {
+          listBranches: {
+            items: [],
+          },
+        },
+      })
+      .mockResolvedValueOnce({
+        data: {
+          listBranches: {
+            items: [{ id: "branch-2", name: "Branch 2" }],
+          },
+        },
+      });
+
+    renderWithUser(<HookHarness />, {
+      userType: "Admin",
+      institution: { id: "inst-1" },
+    });
+
+    await waitFor(() => expect(mockGraphql).toHaveBeenCalledTimes(2));
+    await waitFor(() =>
+      expect(screen.getByText(/branches:\s*1/)).toBeInTheDocument(),
+    );
+  });
+
+  it("hides report controls and content until an admin selects a branch", () => {
+    renderWithUser(
       <ReportShell
         title="Portfolio Overview"
         isAdmin={true}
@@ -163,12 +229,55 @@ describe("reports data loading", () => {
       >
         <div>Report Body</div>
       </ReportShell>,
+      null,
     );
 
     expect(
       screen.getByText("Please select a branch above to view report data."),
     ).toBeInTheDocument();
     expect(screen.queryByText("Report Body")).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Refresh" })).toBeDisabled();
+    expect(screen.queryByText("This Month")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Refresh" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows date filters by default and seeds this month when report content is available", async () => {
+    const handleStartDateChange = jest.fn();
+    const handleEndDateChange = jest.fn();
+
+    renderWithUser(
+      <ReportShell
+        title="Portfolio Overview"
+        isAdmin={true}
+        branches={[{ id: "branch-1", name: "Branch 1" }]}
+        selectedBranchId="branch-1"
+        onBranchChange={jest.fn()}
+        startDate=""
+        endDate=""
+        onStartDateChange={handleStartDateChange}
+        onEndDateChange={handleEndDateChange}
+        onRefresh={jest.fn()}
+      >
+        <div>Report Body</div>
+      </ReportShell>,
+      null,
+    );
+
+    expect(screen.getByText("This Month")).toBeInTheDocument();
+    expect(screen.getByText("Report Body")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Refresh" })).toBeInTheDocument();
+    expect(screen.queryByText("Clear Date Filter")).not.toBeInTheDocument();
+
+    await waitFor(() =>
+      expect(handleStartDateChange).toHaveBeenCalledWith(
+        dayjs().startOf("month").format("YYYY-MM-DD"),
+      ),
+    );
+    await waitFor(() =>
+      expect(handleEndDateChange).toHaveBeenCalledWith(
+        dayjs().startOf("day").format("YYYY-MM-DD"),
+      ),
+    );
   });
 });

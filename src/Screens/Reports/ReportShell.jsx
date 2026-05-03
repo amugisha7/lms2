@@ -15,7 +15,6 @@ import {
   Box,
   Typography,
   Button,
-  TextField,
   CircularProgress,
   Alert,
   Divider,
@@ -25,6 +24,7 @@ import RefreshIcon from "@mui/icons-material/Refresh";
 import SaveIcon from "@mui/icons-material/Save";
 import DownloadIcon from "@mui/icons-material/Download";
 import AdminBranchScopeSelector from "../../ModelAssets/AdminBranchScopeSelector";
+import DateFilters, { getPresetRange } from "../../ModelAssets/DateFilters";
 
 export default function ReportShell({
   title,
@@ -53,8 +53,30 @@ export default function ReportShell({
   // children (report body)
   children,
 }) {
+  const defaultReportRangeAppliedRef = React.useRef(false);
   const requiresBranchSelection =
-    isAdmin && branches.length > 1 && !selectedBranchId;
+    isAdmin && branches.length !== 1 && !selectedBranchId;
+
+  React.useEffect(() => {
+    if (
+      defaultReportRangeAppliedRef.current ||
+      startDate ||
+      endDate ||
+      typeof onStartDateChange !== "function" ||
+      typeof onEndDateChange !== "function"
+    ) {
+      return;
+    }
+
+    const defaultRange = getPresetRange("this_month");
+    defaultReportRangeAppliedRef.current = true;
+    if (!defaultRange) {
+      return;
+    }
+
+    onStartDateChange(defaultRange.from);
+    onEndDateChange(defaultRange.to);
+  }, [endDate, onEndDateChange, onStartDateChange, startDate]);
 
   return (
     <Box sx={{ width: "100%" }}>
@@ -70,86 +92,6 @@ export default function ReportShell({
         )}
       </Box>
 
-      {/* Controls row */}
-      <Box
-        sx={{
-          display: "flex",
-          flexWrap: "wrap",
-          gap: 2,
-          alignItems: "flex-end",
-          mb: 2,
-        }}
-      >
-        {/* Date range */}
-        <TextField
-          label="Start Date"
-          type="date"
-          size="small"
-          value={startDate || ""}
-          onChange={(e) =>
-            onStartDateChange && onStartDateChange(e.target.value)
-          }
-          InputLabelProps={{ shrink: true }}
-          sx={{ minWidth: 160 }}
-        />
-        <TextField
-          label="End Date"
-          type="date"
-          size="small"
-          value={endDate || ""}
-          onChange={(e) => onEndDateChange && onEndDateChange(e.target.value)}
-          InputLabelProps={{ shrink: true }}
-          sx={{ minWidth: 160 }}
-        />
-
-        {/* Actions */}
-        <Button
-          variant="outlined"
-          size="small"
-          startIcon={loading ? <CircularProgress size={14} /> : <RefreshIcon />}
-          onClick={onRefresh}
-          disabled={loading || requiresBranchSelection}
-        >
-          {loading ? "Loading…" : "Refresh"}
-        </Button>
-
-        {onSaveSnapshot && (
-          <Button
-            variant="outlined"
-            size="small"
-            startIcon={saving ? <CircularProgress size={14} /> : <SaveIcon />}
-            onClick={onSaveSnapshot}
-            disabled={saving || loading || requiresBranchSelection}
-          >
-            {saving ? "Saving…" : "Save Snapshot"}
-          </Button>
-        )}
-
-        {onExportCsv && (
-          <Button
-            variant="outlined"
-            size="small"
-            startIcon={<DownloadIcon />}
-            onClick={onExportCsv}
-            disabled={loading || requiresBranchSelection}
-          >
-            Export CSV
-          </Button>
-        )}
-
-        {onExportJson && (
-          <Button
-            variant="outlined"
-            size="small"
-            startIcon={<DownloadIcon />}
-            onClick={onExportJson}
-            disabled={loading || requiresBranchSelection}
-          >
-            Export JSON
-          </Button>
-        )}
-      </Box>
-
       {/* Admin branch selector */}
       {isAdmin && (
         <Box sx={{ mb: 2, maxWidth: 400 }}>
@@ -157,7 +99,7 @@ export default function ReportShell({
             branches={branches}
             selectedBranchId={selectedBranchId}
             onBranchChange={onBranchChange}
-            helperText="Filter by branch (leave blank for institution-wide view)."
+            helperText="Select a branch before viewing report data."
             emptyMessage=""
           />
         </Box>
@@ -170,19 +112,102 @@ export default function ReportShell({
             Please select a branch above to view report data.
           </Alert>
         )}
-        {loadError && <Alert severity="error">{loadError}</Alert>}
-        {saveError && <Alert severity="error">{saveError}</Alert>}
-        {lastSavedAt && (
+        {!requiresBranchSelection && loadError && (
+          <Alert severity="error">{loadError}</Alert>
+        )}
+        {!requiresBranchSelection && saveError && (
+          <Alert severity="error">{saveError}</Alert>
+        )}
+        {!requiresBranchSelection && lastSavedAt && (
           <Alert severity="success">
             Snapshot saved at {new Date(lastSavedAt).toLocaleTimeString()}.
           </Alert>
         )}
       </Stack>
 
-      <Divider sx={{ mb: 3 }} />
+      {!requiresBranchSelection && (
+        <>
+          <Box sx={{ mb: 2 }}>
+            <DateFilters
+              dateFrom={startDate || ""}
+              dateTo={endDate || ""}
+              onDateFromChange={(value) =>
+                onStartDateChange && onStartDateChange(value)
+              }
+              onDateToChange={(value) =>
+                onEndDateChange && onEndDateChange(value)
+              }
+              alwaysVisible={true}
+              allowClear={false}
+            />
+          </Box>
 
-      {/* Report body */}
-      {!requiresBranchSelection && children}
+          <Box
+            sx={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 2,
+              alignItems: "flex-end",
+              mb: 2,
+            }}
+          >
+            <Button
+              variant="outlined"
+              size="small"
+              startIcon={
+                loading ? <CircularProgress size={14} /> : <RefreshIcon />
+              }
+              onClick={onRefresh}
+              disabled={loading}
+            >
+              {loading ? "Loading…" : "Refresh"}
+            </Button>
+
+            {onSaveSnapshot && (
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={
+                  saving ? <CircularProgress size={14} /> : <SaveIcon />
+                }
+                onClick={onSaveSnapshot}
+                disabled={saving || loading}
+              >
+                {saving ? "Saving…" : "Save Snapshot"}
+              </Button>
+            )}
+
+            {onExportCsv && (
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<DownloadIcon />}
+                onClick={onExportCsv}
+                disabled={loading}
+              >
+                Export CSV
+              </Button>
+            )}
+
+            {onExportJson && (
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<DownloadIcon />}
+                onClick={onExportJson}
+                disabled={loading}
+              >
+                Export JSON
+              </Button>
+            )}
+          </Box>
+
+          <Divider sx={{ mb: 3 }} />
+
+          {/* Report body */}
+          {children}
+        </>
+      )}
     </Box>
   );
 }

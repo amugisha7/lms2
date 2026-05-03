@@ -21,7 +21,7 @@ const toDateInputValue = (date) => {
   return parsedDate.isValid() ? parsedDate.format("YYYY-MM-DD") : "";
 };
 
-const getPresetRange = (presetKey) => {
+export const getPresetRange = (presetKey) => {
   const today = dayjs().startOf("day");
   let from = null;
   let to = today;
@@ -58,25 +58,48 @@ const getPresetRange = (presetKey) => {
   };
 };
 
+const getMatchingPresetKey = (dateFrom, dateTo, presetOptions) => {
+  if (!dateFrom || !dateTo) {
+    return "";
+  }
+
+  const matchedPreset = presetOptions.find((preset) => {
+    const range = getPresetRange(preset.key);
+    return range?.from === dateFrom && range?.to === dateTo;
+  });
+
+  return matchedPreset?.key || "";
+};
+
 export default function DateFilters({
   dateFrom,
   dateTo,
   onDateFromChange,
   onDateToChange,
   presetOptions = DEFAULT_DATE_PRESET_OPTIONS,
+  defaultPresetKey = "",
+  alwaysVisible = false,
+  allowClear = true,
 }) {
   const theme = useTheme();
   const sf = theme.palette.sf;
-  const [showDateFilters, setShowDateFilters] = React.useState(false);
+  const [showDateFilters, setShowDateFilters] = React.useState(
+    Boolean(alwaysVisible),
+  );
   const [activeDatePreset, setActiveDatePreset] = React.useState("");
+  const defaultPresetAppliedRef = React.useRef(false);
 
   const isDateFilterActive = Boolean(dateFrom || dateTo);
 
   React.useEffect(() => {
-    if (!dateFrom && !dateTo) {
-      setActiveDatePreset("");
+    if (alwaysVisible) {
+      setShowDateFilters(true);
     }
-  }, [dateFrom, dateTo]);
+  }, [alwaysVisible]);
+
+  React.useEffect(() => {
+    setActiveDatePreset(getMatchingPresetKey(dateFrom, dateTo, presetOptions));
+  }, [dateFrom, dateTo, presetOptions]);
 
   const applyDatePreset = React.useCallback(
     (presetKey) => {
@@ -93,21 +116,45 @@ export default function DateFilters({
     [onDateFromChange, onDateToChange],
   );
 
+  React.useEffect(() => {
+    if (
+      defaultPresetAppliedRef.current ||
+      !defaultPresetKey ||
+      dateFrom ||
+      dateTo
+    ) {
+      return;
+    }
+
+    const range = getPresetRange(defaultPresetKey);
+    defaultPresetAppliedRef.current = true;
+    if (!range) {
+      return;
+    }
+
+    onDateFromChange(range.from);
+    onDateToChange(range.to);
+    setShowDateFilters(true);
+    setActiveDatePreset(defaultPresetKey);
+  }, [dateFrom, dateTo, defaultPresetKey, onDateFromChange, onDateToChange]);
+
   const clearDateFilter = React.useCallback(() => {
     onDateFromChange("");
     onDateToChange("");
-    setShowDateFilters(false);
+    if (!alwaysVisible) {
+      setShowDateFilters(false);
+    }
     setActiveDatePreset("");
-  }, [onDateFromChange, onDateToChange]);
+  }, [alwaysVisible, onDateFromChange, onDateToChange]);
 
   return (
     <>
-      {!showDateFilters && (
+      {!alwaysVisible && !showDateFilters && (
         <SFClickableText onClick={() => setShowDateFilters((prev) => !prev)}>
           Filter by Date
         </SFClickableText>
       )}
-      {(showDateFilters || isDateFilterActive) && (
+      {allowClear && (showDateFilters || isDateFilterActive) && (
         <SFClickableText
           onClick={(event) => {
             event.stopPropagation();

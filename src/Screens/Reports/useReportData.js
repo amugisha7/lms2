@@ -5,7 +5,7 @@
  * Also loads the branch list for admin users.
  */
 
-import { useState, useEffect, useCallback, useContext } from "react";
+import { useState, useEffect, useCallback, useContext, useRef } from "react";
 import { generateClient } from "aws-amplify/api";
 import { listBranches } from "../../graphql/queries";
 import { fetchAllReportLoanSummariesForBranch } from "./reportLoanData";
@@ -22,12 +22,17 @@ export function useReportData({ selectedBranchId = null } = {}) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [lastFetchedAt, setLastFetchedAt] = useState(null);
+  const [branchFetchCompletedCount, setBranchFetchCompletedCount] =
+    useState(0);
+  const branchFetchInFlightRef = useRef(null);
 
   const scope = resolveReportScope(userDetails);
+  const singleAdminBranchId =
+    scope.isAdmin && branches.length === 1 ? branches[0]?.id || null : null;
 
   // Mirror LoansDisplay behavior: reports only load once an effective branch exists.
   const effectiveBranchId = scope.isAdmin
-    ? (selectedBranchId || null)
+    ? (selectedBranchId || singleAdminBranchId)
     : scope.branchId;
 
   const fetchData = useCallback(async () => {
@@ -47,7 +52,7 @@ export function useReportData({ selectedBranchId = null } = {}) {
         client,
       });
 
-      setSummaries(items);
+      setSummaries(Array.isArray(items) ? items : []);
       setLastFetchedAt(Date.now());
     } catch (err) {
       console.error("[useReportData] fetch error:", err);
@@ -55,32 +60,58 @@ export function useReportData({ selectedBranchId = null } = {}) {
     } finally {
       setLoading(false);
     }
-  }, [
-    effectiveBranchId, scope.currencyCode, scope.institutionId,
-  ]);
+  }, [effectiveBranchId, scope.currencyCode, scope.institutionId]);
 
   // Load branches for admin users
   const fetchBranches = useCallback(async () => {
-    if (!scope.isAdmin || !scope.institutionId) return;
-    try {
-      const client = generateClient();
-      const result = await client.graphql({
-        query: listBranches,
-        variables: {
-          filter: { institutionBranchesId: { eq: scope.institutionId } },
-          limit: 1000,
-        },
-      });
-      const items = result?.data?.listBranches?.items || [];
-      setBranches(items.filter(Boolean));
-    } catch (err) {
-      console.error("[useReportData] branch fetch error:", err);
+    if (!scope.isAdmin || !scope.institutionId) return [];
+    if (branchFetchInFlightRef.current) {
+      return branchFetchInFlightRef.current;
     }
+
+    const request = (async () => {
+      try {
+        const client = generateClient();
+        const result = await client.graphql({
+          query: listBranches,
+          variables: {
+            filter: { institutionBranchesId: { eq: scope.institutionId } },
+            limit: 1000,
+          },
+        });
+        const items = result?.data?.listBranches?.items || [];
+        const filteredBranches = items.filter(Boolean);
+        setBranches(filteredBranches);
+        return filteredBranches;
+      } catch (err) {
+        console.error("[useReportData] branch fetch error:", err);
+        return [];
+      } finally {
+        setBranchFetchCompletedCount((count) => count + 1);
+        branchFetchInFlightRef.current = null;
+      }
+    })();
+
+    branchFetchInFlightRef.current = request;
+    return request;
   }, [scope.isAdmin, scope.institutionId]);
 
   useEffect(() => {
     fetchBranches();
   }, [fetchBranches]);
+
+  useEffect(() => {
+    if (
+      !scope.isAdmin ||
+      branches.length > 0 ||
+      branchFetchInFlightRef.current ||
+      branchFetchCompletedCount !== 1
+    ) {
+      return;
+    }
+
+    fetchBranches();
+  }, [branchFetchCompletedCount, branches.length, fetchBranches, scope.isAdmin]);
 
   useEffect(() => {
     fetchData();
@@ -93,6 +124,7 @@ export function useReportData({ selectedBranchId = null } = {}) {
     error,
     lastFetchedAt,
     refresh: fetchData,
+    refreshBranches: fetchBranches,
     scope,
   };
 }

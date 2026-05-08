@@ -5,7 +5,6 @@ import PortfolioOverview from "./PortfolioOverview";
 import { UserContext } from "../../App";
 import { themeSettings } from "../../theme";
 import { useReportData } from "./useReportData";
-import { useSnapshotPersistence } from "./useSnapshotPersistence";
 
 const mockReportShell = jest.fn(({ children }) => <div>{children}</div>);
 
@@ -16,10 +15,6 @@ jest.mock("./ReportShell", () => ({
 
 jest.mock("./useReportData", () => ({
   useReportData: jest.fn(),
-}));
-
-jest.mock("./useSnapshotPersistence", () => ({
-  useSnapshotPersistence: jest.fn(),
 }));
 
 jest.mock("../../App", () => {
@@ -43,13 +38,6 @@ describe("PortfolioOverview", () => {
   beforeEach(() => {
     jest.useFakeTimers().setSystemTime(new Date("2026-05-03T00:00:00Z"));
     mockReportShell.mockClear();
-
-    useSnapshotPersistence.mockReturnValue({
-      saveSnapshot: jest.fn(),
-      saving: false,
-      lastSavedAt: null,
-      saveError: null,
-    });
 
     useReportData.mockReturnValue({
       summaries: [

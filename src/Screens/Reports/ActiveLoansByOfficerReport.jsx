@@ -39,7 +39,6 @@ import SearchIcon from "@mui/icons-material/Search";
 import { UserContext } from "../../App";
 import ReportShell from "./ReportShell";
 import { useReportData } from "./useReportData";
-import { useSnapshotPersistence } from "./useSnapshotPersistence";
 import {
   filterSummariesByDateWindow,
   fmtMoney,
@@ -48,7 +47,6 @@ import {
   downloadFile,
   safeNum,
 } from "./reportUtils";
-import { REPORT_TYPES } from "./reportRegistry";
 import { LOAN_DISPLAY_STATUS } from "../../Models/Loans/loanSummaryProjection";
 import {
   groupByOfficer,
@@ -131,8 +129,6 @@ export default function ActiveLoansByOfficerReport() {
   const { summaries, branches, loading, error, refresh, scope } = useReportData(
     { selectedBranchId },
   );
-  const { saveSnapshot, saving, lastSavedAt, saveError } =
-    useSnapshotPersistence();
 
   const branchMap = useMemo(() => {
     const m = {};
@@ -304,36 +300,6 @@ export default function ActiveLoansByOfficerReport() {
     downloadFile(csv, "active_loans_by_officer.csv", "text/csv");
   }
 
-  async function handleSaveSnapshot() {
-    const payload = {
-      kpis: {
-        officerCount: kpis.officerCount,
-        highestBalanceOfficer: kpis.highestBalance?.officerName,
-        highestDelinquentOfficer: kpis.highestDelinquent?.officerName,
-        mostOverloadedOfficer: kpis.mostOverloaded?.officerName,
-      },
-      officerSummary: officerRows.map((r) => ({
-        officer: r.officerName,
-        activeCount: r.activeCount,
-        totalBalance: r.totalBalance,
-        totalArrears: r.totalArrears,
-        delinquentCount: r.delinquentCount,
-      })),
-      activeDefinition: "CURRENT | CURRENT_WITH_MISSED_PAYMENT | OVERDUE",
-      officerGroupField:
-        "loanOfficerID + loanOfficerDisplayName from LoanSummary",
-      generatedAt: new Date().toISOString(),
-    };
-    await saveSnapshot({
-      reportType: REPORT_TYPES.ACTIVE_LOANS_BY_OFFICER,
-      reportName: "Active Loans by Officer",
-      startDate,
-      endDate,
-      branchId: selectedBranchId || scope?.branchId || null,
-      reportData: payload,
-    });
-  }
-
   return (
     <ReportShell
       title="Active Loans by Officer"
@@ -350,10 +316,6 @@ export default function ActiveLoansByOfficerReport() {
       onRefresh={refresh}
       loading={loading}
       loadError={error}
-      onSaveSnapshot={handleSaveSnapshot}
-      saving={saving}
-      lastSavedAt={lastSavedAt}
-      saveError={saveError}
       onExportCsv={handleExportCsv}
     >
       {/* KPI Cards */}

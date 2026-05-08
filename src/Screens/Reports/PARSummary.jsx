@@ -36,10 +36,8 @@ import SearchIcon from "@mui/icons-material/Search";
 import { UserContext } from "../../App";
 import ReportShell from "./ReportShell";
 import { useReportData } from "./useReportData";
-import { useSnapshotPersistence } from "./useSnapshotPersistence";
 import {
   filterSummariesByDateWindow,
-  formatReportDateKey,
   getReportAsOfDate,
   fmtMoney,
   fmtReportDate,
@@ -48,7 +46,6 @@ import {
   downloadFile,
   safeNum,
 } from "./reportUtils";
-import { REPORT_TYPES } from "./reportRegistry";
 import { computePAR, computeBranchPAR } from "./parHelpers";
 import { computeDaysPastDue } from "./agingHelpers";
 
@@ -111,8 +108,6 @@ export default function PARSummary() {
       selectedBranchId,
     },
   );
-  const { saveSnapshot, saving, lastSavedAt, saveError } =
-    useSnapshotPersistence();
   const currencyCode = userDetails?.institution?.currencyCode || "";
   const reportDate = useMemo(() => getReportAsOfDate(endDate), [endDate]);
 
@@ -205,61 +200,6 @@ export default function PARSummary() {
     downloadFile(csv, "par_summary.csv", "text/csv");
   };
 
-  const handleExportJson = () => {
-    const payload = buildSnapshotPayload();
-    downloadFile(
-      JSON.stringify(payload, null, 2),
-      "par_summary.json",
-      "application/json",
-    );
-  };
-
-  function buildSnapshotPayload() {
-    return {
-      generatedAt: new Date().toISOString(),
-      reportDate: formatReportDateKey(reportDate),
-      startDate,
-      endDate,
-      selectedBranchId,
-      // Trend-ready structure: keyed by date so future periods can be appended
-      snapshot: {
-        [formatReportDateKey(reportDate)]: {
-          denominator,
-          eligibleLoanCount: eligible.length,
-          par: PAR_THRESHOLDS.reduce((acc, t) => {
-            acc[`par${t}`] = {
-              balance: par[t]?.balance || 0,
-              count: par[t]?.count || 0,
-              pct: par[t]?.pct || 0,
-            };
-            return acc;
-          }, {}),
-        },
-      },
-      branchPAR,
-      denominatorNote:
-        "Total outstanding balance of active loans (excludes VOIDED, WRITTEN_OFF, CLOSED).",
-    };
-  }
-
-  const handleSaveSnapshot = async () => {
-    const payload = buildSnapshotPayload();
-    await saveSnapshot({
-      reportType: REPORT_TYPES.PAR_SUMMARY,
-      reportName: "Portfolio at Risk Summary",
-      startDate,
-      endDate,
-      branchId: selectedBranchId || scope.branchId,
-      reportData: payload,
-      customDetails: {
-        thresholds: PAR_THRESHOLDS,
-        denominatorDefinition:
-          "Active loan outstanding balance (excl. VOIDED, WRITTEN_OFF, CLOSED)",
-        generatedAt: new Date().toISOString(),
-      },
-    });
-  };
-
   return (
     <ReportShell
       title="Portfolio at Risk (PAR)"
@@ -275,13 +215,8 @@ export default function PARSummary() {
       showDateFilters={false}
       onRefresh={refresh}
       loading={loading}
-      onSaveSnapshot={handleSaveSnapshot}
-      saving={saving}
-      lastSavedAt={lastSavedAt}
       onExportCsv={handleExportCsv}
-      onExportJson={handleExportJson}
       loadError={error}
-      saveError={saveError}
     >
       {/* PAR KPI Cards */}
       <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1.5 }}>

@@ -50,7 +50,6 @@ import { generateClient } from "aws-amplify/api";
 import { UserContext } from "../../App";
 import ReportShell from "./ReportShell";
 import { useReportData } from "./useReportData";
-import { useSnapshotPersistence } from "./useSnapshotPersistence";
 import {
   parseReportDate,
   fmtMoney,
@@ -59,7 +58,6 @@ import {
   downloadFile,
   safeNum,
 } from "./reportUtils";
-import { REPORT_TYPES } from "./reportRegistry";
 import { LOAN_DISPLAY_STATUS } from "../../Models/Loans/loanSummaryProjection";
 import { resolveLoanSchedule } from "../../Models/Loans/LoanStatements/statementHelpers";
 import { GET_REPORT_LOAN_SOURCE_QUERY } from "./reportLoanData";
@@ -209,8 +207,6 @@ export default function RepaymentSchedulesReport() {
       selectedBranchId,
     },
   );
-  const { saveSnapshot, saving, lastSavedAt, saveError } =
-    useSnapshotPersistence();
 
   const branchMap = useMemo(() => {
     const m = {};
@@ -428,28 +424,6 @@ export default function RepaymentSchedulesReport() {
     downloadFile(csv, `repayment_schedules_${horizonDays}d.csv`, "text/csv");
   }
 
-  async function handleSaveSnapshot() {
-    const payload = {
-      kpis,
-      forecastByWeek,
-      horizonDays,
-      scheduleSource:
-        scheduleRows !== null
-          ? "resolveLoanSchedule + summary fallback"
-          : "LoanSummary.nextDueDate",
-      generatedAt: new Date().toISOString(),
-      dateWindow: { startDate, endDate },
-    };
-    await saveSnapshot({
-      reportType: REPORT_TYPES.REPAYMENT_SCHEDULES,
-      reportName: `Repayment Schedules — Next ${horizonDays} days`,
-      startDate,
-      endDate,
-      branchId: selectedBranchId || scope?.branchId || null,
-      reportData: payload,
-    });
-  }
-
   return (
     <ReportShell
       title="Loan Repayment Schedules"
@@ -471,10 +445,6 @@ export default function RepaymentSchedulesReport() {
       }}
       loading={loading || scheduleLoading}
       loadError={error}
-      onSaveSnapshot={handleSaveSnapshot}
-      saving={saving}
-      lastSavedAt={lastSavedAt}
-      saveError={saveError}
       onExportCsv={handleExportCsv}
     >
       {/* Horizon selector */}

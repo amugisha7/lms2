@@ -50,7 +50,6 @@ import SearchIcon from "@mui/icons-material/Search";
 import { UserContext } from "../../App";
 import ReportShell from "./ReportShell";
 import { useReportData } from "./useReportData";
-import { useSnapshotPersistence } from "./useSnapshotPersistence";
 import {
   filterSummariesByDateWindow,
   fmtMoney,
@@ -59,7 +58,6 @@ import {
   downloadFile,
   safeNum,
 } from "./reportUtils";
-import { REPORT_TYPES } from "./reportRegistry";
 import { LOAN_DISPLAY_STATUS } from "../../Models/Loans/loanSummaryProjection";
 import {
   buildConcentrationGroups,
@@ -197,8 +195,6 @@ export default function ConcentrationsReport() {
   const { summaries, branches, loading, error, refresh, scope } = useReportData(
     { selectedBranchId },
   );
-  const { saveSnapshot, saving, lastSavedAt, saveError } =
-    useSnapshotPersistence();
 
   const branchMap = useMemo(() => {
     const m = {};
@@ -342,39 +338,6 @@ export default function ConcentrationsReport() {
     downloadFile(csv, `concentrations_${activeDimension}.csv`, "text/csv");
   }
 
-  async function handleSaveSnapshot() {
-    const payload = {
-      kpis: {
-        largestBorrower: kpis.top1borrower?.label,
-        largestBorrowerPct: kpis.top1borrower?.pct,
-        top5BorrowerSharePct: kpis.top5pct,
-        largestProduct: kpis.topProduct?.label,
-        largestProductPct: kpis.topProduct?.pct,
-        largestSector: kpis.topSector?.label,
-        largestSectorPct: kpis.topSector?.pct,
-      },
-      topBorrowers: borrowerGroups
-        .slice(0, 10)
-        .map((r) => ({ borrower: r.label, balance: r.balance, pct: r.pct })),
-      topProducts: productGroups
-        .slice(0, 10)
-        .map((r) => ({ product: r.label, balance: r.balance, pct: r.pct })),
-      sectorNote:
-        "Sector uses loanProductName as proxy. Raw borrower typeOfBusiness/employerName enrichment not loaded.",
-      segmentationFallbackOrder:
-        "loanProductName (LoanSummary) → Unclassified. Full order per spec: typeOfBusiness → employmentDepartment → employerName → loanPurpose → Unclassified",
-      generatedAt: new Date().toISOString(),
-    };
-    await saveSnapshot({
-      reportType: REPORT_TYPES.CONCENTRATIONS,
-      reportName: "Concentrations Report",
-      startDate,
-      endDate,
-      branchId: selectedBranchId || scope?.branchId || null,
-      reportData: payload,
-    });
-  }
-
   return (
     <ReportShell
       title="Concentrations Report"
@@ -394,10 +357,6 @@ export default function ConcentrationsReport() {
       }}
       loading={loading}
       loadError={error}
-      onSaveSnapshot={handleSaveSnapshot}
-      saving={saving}
-      lastSavedAt={lastSavedAt}
-      saveError={saveError}
       onExportCsv={handleExportCsv}
     >
       {/* KPIs */}

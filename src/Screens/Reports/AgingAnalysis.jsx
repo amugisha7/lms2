@@ -35,7 +35,6 @@ import SearchIcon from "@mui/icons-material/Search";
 import { UserContext } from "../../App";
 import ReportShell from "./ReportShell";
 import { useReportData } from "./useReportData";
-import { useSnapshotPersistence } from "./useSnapshotPersistence";
 import {
   filterSummariesByDateWindow,
   getReportAsOfDate,
@@ -46,7 +45,6 @@ import {
   downloadFile,
   safeNum,
 } from "./reportUtils";
-import { REPORT_TYPES } from "./reportRegistry";
 import {
   AGING_BUCKETS,
   buildAgingSummary,
@@ -102,8 +100,6 @@ export default function AgingAnalysis() {
       selectedBranchId,
     },
   );
-  const { saveSnapshot, saving, lastSavedAt, saveError } =
-    useSnapshotPersistence();
   const currencyCode = userDetails?.institution?.currencyCode || "";
   const reportDate = useMemo(() => getReportAsOfDate(endDate), [endDate]);
 
@@ -214,25 +210,6 @@ export default function AgingAnalysis() {
     downloadFile(csv, "aging_analysis.csv", "text/csv");
   };
 
-  const handleSaveSnapshot = async () => {
-    const payload = { bucketSummary, branchBucketRollup };
-    await saveSnapshot({
-      reportType: REPORT_TYPES.AGING_ANALYSIS,
-      reportName: "Aging Analysis Report",
-      startDate,
-      endDate,
-      branchId: selectedBranchId || scope.branchId,
-      reportData: payload,
-      customDetails: {
-        startDate,
-        endDate,
-        selectedBranchId,
-        generatedAt: new Date().toISOString(),
-        buckets: AGING_BUCKETS.map((b) => b.label),
-      },
-    });
-  };
-
   // Total at-risk (all non-current buckets)
   const totalAtRisk = useMemo(
     () =>
@@ -257,12 +234,8 @@ export default function AgingAnalysis() {
       showDateFilters={false}
       onRefresh={refresh}
       loading={loading}
-      onSaveSnapshot={handleSaveSnapshot}
-      saving={saving}
-      lastSavedAt={lastSavedAt}
       onExportCsv={handleExportCsv}
       loadError={error}
-      saveError={saveError}
     >
       {/* Bucket Summary */}
       <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1.5 }}>

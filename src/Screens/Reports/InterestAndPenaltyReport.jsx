@@ -50,7 +50,6 @@ import { generateClient } from "aws-amplify/api";
 import { UserContext } from "../../App";
 import ReportShell from "./ReportShell";
 import { useReportData } from "./useReportData";
-import { useSnapshotPersistence } from "./useSnapshotPersistence";
 import {
   filterRowsByDateWindow,
   fmtMoney,
@@ -60,7 +59,6 @@ import {
   downloadFile,
   safeNum,
 } from "./reportUtils";
-import { REPORT_TYPES } from "./reportRegistry";
 import { LOAN_DISPLAY_STATUS } from "../../Models/Loans/loanSummaryProjection";
 import { isValidPayment } from "../../Models/Loans/LoanStatements/statementHelpers";
 import { GET_REPORT_LOAN_SOURCE_QUERY } from "./reportLoanData";
@@ -146,8 +144,6 @@ export default function InterestAndPenaltyReport() {
   const { summaries, branches, loading, error, refresh, scope } = useReportData(
     { selectedBranchId },
   );
-  const { saveSnapshot, saving, lastSavedAt, saveError } =
-    useSnapshotPersistence();
 
   const branchMap = useMemo(() => {
     const m = {};
@@ -407,30 +403,6 @@ export default function InterestAndPenaltyReport() {
     }
   }
 
-  async function handleSaveSnapshot() {
-    const payload = {
-      kpis: kpis || { note: "Run data load to populate KPIs" },
-      productRollup,
-      branchRollup: scope?.isAdmin ? branchRollup : undefined,
-      dataSource:
-        "Payment.amountAllocatedToInterest + amountAllocatedToPenalty (valid payments); Penalty.amount (active penalties)",
-      paymentValidityRule:
-        "isValidPayment() — excludes REVERSED/VOIDED/FAILED via paymentStatusEnum or status",
-      penaltyValidityRule: "penaltyStatus not in VOIDED/CANCELLED/REVERSED",
-      dateFieldNote:
-        "Payments filtered by paymentDate; penalties filtered by penaltyDate or createdAt",
-      generatedAt: new Date().toISOString(),
-    };
-    await saveSnapshot({
-      reportType: REPORT_TYPES.INTEREST_AND_PENALTY,
-      reportName: `Interest & Penalty Report ${startDate} to ${endDate}`,
-      startDate,
-      endDate,
-      branchId: selectedBranchId || scope?.branchId || null,
-      reportData: payload,
-    });
-  }
-
   return (
     <ReportShell
       title="Interest & Penalty Report"
@@ -452,10 +424,6 @@ export default function InterestAndPenaltyReport() {
       }}
       loading={loading || enrichLoading}
       loadError={error || enrichError}
-      onSaveSnapshot={handleSaveSnapshot}
-      saving={saving}
-      lastSavedAt={lastSavedAt}
-      saveError={saveError}
       onExportCsv={enrichedData ? handleExportCsv : undefined}
     >
       {/* Load trigger */}

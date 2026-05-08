@@ -44,7 +44,6 @@ import SearchIcon from "@mui/icons-material/Search";
 import { UserContext } from "../../App";
 import ReportShell from "./ReportShell";
 import { useReportData } from "./useReportData";
-import { useSnapshotPersistence } from "./useSnapshotPersistence";
 import {
   fmtMoney,
   fmtReportDate,
@@ -52,7 +51,6 @@ import {
   downloadFile,
   safeNum,
 } from "./reportUtils";
-import { REPORT_TYPES } from "./reportRegistry";
 import { LOAN_DISPLAY_STATUS } from "../../Models/Loans/loanSummaryProjection";
 
 // Lifecycle statuses that indicate the loan has been disbursed (is active)
@@ -142,8 +140,6 @@ export default function DisbursementReport() {
       selectedBranchId,
     },
   );
-  const { saveSnapshot, saving, lastSavedAt, saveError } =
-    useSnapshotPersistence();
 
   // Resolve branch names
   const branchMap = useMemo(() => {
@@ -305,28 +301,6 @@ export default function DisbursementReport() {
     );
   }
 
-  async function handleSaveSnapshot() {
-    const payload = {
-      kpis,
-      branchRollup,
-      productRollup,
-      officerRollup,
-      disbursedDateField: "startDate",
-      disbursementStatusLogic:
-        "lifecycleStatus: ACTIVE/CURRENT/OVERDUE → COMPLETED; APPROVED → PENDING",
-      approvedNotDisbursedCount: approvedNotDisbursed.length,
-      generatedAt: new Date().toISOString(),
-    };
-    await saveSnapshot({
-      reportType: REPORT_TYPES.DISBURSEMENT,
-      reportName: `Disbursement Report ${startDate} to ${endDate}`,
-      startDate,
-      endDate,
-      branchId: selectedBranchId || scope?.branchId || null,
-      reportData: payload,
-    });
-  }
-
   return (
     <ReportShell
       title="Disbursement Report"
@@ -342,10 +316,6 @@ export default function DisbursementReport() {
       onRefresh={refresh}
       loading={loading}
       loadError={error}
-      onSaveSnapshot={handleSaveSnapshot}
-      saving={saving}
-      lastSavedAt={lastSavedAt}
-      saveError={saveError}
       onExportCsv={handleExportCsv}
     >
       {/* KPIs */}

@@ -49,7 +49,6 @@ import SearchIcon from "@mui/icons-material/Search";
 import { UserContext } from "../../App";
 import ReportShell from "./ReportShell";
 import { useReportData } from "./useReportData";
-import { useSnapshotPersistence } from "./useSnapshotPersistence";
 import {
   filterSummariesByDateWindow,
   getReportAsOfDate,
@@ -60,7 +59,6 @@ import {
   downloadFile,
   safeNum,
 } from "./reportUtils";
-import { REPORT_TYPES } from "./reportRegistry";
 import { AGING_BUCKETS, enrichSummariesWithAging } from "./agingHelpers";
 
 // Default provisioning matrix: bucket key → rate (0–1)
@@ -201,8 +199,6 @@ export default function ProvisionsReport() {
       selectedBranchId,
     },
   );
-  const { saveSnapshot, saving, lastSavedAt, saveError } =
-    useSnapshotPersistence();
   const currencyCode = userDetails?.institution?.currencyCode || "";
   const reportDate = useMemo(() => getReportAsOfDate(endDate), [endDate]);
 
@@ -271,48 +267,6 @@ export default function ProvisionsReport() {
     downloadFile(csv, "provisions_report.csv", "text/csv");
   };
 
-  const handleExportJson = () => {
-    const payload = buildSnapshotPayload();
-    downloadFile(
-      JSON.stringify(payload, null, 2),
-      "provisions_report.json",
-      "application/json",
-    );
-  };
-
-  function buildSnapshotPayload() {
-    return {
-      generatedAt: new Date().toISOString(),
-      startDate,
-      endDate,
-      selectedBranchId,
-      matrix,
-      grossBalance,
-      totalProvision,
-      netPortfolio,
-      bucketTotals,
-    };
-  }
-
-  const handleSaveSnapshot = async () => {
-    const payload = buildSnapshotPayload();
-    await saveSnapshot({
-      reportType: REPORT_TYPES.PROVISIONS,
-      reportName: "Provisions Report",
-      startDate,
-      endDate,
-      branchId: selectedBranchId || scope.branchId,
-      reportData: payload,
-      customDetails: {
-        // Include exact matrix used so the snapshot is fully auditable
-        matrixUsed: matrix,
-        matrixPctUsed: matrixPct,
-        generatedAt: new Date().toISOString(),
-        note: "Edit the provisioning matrix above before saving to capture the rates used in this run.",
-      },
-    });
-  };
-
   return (
     <ReportShell
       title="Provisions Report"
@@ -328,13 +282,8 @@ export default function ProvisionsReport() {
       showDateFilters={false}
       onRefresh={refresh}
       loading={loading}
-      onSaveSnapshot={handleSaveSnapshot}
-      saving={saving}
-      lastSavedAt={lastSavedAt}
       onExportCsv={handleExportCsv}
-      onExportJson={handleExportJson}
       loadError={error}
-      saveError={saveError}
     >
       {/* Editable Provisioning Matrix */}
       <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1 }}>
@@ -345,8 +294,8 @@ export default function ProvisionsReport() {
         color="text.secondary"
         sx={{ mb: 1.5, display: "block" }}
       >
-        Edit the rates below before running or saving this report. Changes apply
-        only to the current session.
+        Edit the rates below before reviewing or exporting this report. Changes
+        apply only to the current session.
       </Typography>
       <Box
         sx={{

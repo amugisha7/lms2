@@ -6,8 +6,7 @@
  *  - Date range controls (startDate / endDate)
  *  - Admin branch selector
  *  - Refresh action
- *  - Snapshot save button
- *  - Export helpers (CSV / JSON) via callback props
+ *  - CSV export helper via callback prop
  */
 
 import React from "react";
@@ -15,17 +14,17 @@ import {
   Box,
   Typography,
   Button,
-  CircularProgress,
   Alert,
   Divider,
   Stack,
+  IconButton,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import RefreshIcon from "@mui/icons-material/Refresh";
-import SaveIcon from "@mui/icons-material/Save";
 import DownloadIcon from "@mui/icons-material/Download";
 import AdminBranchScopeSelector from "../../ModelAssets/AdminBranchScopeSelector";
 import DateFilters, { getPresetRange } from "../../ModelAssets/DateFilters";
+import PlusButtonMain from "../../ModelAssets/PlusButtonMain";
 
 export default function ReportShell({
   title,
@@ -41,17 +40,13 @@ export default function ReportShell({
   onStartDateChange,
   onEndDateChange,
   showDateFilters = true,
+  defaultDatePreset = "this_month",
   // actions
   onRefresh,
   loading = false,
-  onSaveSnapshot,
-  saving = false,
-  lastSavedAt = null,
   onExportCsv,
-  onExportJson,
   // errors
   loadError,
-  saveError,
   // children (report body)
   children,
 }) {
@@ -85,7 +80,7 @@ export default function ReportShell({
       return;
     }
 
-    const defaultRange = getPresetRange("this_month");
+    const defaultRange = getPresetRange(defaultDatePreset);
     defaultReportRangeAppliedRef.current = true;
     if (!defaultRange) {
       return;
@@ -93,7 +88,14 @@ export default function ReportShell({
 
     onStartDateChange(defaultRange.from);
     onEndDateChange(defaultRange.to);
-  }, [endDate, onEndDateChange, onStartDateChange, showDateFilters, startDate]);
+  }, [
+    defaultDatePreset,
+    endDate,
+    onEndDateChange,
+    onStartDateChange,
+    showDateFilters,
+    startDate,
+  ]);
 
   return (
     <Box sx={{ width: "100%" }}>
@@ -126,16 +128,59 @@ export default function ReportShell({
           )}
         </Box>
         {!requiresBranchSelection && (
-          <Typography
-            sx={{
-              fontSize: "0.75rem",
-              color: sf.sf_textTertiary,
-              textTransform: "uppercase",
-              letterSpacing: "0.04em",
-            }}
-          >
-            {loading ? "Refreshing report" : "Report ready"}
-          </Typography>
+          <>
+            <Typography
+              sx={{
+                fontSize: "0.75rem",
+                color: sf.sf_textTertiary,
+                textTransform: "uppercase",
+                letterSpacing: "0.04em",
+                alignSelf: "flex-end",
+              }}
+            >
+              {loading ? "Refreshing report" : "Report ready"}
+            </Typography>
+
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+                flexWrap: "wrap",
+                ml: "auto",
+              }}
+            >
+              {onExportCsv && (
+                // <Button
+                //   variant="outlined"
+                //   size="small"
+                //   startIcon={<DownloadIcon />}
+                //   disabled={loading}
+                //   sx={actionButtonSx}
+                //   >
+                //   Export CSV
+                // </Button>
+                <PlusButtonMain onClick={onExportCsv} buttonText="EXPORT" />
+              )}
+
+              {onRefresh && (
+                <IconButton
+                  onClick={onRefresh}
+                  disabled={loading}
+                  sx={{
+                    color: sf.sf_brandPrimary,
+                    border: `1px solid ${sf.sf_borderLight}`,
+                    borderRadius: 0,
+                    p: 0.7,
+                    bgcolor: sf.sf_cardBg,
+                    "&:hover": { bgcolor: sf.sf_actionHoverBg },
+                  }}
+                >
+                  <RefreshIcon sx={{ fontSize: 18 }} />
+                </IconButton>
+              )}
+            </Box>
+          </>
         )}
       </Box>
 
@@ -156,14 +201,6 @@ export default function ReportShell({
       <Stack spacing={1} sx={{ mb: 2 }}>
         {!requiresBranchSelection && loadError && (
           <Alert severity="error">{loadError}</Alert>
-        )}
-        {!requiresBranchSelection && saveError && (
-          <Alert severity="error">{saveError}</Alert>
-        )}
-        {!requiresBranchSelection && lastSavedAt && (
-          <Alert severity="success">
-            Snapshot saved at {new Date(lastSavedAt).toLocaleTimeString()}.
-          </Alert>
         )}
       </Stack>
 
@@ -193,74 +230,6 @@ export default function ReportShell({
               />
             </Box>
           )}
-
-          <Box
-            sx={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: 2,
-              alignItems: "flex-end",
-              mb: 2,
-              p: 1.5,
-              border: `1px solid ${sf.sf_borderLight}`,
-              bgcolor: sf.sf_cardBg,
-              boxShadow: sf.sf_shadowSm,
-            }}
-          >
-            <Button
-              variant="outlined"
-              size="small"
-              startIcon={
-                loading ? <CircularProgress size={14} /> : <RefreshIcon />
-              }
-              onClick={onRefresh}
-              disabled={loading}
-              sx={actionButtonSx}
-            >
-              {loading ? "Loading…" : "Refresh"}
-            </Button>
-
-            {onSaveSnapshot && (
-              <Button
-                variant="outlined"
-                size="small"
-                startIcon={
-                  saving ? <CircularProgress size={14} /> : <SaveIcon />
-                }
-                onClick={onSaveSnapshot}
-                disabled={saving || loading}
-                sx={actionButtonSx}
-              >
-                {saving ? "Saving…" : "Save Snapshot"}
-              </Button>
-            )}
-
-            {onExportCsv && (
-              <Button
-                variant="outlined"
-                size="small"
-                startIcon={<DownloadIcon />}
-                onClick={onExportCsv}
-                disabled={loading}
-                sx={actionButtonSx}
-              >
-                Export CSV
-              </Button>
-            )}
-
-            {onExportJson && (
-              <Button
-                variant="outlined"
-                size="small"
-                startIcon={<DownloadIcon />}
-                onClick={onExportJson}
-                disabled={loading}
-                sx={actionButtonSx}
-              >
-                Export JSON
-              </Button>
-            )}
-          </Box>
 
           <Divider sx={{ mb: 3, borderColor: sf.sf_borderLight }} />
 

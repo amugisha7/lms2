@@ -46,7 +46,6 @@ import { generateClient } from "aws-amplify/api";
 import { UserContext } from "../../App";
 import ReportShell from "./ReportShell";
 import { useReportData } from "./useReportData";
-import { useSnapshotPersistence } from "./useSnapshotPersistence";
 import {
   filterRowsByDateWindow,
   fmtMoney,
@@ -56,7 +55,6 @@ import {
   downloadFile,
   safeNum,
 } from "./reportUtils";
-import { REPORT_TYPES } from "./reportRegistry";
 import { LOAN_DISPLAY_STATUS } from "../../Models/Loans/loanSummaryProjection";
 import { isValidPayment } from "../../Models/Loans/LoanStatements/statementHelpers";
 import { GET_REPORT_LOAN_SOURCE_QUERY } from "./reportLoanData";
@@ -136,8 +134,6 @@ export default function WriteOffAndRecoveryReport() {
   const { summaries, branches, loading, error, refresh, scope } = useReportData(
     { selectedBranchId },
   );
-  const { saveSnapshot, saving, lastSavedAt, saveError } =
-    useSnapshotPersistence();
 
   const branchMap = useMemo(() => {
     const m = {};
@@ -352,29 +348,6 @@ export default function WriteOffAndRecoveryReport() {
     }
   }
 
-  async function handleSaveSnapshot() {
-    const payload = {
-      stockKpis,
-      recoveryKpis: recoveryKpis || { note: "Load recovery data to populate" },
-      branchRollup,
-      dataSource:
-        "Written-off stock from LoanSummary.displayStatus === 'WRITTEN_OFF'; recoveries inferred from valid payments on WO loans",
-      recoveryValidityRule:
-        "isValidPayment() — excludes REVERSED/VOIDED/FAILED",
-      recoveryDateField: "paymentDate",
-      recoveryDateWindow: { startDate, endDate },
-      generatedAt: new Date().toISOString(),
-    };
-    await saveSnapshot({
-      reportType: REPORT_TYPES.WRITE_OFF_AND_RECOVERY,
-      reportName: `Write-Off & Recovery Report — ${startDate} to ${endDate}`,
-      startDate,
-      endDate,
-      branchId: selectedBranchId || scope?.branchId || null,
-      reportData: payload,
-    });
-  }
-
   return (
     <ReportShell
       title="Write-Off & Recovery Report"
@@ -396,10 +369,6 @@ export default function WriteOffAndRecoveryReport() {
       }}
       loading={loading || recoveryLoading}
       loadError={error || recoveryError}
-      onSaveSnapshot={handleSaveSnapshot}
-      saving={saving}
-      lastSavedAt={lastSavedAt}
-      saveError={saveError}
       onExportCsv={handleExportCsv}
     >
       {/* Stock KPIs — available immediately from LoanSummary */}

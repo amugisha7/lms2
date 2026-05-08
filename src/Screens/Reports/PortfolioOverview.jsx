@@ -35,7 +35,6 @@ import SearchIcon from "@mui/icons-material/Search";
 import { UserContext } from "../../App";
 import ReportShell from "./ReportShell";
 import { useReportData } from "./useReportData";
-import { useSnapshotPersistence } from "./useSnapshotPersistence";
 import {
   filterSummariesByDateWindow,
   getReportAsOfDate,
@@ -46,7 +45,6 @@ import {
   downloadFile,
   safeNum,
 } from "./reportUtils";
-import { REPORT_TYPES } from "./reportRegistry";
 import { LOAN_DISPLAY_STATUS } from "../../Models/Loans/loanSummaryProjection";
 
 const ACTIVE_STATUS_CODES = new Set([
@@ -63,14 +61,22 @@ const EXCLUDED_FROM_ACTIVE = new Set([
 
 const STATUS_LABELS = Object.values(LOAN_DISPLAY_STATUS).reduce(
   (accumulator, meta) => {
-    accumulator[meta.code] = String(meta.label || meta.code).replace(/\s+/g, " ");
+    accumulator[meta.code] = String(meta.label || meta.code).replace(
+      /\s+/g,
+      " ",
+    );
     return accumulator;
   },
   {},
 );
 
 const AGING_BUCKETS = [
-  { key: "current", label: "Current / Not Yet Due", minDays: -Infinity, maxDays: 0 },
+  {
+    key: "current",
+    label: "Current / Not Yet Due",
+    minDays: -Infinity,
+    maxDays: 0,
+  },
   { key: "1_30", label: "1-30 Days", minDays: 1, maxDays: 30 },
   { key: "31_60", label: "31-60 Days", minDays: 31, maxDays: 60 },
   { key: "61_90", label: "61-90 Days", minDays: 61, maxDays: 90 },
@@ -378,24 +384,26 @@ function KpiCard({ label, value, sub, tone = "brand", sf }) {
           letterSpacing: "0.04em",
         }}
       >
-          {label}
-        </Typography>
+        {label}
+      </Typography>
+      <Typography
+        sx={{
+          fontSize: "1.3rem",
+          fontWeight: 700,
+          color: sf.sf_textPrimary,
+          lineHeight: 1.25,
+          mt: 0.4,
+        }}
+      >
+        {value}
+      </Typography>
+      {sub && (
         <Typography
-          sx={{
-            fontSize: "1.3rem",
-            fontWeight: 700,
-            color: sf.sf_textPrimary,
-            lineHeight: 1.25,
-            mt: 0.4,
-          }}
+          sx={{ fontSize: "0.74rem", color: sf.sf_textTertiary, mt: 0.5 }}
         >
-          {value}
+          {sub}
         </Typography>
-        {sub && (
-          <Typography sx={{ fontSize: "0.74rem", color: sf.sf_textTertiary, mt: 0.5 }}>
-            {sub}
-          </Typography>
-        )}
+      )}
     </Box>
   );
 }
@@ -434,10 +442,14 @@ function ConcentrationCard({ title, subtitle, items, currencyCode, sf }) {
         boxShadow: sf.sf_shadowSm,
       }}
     >
-      <Typography sx={{ fontSize: "0.92rem", fontWeight: 700, color: sf.sf_textPrimary }}>
+      <Typography
+        sx={{ fontSize: "0.92rem", fontWeight: 700, color: sf.sf_textPrimary }}
+      >
         {title}
       </Typography>
-      <Typography sx={{ fontSize: "0.74rem", color: sf.sf_textTertiary, mb: 1.5 }}>
+      <Typography
+        sx={{ fontSize: "0.74rem", color: sf.sf_textTertiary, mb: 1.5 }}
+      >
         {subtitle}
       </Typography>
       <Stack spacing={1.25}>
@@ -448,7 +460,13 @@ function ConcentrationCard({ title, subtitle, items, currencyCode, sf }) {
         ) : (
           items.map((item) => (
             <Box key={item.key}>
-              <Box sx={{ display: "flex", justifyContent: "space-between", gap: 2 }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  gap: 2,
+                }}
+              >
                 <Box sx={{ minWidth: 0 }}>
                   <Typography
                     sx={{
@@ -462,15 +480,26 @@ function ConcentrationCard({ title, subtitle, items, currencyCode, sf }) {
                   >
                     {item.label}
                   </Typography>
-                  <Typography sx={{ fontSize: "0.72rem", color: sf.sf_textTertiary }}>
-                    {item.count} loans · Arrears {fmtMoney(item.arrears, currencyCode)}
+                  <Typography
+                    sx={{ fontSize: "0.72rem", color: sf.sf_textTertiary }}
+                  >
+                    {item.count} loans · Arrears{" "}
+                    {fmtMoney(item.arrears, currencyCode)}
                   </Typography>
                 </Box>
                 <Box sx={{ textAlign: "right", flexShrink: 0 }}>
-                  <Typography sx={{ fontSize: "0.82rem", fontWeight: 700, color: sf.sf_textPrimary }}>
+                  <Typography
+                    sx={{
+                      fontSize: "0.82rem",
+                      fontWeight: 700,
+                      color: sf.sf_textPrimary,
+                    }}
+                  >
                     {fmtMoney(item.balance, currencyCode)}
                   </Typography>
-                  <Typography sx={{ fontSize: "0.72rem", color: sf.sf_textTertiary }}>
+                  <Typography
+                    sx={{ fontSize: "0.72rem", color: sf.sf_textTertiary }}
+                  >
                     {formatShare(item.balanceShare)} of balance
                   </Typography>
                 </Box>
@@ -496,7 +525,15 @@ function ConcentrationCard({ title, subtitle, items, currencyCode, sf }) {
   );
 }
 
-function RiskListCard({ title, subtitle, rows, emptyText, currencyCode, sf, metaLabel }) {
+function RiskListCard({
+  title,
+  subtitle,
+  rows,
+  emptyText,
+  currencyCode,
+  sf,
+  metaLabel,
+}) {
   return (
     <Box
       sx={{
@@ -507,10 +544,14 @@ function RiskListCard({ title, subtitle, rows, emptyText, currencyCode, sf, meta
         boxShadow: sf.sf_shadowSm,
       }}
     >
-      <Typography sx={{ fontSize: "0.92rem", fontWeight: 700, color: sf.sf_textPrimary }}>
+      <Typography
+        sx={{ fontSize: "0.92rem", fontWeight: 700, color: sf.sf_textPrimary }}
+      >
         {title}
       </Typography>
-      <Typography sx={{ fontSize: "0.74rem", color: sf.sf_textTertiary, mb: 1.5 }}>
+      <Typography
+        sx={{ fontSize: "0.74rem", color: sf.sf_textTertiary, mb: 1.5 }}
+      >
         {subtitle}
       </Typography>
       <Stack spacing={1.2}>
@@ -528,7 +569,13 @@ function RiskListCard({ title, subtitle, rows, emptyText, currencyCode, sf, meta
                 bgcolor: sf.sf_kpiCardBg,
               }}
             >
-              <Box sx={{ display: "flex", justifyContent: "space-between", gap: 2 }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  gap: 2,
+                }}
+              >
                 <Box sx={{ minWidth: 0 }}>
                   <Typography
                     sx={{
@@ -542,15 +589,25 @@ function RiskListCard({ title, subtitle, rows, emptyText, currencyCode, sf, meta
                   >
                     {row.borrowerDisplayName || "—"}
                   </Typography>
-                  <Typography sx={{ fontSize: "0.72rem", color: sf.sf_textTertiary }}>
+                  <Typography
+                    sx={{ fontSize: "0.72rem", color: sf.sf_textTertiary }}
+                  >
                     {row.loanNumber || "—"} · {row.branchName || "—"}
                   </Typography>
                 </Box>
                 <Box sx={{ textAlign: "right", flexShrink: 0 }}>
-                  <Typography sx={{ fontSize: "0.82rem", fontWeight: 700, color: sf.sf_textPrimary }}>
+                  <Typography
+                    sx={{
+                      fontSize: "0.82rem",
+                      fontWeight: 700,
+                      color: sf.sf_textPrimary,
+                    }}
+                  >
                     {fmtMoney(row.loanBalanceAmount, currencyCode)}
                   </Typography>
-                  <Typography sx={{ fontSize: "0.72rem", color: sf.sf_textTertiary }}>
+                  <Typography
+                    sx={{ fontSize: "0.72rem", color: sf.sf_textTertiary }}
+                  >
                     Balance
                   </Typography>
                 </Box>
@@ -565,7 +622,9 @@ function RiskListCard({ title, subtitle, rows, emptyText, currencyCode, sf, meta
                 }}
               >
                 <StatusPill code={row.displayStatus} sf={sf} />
-                <Typography sx={{ fontSize: "0.72rem", color: sf.sf_textTertiary }}>
+                <Typography
+                  sx={{ fontSize: "0.72rem", color: sf.sf_textTertiary }}
+                >
                   {metaLabel(row)}
                 </Typography>
               </Box>
@@ -590,9 +649,6 @@ export default function PortfolioOverview() {
 
   const { summaries, branches, loading, error, refresh, scope, lastFetchedAt } =
     useReportData({ selectedBranchId });
-
-  const { saveSnapshot, saving, lastSavedAt, saveError } =
-    useSnapshotPersistence();
 
   const currencyCode = userDetails?.institution?.currencyCode || "";
 
@@ -636,7 +692,8 @@ export default function PortfolioOverview() {
       (r) => r.displayStatus === LOAN_DISPLAY_STATUS.OVERDUE.code,
     ).length;
     const averageBalance = active > 0 ? totalBalance / active : 0;
-    const arrearsCoverage = totalBalance > 0 ? (totalArrears / totalBalance) * 100 : 0;
+    const arrearsCoverage =
+      totalBalance > 0 ? (totalArrears / totalBalance) * 100 : 0;
 
     return {
       total,
@@ -745,7 +802,10 @@ export default function PortfolioOverview() {
     () =>
       [...activeSummaries]
         .filter((row) => safeNum(row.arrearsAmount) > 0)
-        .sort((left, right) => safeNum(right.arrearsAmount) - safeNum(left.arrearsAmount))
+        .sort(
+          (left, right) =>
+            safeNum(right.arrearsAmount) - safeNum(left.arrearsAmount),
+        )
         .slice(0, 8),
     [activeSummaries],
   );
@@ -753,19 +813,6 @@ export default function PortfolioOverview() {
   const agingBreakdown = useMemo(
     () => buildAgingBreakdown(activeSummaries, reportDate),
     [activeSummaries, reportDate],
-  );
-
-  const branchConcentration = useMemo(
-    () =>
-      buildDimensionBreakdown(
-        activeSummaries,
-        (row) => ({
-          key: row.branchID || "unknown",
-          label: branches.find((branch) => branch.id === row.branchID)?.name || row.branchID || "Unknown",
-        }),
-        kpis.totalBalance,
-      ),
-    [activeSummaries, branches, kpis.totalBalance],
   );
 
   const officerConcentration = useMemo(
@@ -850,58 +897,12 @@ export default function PortfolioOverview() {
     downloadFile(csv, "portfolio_overview.csv", "text/csv");
   };
 
-  const handleExportJson = () => {
-    const payload = {
-      generatedAt: new Date().toISOString(),
-      startDate,
-      endDate,
-      kpis,
-      statusBreakdown,
-      agingBreakdown,
-      branchRollup,
-      branchConcentration,
-      officerConcentration,
-      productConcentration,
-    };
-    downloadFile(
-      JSON.stringify(payload, null, 2),
-      "portfolio_overview.json",
-      "application/json",
-    );
-  };
-
-  const handleSaveSnapshot = async () => {
-    const payload = {
-      kpis,
-      statusBreakdown,
-      agingBreakdown,
-      branchRollup,
-      branchConcentration,
-      officerConcentration,
-      productConcentration,
-    };
-    await saveSnapshot({
-      reportType: REPORT_TYPES.PORTFOLIO_OVERVIEW,
-      reportName: "Loan Portfolio Overview",
-      startDate,
-      endDate,
-      branchId: selectedBranchId || scope.branchId,
-      reportData: payload,
-      customDetails: {
-        startDate,
-        endDate,
-        selectedBranchId,
-        generatedAt: new Date().toISOString(),
-      },
-    });
-  };
-
   const selectedBranchName =
     branches.find((branch) => branch.id === selectedBranchId)?.name || null;
   const scopeLabel = scope.isAdmin
-    ? selectedBranchName || (branches.length === 1 ? branches[0]?.name : "All branches")
+    ? selectedBranchName ||
+      (branches.length === 1 ? branches[0]?.name : "All branches")
     : selectedBranchName || "My branch";
-  const topBranch = branchConcentration[0];
   const topOfficer = officerConcentration[0];
   const topProduct = productConcentration[0];
 
@@ -918,15 +919,11 @@ export default function PortfolioOverview() {
       onStartDateChange={setStartDate}
       onEndDateChange={setEndDate}
       showDateFilters={true}
+      defaultDatePreset="last_month"
       onRefresh={refresh}
       loading={loading}
-      onSaveSnapshot={handleSaveSnapshot}
-      saving={saving}
-      lastSavedAt={lastSavedAt}
       onExportCsv={handleExportCsv}
-      onExportJson={handleExportJson}
       loadError={error}
-      saveError={saveError}
     >
       <Box
         sx={{
@@ -956,10 +953,18 @@ export default function PortfolioOverview() {
             >
               Portfolio Coverage
             </Typography>
-            <Typography sx={{ fontSize: "1rem", fontWeight: 700, color: sf.sf_textPrimary }}>
+            <Typography
+              sx={{
+                fontSize: "1rem",
+                fontWeight: 700,
+                color: sf.sf_textPrimary,
+              }}
+            >
               {scopeLabel}
             </Typography>
-            <Typography sx={{ fontSize: "0.76rem", color: sf.sf_textTertiary, mt: 0.4 }}>
+            <Typography
+              sx={{ fontSize: "0.76rem", color: sf.sf_textTertiary, mt: 0.4 }}
+            >
               As of {fmtReportDate(reportDate)}
               {startDate || endDate
                 ? ` · Window ${startDate || "Start"} to ${endDate || "Today"}`
@@ -967,27 +972,6 @@ export default function PortfolioOverview() {
             </Typography>
           </Box>
           <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-            {topBranch ? (
-              <Box
-                sx={{
-                  minWidth: 170,
-                  px: 1.4,
-                  py: 1,
-                  border: `1px solid ${sf.sf_borderLight}`,
-                  bgcolor: sf.sf_kpiCardBg,
-                }}
-              >
-                <Typography sx={{ fontSize: "0.68rem", color: sf.sf_textTertiary, textTransform: "uppercase" }}>
-                  Largest Branch Exposure
-                </Typography>
-                <Typography sx={{ fontSize: "0.9rem", fontWeight: 700, color: sf.sf_textPrimary }}>
-                  {topBranch.label}
-                </Typography>
-                <Typography sx={{ fontSize: "0.74rem", color: sf.sf_textTertiary }}>
-                  {formatShare(topBranch.balanceShare)} of outstanding balance
-                </Typography>
-              </Box>
-            ) : null}
             {topOfficer ? (
               <Box
                 sx={{
@@ -998,13 +982,27 @@ export default function PortfolioOverview() {
                   bgcolor: sf.sf_kpiCardBg,
                 }}
               >
-                <Typography sx={{ fontSize: "0.68rem", color: sf.sf_textTertiary, textTransform: "uppercase" }}>
+                <Typography
+                  sx={{
+                    fontSize: "0.68rem",
+                    color: sf.sf_textTertiary,
+                    textTransform: "uppercase",
+                  }}
+                >
                   Largest Officer Book
                 </Typography>
-                <Typography sx={{ fontSize: "0.9rem", fontWeight: 700, color: sf.sf_textPrimary }}>
+                <Typography
+                  sx={{
+                    fontSize: "0.9rem",
+                    fontWeight: 700,
+                    color: sf.sf_textPrimary,
+                  }}
+                >
                   {topOfficer.label}
                 </Typography>
-                <Typography sx={{ fontSize: "0.74rem", color: sf.sf_textTertiary }}>
+                <Typography
+                  sx={{ fontSize: "0.74rem", color: sf.sf_textTertiary }}
+                >
                   {formatShare(topOfficer.balanceShare)} of outstanding balance
                 </Typography>
               </Box>
@@ -1019,13 +1017,27 @@ export default function PortfolioOverview() {
                   bgcolor: sf.sf_kpiCardBg,
                 }}
               >
-                <Typography sx={{ fontSize: "0.68rem", color: sf.sf_textTertiary, textTransform: "uppercase" }}>
+                <Typography
+                  sx={{
+                    fontSize: "0.68rem",
+                    color: sf.sf_textTertiary,
+                    textTransform: "uppercase",
+                  }}
+                >
                   Largest Product Mix
                 </Typography>
-                <Typography sx={{ fontSize: "0.9rem", fontWeight: 700, color: sf.sf_textPrimary }}>
+                <Typography
+                  sx={{
+                    fontSize: "0.9rem",
+                    fontWeight: 700,
+                    color: sf.sf_textPrimary,
+                  }}
+                >
                   {topProduct.label}
                 </Typography>
-                <Typography sx={{ fontSize: "0.74rem", color: sf.sf_textTertiary }}>
+                <Typography
+                  sx={{ fontSize: "0.74rem", color: sf.sf_textTertiary }}
+                >
                   {formatShare(topProduct.balanceShare)} of outstanding balance
                 </Typography>
               </Box>
@@ -1034,75 +1046,71 @@ export default function PortfolioOverview() {
         </Box>
       </Box>
 
-      <SectionBlock
-        title="Key Metrics"
-        subtitle="LoansDisplay-inspired metric cards with portfolio size, repayment momentum, and delinquency pressure."
-        sf={sf}
-      >
-      <Grid container spacing={2} sx={{ mb: 0 }}>
-        <Grid item xs={6} sm={4} md={3}>
-          <KpiCard label="Total Loans in Scope" value={kpis.total} sf={sf} />
+      <SectionBlock title="Key Metrics" subtitle="" sf={sf}>
+        <Grid container spacing={2} sx={{ mb: 0 }}>
+          <Grid item xs={6} sm={4} md={3}>
+            <KpiCard label="Total Loans in Scope" value={kpis.total} sf={sf} />
+          </Grid>
+          <Grid item xs={6} sm={4} md={3}>
+            <KpiCard label="Active Loans" value={kpis.active} sf={sf} />
+          </Grid>
+          <Grid item xs={6} sm={4} md={3}>
+            <KpiCard
+              label="Total Principal Disbursed"
+              value={fmtMoney(kpis.totalPrincipal, currencyCode)}
+              sf={sf}
+            />
+          </Grid>
+          <Grid item xs={6} sm={4} md={3}>
+            <KpiCard
+              label="Total Outstanding Balance"
+              value={fmtMoney(kpis.totalBalance, currencyCode)}
+              sf={sf}
+            />
+          </Grid>
+          <Grid item xs={6} sm={4} md={3}>
+            <KpiCard
+              label="Total Arrears"
+              value={fmtMoney(kpis.totalArrears, currencyCode)}
+              tone="warning"
+              sf={sf}
+            />
+          </Grid>
+          <Grid item xs={6} sm={4} md={3}>
+            <KpiCard
+              label="Total Collected"
+              value={fmtMoney(kpis.totalPaid, currencyCode)}
+              tone="success"
+              sf={sf}
+            />
+          </Grid>
+          <Grid item xs={6} sm={4} md={3}>
+            <KpiCard
+              label="Arrears Coverage"
+              value={fmtPct(kpis.arrearsCoverage)}
+              sub={`${kpis.overdueCount} overdue loans in active portfolio`}
+              tone={kpis.arrearsCoverage >= 10 ? "warning" : "brand"}
+              sf={sf}
+            />
+          </Grid>
+          <Grid item xs={6} sm={4} md={3}>
+            <KpiCard
+              label="Missed Installments"
+              value={fmtPct(kpis.missedPct)}
+              sub={`${kpis.missedCount} of ${kpis.active} active loans`}
+              tone={kpis.missedPct > 10 ? "danger" : "brand"}
+              sf={sf}
+            />
+          </Grid>
+          <Grid item xs={6} sm={4} md={3}>
+            <KpiCard
+              label="Average Active Balance"
+              value={fmtMoney(kpis.averageBalance, currencyCode)}
+              sub="Outstanding balance per active loan"
+              sf={sf}
+            />
+          </Grid>
         </Grid>
-        <Grid item xs={6} sm={4} md={3}>
-          <KpiCard label="Active Loans" value={kpis.active} sf={sf} />
-        </Grid>
-        <Grid item xs={6} sm={4} md={3}>
-          <KpiCard
-            label="Total Principal Disbursed"
-            value={fmtMoney(kpis.totalPrincipal, currencyCode)}
-            sf={sf}
-          />
-        </Grid>
-        <Grid item xs={6} sm={4} md={3}>
-          <KpiCard
-            label="Total Outstanding Balance"
-            value={fmtMoney(kpis.totalBalance, currencyCode)}
-            sf={sf}
-          />
-        </Grid>
-        <Grid item xs={6} sm={4} md={3}>
-          <KpiCard
-            label="Total Arrears"
-            value={fmtMoney(kpis.totalArrears, currencyCode)}
-            tone="warning"
-            sf={sf}
-          />
-        </Grid>
-        <Grid item xs={6} sm={4} md={3}>
-          <KpiCard
-            label="Total Collected"
-            value={fmtMoney(kpis.totalPaid, currencyCode)}
-            tone="success"
-            sf={sf}
-          />
-        </Grid>
-        <Grid item xs={6} sm={4} md={3}>
-          <KpiCard
-            label="Arrears Coverage"
-            value={fmtPct(kpis.arrearsCoverage)}
-            sub={`${kpis.overdueCount} overdue loans in active portfolio`}
-            tone={kpis.arrearsCoverage >= 10 ? "warning" : "brand"}
-            sf={sf}
-          />
-        </Grid>
-        <Grid item xs={6} sm={4} md={3}>
-          <KpiCard
-            label="Missed Installments"
-            value={fmtPct(kpis.missedPct)}
-            sub={`${kpis.missedCount} of ${kpis.active} active loans`}
-            tone={kpis.missedPct > 10 ? "danger" : "brand"}
-            sf={sf}
-          />
-        </Grid>
-        <Grid item xs={6} sm={4} md={3}>
-          <KpiCard
-            label="Average Active Balance"
-            value={fmtMoney(kpis.averageBalance, currencyCode)}
-            sub="Outstanding balance per active loan"
-            sf={sf}
-          />
-        </Grid>
-      </Grid>
       </SectionBlock>
 
       <Grid container spacing={2} sx={{ mb: 3 }}>
@@ -1112,7 +1120,16 @@ export default function PortfolioOverview() {
             subtitle="Current status distribution by count and portfolio balance."
             sf={sf}
           >
-            <Box sx={{ display: "grid", gap: 1, gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))" } }}>
+            <Box
+              sx={{
+                display: "grid",
+                gap: 1,
+                gridTemplateColumns: {
+                  xs: "1fr",
+                  sm: "repeat(2, minmax(0, 1fr))",
+                },
+              }}
+            >
               {statusBreakdown.map((item) => (
                 <Box
                   key={item.code}
@@ -1124,11 +1141,30 @@ export default function PortfolioOverview() {
                   }}
                 >
                   <StatusPill code={item.code} sf={sf} />
-                  <Typography sx={{ fontSize: "0.85rem", fontWeight: 700, color: sf.sf_textPrimary, mt: 1 }}>
+                  <Typography
+                    sx={{
+                      fontSize: "0.85rem",
+                      fontWeight: 700,
+                      color: sf.sf_textPrimary,
+                      mt: 1,
+                    }}
+                  >
                     {item.count} loans
                   </Typography>
-                  <Typography sx={{ fontSize: "0.75rem", color: sf.sf_textTertiary, mt: 0.35 }}>
-                    {fmtMoney(item.balance, currencyCode)} balance · {formatShare(windowSummaries.length > 0 ? (item.count / windowSummaries.length) * 100 : 0)} of scoped loans
+                  <Typography
+                    sx={{
+                      fontSize: "0.75rem",
+                      color: sf.sf_textTertiary,
+                      mt: 0.35,
+                    }}
+                  >
+                    {fmtMoney(item.balance, currencyCode)} balance ·{" "}
+                    {formatShare(
+                      windowSummaries.length > 0
+                        ? (item.count / windowSummaries.length) * 100
+                        : 0,
+                    )}{" "}
+                    of scoped loans
                   </Typography>
                 </Box>
               ))}
@@ -1152,22 +1188,49 @@ export default function PortfolioOverview() {
                     boxShadow: sf.sf_shadowSm,
                   }}
                 >
-                  <Box sx={{ display: "flex", justifyContent: "space-between", gap: 2, flexWrap: "wrap" }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      gap: 2,
+                      flexWrap: "wrap",
+                    }}
+                  >
                     <Box>
-                      <Typography sx={{ fontSize: "0.84rem", fontWeight: 700, color: sf.sf_textPrimary }}>
+                      <Typography
+                        sx={{
+                          fontSize: "0.84rem",
+                          fontWeight: 700,
+                          color: sf.sf_textPrimary,
+                        }}
+                      >
                         {bucket.label}
                       </Typography>
-                      <Typography sx={{ fontSize: "0.72rem", color: sf.sf_textTertiary }}>
-                        {bucket.count} loans · Arrears {fmtMoney(bucket.arrears, currencyCode)}
+                      <Typography
+                        sx={{ fontSize: "0.72rem", color: sf.sf_textTertiary }}
+                      >
+                        {bucket.count} loans · Arrears{" "}
+                        {fmtMoney(bucket.arrears, currencyCode)}
                       </Typography>
                     </Box>
-                    <Typography sx={{ fontSize: "0.84rem", fontWeight: 700, color: sf.sf_textPrimary }}>
+                    <Typography
+                      sx={{
+                        fontSize: "0.84rem",
+                        fontWeight: 700,
+                        color: sf.sf_textPrimary,
+                      }}
+                    >
                       {fmtMoney(bucket.balance, currencyCode)}
                     </Typography>
                   </Box>
                   <LinearProgress
                     variant="determinate"
-                    value={Math.min(100, kpis.totalBalance > 0 ? (bucket.balance / kpis.totalBalance) * 100 : 0)}
+                    value={Math.min(
+                      100,
+                      kpis.totalBalance > 0
+                        ? (bucket.balance / kpis.totalBalance) * 100
+                        : 0,
+                    )}
                     sx={{
                       mt: 0.85,
                       height: 8,
@@ -1196,16 +1259,7 @@ export default function PortfolioOverview() {
         sf={sf}
       >
         <Grid container spacing={2} sx={{ mb: 0 }}>
-          <Grid item xs={12} md={4}>
-            <ConcentrationCard
-              title="By Branch"
-              subtitle="Largest balance concentrations in the selected scope."
-              items={branchConcentration}
-              currencyCode={currencyCode}
-              sf={sf}
-            />
-          </Grid>
-          <Grid item xs={12} md={4}>
+          <Grid item xs={12} md={6}>
             <ConcentrationCard
               title="By Loan Officer"
               subtitle="Books with the largest active exposure."
@@ -1214,7 +1268,7 @@ export default function PortfolioOverview() {
               sf={sf}
             />
           </Grid>
-          <Grid item xs={12} md={4}>
+          <Grid item xs={12} md={6}>
             <ConcentrationCard
               title="By Product"
               subtitle="Product mix concentration without extra schema changes."
@@ -1275,22 +1329,39 @@ export default function PortfolioOverview() {
                     hover
                     sx={{ "&:hover": { bgcolor: sf.sf_rowHover } }}
                   >
-                    <TableCell sx={{ borderBottom: `1px solid ${sf.sf_tableBorder}` }}>
+                    <TableCell
+                      sx={{ borderBottom: `1px solid ${sf.sf_tableBorder}` }}
+                    >
                       {r.branchName}
                     </TableCell>
-                    <TableCell align="right" sx={{ borderBottom: `1px solid ${sf.sf_tableBorder}` }}>
+                    <TableCell
+                      align="right"
+                      sx={{ borderBottom: `1px solid ${sf.sf_tableBorder}` }}
+                    >
                       {r.loanCount}
                     </TableCell>
-                    <TableCell align="right" sx={{ borderBottom: `1px solid ${sf.sf_tableBorder}` }}>
+                    <TableCell
+                      align="right"
+                      sx={{ borderBottom: `1px solid ${sf.sf_tableBorder}` }}
+                    >
                       {fmtMoney(r.outstandingBalance, currencyCode)}
                     </TableCell>
-                    <TableCell align="right" sx={{ borderBottom: `1px solid ${sf.sf_tableBorder}` }}>
+                    <TableCell
+                      align="right"
+                      sx={{ borderBottom: `1px solid ${sf.sf_tableBorder}` }}
+                    >
                       {fmtMoney(r.arrearsAmount, currencyCode)}
                     </TableCell>
-                    <TableCell align="right" sx={{ borderBottom: `1px solid ${sf.sf_tableBorder}` }}>
+                    <TableCell
+                      align="right"
+                      sx={{ borderBottom: `1px solid ${sf.sf_tableBorder}` }}
+                    >
                       {r.missedCount}
                     </TableCell>
-                    <TableCell align="right" sx={{ borderBottom: `1px solid ${sf.sf_tableBorder}` }}>
+                    <TableCell
+                      align="right"
+                      sx={{ borderBottom: `1px solid ${sf.sf_tableBorder}` }}
+                    >
                       {r.overdueCount}
                     </TableCell>
                   </TableRow>
@@ -1306,41 +1377,45 @@ export default function PortfolioOverview() {
         subtitle="Operational watchlists built from existing summary dates, arrears, and repayment history."
         sf={sf}
       >
-      <Grid container spacing={2} sx={{ mb: 0 }}>
-        <Grid item xs={12} md={4}>
-          <RiskListCard
-            title={`High Arrears (${highArrears.length})`}
-            subtitle="Largest arrears balances to review first."
-            rows={highArrears}
-            emptyText="No loans with arrears in the current scope."
-            currencyCode={currencyCode}
-            sf={sf}
-            metaLabel={(row) => `Arrears ${fmtMoney(row.arrearsAmount, currencyCode)}`}
-          />
+        <Grid container spacing={2} sx={{ mb: 0 }}>
+          <Grid item xs={12} md={4}>
+            <RiskListCard
+              title={`High Arrears (${highArrears.length})`}
+              subtitle="Largest arrears balances to review first."
+              rows={highArrears}
+              emptyText="No loans with arrears in the current scope."
+              currencyCode={currencyCode}
+              sf={sf}
+              metaLabel={(row) =>
+                `Arrears ${fmtMoney(row.arrearsAmount, currencyCode)}`
+              }
+            />
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <RiskListCard
+              title={`No Payment in 30+ Days (${noRecentPayment.length})`}
+              subtitle="Accounts with stale repayment activity and active exposure."
+              rows={noRecentPayment}
+              emptyText="All active loans show recent payment activity."
+              currencyCode={currencyCode}
+              sf={sf}
+              metaLabel={(row) =>
+                `Last payment ${fmtReportDate(row.lastPaymentDate)}`
+              }
+            />
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <RiskListCard
+              title={`Due in Next 7 Days (${upcomingDue.length})`}
+              subtitle="Near-term maturities and scheduled balances requiring attention."
+              rows={upcomingDue.length > 0 ? upcomingDue : largestBalances}
+              emptyText="No loans are due inside the next seven days."
+              currencyCode={currencyCode}
+              sf={sf}
+              metaLabel={(row) => `Next due ${fmtReportDate(row.nextDueDate)}`}
+            />
+          </Grid>
         </Grid>
-        <Grid item xs={12} md={4}>
-          <RiskListCard
-            title={`No Payment in 30+ Days (${noRecentPayment.length})`}
-            subtitle="Accounts with stale repayment activity and active exposure."
-            rows={noRecentPayment}
-            emptyText="All active loans show recent payment activity."
-            currencyCode={currencyCode}
-            sf={sf}
-            metaLabel={(row) => `Last payment ${fmtReportDate(row.lastPaymentDate)}`}
-          />
-        </Grid>
-        <Grid item xs={12} md={4}>
-          <RiskListCard
-            title={`Due in Next 7 Days (${upcomingDue.length})`}
-            subtitle="Near-term maturities and scheduled balances requiring attention."
-            rows={upcomingDue.length > 0 ? upcomingDue : largestBalances}
-            emptyText="No loans are due inside the next seven days."
-            currencyCode={currencyCode}
-            sf={sf}
-            metaLabel={(row) => `Next due ${fmtReportDate(row.nextDueDate)}`}
-          />
-        </Grid>
-      </Grid>
       </SectionBlock>
 
       <SectionBlock
@@ -1348,145 +1423,157 @@ export default function PortfolioOverview() {
         subtitle="Searchable active-loan detail table with numeric sorting, product visibility, and status-aware styling."
         sf={sf}
       >
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          gap: 2,
-          flexWrap: "wrap",
-          mb: 1.5,
-        }}
-      >
         <Box
           sx={{
             display: "flex",
-            alignItems: "center",
-            bgcolor: sf.sf_searchBg,
-            border: `1px solid ${sf.sf_searchBorder}`,
-            borderRadius: 0,
-            px: 1.2,
-            py: 0.4,
-            minWidth: 260,
-            maxWidth: 360,
-            flex: "1 1 260px",
-            transition: "border-color 0.15s",
-            "&:focus-within": { borderColor: sf.sf_searchFocusBorder },
+            justifyContent: "space-between",
+            gap: 2,
+            flexWrap: "wrap",
+            mb: 1.5,
           }}
         >
-          <InputBase
-            placeholder="Search borrower, loan #, branch, officer, product..."
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
+          <Box
             sx={{
-              flex: 1,
-              fontSize: "0.82rem",
-              color: sf.sf_textPrimary,
-              "& ::placeholder": {
-                color: sf.sf_searchPlaceholder,
-                opacity: 1,
-              },
+              display: "flex",
+              alignItems: "center",
+              bgcolor: sf.sf_searchBg,
+              border: `1px solid ${sf.sf_searchBorder}`,
+              borderRadius: 0,
+              px: 1.2,
+              py: 0.4,
+              minWidth: 260,
+              maxWidth: 360,
+              flex: "1 1 260px",
+              transition: "border-color 0.15s",
+              "&:focus-within": { borderColor: sf.sf_searchFocusBorder },
             }}
-            startAdornment={
-              <InputAdornment position="start">
-                <SearchIcon sx={{ fontSize: 18, color: sf.sf_textTertiary }} />
-              </InputAdornment>
-            }
-          />
+          >
+            <InputBase
+              placeholder="Search borrower, loan #, branch, officer, product..."
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              sx={{
+                flex: 1,
+                fontSize: "0.82rem",
+                color: sf.sf_textPrimary,
+                "& ::placeholder": {
+                  color: sf.sf_searchPlaceholder,
+                  opacity: 1,
+                },
+              }}
+              startAdornment={
+                <InputAdornment position="start">
+                  <SearchIcon
+                    sx={{ fontSize: 18, color: sf.sf_textTertiary }}
+                  />
+                </InputAdornment>
+              }
+            />
+          </Box>
+          <Typography
+            sx={{
+              fontSize: "0.76rem",
+              color: sf.sf_textTertiary,
+              alignSelf: "center",
+            }}
+          >
+            {filteredRows.length} active loans shown · Sorted by{" "}
+            {DETAIL_TABLE_COLUMNS.find((column) => column.key === orderBy)
+              ?.label || "Balance"}
+          </Typography>
         </Box>
-        <Typography sx={{ fontSize: "0.76rem", color: sf.sf_textTertiary, alignSelf: "center" }}>
-          {filteredRows.length} active loans shown · Sorted by {DETAIL_TABLE_COLUMNS.find((column) => column.key === orderBy)?.label || "Balance"}
-        </Typography>
-      </Box>
-      <TableContainer
-        component={Paper}
-        variant="outlined"
-        sx={{
-          borderRadius: 0,
-          borderColor: sf.sf_borderLight,
-          boxShadow: sf.sf_shadowSm,
-          overflowX: "auto",
-        }}
-      >
-        <Table size="small" stickyHeader>
-          <TableHead>
-            <TableRow>
-              {DETAIL_TABLE_COLUMNS.map((col) => (
-                <TableCell
-                  key={col.key}
-                  align={col.align || "left"}
-                  sx={{
-                    bgcolor: sf.sf_tableHeaderBg,
-                    color: sf.sf_tableHeaderText,
-                    fontWeight: 700,
-                    borderBottom: `1px solid ${sf.sf_tableBorder}`,
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  <TableSortLabel
-                    active={orderBy === col.key}
-                    direction={orderBy === col.key ? orderDir : "asc"}
-                    onClick={() => handleSort(col.key)}
-                    sx={{ color: `${sf.sf_tableHeaderText} !important` }}
-                  >
-                    {col.label}
-                  </TableSortLabel>
-                </TableCell>
-              ))}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {filteredRows.length === 0 && (
+        <TableContainer
+          component={Paper}
+          variant="outlined"
+          sx={{
+            borderRadius: 0,
+            borderColor: sf.sf_borderLight,
+            boxShadow: sf.sf_shadowSm,
+            overflowX: "auto",
+          }}
+        >
+          <Table size="small" stickyHeader>
+            <TableHead>
               <TableRow>
-                <TableCell
-                  colSpan={DETAIL_TABLE_COLUMNS.length}
-                  align="center"
-                  sx={{ borderBottom: `1px solid ${sf.sf_tableBorder}` }}
-                >
-                  <Typography sx={{ fontSize: "0.78rem", color: sf.sf_textTertiary }}>
-                    {loading ? "Loading…" : "No records found."}
-                  </Typography>
-                </TableCell>
-              </TableRow>
-            )}
-            {filteredRows.map((row) => (
-              <TableRow
-                key={row.id}
-                hover
-                sx={{
-                  "&:nth-of-type(even)": { bgcolor: sf.sf_rowStripeBg },
-                  "&:hover": { bgcolor: sf.sf_rowHover },
-                }}
-              >
                 {DETAIL_TABLE_COLUMNS.map((col) => (
                   <TableCell
                     key={col.key}
                     align={col.align || "left"}
-                    sx={{ borderBottom: `1px solid ${sf.sf_tableBorder}` }}
+                    sx={{
+                      bgcolor: sf.sf_tableHeaderBg,
+                      color: sf.sf_tableHeaderText,
+                      fontWeight: 700,
+                      borderBottom: `1px solid ${sf.sf_tableBorder}`,
+                      whiteSpace: "nowrap",
+                    }}
                   >
-                    {col.key === "displayStatus" ? (
-                      <StatusPill code={row.displayStatus} sf={sf} />
-                    ) : col.key === "principalAmount" ? (
-                      row.principalAmountFmt
-                    ) : col.key === "loanBalanceAmount" ? (
-                      row.loanBalanceAmountFmt
-                    ) : col.key === "arrearsAmount" ? (
-                      row.arrearsAmountFmt
-                    ) : col.key === "totalPaidAmount" ? (
-                      row.totalPaidAmountFmt
-                    ) : col.key === "nextDueDate" ? (
-                      row.nextDueDateFmt
-                    ) : col.key === "lastPaymentDate" ? (
-                      row.lastPaymentDateFmt
-                    ) : (
-                      (row[col.key] ?? "—")
-                    )}
+                    <TableSortLabel
+                      active={orderBy === col.key}
+                      direction={orderBy === col.key ? orderDir : "asc"}
+                      onClick={() => handleSort(col.key)}
+                      sx={{ color: `${sf.sf_tableHeaderText} !important` }}
+                    >
+                      {col.label}
+                    </TableSortLabel>
                   </TableCell>
                 ))}
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+            </TableHead>
+            <TableBody>
+              {filteredRows.length === 0 && (
+                <TableRow>
+                  <TableCell
+                    colSpan={DETAIL_TABLE_COLUMNS.length}
+                    align="center"
+                    sx={{ borderBottom: `1px solid ${sf.sf_tableBorder}` }}
+                  >
+                    <Typography
+                      sx={{ fontSize: "0.78rem", color: sf.sf_textTertiary }}
+                    >
+                      {loading ? "Loading…" : "No records found."}
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              )}
+              {filteredRows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  hover
+                  sx={{
+                    "&:nth-of-type(even)": { bgcolor: sf.sf_rowStripeBg },
+                    "&:hover": { bgcolor: sf.sf_rowHover },
+                  }}
+                >
+                  {DETAIL_TABLE_COLUMNS.map((col) => (
+                    <TableCell
+                      key={col.key}
+                      align={col.align || "left"}
+                      sx={{ borderBottom: `1px solid ${sf.sf_tableBorder}` }}
+                    >
+                      {col.key === "displayStatus" ? (
+                        <StatusPill code={row.displayStatus} sf={sf} />
+                      ) : col.key === "principalAmount" ? (
+                        row.principalAmountFmt
+                      ) : col.key === "loanBalanceAmount" ? (
+                        row.loanBalanceAmountFmt
+                      ) : col.key === "arrearsAmount" ? (
+                        row.arrearsAmountFmt
+                      ) : col.key === "totalPaidAmount" ? (
+                        row.totalPaidAmountFmt
+                      ) : col.key === "nextDueDate" ? (
+                        row.nextDueDateFmt
+                      ) : col.key === "lastPaymentDate" ? (
+                        row.lastPaymentDateFmt
+                      ) : (
+                        (row[col.key] ?? "—")
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
       </SectionBlock>
     </ReportShell>
   );

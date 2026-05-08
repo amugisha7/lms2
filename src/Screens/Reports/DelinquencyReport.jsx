@@ -40,7 +40,6 @@ import SearchIcon from "@mui/icons-material/Search";
 import { UserContext } from "../../App";
 import ReportShell from "./ReportShell";
 import { useReportData } from "./useReportData";
-import { useSnapshotPersistence } from "./useSnapshotPersistence";
 import {
   filterSummariesByDateWindow,
   getReportAsOfDate,
@@ -50,7 +49,6 @@ import {
   downloadFile,
   safeNum,
 } from "./reportUtils";
-import { REPORT_TYPES } from "./reportRegistry";
 import { LOAN_DISPLAY_STATUS } from "../../Models/Loans/loanSummaryProjection";
 import { computeDaysPastDue } from "./agingHelpers";
 import { computeUrgencyScore, getUrgencyBand } from "./delinquencyHelpers";
@@ -118,8 +116,6 @@ export default function DelinquencyReport() {
       selectedBranchId,
     },
   );
-  const { saveSnapshot, saving, lastSavedAt, saveError } =
-    useSnapshotPersistence();
   const currencyCode = userDetails?.institution?.currencyCode || "";
   const reportDate = useMemo(() => getReportAsOfDate(endDate), [endDate]);
 
@@ -230,28 +226,6 @@ export default function DelinquencyReport() {
     downloadFile(csv, "delinquency_report.csv", "text/csv");
   };
 
-  const handleSaveSnapshot = async () => {
-    const payload = { kpis, rowCount: delinquentRows.length };
-    await saveSnapshot({
-      reportType: REPORT_TYPES.DELINQUENCY,
-      reportName: "Delinquency Report",
-      startDate,
-      endDate,
-      branchId: selectedBranchId || scope.branchId,
-      reportData: payload,
-      customDetails: {
-        startDate,
-        endDate,
-        selectedBranchId,
-        generatedAt: new Date().toISOString(),
-        delinquencyDefinition:
-          "missedInstallmentCount > 0 OR displayStatus in [CURRENT_WITH_MISSED_PAYMENT, OVERDUE]",
-        urgencyFormula:
-          "40% DPD + 30% missed installments + 20% arrears amount + 10% payment inactivity",
-      },
-    });
-  };
-
   // Operational summaries
   const topByBalance = useMemo(
     () =>
@@ -300,12 +274,8 @@ export default function DelinquencyReport() {
       showDateFilters={false}
       onRefresh={refresh}
       loading={loading}
-      onSaveSnapshot={handleSaveSnapshot}
-      saving={saving}
-      lastSavedAt={lastSavedAt}
       onExportCsv={handleExportCsv}
       loadError={error}
-      saveError={saveError}
     >
       {/* KPI Cards */}
       <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1.5 }}>

@@ -52,6 +52,7 @@ import { useReportData } from "./useReportData";
 import { useSnapshotPersistence } from "./useSnapshotPersistence";
 import {
   filterSummariesByDateWindow,
+  getReportAsOfDate,
   fmtMoney,
   fmtReportDate,
   fmtPct,
@@ -203,7 +204,7 @@ export default function ProvisionsReport() {
   const { saveSnapshot, saving, lastSavedAt, saveError } =
     useSnapshotPersistence();
   const currencyCode = userDetails?.institution?.currencyCode || "";
-  const today = useMemo(() => new Date(), []);
+  const reportDate = useMemo(() => getReportAsOfDate(endDate), [endDate]);
 
   const windowSummaries = useMemo(
     () => filterSummariesByDateWindow(summaries, startDate, endDate),
@@ -212,8 +213,8 @@ export default function ProvisionsReport() {
 
   const { rows, bucketTotals, grossBalance, totalProvision, netPortfolio } =
     useMemo(
-      () => computeProvisions(windowSummaries, matrix, today),
-      [windowSummaries, matrix, today],
+      () => computeProvisions(windowSummaries, matrix, reportDate),
+      [windowSummaries, matrix, reportDate],
     );
 
   // Enrich display rows
@@ -324,6 +325,7 @@ export default function ProvisionsReport() {
       endDate={endDate}
       onStartDateChange={setStartDate}
       onEndDateChange={setEndDate}
+      showDateFilters={false}
       onRefresh={refresh}
       loading={loading}
       onSaveSnapshot={handleSaveSnapshot}

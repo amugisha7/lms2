@@ -51,7 +51,14 @@ import { UserContext } from "../../App";
 import ReportShell from "./ReportShell";
 import { useReportData } from "./useReportData";
 import { useSnapshotPersistence } from "./useSnapshotPersistence";
-import { fmtMoney, fmtPct, toCsv, downloadFile, safeNum } from "./reportUtils";
+import {
+  filterSummariesByDateWindow,
+  fmtMoney,
+  fmtPct,
+  toCsv,
+  downloadFile,
+  safeNum,
+} from "./reportUtils";
 import { REPORT_TYPES } from "./reportRegistry";
 import { LOAN_DISPLAY_STATUS } from "../../Models/Loans/loanSummaryProjection";
 import {
@@ -201,7 +208,15 @@ export default function ConcentrationsReport() {
     return m;
   }, [branches]);
 
-  const eligible = useMemo(() => summaries.filter(isEligible), [summaries]);
+  const windowSummaries = useMemo(
+    () => filterSummariesByDateWindow(summaries, startDate, endDate),
+    [summaries, startDate, endDate],
+  );
+
+  const eligible = useMemo(
+    () => windowSummaries.filter(isEligible),
+    [windowSummaries],
+  );
 
   const totalPortfolioBalance = useMemo(
     () => eligible.reduce((acc, s) => acc + safeNum(s.loanBalanceAmount), 0),
@@ -372,6 +387,7 @@ export default function ConcentrationsReport() {
       endDate={endDate}
       onStartDateChange={setStartDate}
       onEndDateChange={setEndDate}
+      showDateFilters={false}
       onRefresh={() => {
         refresh();
         setSelectedGroupKey(null);

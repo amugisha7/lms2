@@ -38,6 +38,7 @@ import { useReportData } from "./useReportData";
 import { useSnapshotPersistence } from "./useSnapshotPersistence";
 import {
   filterSummariesByDateWindow,
+  getReportAsOfDate,
   fmtMoney,
   fmtReportDate,
   fmtPct,
@@ -104,7 +105,7 @@ export default function AgingAnalysis() {
   const { saveSnapshot, saving, lastSavedAt, saveError } =
     useSnapshotPersistence();
   const currencyCode = userDetails?.institution?.currencyCode || "";
-  const today = useMemo(() => new Date(), []);
+  const reportDate = useMemo(() => getReportAsOfDate(endDate), [endDate]);
 
   const windowSummaries = useMemo(
     () =>
@@ -116,13 +117,13 @@ export default function AgingAnalysis() {
 
   // Bucket summary totals
   const bucketSummary = useMemo(
-    () => buildAgingSummary(windowSummaries, today),
-    [windowSummaries, today],
+    () => buildAgingSummary(windowSummaries, reportDate),
+    [windowSummaries, reportDate],
   );
 
   // Enriched detail rows
   const detailRows = useMemo(() => {
-    const enriched = enrichSummariesWithAging(windowSummaries, today);
+    const enriched = enrichSummariesWithAging(windowSummaries, reportDate);
     return enriched.map((s) => {
       const branch = branches.find((b) => b.id === s.branchID);
       return {
@@ -135,7 +136,7 @@ export default function AgingAnalysis() {
         lastPaymentDateFmt: fmtReportDate(s.lastPaymentDate),
       };
     });
-  }, [windowSummaries, branches, currencyCode, today]);
+  }, [windowSummaries, branches, currencyCode, reportDate]);
 
   // Branch rollup by bucket (admin only)
   const branchBucketRollup = useMemo(() => {
@@ -253,6 +254,7 @@ export default function AgingAnalysis() {
       endDate={endDate}
       onStartDateChange={setStartDate}
       onEndDateChange={setEndDate}
+      showDateFilters={false}
       onRefresh={refresh}
       loading={loading}
       onSaveSnapshot={handleSaveSnapshot}

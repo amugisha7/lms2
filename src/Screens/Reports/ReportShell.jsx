@@ -20,6 +20,7 @@ import {
   Divider,
   Stack,
 } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import SaveIcon from "@mui/icons-material/Save";
 import DownloadIcon from "@mui/icons-material/Download";
@@ -39,6 +40,7 @@ export default function ReportShell({
   endDate,
   onStartDateChange,
   onEndDateChange,
+  showDateFilters = true,
   // actions
   onRefresh,
   loading = false,
@@ -53,12 +55,27 @@ export default function ReportShell({
   // children (report body)
   children,
 }) {
+  const theme = useTheme();
+  const sf = theme.palette.sf;
   const defaultReportRangeAppliedRef = React.useRef(false);
   const requiresBranchSelection =
     isAdmin && branches.length !== 1 && !selectedBranchId;
 
+  const actionButtonSx = {
+    borderRadius: 0,
+    borderColor: sf.sf_borderLight,
+    color: sf.sf_brandPrimary,
+    bgcolor: sf.sf_cardBg,
+    px: 1.35,
+    "&:hover": {
+      borderColor: sf.sf_brandPrimary,
+      bgcolor: sf.sf_actionHoverBg,
+    },
+  };
+
   React.useEffect(() => {
     if (
+      !showDateFilters ||
       defaultReportRangeAppliedRef.current ||
       startDate ||
       endDate ||
@@ -76,42 +93,67 @@ export default function ReportShell({
 
     onStartDateChange(defaultRange.from);
     onEndDateChange(defaultRange.to);
-  }, [endDate, onEndDateChange, onStartDateChange, startDate]);
+  }, [endDate, onEndDateChange, onStartDateChange, showDateFilters, startDate]);
 
   return (
     <Box sx={{ width: "100%" }}>
       {/* Header */}
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="h5" fontWeight={700} gutterBottom>
-          {title}
-        </Typography>
-        {description && (
-          <Typography variant="body2" color="text.secondary">
-            {description}
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "flex-end",
+          justifyContent: "space-between",
+          gap: 2,
+          flexWrap: "wrap",
+          mb: 3,
+          pb: 1.5,
+          borderBottom: `3px solid ${sf.sf_brandPrimary}`,
+        }}
+      >
+        <Box>
+          <Typography
+            variant="h5"
+            fontWeight={700}
+            gutterBottom
+            sx={{ color: sf.sf_textPrimary, mb: 0.4 }}
+          >
+            {title}
+          </Typography>
+          {description && (
+            <Typography variant="body2" sx={{ color: sf.sf_textTertiary }}>
+              {description}
+            </Typography>
+          )}
+        </Box>
+        {!requiresBranchSelection && (
+          <Typography
+            sx={{
+              fontSize: "0.75rem",
+              color: sf.sf_textTertiary,
+              textTransform: "uppercase",
+              letterSpacing: "0.04em",
+            }}
+          >
+            {loading ? "Refreshing report" : "Report ready"}
           </Typography>
         )}
       </Box>
 
       {/* Admin branch selector */}
       {isAdmin && (
-        <Box sx={{ mb: 2, maxWidth: 400 }}>
+        <Box sx={{ mb: 2 }}>
           <AdminBranchScopeSelector
             branches={branches}
             selectedBranchId={selectedBranchId}
             onBranchChange={onBranchChange}
             helperText="Select a branch before viewing report data."
-            emptyMessage=""
+            emptyMessage="Please select a branch above to view report data."
           />
         </Box>
       )}
 
       {/* Status messages */}
       <Stack spacing={1} sx={{ mb: 2 }}>
-        {requiresBranchSelection && (
-          <Alert severity="info">
-            Please select a branch above to view report data.
-          </Alert>
-        )}
         {!requiresBranchSelection && loadError && (
           <Alert severity="error">{loadError}</Alert>
         )}
@@ -127,20 +169,30 @@ export default function ReportShell({
 
       {!requiresBranchSelection && (
         <>
-          <Box sx={{ mb: 2 }}>
-            <DateFilters
-              dateFrom={startDate || ""}
-              dateTo={endDate || ""}
-              onDateFromChange={(value) =>
-                onStartDateChange && onStartDateChange(value)
-              }
-              onDateToChange={(value) =>
-                onEndDateChange && onEndDateChange(value)
-              }
-              alwaysVisible={true}
-              allowClear={false}
-            />
-          </Box>
+          {showDateFilters && (
+            <Box
+              sx={{
+                mb: 2,
+                p: 1.5,
+                border: `1px solid ${sf.sf_borderLight}`,
+                bgcolor: sf.sf_cardBg,
+                boxShadow: sf.sf_shadowSm,
+              }}
+            >
+              <DateFilters
+                dateFrom={startDate || ""}
+                dateTo={endDate || ""}
+                onDateFromChange={(value) =>
+                  onStartDateChange && onStartDateChange(value)
+                }
+                onDateToChange={(value) =>
+                  onEndDateChange && onEndDateChange(value)
+                }
+                alwaysVisible={true}
+                allowClear={false}
+              />
+            </Box>
+          )}
 
           <Box
             sx={{
@@ -149,6 +201,10 @@ export default function ReportShell({
               gap: 2,
               alignItems: "flex-end",
               mb: 2,
+              p: 1.5,
+              border: `1px solid ${sf.sf_borderLight}`,
+              bgcolor: sf.sf_cardBg,
+              boxShadow: sf.sf_shadowSm,
             }}
           >
             <Button
@@ -159,6 +215,7 @@ export default function ReportShell({
               }
               onClick={onRefresh}
               disabled={loading}
+              sx={actionButtonSx}
             >
               {loading ? "Loading…" : "Refresh"}
             </Button>
@@ -172,6 +229,7 @@ export default function ReportShell({
                 }
                 onClick={onSaveSnapshot}
                 disabled={saving || loading}
+                sx={actionButtonSx}
               >
                 {saving ? "Saving…" : "Save Snapshot"}
               </Button>
@@ -184,6 +242,7 @@ export default function ReportShell({
                 startIcon={<DownloadIcon />}
                 onClick={onExportCsv}
                 disabled={loading}
+                sx={actionButtonSx}
               >
                 Export CSV
               </Button>
@@ -196,13 +255,14 @@ export default function ReportShell({
                 startIcon={<DownloadIcon />}
                 onClick={onExportJson}
                 disabled={loading}
+                sx={actionButtonSx}
               >
                 Export JSON
               </Button>
             )}
           </Box>
 
-          <Divider sx={{ mb: 3 }} />
+          <Divider sx={{ mb: 3, borderColor: sf.sf_borderLight }} />
 
           {/* Report body */}
           {children}

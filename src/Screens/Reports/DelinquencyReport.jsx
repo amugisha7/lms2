@@ -43,6 +43,7 @@ import { useReportData } from "./useReportData";
 import { useSnapshotPersistence } from "./useSnapshotPersistence";
 import {
   filterSummariesByDateWindow,
+  getReportAsOfDate,
   fmtMoney,
   fmtReportDate,
   toCsv,
@@ -120,7 +121,7 @@ export default function DelinquencyReport() {
   const { saveSnapshot, saving, lastSavedAt, saveError } =
     useSnapshotPersistence();
   const currencyCode = userDetails?.institution?.currencyCode || "";
-  const today = useMemo(() => new Date(), []);
+  const reportDate = useMemo(() => getReportAsOfDate(endDate), [endDate]);
 
   const windowSummaries = useMemo(
     () => filterSummariesByDateWindow(summaries, startDate, endDate),
@@ -131,9 +132,9 @@ export default function DelinquencyReport() {
   const delinquentRows = useMemo(() => {
     const delinquent = windowSummaries.filter(isDelinquent);
     return delinquent.map((s) => {
-      const dpd = computeDaysPastDue(s, today);
+      const dpd = computeDaysPastDue(s, reportDate);
       const enriched = { ...s, daysPastDue: dpd };
-      const score = computeUrgencyScore(enriched);
+      const score = computeUrgencyScore(enriched, reportDate);
       const band = getUrgencyBand(score);
       const branch = branches.find((b) => b.id === s.branchID);
       return {
@@ -149,7 +150,7 @@ export default function DelinquencyReport() {
         urgencyColor: band.color,
       };
     });
-  }, [windowSummaries, branches, currencyCode, today]);
+  }, [windowSummaries, branches, currencyCode, reportDate]);
 
   // KPIs
   const kpis = useMemo(() => {
@@ -166,11 +167,11 @@ export default function DelinquencyReport() {
     const noPayment30 = delinquentRows.filter((r) => {
       if (!r.lastPaymentDate) return true;
       return (
-        (today - new Date(r.lastPaymentDate)) / (1000 * 60 * 60 * 24) >= 30
+        (reportDate - new Date(r.lastPaymentDate)) / (1000 * 60 * 60 * 24) >= 30
       );
     }).length;
     return { count, totalArrears, totalBalance, avgArrears, noPayment30 };
-  }, [delinquentRows, today]);
+  }, [delinquentRows, reportDate]);
 
   // Distinct loan officers for filter
   const officers = useMemo(() => {
@@ -296,6 +297,7 @@ export default function DelinquencyReport() {
       endDate={endDate}
       onStartDateChange={setStartDate}
       onEndDateChange={setEndDate}
+      showDateFilters={false}
       onRefresh={refresh}
       loading={loading}
       onSaveSnapshot={handleSaveSnapshot}

@@ -476,6 +476,7 @@ export default function LoansDisplay() {
   const [searchTerm, setSearchTerm] = React.useState("");
   const [dateFrom, setDateFrom] = React.useState("");
   const [dateTo, setDateTo] = React.useState("");
+  const [showDateFilters, setShowDateFilters] = React.useState(false);
   const [showLoanOfficerFilters, setShowLoanOfficerFilters] =
     React.useState(false);
   const [selectedLoanOfficerKey, setSelectedLoanOfficerKey] =
@@ -1265,7 +1266,14 @@ export default function LoansDisplay() {
     setShowLoanOfficerFilters(false);
   }, []);
 
+  const clearDateFilter = React.useCallback(() => {
+    setDateFrom("");
+    setDateTo("");
+    setShowDateFilters(false);
+  }, []);
+
   const isLoanOfficerFilterActive = Boolean(selectedLoanOfficerKey);
+  const isDateFilterActive = Boolean(dateFrom || dateTo);
 
   //  Final table set (base filters + status tab)
   const filteredLoans = React.useMemo(() => {
@@ -1569,18 +1577,15 @@ export default function LoansDisplay() {
           <Box
             sx={{
               display: "flex",
-              alignItems: "flex-start",
-              gap: 2,
+              flexDirection: "column",
+              gap: 1.5,
               mb: "10px",
-              flexWrap: "wrap",
             }}
           >
             <Box
               sx={{
                 display: "flex",
-                alignItems: "center",
-                gap: 1,
-                flexWrap: "wrap",
+                width: "100%",
               }}
             >
               <Box
@@ -1592,9 +1597,8 @@ export default function LoansDisplay() {
                   borderRadius: 0,
                   px: 1.2,
                   py: 0.4,
-                  minWidth: 240,
-                  maxWidth: 340,
-                  flex: "1 1 240px",
+                  width: "100%",
+                  flex: "1 1 100%",
                   transition: "border-color 0.15s",
                   "&:focus-within": { borderColor: sf.sf_searchFocusBorder },
                 }}
@@ -1640,12 +1644,21 @@ export default function LoansDisplay() {
                   }
                 />
               </Box>
-              <DateFilters
-                dateFrom={dateFrom}
-                dateTo={dateTo}
-                onDateFromChange={setDateFrom}
-                onDateToChange={setDateTo}
-              />
+            </Box>
+
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1.5,
+                flexWrap: "wrap",
+              }}
+            >
+              {!showDateFilters && (
+                <SFClickableText onClick={() => setShowDateFilters(true)}>
+                  Filter by Date
+                </SFClickableText>
+              )}
               {!showLoanOfficerFilters && (
                 <SFClickableText
                   onClick={() => setShowLoanOfficerFilters(true)}
@@ -1653,121 +1666,214 @@ export default function LoansDisplay() {
                   Filter by Loan Officer
                 </SFClickableText>
               )}
-              {(showLoanOfficerFilters || isLoanOfficerFilterActive) && (
-                <SFClickableText
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    clearLoanOfficerFilter();
-                  }}
-                >
-                  Clear Loan Officer Filter
-                </SFClickableText>
-              )}
             </Box>
-          </Box>
 
-          {showLoanOfficerFilters &&
-            (loanOfficerFilterTabs.length > 0 ? (
+            {showDateFilters && (
               <Box
-                role="tablist"
-                aria-label="Loan officer filters"
                 sx={{
-                  display: "grid",
-                  gap: 1,
-                  width: "100%",
-                  mb: "18px",
-                  gridTemplateColumns: {
-                    xs: "repeat(2, minmax(0, 1fr))",
-                    sm: "repeat(auto-fit, minmax(180px, max-content))",
-                  },
-                  alignItems: "stretch",
+                  mb: 2,
+                  p: 1.5,
+                  border: `1px solid ${sf.sf_borderLight}`,
+                  bgcolor: sf.sf_cardBg,
+                  boxShadow: sf.sf_shadowSm,
                 }}
               >
-                {loanOfficerFilterTabs.map((officerTab) => {
-                  const isActive = selectedLoanOfficerKey === officerTab.key;
-                  const count = loanOfficerTabCounts[officerTab.key] ?? 0;
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 1,
+                    flexWrap: "wrap",
+                    mb: 1,
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      fontSize: "0.78rem",
+                      fontWeight: 600,
+                      color: sf.sf_textSecondary,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.04em",
+                    }}
+                  >
+                    Date Filter
+                  </Typography>
+                  <SFClickableText
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      clearDateFilter();
+                    }}
+                  >
+                    {isDateFilterActive
+                      ? "Clear Date Filter"
+                      : "Hide Date Filter"}
+                  </SFClickableText>
+                </Box>
 
-                  return (
-                    <SFClickableText
-                      key={officerTab.key}
-                      onClick={() => setSelectedLoanOfficerKey(officerTab.key)}
+                <DateFilters
+                  dateFrom={dateFrom}
+                  dateTo={dateTo}
+                  onDateFromChange={setDateFrom}
+                  onDateToChange={setDateTo}
+                  alwaysVisible
+                  allowClear={false}
+                />
+              </Box>
+            )}
+
+            {showLoanOfficerFilters && (
+              <Box
+                sx={{
+                  mb: 2,
+                  p: 1.5,
+                  border: `1px solid ${sf.sf_borderLight}`,
+                  bgcolor: sf.sf_cardBg,
+                  boxShadow: sf.sf_shadowSm,
+                }}
+              >
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 1,
+                    flexWrap: "wrap",
+                    mb: 1,
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      fontSize: "0.78rem",
+                      fontWeight: 600,
+                      color: sf.sf_textSecondary,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.04em",
+                    }}
+                  >
+                    Loan Officer Filter
+                  </Typography>
+                  <SFClickableText
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      clearLoanOfficerFilter();
+                    }}
+                  >
+                    {isLoanOfficerFilterActive
+                      ? "Clear Loan Officer Filter"
+                      : "Hide Loan Officer Filter"}
+                  </SFClickableText>
+                </Box>
+
+                {loanOfficerFilterTabs.length > 0 ? (
+                  <Box
+                    role="tablist"
+                    aria-label="Loan officer filters"
+                    sx={{
+                      display: "grid",
+                      gap: 1,
+                      width: "100%",
+                      mt: 1,
+                      gridTemplateColumns: {
+                        xs: "repeat(2, minmax(0, 1fr))",
+                        sm: "repeat(auto-fit, minmax(180px, max-content))",
+                      },
+                      alignItems: "stretch",
+                    }}
+                  >
+                    {loanOfficerFilterTabs.map((officerTab) => {
+                      const isActive =
+                        selectedLoanOfficerKey === officerTab.key;
+                      const count = loanOfficerTabCounts[officerTab.key] ?? 0;
+
+                      return (
+                        <SFClickableText
+                          key={officerTab.key}
+                          onClick={() =>
+                            setSelectedLoanOfficerKey(officerTab.key)
+                          }
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            minHeight: 33,
+                            px: 1,
+                            mt: 0,
+                            gap: 0.5,
+                            border: `1px solid ${isActive ? sf.sf_brandPrimary : sf.sf_searchBorder}`,
+                            bgcolor: isActive
+                              ? sf.sf_brandPrimary
+                              : sf.sf_searchBg,
+                            color: isActive
+                              ? sf.sf_whiteMain || "#fff"
+                              : sf.sf_textLink,
+                            textDecoration: "none",
+                            textAlign: "center",
+                            lineHeight: 1.2,
+                            borderRadius: 0,
+                            transition:
+                              "background-color 0.15s, color 0.15s, border-color 0.15s",
+                            "&:hover": {
+                              color: isActive
+                                ? sf.sf_whiteMain || "#fff"
+                                : sf.sf_textLinkHover,
+                              bgcolor: isActive
+                                ? sf.sf_brandPrimary
+                                : sf.sf_actionHoverBg,
+                              borderColor: sf.sf_brandPrimary,
+                            },
+                          }}
+                        >
+                          <Typography
+                            component="span"
+                            sx={{
+                              fontSize: "0.8rem",
+                              fontWeight: 500,
+                              color: "inherit",
+                              lineHeight: 1.2,
+                            }}
+                          >
+                            {officerTab.label}
+                          </Typography>
+                          <Typography
+                            component="span"
+                            sx={{
+                              fontSize: "0.7rem",
+                              fontWeight: 600,
+                              color: "inherit",
+                              lineHeight: 1,
+                              opacity: 0.88,
+                            }}
+                          >
+                            {count}
+                          </Typography>
+                        </SFClickableText>
+                      );
+                    })}
+                  </Box>
+                ) : (
+                  <Box
+                    sx={{
+                      mt: 1,
+                      px: 1,
+                      py: 1.25,
+                      borderBottom: `1px solid ${sf.sf_borderLight}`,
+                      bgcolor: sf.sf_cardBg,
+                    }}
+                  >
+                    <Typography
                       sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        minHeight: 33,
-                        px: 1,
-                        mt: 0,
-                        gap: 0.5,
-                        border: `1px solid ${isActive ? sf.sf_brandPrimary : sf.sf_searchBorder}`,
-                        bgcolor: isActive ? sf.sf_brandPrimary : sf.sf_searchBg,
-                        color: isActive
-                          ? sf.sf_whiteMain || "#fff"
-                          : sf.sf_textLink,
-                        textDecoration: "none",
-                        textAlign: "center",
-                        lineHeight: 1.2,
-                        borderRadius: 0,
-                        transition:
-                          "background-color 0.15s, color 0.15s, border-color 0.15s",
-                        "&:hover": {
-                          color: isActive
-                            ? sf.sf_whiteMain || "#fff"
-                            : sf.sf_textLinkHover,
-                          bgcolor: isActive
-                            ? sf.sf_brandPrimary
-                            : sf.sf_actionHoverBg,
-                          borderColor: sf.sf_brandPrimary,
-                        },
+                        fontSize: "0.8rem",
+                        color: sf.sf_textTertiary,
                       }}
                     >
-                      <Typography
-                        component="span"
-                        sx={{
-                          fontSize: "0.8rem",
-                          fontWeight: 500,
-                          color: "inherit",
-                          lineHeight: 1.2,
-                        }}
-                      >
-                        {officerTab.label}
-                      </Typography>
-                      <Typography
-                        component="span"
-                        sx={{
-                          fontSize: "0.7rem",
-                          fontWeight: 600,
-                          color: "inherit",
-                          lineHeight: 1,
-                          opacity: 0.88,
-                        }}
-                      >
-                        {count}
-                      </Typography>
-                    </SFClickableText>
-                  );
-                })}
+                      No loan officers found for the current loan results.
+                    </Typography>
+                  </Box>
+                )}
               </Box>
-            ) : (
-              <Box
-                sx={{
-                  mb: "18px",
-                  px: 1,
-                  py: 1.25,
-                  borderBottom: `1px solid ${sf.sf_borderLight}`,
-                  bgcolor: sf.sf_cardBg,
-                }}
-              >
-                <Typography
-                  sx={{
-                    fontSize: "0.8rem",
-                    color: sf.sf_textTertiary,
-                  }}
-                >
-                  No loan officers found for the current loan results.
-                </Typography>
-              </Box>
-            ))}
+            )}
+          </Box>
 
           <SFTabs
             tabs={STATUS_TABS}

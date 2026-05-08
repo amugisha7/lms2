@@ -41,6 +41,7 @@ import ReportShell from "./ReportShell";
 import { useReportData } from "./useReportData";
 import { useSnapshotPersistence } from "./useSnapshotPersistence";
 import {
+  filterSummariesByDateWindow,
   fmtMoney,
   fmtReportDate,
   toCsv,
@@ -141,8 +142,16 @@ export default function ActiveLoansByOfficerReport() {
     return m;
   }, [branches]);
 
+  const windowSummaries = useMemo(
+    () => filterSummariesByDateWindow(summaries, startDate, endDate),
+    [summaries, startDate, endDate],
+  );
+
   // Officer summary rows
-  const officerRows = useMemo(() => groupByOfficer(summaries), [summaries]);
+  const officerRows = useMemo(
+    () => groupByOfficer(windowSummaries),
+    [windowSummaries],
+  );
 
   // KPI cards
   const kpis = useMemo(() => {
@@ -199,13 +208,13 @@ export default function ActiveLoansByOfficerReport() {
   // Active loans for detail table
   const activeLoans = useMemo(
     () =>
-      summaries
+      windowSummaries
         .filter((s) => OFFICER_ACTIVE_STATUSES.has(s?.displayStatus))
         .map((s) => ({
           ...s,
           branchName: branchMap[s.branchID] || s.branchID || "—",
         })),
-    [summaries, branchMap],
+    [windowSummaries, branchMap],
   );
 
   // Unique officers list for filter
@@ -337,6 +346,7 @@ export default function ActiveLoansByOfficerReport() {
       endDate={endDate}
       onStartDateChange={setStartDate}
       onEndDateChange={setEndDate}
+      showDateFilters={false}
       onRefresh={refresh}
       loading={loading}
       loadError={error}

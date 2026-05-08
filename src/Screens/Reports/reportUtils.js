@@ -30,6 +30,66 @@ export function resolveReportScope(userDetails) {
   };
 }
 
+export function parseReportDate(dateValue, { endOfDay = false } = {}) {
+  if (!dateValue) return null;
+  if (typeof dateValue === "string" && !dateValue.includes("T")) {
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateValue.trim());
+    if (!match) return null;
+    const [, year, month, day] = match;
+    const parsed = new Date(
+      Number(year),
+      Number(month) - 1,
+      Number(day),
+      endOfDay ? 23 : 0,
+      endOfDay ? 59 : 0,
+      endOfDay ? 59 : 0,
+      endOfDay ? 999 : 0,
+    );
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  const parsed = new Date(dateValue);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+export function getReportAsOfDate(endDate, fallbackDate = new Date()) {
+  const reportDate = parseReportDate(endDate) || new Date(fallbackDate);
+  reportDate.setHours(0, 0, 0, 0);
+  return reportDate;
+}
+
+export function formatReportDateKey(dateValue) {
+  const date =
+    dateValue instanceof Date ? new Date(dateValue) : parseReportDate(dateValue);
+  if (!date || Number.isNaN(date.getTime())) return "";
+  const year = String(date.getFullYear());
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+export function isDateWithinWindow(dateStr, startDate, endDate) {
+  const current = parseReportDate(dateStr);
+  if (!current) return false;
+  const start = parseReportDate(startDate);
+  const end = parseReportDate(endDate, { endOfDay: true });
+  if (start && current < start) return false;
+  if (end && current > end) return false;
+  return true;
+}
+
+export function filterRowsByDateWindow(
+  rows,
+  getDateValue,
+  startDate,
+  endDate,
+) {
+  if (!startDate && !endDate) return rows;
+  return rows.filter((row) =>
+    isDateWithinWindow(getDateValue(row), startDate, endDate),
+  );
+}
+
 /**
  * Filters a list of LoanSummary rows by the report date window.
  * Rows with no startDate are not excluded (they are still active portfolio).
@@ -38,12 +98,13 @@ export function resolveReportScope(userDetails) {
  */
 export function filterSummariesByDateWindow(summaries, startDate, endDate) {
   if (!startDate && !endDate) return summaries;
-  const start = startDate ? new Date(startDate) : null;
-  const end = endDate ? new Date(endDate + "T23:59:59") : null;
+  const start = parseReportDate(startDate);
+  const end = parseReportDate(endDate, { endOfDay: true });
 
   return summaries.filter((s) => {
     if (!s?.startDate) return true; // include if no start date
-    const loanStart = new Date(s.startDate);
+    const loanStart = parseReportDate(s.startDate);
+    if (!loanStart) return true;
     if (start && loanStart < start) return false;
     if (end && loanStart > end) return false;
     return true;

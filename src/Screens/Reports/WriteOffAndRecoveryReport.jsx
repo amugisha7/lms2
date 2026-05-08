@@ -48,6 +48,7 @@ import ReportShell from "./ReportShell";
 import { useReportData } from "./useReportData";
 import { useSnapshotPersistence } from "./useSnapshotPersistence";
 import {
+  filterRowsByDateWindow,
   fmtMoney,
   fmtReportDate,
   fmtPct,
@@ -61,14 +62,6 @@ import { isValidPayment } from "../../Models/Loans/LoanStatements/statementHelpe
 import { GET_REPORT_LOAN_SOURCE_QUERY } from "./reportLoanData";
 
 const WO_STATUS = LOAN_DISPLAY_STATUS.WRITTEN_OFF?.code || "WRITTEN_OFF";
-
-function isInWindow(dateStr, startDate, endDate) {
-  if (!dateStr) return false;
-  const d = new Date(dateStr);
-  if (startDate && d < new Date(startDate)) return false;
-  if (endDate && d > new Date(endDate + "T23:59:59")) return false;
-  return true;
-}
 
 function KpiCard({ label, value, sub, color }) {
   return (
@@ -191,7 +184,6 @@ export default function WriteOffAndRecoveryReport() {
     try {
       const client = generateClient();
       const rows = [];
-      const loanRecoveryMap = {}; // loanID → recovered amount
 
       for (const summary of woSummaries) {
         try {
@@ -203,13 +195,10 @@ export default function WriteOffAndRecoveryReport() {
           if (!loan) continue;
 
           const payments = loan.payments?.items || [];
-          let loanRecovered = 0;
 
           payments.forEach((p) => {
             if (!isValidPayment(p)) return;
-            if (!isInWindow(p.paymentDate, startDate, endDate)) return;
             const amt = safeNum(p.amount);
-            loanRecovered += amt;
             rows.push({
               id: p.id,
               loanId: loan.id,
@@ -222,45 +211,60 @@ export default function WriteOffAndRecoveryReport() {
               paymentAmount: amt,
             });
           });
-
-          if (loanRecovered > 0) {
-            loanRecoveryMap[summary.loanID || summary.id] = loanRecovered;
-          }
         } catch {
           // Skip individual loan errors
         }
       }
 
-      setRecoveries({ rows, loanRecoveryMap, loadedAt: Date.now() });
+      setRecoveries({ rows, loadedAt: Date.now() });
     } catch (err) {
       console.error("[WriteOffAndRecoveryReport] load error:", err);
       setRecoveryError("Failed to load recovery data. Please try again.");
     } finally {
       setRecoveryLoading(false);
     }
-  }, [woSummaries, startDate, endDate]);
+  }, [woSummaries]);
+
+  const windowRecoveries = useMemo(
+    () =>
+      filterRowsByDateWindow(
+        recoveries?.rows || [],
+        (row) => row.paymentDate,
+        startDate,
+        endDate,
+      ),
+    [recoveries, startDate, endDate],
+  );
+
+  const recoveryLoanMap = useMemo(() => {
+    const map = {};
+    windowRecoveries.forEach((row) => {
+      map[row.loanId] = (map[row.loanId] || 0) + row.paymentAmount;
+    });
+    return map;
+  }, [windowRecoveries]);
 
   // Enrich wo summaries with recovery amounts
   const woSummariesEnriched = useMemo(() => {
     return woSummaries.map((s) => ({
       ...s,
-      recoveredAmount: recoveries?.loanRecoveryMap?.[s.loanID || s.id] || 0,
+      recoveredAmount: recoveryLoanMap[s.loanID || s.id] || 0,
     }));
-  }, [woSummaries, recoveries]);
+  }, [woSummaries, recoveryLoanMap]);
 
   // Recovery KPIs
   const recoveryKpis = useMemo(() => {
     if (!recoveries) return null;
-    const totalRecovered = recoveries.rows.reduce(
+    const totalRecovered = windowRecoveries.reduce(
       (acc, r) => acc + r.paymentAmount,
       0,
     );
-    const loansWithRecovery = Object.keys(recoveries.loanRecoveryMap).length;
+    const loansWithRecovery = Object.keys(recoveryLoanMap).length;
     const netExposure = stockKpis.total - totalRecovered;
     const recoveryRate =
       stockKpis.total > 0 ? (totalRecovered / stockKpis.total) * 100 : 0;
     return { totalRecovered, loansWithRecovery, netExposure, recoveryRate };
-  }, [recoveries, stockKpis]);
+  }, [recoveries, recoveryLoanMap, stockKpis, windowRecoveries]);
 
   // Branch rollup (written-off stock)
   const branchRollup = useMemo(() => {
@@ -297,7 +301,7 @@ export default function WriteOffAndRecoveryReport() {
   // Filtered recovery rows
   const filteredRecoveries = useMemo(() => {
     if (!recoveries) return [];
-    let rows = recoveries.rows;
+    let rows = windowRecoveries;
     if (officerFilter !== "ALL")
       rows = rows.filter((r) => r.loanOfficerDisplayName === officerFilter);
     if (woSearch) {
@@ -311,7 +315,7 @@ export default function WriteOffAndRecoveryReport() {
     return [...rows].sort((a, b) =>
       (b.paymentDate || "").localeCompare(a.paymentDate || ""),
     );
-  }, [recoveries, officerFilter, woSearch]);
+  }, [recoveries, officerFilter, woSearch, windowRecoveries]);
 
   function handleExportCsv() {
     if (activeTab === "written-off") {
@@ -384,14 +388,8 @@ export default function WriteOffAndRecoveryReport() {
       }}
       startDate={startDate}
       endDate={endDate}
-      onStartDateChange={(v) => {
-        setStartDate(v);
-        setRecoveries(null);
-      }}
-      onEndDateChange={(v) => {
-        setEndDate(v);
-        setRecoveries(null);
-      }}
+      onStartDateChange={setStartDate}
+      onEndDateChange={setEndDate}
       onRefresh={() => {
         refresh();
         setRecoveries(null);
@@ -455,9 +453,10 @@ export default function WriteOffAndRecoveryReport() {
           }
         >
           Recovery details (payments on written-off loans) require fetching raw
-          loan records for {woSummaries.length} written-off{" "}
+          loan records once for {woSummaries.length} written-off{" "}
           {woSummaries.length === 1 ? "loan" : "loans"}. Date window:{" "}
-          {startDate} → {endDate}.
+          {startDate} → {endDate}. After loading, date changes filter the cached
+          recoveries client-side.
         </Alert>
       )}
       {recoveryLoading && (

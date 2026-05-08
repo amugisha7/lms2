@@ -52,6 +52,7 @@ import ReportShell from "./ReportShell";
 import { useReportData } from "./useReportData";
 import { useSnapshotPersistence } from "./useSnapshotPersistence";
 import {
+  filterRowsByDateWindow,
   fmtMoney,
   fmtReportDate,
   fmtPct,
@@ -70,14 +71,6 @@ function isActivePenalty(p) {
   return !EXCLUDED_PENALTY_STATUSES.has(
     (p?.penaltyStatus || p?.status || "").toUpperCase(),
   );
-}
-
-function isInWindow(dateStr, startDate, endDate) {
-  if (!dateStr) return false;
-  const d = new Date(dateStr);
-  if (startDate && d < new Date(startDate)) return false;
-  if (endDate && d > new Date(endDate + "T23:59:59")) return false;
-  return true;
 }
 
 function KpiCard({ label, value, sub, color }) {
@@ -180,18 +173,9 @@ export default function InterestAndPenaltyReport() {
       const paymentRows = [];
       const penaltyRows = [];
 
-      // Only fetch loans that could have activity in the date window
-      const relevantSummaries = summaries.filter((s) => {
-        if (s.displayStatus === LOAN_DISPLAY_STATUS.VOIDED.code) return false;
-        // If endDate filter exists, only fetch loans that started before endDate
-        if (
-          endDate &&
-          s.startDate &&
-          new Date(s.startDate) > new Date(endDate + "T23:59:59")
-        )
-          return false;
-        return true;
-      });
+      const relevantSummaries = summaries.filter(
+        (s) => s.displayStatus !== LOAN_DISPLAY_STATUS.VOIDED.code,
+      );
 
       for (const summary of relevantSummaries) {
         try {
@@ -209,7 +193,6 @@ export default function InterestAndPenaltyReport() {
           const payments = loan.payments?.items || [];
           payments.forEach((p) => {
             if (!isValidPayment(p)) return;
-            if (!isInWindow(p.paymentDate, startDate, endDate)) return;
             const interestCollected = safeNum(p.amountAllocatedToInterest);
             const penaltyCollected = safeNum(p.amountAllocatedToPenalty);
             if (interestCollected === 0 && penaltyCollected === 0) return;
@@ -234,7 +217,6 @@ export default function InterestAndPenaltyReport() {
           penalties.forEach((pen) => {
             if (!isActivePenalty(pen)) return;
             const penDate = pen.penaltyDate || pen.createdAt;
-            if (!isInWindow(penDate, startDate, endDate)) return;
             const amt = safeNum(pen.amount);
             if (amt === 0) return;
 
@@ -268,22 +250,42 @@ export default function InterestAndPenaltyReport() {
     } finally {
       setEnrichLoading(false);
     }
-  }, [summaries, branchMap, startDate, endDate]);
+  }, [summaries, branchMap]);
+
+  const windowPaymentRows = useMemo(
+    () =>
+      filterRowsByDateWindow(
+        enrichedData?.paymentRows || [],
+        (row) => row.paymentDate,
+        startDate,
+        endDate,
+      ),
+    [enrichedData, startDate, endDate],
+  );
+
+  const windowPenaltyRows = useMemo(
+    () =>
+      filterRowsByDateWindow(
+        enrichedData?.penaltyRows || [],
+        (row) => row.penaltyDate,
+        startDate,
+        endDate,
+      ),
+    [enrichedData, startDate, endDate],
+  );
 
   // KPIs from enriched data
   const kpis = useMemo(() => {
     if (!enrichedData) return null;
-    const { paymentRows, penaltyRows } = enrichedData;
-
-    const interestCollected = paymentRows.reduce(
+    const interestCollected = windowPaymentRows.reduce(
       (acc, r) => acc + r.interestCollected,
       0,
     );
-    const penaltyCollected = paymentRows.reduce(
+    const penaltyCollected = windowPaymentRows.reduce(
       (acc, r) => acc + r.penaltyCollected,
       0,
     );
-    const penaltyCharged = penaltyRows.reduce(
+    const penaltyCharged = windowPenaltyRows.reduce(
       (acc, r) => acc + r.penaltyAmount,
       0,
     );
@@ -300,13 +302,13 @@ export default function InterestAndPenaltyReport() {
       interestPct,
       penaltyPct,
     };
-  }, [enrichedData]);
+  }, [enrichedData, windowPaymentRows, windowPenaltyRows]);
 
   // Product rollups from payment rows
   const productRollup = useMemo(() => {
     if (!enrichedData) return [];
     const map = {};
-    enrichedData.paymentRows.forEach((r) => {
+    windowPaymentRows.forEach((r) => {
       const key = r.loanProductName;
       if (!map[key])
         map[key] = { product: key, interestCollected: 0, penaltyCollected: 0 };
@@ -316,13 +318,13 @@ export default function InterestAndPenaltyReport() {
     return Object.values(map).sort(
       (a, b) => b.interestCollected - a.interestCollected,
     );
-  }, [enrichedData]);
+  }, [enrichedData, windowPaymentRows]);
 
   // Branch rollups
   const branchRollup = useMemo(() => {
     if (!enrichedData || !scope?.isAdmin) return [];
     const map = {};
-    enrichedData.paymentRows.forEach((r) => {
+    windowPaymentRows.forEach((r) => {
       const key = r.branchName;
       if (!map[key])
         map[key] = { branch: key, interestCollected: 0, penaltyCollected: 0 };
@@ -332,12 +334,12 @@ export default function InterestAndPenaltyReport() {
     return Object.values(map).sort(
       (a, b) => b.interestCollected - a.interestCollected,
     );
-  }, [enrichedData, scope]);
+  }, [enrichedData, scope, windowPaymentRows]);
 
   // Filtered detail rows
   const filteredPayments = useMemo(() => {
     if (!enrichedData) return [];
-    let rows = enrichedData.paymentRows;
+    let rows = windowPaymentRows;
     if (productFilter !== "ALL")
       rows = rows.filter((r) => r.loanProductName === productFilter);
     if (search) {
@@ -351,11 +353,11 @@ export default function InterestAndPenaltyReport() {
     return [...rows].sort((a, b) =>
       (b.paymentDate || "").localeCompare(a.paymentDate || ""),
     );
-  }, [enrichedData, productFilter, search]);
+  }, [enrichedData, productFilter, search, windowPaymentRows]);
 
   const filteredPenalties = useMemo(() => {
     if (!enrichedData) return [];
-    let rows = enrichedData.penaltyRows;
+    let rows = windowPenaltyRows;
     if (productFilter !== "ALL")
       rows = rows.filter((r) => r.loanProductName === productFilter);
     if (search) {
@@ -369,7 +371,7 @@ export default function InterestAndPenaltyReport() {
     return [...rows].sort((a, b) =>
       (b.penaltyDate || "").localeCompare(a.penaltyDate || ""),
     );
-  }, [enrichedData, productFilter, search]);
+  }, [enrichedData, productFilter, search, windowPenaltyRows]);
 
   function handleExportCsv() {
     if (activeTab === "payments") {
@@ -442,14 +444,8 @@ export default function InterestAndPenaltyReport() {
       }}
       startDate={startDate}
       endDate={endDate}
-      onStartDateChange={(v) => {
-        setStartDate(v);
-        setEnrichedData(null);
-      }}
-      onEndDateChange={(v) => {
-        setEndDate(v);
-        setEnrichedData(null);
-      }}
+      onStartDateChange={setStartDate}
+      onEndDateChange={setEndDate}
       onRefresh={() => {
         refresh();
         setEnrichedData(null);
@@ -473,8 +469,9 @@ export default function InterestAndPenaltyReport() {
             </Button>
           }
         >
-          Payment allocation data requires fetching raw loan records. Click to
-          load payments and penalties for the selected date window.
+          Payment allocation data requires fetching raw loan records once for
+          the current scope. After loading, the date window filters the cached
+          rows client-side.
         </Alert>
       )}
       {enrichLoading && (

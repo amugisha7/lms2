@@ -39,8 +39,7 @@ function clamp(value, min, max) {
  * @param {object} s - LoanSummary row, already enriched with daysPastDue
  * @returns {number} score
  */
-export function computeUrgencyScore(s) {
-  const today = new Date();
+export function computeUrgencyScore(s, today = new Date()) {
 
   // 1. Days past due (40%)
   const dpd = safeNum(s.daysPastDue);

@@ -52,6 +52,7 @@ import ReportShell from "./ReportShell";
 import { useReportData } from "./useReportData";
 import { useSnapshotPersistence } from "./useSnapshotPersistence";
 import {
+  parseReportDate,
   fmtMoney,
   fmtReportDate,
   toCsv,
@@ -134,18 +135,15 @@ function summaryToInstallmentRow(s) {
 
 /**
  * Build installment rows from a full raw loan object using resolveLoanSchedule.
- * Filters to future installments within the horizon.
+ * Keeps all schedule rows so the selected date window can filter them client-side.
  */
-function loanToScheduleRows(loan, summary, horizonEnd) {
+function loanToScheduleRows(loan, summary) {
   const schedule = resolveLoanSchedule(loan);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
 
-  const futureRows = schedule
+  const scheduleRows = schedule
     .filter((inst) => {
       if (!inst?.dueDate) return false;
-      const d = new Date(inst.dueDate);
-      return d >= today && d <= horizonEnd;
+      return !Number.isNaN(new Date(inst.dueDate).getTime());
     })
     .map((inst, idx) => ({
       id: `${summary.id}-inst-${idx}`,
@@ -172,7 +170,7 @@ function loanToScheduleRows(loan, summary, horizonEnd) {
       loanProductName: summary.loanProductName || "—",
     }));
 
-  return futureRows;
+  return scheduleRows;
 }
 
 const DETAIL_COLS = [
@@ -193,10 +191,11 @@ export default function RepaymentSchedulesReport() {
 
   const today = new Date();
   const todayStr = today.toISOString().slice(0, 10);
+  const defaultEndDate = addDays(today, 30).toISOString().slice(0, 10);
 
   const [selectedBranchId, setSelectedBranchId] = useState(null);
   const [startDate, setStartDate] = useState(todayStr);
-  const [endDate, setEndDate] = useState(null);
+  const [endDate, setEndDate] = useState(defaultEndDate);
   const [horizonDays, setHorizonDays] = useState(30);
   const [search, setSearch] = useState("");
   const [officerFilter, setOfficerFilter] = useState("ALL");
@@ -221,7 +220,18 @@ export default function RepaymentSchedulesReport() {
     return m;
   }, [branches]);
 
-  const horizonEnd = useMemo(() => addDays(today, horizonDays), [horizonDays]);
+  const windowStart = useMemo(
+    () => parseReportDate(startDate) || parseReportDate(todayStr) || new Date(),
+    [startDate, todayStr],
+  );
+
+  const windowEnd = useMemo(
+    () =>
+      parseReportDate(endDate, { endOfDay: true }) ||
+      parseReportDate(defaultEndDate, { endOfDay: true }) ||
+      addDays(windowStart, horizonDays),
+    [defaultEndDate, endDate, horizonDays, windowStart],
+  );
 
   // Active loans only
   const activeLoans = useMemo(
@@ -239,20 +249,20 @@ export default function RepaymentSchedulesReport() {
 
   // KPIs from LoanSummary nextDueDate
   const kpis = useMemo(() => {
-    const horizon7 = addDays(today, 7);
-    const horizon30 = addDays(today, 30);
-    const todayStart = new Date(today);
-    todayStart.setHours(0, 0, 0, 0);
+    const horizon7 = addDays(windowStart, 7);
+    const horizon30 = addDays(windowStart, 30);
+    const first7End = horizon7 < windowEnd ? horizon7 : windowEnd;
+    const first30End = horizon30 < windowEnd ? horizon30 : windowEnd;
 
     const due7 = activeLoans.filter((s) => {
       if (!s.nextDueDate) return false;
       const d = new Date(s.nextDueDate);
-      return d >= todayStart && d <= horizon7;
+      return d >= windowStart && d <= first7End;
     });
     const due30 = activeLoans.filter((s) => {
       if (!s.nextDueDate) return false;
       const d = new Date(s.nextDueDate);
-      return d >= todayStart && d <= horizon30;
+      return d >= windowStart && d <= first30End;
     });
     const expectedDue30 = due30.reduce(
       (acc, s) => acc + safeNum(s.amountDueAmount),
@@ -265,18 +275,16 @@ export default function RepaymentSchedulesReport() {
       due30Count: due30.length,
       due30Amount: expectedDue30,
     };
-  }, [activeLoans]);
+  }, [activeLoans, windowEnd, windowStart]);
 
   // Forecast summary grouped by week from nextDueDate
   const forecastByWeek = useMemo(() => {
     const map = {};
-    const todayStart = new Date(today);
-    todayStart.setHours(0, 0, 0, 0);
 
     activeLoans.forEach((s) => {
       if (!s.nextDueDate) return;
       const d = new Date(s.nextDueDate);
-      if (d < todayStart || d > horizonEnd) return;
+      if (d < windowStart || d > windowEnd) return;
 
       // Week key: Monday of that week
       const weekStart = new Date(d);
@@ -288,7 +296,7 @@ export default function RepaymentSchedulesReport() {
     });
 
     return Object.values(map).sort((a, b) => a.weekOf.localeCompare(b.weekOf));
-  }, [activeLoans, horizonEnd]);
+  }, [activeLoans, windowEnd, windowStart]);
 
   // Load full schedules for active loans
   const loadFullSchedules = useCallback(async () => {
@@ -297,11 +305,7 @@ export default function RepaymentSchedulesReport() {
     try {
       const client = generateClient();
       const rows = [];
-      const toFetch = activeLoans.filter((s) => {
-        if (!s.nextDueDate) return false;
-        const d = new Date(s.nextDueDate);
-        return d <= horizonEnd;
-      });
+      const toFetch = activeLoans;
 
       for (const summary of toFetch) {
         try {
@@ -315,7 +319,7 @@ export default function RepaymentSchedulesReport() {
             if (fallback) rows.push(fallback);
             continue;
           }
-          const instRows = loanToScheduleRows(loan, summary, horizonEnd);
+          const instRows = loanToScheduleRows(loan, summary);
           if (instRows.length > 0) {
             rows.push(...instRows);
           } else {
@@ -334,7 +338,7 @@ export default function RepaymentSchedulesReport() {
     } finally {
       setScheduleLoading(false);
     }
-  }, [activeLoans, horizonEnd]);
+  }, [activeLoans]);
 
   // Display rows: use full schedule if loaded, otherwise next-due summaries
   const displayRows = useMemo(() => {
@@ -345,14 +349,15 @@ export default function RepaymentSchedulesReport() {
             .filter((s) => {
               if (!s.nextDueDate) return false;
               const d = new Date(s.nextDueDate);
-              const todayStart = new Date(today);
-              todayStart.setHours(0, 0, 0, 0);
-              return d >= todayStart && d <= horizonEnd;
+              return d >= windowStart && d <= windowEnd;
             })
             .map(summaryToInstallmentRow)
             .filter(Boolean);
 
     return base.filter((r) => {
+      if (!r?.dueDate) return false;
+      const dueDate = new Date(r.dueDate);
+      if (dueDate < windowStart || dueDate > windowEnd) return false;
       if (officerFilter !== "ALL" && r.loanOfficerDisplayName !== officerFilter)
         return false;
       if (search) {
@@ -366,7 +371,14 @@ export default function RepaymentSchedulesReport() {
       }
       return true;
     });
-  }, [scheduleRows, activeLoans, horizonEnd, officerFilter, search]);
+  }, [
+    scheduleRows,
+    activeLoans,
+    officerFilter,
+    search,
+    windowEnd,
+    windowStart,
+  ]);
 
   const sorted = useMemo(
     () =>
@@ -426,12 +438,13 @@ export default function RepaymentSchedulesReport() {
           ? "resolveLoanSchedule + summary fallback"
           : "LoanSummary.nextDueDate",
       generatedAt: new Date().toISOString(),
+      dateWindow: { startDate, endDate },
     };
     await saveSnapshot({
       reportType: REPORT_TYPES.REPAYMENT_SCHEDULES,
       reportName: `Repayment Schedules — Next ${horizonDays} days`,
-      startDate: todayStr,
-      endDate: horizonEnd.toISOString().slice(0, 10),
+      startDate,
+      endDate,
       branchId: selectedBranchId || scope?.branchId || null,
       reportData: payload,
     });
@@ -472,8 +485,15 @@ export default function RepaymentSchedulesReport() {
             value={horizonDays}
             label="Forecast Horizon"
             onChange={(e) => {
-              setHorizonDays(e.target.value);
-              setScheduleRows(null);
+              const nextDays = e.target.value;
+              const baseStart =
+                parseReportDate(startDate) ||
+                parseReportDate(todayStr) ||
+                new Date();
+              setHorizonDays(nextDays);
+              setEndDate(
+                addDays(baseStart, nextDays).toISOString().slice(0, 10),
+              );
             }}
           >
             {HORIZON_OPTIONS.map((o) => (
@@ -504,11 +524,14 @@ export default function RepaymentSchedulesReport() {
       {/* KPIs */}
       <Grid container spacing={2} sx={{ mb: 3 }}>
         {[
-          { label: "Due in Next 7 Days (loans)", value: kpis.due7Count },
-          { label: "Expected Due in 7 Days", value: fmtMoney(kpis.due7Amount) },
-          { label: "Due in Next 30 Days (loans)", value: kpis.due30Count },
+          { label: "Due in First 7 Days", value: kpis.due7Count },
           {
-            label: "Expected Due in 30 Days",
+            label: "Expected Due in First 7 Days",
+            value: fmtMoney(kpis.due7Amount),
+          },
+          { label: "Due in First 30 Days", value: kpis.due30Count },
+          {
+            label: "Expected Due in First 30 Days",
             value: fmtMoney(kpis.due30Amount),
           },
         ].map((k) => (
@@ -520,7 +543,7 @@ export default function RepaymentSchedulesReport() {
 
       {/* Weekly forecast summary */}
       <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 1 }}>
-        Weekly Forecast — Next {horizonDays} Days
+        Weekly Forecast — {startDate} to {endDate}
       </Typography>
       <TableContainer component={Paper} variant="outlined" sx={{ mb: 3 }}>
         <Table size="small">
@@ -546,7 +569,7 @@ export default function RepaymentSchedulesReport() {
                   align="center"
                   sx={{ color: "text.secondary", py: 2 }}
                 >
-                  No upcoming payments in the selected horizon.
+                  No upcoming payments in the selected date window.
                 </TableCell>
               </TableRow>
             )}

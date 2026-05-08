@@ -39,6 +39,8 @@ import { useReportData } from "./useReportData";
 import { useSnapshotPersistence } from "./useSnapshotPersistence";
 import {
   filterSummariesByDateWindow,
+  formatReportDateKey,
+  getReportAsOfDate,
   fmtMoney,
   fmtReportDate,
   fmtPct,
@@ -112,7 +114,7 @@ export default function PARSummary() {
   const { saveSnapshot, saving, lastSavedAt, saveError } =
     useSnapshotPersistence();
   const currencyCode = userDetails?.institution?.currencyCode || "";
-  const today = useMemo(() => new Date(), []);
+  const reportDate = useMemo(() => getReportAsOfDate(endDate), [endDate]);
 
   const windowSummaries = useMemo(
     () => filterSummariesByDateWindow(summaries, startDate, endDate),
@@ -121,17 +123,22 @@ export default function PARSummary() {
 
   // Compute PAR
   const { denominator, eligible, par } = useMemo(
-    () => computePAR(windowSummaries, PAR_THRESHOLDS, today),
-    [windowSummaries, today],
+    () => computePAR(windowSummaries, PAR_THRESHOLDS, reportDate),
+    [windowSummaries, reportDate],
   );
 
   // Branch PAR
   const branchPAR = useMemo(
     () =>
       scope.isAdmin
-        ? computeBranchPAR(windowSummaries, PAR_THRESHOLDS, branches, today)
+        ? computeBranchPAR(
+            windowSummaries,
+            PAR_THRESHOLDS,
+            branches,
+            reportDate,
+          )
         : [],
-    [windowSummaries, branches, scope.isAdmin, today],
+    [windowSummaries, branches, scope.isAdmin, reportDate],
   );
 
   // Detail rows (PAR 30 loans — superset of PAR 60 and PAR 90)
@@ -141,7 +148,7 @@ export default function PARSummary() {
     const par90Set = new Set((par[90]?.loans || []).map((s) => s.id));
 
     return (par[30]?.loans || []).map((s) => {
-      const dpd = computeDaysPastDue(s, today);
+      const dpd = computeDaysPastDue(s, reportDate);
       const branch = branches.find((b) => b.id === s.branchID);
       const flags = PAR_THRESHOLDS.filter((t) => {
         if (t === 30) return par30Set.has(s.id);
@@ -162,7 +169,7 @@ export default function PARSummary() {
         parThresholds: flags,
       };
     });
-  }, [par, branches, currencyCode, today]);
+  }, [par, branches, currencyCode, reportDate]);
 
   const filteredRows = useMemo(() => {
     const q = search.toLowerCase();
@@ -210,13 +217,13 @@ export default function PARSummary() {
   function buildSnapshotPayload() {
     return {
       generatedAt: new Date().toISOString(),
-      reportDate: new Date().toISOString().slice(0, 10),
+      reportDate: formatReportDateKey(reportDate),
       startDate,
       endDate,
       selectedBranchId,
       // Trend-ready structure: keyed by date so future periods can be appended
       snapshot: {
-        [new Date().toISOString().slice(0, 10)]: {
+        [formatReportDateKey(reportDate)]: {
           denominator,
           eligibleLoanCount: eligible.length,
           par: PAR_THRESHOLDS.reduce((acc, t) => {
@@ -265,6 +272,7 @@ export default function PARSummary() {
       endDate={endDate}
       onStartDateChange={setStartDate}
       onEndDateChange={setEndDate}
+      showDateFilters={false}
       onRefresh={refresh}
       loading={loading}
       onSaveSnapshot={handleSaveSnapshot}

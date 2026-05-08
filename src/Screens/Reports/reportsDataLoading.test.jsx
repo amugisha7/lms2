@@ -280,4 +280,33 @@ describe("reports data loading", () => {
       ),
     );
   });
+
+  it("can hide date filters for reports that do not use date ranges", () => {
+    const handleStartDateChange = jest.fn();
+    const handleEndDateChange = jest.fn();
+
+    renderWithUser(
+      <ReportShell
+        title="Portfolio Overview"
+        isAdmin={false}
+        branches={[]}
+        selectedBranchId={null}
+        onBranchChange={jest.fn()}
+        startDate=""
+        endDate=""
+        onStartDateChange={handleStartDateChange}
+        onEndDateChange={handleEndDateChange}
+        showDateFilters={false}
+        onRefresh={jest.fn()}
+      >
+        <div>Report Body</div>
+      </ReportShell>,
+      null,
+    );
+
+    expect(screen.queryByText("This Month")).not.toBeInTheDocument();
+    expect(screen.getByText("Report Body")).toBeInTheDocument();
+    expect(handleStartDateChange).not.toHaveBeenCalled();
+    expect(handleEndDateChange).not.toHaveBeenCalled();
+  });
 });

@@ -167,13 +167,10 @@ export default function DateFilters({
       {showDateFilters && (
         <Box
           sx={{
-            display: "grid",
+            display: "flex",
+            flexWrap: "wrap",
             gap: 1,
             width: "100%",
-            gridTemplateColumns: {
-              xs: "repeat(3, minmax(0, 1fr))",
-              sm: "repeat(10, minmax(0, max-content))",
-            },
             alignItems: "stretch",
           }}
         >
@@ -186,11 +183,13 @@ export default function DateFilters({
                 onClick={() => applyDatePreset(preset.key)}
                 sx={{
                   display: "flex",
+                  flex: "0 0 auto",
                   alignItems: "center",
                   justifyContent: "center",
                   minHeight: 33,
                   px: 1,
                   mt: 0,
+                  whiteSpace: "nowrap",
                   border: `1px solid ${isActive ? sf.sf_brandPrimary : sf.sf_searchBorder}`,
                   bgcolor: isActive ? sf.sf_brandPrimary : sf.sf_searchBg,
                   color: isActive ? sf.sf_whiteMain || "#fff" : sf.sf_textLink,
@@ -217,16 +216,11 @@ export default function DateFilters({
           })}
           <Box
             sx={{
-              display: "grid",
+              display: "flex",
+              flexWrap: "wrap",
+              flex: "1 1 280px",
               gap: 1,
-              gridColumn: {
-                xs: "1 / -1",
-                sm: "span 2",
-              },
-              gridTemplateColumns: {
-                xs: "repeat(2, minmax(0, 1fr))",
-                sm: "repeat(2, minmax(130px, 160px))",
-              },
+              minWidth: 0,
             }}
           >
             <TextField
@@ -240,7 +234,8 @@ export default function DateFilters({
               }}
               InputLabelProps={{ shrink: true }}
               sx={{
-                minWidth: 130,
+                flex: "1 1 130px",
+                minWidth: 120,
                 "& .MuiInputBase-root": { borderRadius: 0, height: 33 },
                 "& .MuiInputLabel-root": { fontSize: "0.72rem" },
                 "& .MuiInputBase-input": {
@@ -260,7 +255,8 @@ export default function DateFilters({
               }}
               InputLabelProps={{ shrink: true }}
               sx={{
-                minWidth: 130,
+                flex: "1 1 130px",
+                minWidth: 120,
                 "& .MuiInputBase-root": { borderRadius: 0, height: 33 },
                 "& .MuiInputLabel-root": { fontSize: "0.72rem" },
                 "& .MuiInputBase-input": {

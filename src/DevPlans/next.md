@@ -1,7 +1,10 @@
 - Create loans form. Also create from loan product.
   - Resume:
-    - Check validity of loan statements.
     - Deploy reports.
+      - Work on Profitability Report with Income Statement and Balance Sheet.
+      - Work on the Transactions sheet to replace Shammy's excel.
+    - Work on Portfolio page to function as dashboard of app.
+    - Check validity of loan statements.
     - What happens if a customer logs in on the main portal?
 
     Put the contracts, collateral and gurantors, other incomes and expenses as tabs on loan drafts and loans.

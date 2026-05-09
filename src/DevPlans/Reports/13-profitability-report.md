@@ -13,6 +13,8 @@ Inspect before editing:
 - `src/Screens/Reports/reportUtils.js`
 - `src/Screens/Reports/reportLoanData.js`
 - `src/Screens/Reports/reportRegistry.js`
+- `src/Screens/Reports/ReportsLanding.jsx`
+- `src/Screens/Dashboard/Menu.jsx`
 - `src/Screens/Reports/PortfolioOverview.jsx`
 - `src/Screens/Reports/InterestAndPenaltyReport.jsx`
 - `src/Screens/Reports/WriteOffAndRecoveryReport.jsx`
@@ -48,17 +50,21 @@ Business intent:
 Implement `/reports/profitability` with the following:
 
 1. Add a report registry entry and route for a Profitability Report.
-2. Use `ReportShell` and reuse `DateFilters` through the existing reporting shell flow.
-3. Match the overall styling direction of `LoansDisplay`:
+2. Add visible navigation to the new report anywhere this repo currently enumerates report destinations. At minimum:
+   - add the Profitability Report to `REPORT_REGISTRY` so it appears on the reports landing page
+   - add it to any existing reports submenu or dashboard report navigation that is driven by explicit route entries, including `src/Screens/Dashboard/Menu.jsx` if that menu still lists reports individually
+   - ensure the report is discoverable through normal app navigation, not only by typing `/reports/profitability`
+3. Use `ReportShell` and reuse `DateFilters` through the existing reporting shell flow.
+4. Match the overall styling direction of `LoansDisplay`:
    - compact KPI header blocks
    - flat filter containers with `sf` colors
    - clickable pill-style filters similar to the loans page
    - dense tabular detail presentation
    - no rounded-card dashboard redesign
-4. Build the report from two clearly labeled layers:
+5. Build the report from two clearly labeled layers:
    - `Realized income` from actual repo data
    - `Net profit proxy` from realized income minus explicit user-visible modeled costs
-5. Summary KPIs must include at least:
+6. Summary KPIs must include at least:
    - loans in scope
    - outstanding principal / active exposure
    - interest collected in range
@@ -68,22 +74,24 @@ Implement `/reports/profitability` with the following:
    - modeled cost total
    - net profit proxy
    - average net profit proxy per loan
-6. Add a compact assumptions panel for client-side modeling only. Persist assumptions in the existing `FinancialReport` JSON payload, not the schema. Include at least:
+7. Add a compact assumptions panel for client-side modeling only. Persist assumptions in the existing `FinancialReport` JSON payload, not the schema. Include at least:
    - origination cost per loan
    - servicing cost per active loan per month
    - funding-cost rate or capital-cost rate applied to balance exposure
    - optional credit-cost factor applied to written-off exposure, arrears, or another clearly explained existing field
-7. Make every assumption editable, visible, resettable, and explicitly labeled as a modeled input rather than sourced data.
-8. Add a monthly trend section for the selected date range showing at least:
+8. Make every assumption editable, visible, resettable, and explicitly labeled as a modeled input rather than sourced data.
+9. Add a monthly trend section for the selected date range showing at least:
    - realized income by month
    - modeled costs by month
    - net profit proxy by month
-9. Add ranked rollups for at least:
-   - branch
-   - loan product
-   - loan officer
-   - display status
-10. Add a loan-level detail grid with search/filter/export support. Include columns such as:
+10. Add ranked rollups for at least:
+
+- branch
+- loan product
+- loan officer
+- display status
+
+11. Add a loan-level detail grid with search/filter/export support. Include columns such as:
     - borrower
     - loan number
     - branch
@@ -101,13 +109,13 @@ Implement `/reports/profitability` with the following:
     - modeled cost
     - net profit proxy
     - profitability band or margin band
-11. Add exception views or ranked lists for at least:
+12. Add exception views or ranked lists for at least:
     - highest-profit loans
     - lowest-profit loans
     - negative-profit loans
     - written-off loans with negative or weak profitability
-12. Support CSV export and `FinancialReport` snapshot persistence using report type `profitability_report`.
-13. If a new front-end registry constant is needed for the report type, add it in the reporting module only. Do not introduce or regenerate a schema change.
+13. Support CSV export and `FinancialReport` snapshot persistence using report type `profitability_report`.
+14. If a new front-end registry constant is needed for the report type, add it in the reporting module only. Do not introduce or regenerate a schema change.
 
 Calculation guidance:
 
@@ -141,6 +149,7 @@ Testing expectations:
 Acceptance criteria:
 
 - `/reports/profitability` renders inside the existing reports module without schema changes
+- the report is reachable from the reports landing page and any existing explicit report navigation menu used by the app
 - Date filtering reuses the existing `DateFilters` pattern
 - The page visually aligns with `LoansDisplay` and the shared reports shell
 - The report clearly distinguishes actual realized income from modeled net-profit outputs

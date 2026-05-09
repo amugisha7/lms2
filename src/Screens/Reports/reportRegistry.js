@@ -14,6 +14,7 @@ export const REPORT_TYPES = Object.freeze({
   CONCENTRATIONS: "concentrations_report",
   INTEREST_AND_PENALTY: "interest_and_penalty_report",
   WRITE_OFF_AND_RECOVERY: "write_off_and_recovery_report",
+  PROFITABILITY: "profitability_report",
 });
 
 export const REPORT_REGISTRY = [
@@ -115,5 +116,14 @@ export const REPORT_REGISTRY = [
     description:
       "Stock of written-off loans and recoveries against them in a selected period, showing net written-off exposure.",
     icon: "MoneyOff",
+  },
+  {
+    key: "profitability",
+    reportType: REPORT_TYPES.PROFITABILITY,
+    label: "Profitability Report",
+    route: "/reports/profitability",
+    description:
+      "Realized income (interest, fees, penalties) and net-profit proxy by loan, branch, product, and officer. Includes optional modeled cost assumptions.",
+    icon: "TrendingUp",
   },
 ];

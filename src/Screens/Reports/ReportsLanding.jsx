@@ -18,6 +18,7 @@ import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import TrendingDownIcon from "@mui/icons-material/TrendingDown";
+import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import ShieldIcon from "@mui/icons-material/Shield";
 import { REPORT_REGISTRY } from "./reportRegistry";
 
@@ -28,6 +29,7 @@ const ICON_MAP = {
   Warning: <WarningAmberIcon sx={{ fontSize: 36, color: "warning.main" }} />,
   AccessTime: <AccessTimeIcon sx={{ fontSize: 36, color: "info.main" }} />,
   TrendingDown: <TrendingDownIcon sx={{ fontSize: 36, color: "error.main" }} />,
+  TrendingUp: <TrendingUpIcon sx={{ fontSize: 36, color: "success.main" }} />,
   Shield: <ShieldIcon sx={{ fontSize: 36, color: "success.main" }} />,
 };
 

@@ -60,6 +60,7 @@ import ActiveLoansByOfficerReport from "./Screens/Reports/ActiveLoansByOfficerRe
 import ConcentrationsReport from "./Screens/Reports/ConcentrationsReport";
 import InterestAndPenaltyReport from "./Screens/Reports/InterestAndPenaltyReport";
 import WriteOffAndRecoveryReport from "./Screens/Reports/WriteOffAndRecoveryReport";
+import ProfitabilityReport from "./Screens/Reports/ProfitabilityReport";
 
 export default function AppRoutes({ userExists, userStatus }) {
   const normalizedStatus = (userStatus || "").toLowerCase();
@@ -121,6 +122,10 @@ export default function AppRoutes({ userExists, userStatus }) {
               <Route
                 path="reports/write-off-and-recovery"
                 element={<WriteOffAndRecoveryReport />}
+              />
+              <Route
+                path="reports/profitability"
+                element={<ProfitabilityReport />}
               />
               <Route path="settings" element={<SettingsWrapper />} />
               <Route

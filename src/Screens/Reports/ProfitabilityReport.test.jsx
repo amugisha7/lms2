@@ -129,6 +129,10 @@ describe("ProfitabilityReport — main rendered state", () => {
     mockFetchSummaries.mockReset();
   });
 
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
   it("renders the report title", async () => {
     mockFetchSummaries.mockResolvedValue([]);
 
@@ -164,6 +168,18 @@ describe("ProfitabilityReport — main rendered state", () => {
     );
 
     expect(screen.queryByText(/Load Payment Data/i)).not.toBeInTheDocument();
+  });
+
+  it("opens with the previous month selected by default", async () => {
+    jest.useFakeTimers().setSystemTime(new Date("2026-05-14T12:00:00"));
+    mockFetchSummaries.mockResolvedValue([]);
+
+    renderReport(BRANCH_USER);
+
+    await waitFor(() => {
+      expect(screen.getByText("DateFrom:2026-04-01")).toBeInTheDocument();
+    });
+    expect(screen.getByText("DateTo:2026-04-30")).toBeInTheDocument();
   });
 
   it("shows KPI blocks and detail grid after the initial report load", async () => {

@@ -50,6 +50,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { BarChart } from "@mui/x-charts/BarChart";
 import { UserContext } from "../../App";
+import { getPresetRange } from "../../ModelAssets/DateFilters";
 import ReportShell from "./ReportShell";
 import { useReportData } from "./useReportData";
 import {
@@ -298,17 +299,12 @@ export default function ProfitabilityReport() {
   const { userDetails } = useContext(UserContext);
   const theme = useTheme();
   const sf = theme.palette.sf;
-
-  const today = new Date();
-  const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
-    .toISOString()
-    .slice(0, 10);
-  const todayStr = today.toISOString().slice(0, 10);
+  const defaultDateRange = getPresetRange("last_month");
 
   // ── Page state ──────────────────────────────────────────────────────────
   const [selectedBranchId, setSelectedBranchId] = useState(null);
-  const [startDate, setStartDate] = useState(firstOfMonth);
-  const [endDate, setEndDate] = useState(todayStr);
+  const [startDate, setStartDate] = useState(defaultDateRange?.from || "");
+  const [endDate, setEndDate] = useState(defaultDateRange?.to || "");
 
   // Cost assumptions (modeled, client-side only)
   const [assumptions, setAssumptions] = useState({ ...DEFAULT_ASSUMPTIONS });
@@ -602,6 +598,7 @@ export default function ProfitabilityReport() {
       endDate={endDate}
       onStartDateChange={setStartDate}
       onEndDateChange={setEndDate}
+      defaultDatePreset="last_month"
       onRefresh={() => {
         refresh();
       }}

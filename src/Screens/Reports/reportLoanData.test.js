@@ -25,6 +25,7 @@ jest.mock("../../Models/Loans/loanSummaryProjection", () => ({
 }));
 
 const { generateClient: mockGenerateClient } = require("aws-amplify/api");
+const loanSummaryProjection = require("../../Models/Loans/loanSummaryProjection");
 const {
   fetchAllReportLoanSummariesForBranch,
   fetchReportLoanSummariesPage,
@@ -35,6 +36,25 @@ describe("reportLoanData", () => {
     mockGraphql.mockReset();
     mockGenerateClient.mockReset();
     mockGenerateClient.mockReturnValue({ graphql: mockGraphql });
+    loanSummaryProjection.buildLoanSummaryRecord.mockImplementation(
+      (loan, options = {}) => {
+        if (!loan?.id || loan?.status === "DRAFT") {
+          return null;
+        }
+
+        return {
+          id: loan.id,
+          loanID: loan.id,
+          branchID: loan.branchID,
+          institutionID: options.defaultInstitutionId || null,
+          currencyCode: options.defaultCurrencyCode || null,
+          lifecycleStatus: loan.status,
+        };
+      },
+    );
+    loanSummaryProjection.isLoanSummaryVisible.mockImplementation(
+      (summary) => Boolean(summary) && summary.lifecycleStatus !== "DRAFT",
+    );
   });
 
   it("loads report summaries from the branch loans query", async () => {
@@ -74,6 +94,8 @@ describe("reportLoanData", () => {
           institutionID: "inst-1",
           currencyCode: "USD",
           lifecycleStatus: "ACTIVE",
+          reportSourcePayments: [],
+          reportSourcePenalties: [],
         },
       ],
       nextToken: null,
@@ -114,6 +136,8 @@ describe("reportLoanData", () => {
         institutionID: "inst-1",
         currencyCode: "USD",
         lifecycleStatus: "ACTIVE",
+        reportSourcePayments: [],
+        reportSourcePenalties: [],
       },
       {
         id: "loan-2",
@@ -122,6 +146,8 @@ describe("reportLoanData", () => {
         institutionID: "inst-1",
         currencyCode: "USD",
         lifecycleStatus: "ACTIVE",
+        reportSourcePayments: [],
+        reportSourcePenalties: [],
       },
     ]);
   });

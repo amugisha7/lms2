@@ -125,7 +125,19 @@ const REPORT_BRANCH_LOANS_QUERY = `
 
 const mapLoanToVisibleSummary = (loan, options = {}) => {
   const summary = buildLoanSummaryRecord(loan, options);
-  return summary && isLoanSummaryVisible(summary) ? summary : null;
+  if (!summary || !isLoanSummaryVisible(summary)) {
+    return null;
+  }
+
+  return {
+    ...summary,
+    reportSourcePayments: Array.isArray(loan?.payments?.items)
+      ? loan.payments.items.filter(Boolean)
+      : [],
+    reportSourcePenalties: Array.isArray(loan?.penalties?.items)
+      ? loan.penalties.items.filter(Boolean)
+      : [],
+  };
 };
 
 export const fetchReportLoanSummariesPage = async ({

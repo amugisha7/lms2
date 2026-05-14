@@ -14,6 +14,20 @@ import {
   Notifications as NotificationsIcon,
   Settings as SettingsIcon,
 } from "@mui/icons-material";
+import { REPORT_REGISTRY } from "../Reports/reportRegistry";
+
+const reportMenuChildren = [
+  {
+    name: "All Reports",
+    icon: <ListAltIcon sx={{ color: "white" }} />,
+    route: "/reports",
+  },
+  ...REPORT_REGISTRY.map((report) => ({
+    name: report.label,
+    icon: <ListAltIcon sx={{ color: "white" }} />,
+    route: report.route,
+  })),
+];
 
 export const menuItems = [
   {
@@ -120,68 +134,7 @@ export const menuItems = [
     name: "Reports",
     icon: <ReportsIcon sx={{ color: "white" }} />,
     expandable: true,
-    children: [
-      {
-        name: "All Reports",
-        icon: <ListAltIcon sx={{ color: "white" }} />,
-        route: "/reports",
-      },
-      {
-        name: "Portfolio Overview",
-        icon: <ListAltIcon sx={{ color: "white" }} />,
-        route: "/reports/portfolio-overview",
-      },
-      {
-        name: "Delinquency",
-        icon: <ListAltIcon sx={{ color: "white" }} />,
-        route: "/reports/delinquency",
-      },
-      {
-        name: "Aging Analysis",
-        icon: <ListAltIcon sx={{ color: "white" }} />,
-        route: "/reports/aging-analysis",
-      },
-      {
-        name: "PAR Summary",
-        icon: <ListAltIcon sx={{ color: "white" }} />,
-        route: "/reports/par-summary",
-      },
-      {
-        name: "Provisions",
-        icon: <ListAltIcon sx={{ color: "white" }} />,
-        route: "/reports/provisions",
-      },
-      {
-        name: "Disbursement",
-        icon: <ListAltIcon sx={{ color: "white" }} />,
-        route: "/reports/disbursement",
-      },
-      {
-        name: "Repayment Schedules",
-        icon: <ListAltIcon sx={{ color: "white" }} />,
-        route: "/reports/repayment-schedules",
-      },
-      {
-        name: "Loans by Officer",
-        icon: <ListAltIcon sx={{ color: "white" }} />,
-        route: "/reports/active-loans-by-officer",
-      },
-      {
-        name: "Concentrations",
-        icon: <ListAltIcon sx={{ color: "white" }} />,
-        route: "/reports/concentrations",
-      },
-      {
-        name: "Interest & Penalty",
-        icon: <ListAltIcon sx={{ color: "white" }} />,
-        route: "/reports/interest-and-penalty",
-      },
-      {
-        name: "Write-Off & Recovery",
-        icon: <ListAltIcon sx={{ color: "white" }} />,
-        route: "/reports/write-off-and-recovery",
-      },
-    ],
+    children: reportMenuChildren,
   },
   {
     name: "Admin",

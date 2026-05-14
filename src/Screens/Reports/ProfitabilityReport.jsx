@@ -18,7 +18,7 @@
  * throughout the UI.
  */
 
-import React, { useState, useMemo, useContext, useCallback } from "react";
+import React, { useState, useMemo, useContext } from "react";
 import {
   Box,
   Typography,
@@ -49,7 +49,6 @@ import { useTheme } from "@mui/material/styles";
 import SearchIcon from "@mui/icons-material/Search";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { BarChart } from "@mui/x-charts/BarChart";
-import { generateClient } from "aws-amplify/api";
 import { UserContext } from "../../App";
 import ReportShell from "./ReportShell";
 import { useReportData } from "./useReportData";
@@ -61,8 +60,6 @@ import {
   safeNum,
 } from "./reportUtils";
 import { LOAN_DISPLAY_STATUS } from "../../Models/Loans/loanSummaryProjection";
-import { isValidPayment } from "../../Models/Loans/LoanStatements/statementHelpers";
-import { GET_REPORT_LOAN_SOURCE_QUERY } from "./reportLoanData";
 import {
   DEFAULT_ASSUMPTIONS,
   computeLoanRealizedIncome,
@@ -98,13 +95,10 @@ const DETAIL_COLS = [
 // ---------------------------------------------------------------------------
 // Status label map
 // ---------------------------------------------------------------------------
-const STATUS_LABELS = Object.values(LOAN_DISPLAY_STATUS).reduce(
-  (acc, meta) => {
-    acc[meta.code] = String(meta.label || meta.code).replace(/\s+/g, " ");
-    return acc;
-  },
-  {},
-);
+const STATUS_LABELS = Object.values(LOAN_DISPLAY_STATUS).reduce((acc, meta) => {
+  acc[meta.code] = String(meta.label || meta.code).replace(/\s+/g, " ");
+  return acc;
+}, {});
 
 // ---------------------------------------------------------------------------
 // Sub-components
@@ -136,7 +130,9 @@ function KpiBlock({ label, value, sub, color, tooltip }) {
         </Typography>
         {tooltip && (
           <Tooltip title={tooltip} arrow>
-            <InfoOutlinedIcon sx={{ fontSize: 12, color: sf.sf_textTertiary }} />
+            <InfoOutlinedIcon
+              sx={{ fontSize: 12, color: sf.sf_textTertiary }}
+            />
           </Tooltip>
         )}
       </Box>
@@ -205,19 +201,53 @@ function RollupTable({ rows, labelField, labelHeader }) {
       <Table size="small">
         <TableHead>
           <TableRow sx={{ bgcolor: sf.sf_sectionBg }}>
-            <TableCell sx={{ fontWeight: 700, textTransform: "uppercase", fontSize: "0.7rem" }}>
+            <TableCell
+              sx={{
+                fontWeight: 700,
+                textTransform: "uppercase",
+                fontSize: "0.7rem",
+              }}
+            >
               {labelHeader}
             </TableCell>
-            <TableCell align="right" sx={{ fontWeight: 700, textTransform: "uppercase", fontSize: "0.7rem" }}>
+            <TableCell
+              align="right"
+              sx={{
+                fontWeight: 700,
+                textTransform: "uppercase",
+                fontSize: "0.7rem",
+              }}
+            >
               Loans
             </TableCell>
-            <TableCell align="right" sx={{ fontWeight: 700, textTransform: "uppercase", fontSize: "0.7rem" }}>
+            <TableCell
+              align="right"
+              sx={{
+                fontWeight: 700,
+                textTransform: "uppercase",
+                fontSize: "0.7rem",
+              }}
+            >
               Realized Income
             </TableCell>
-            <TableCell align="right" sx={{ fontWeight: 700, textTransform: "uppercase", fontSize: "0.7rem" }}>
+            <TableCell
+              align="right"
+              sx={{
+                fontWeight: 700,
+                textTransform: "uppercase",
+                fontSize: "0.7rem",
+              }}
+            >
               Modeled Cost
             </TableCell>
-            <TableCell align="right" sx={{ fontWeight: 700, textTransform: "uppercase", fontSize: "0.7rem" }}>
+            <TableCell
+              align="right"
+              sx={{
+                fontWeight: 700,
+                textTransform: "uppercase",
+                fontSize: "0.7rem",
+              }}
+            >
               Net Profit Proxy
             </TableCell>
           </TableRow>
@@ -225,7 +255,11 @@ function RollupTable({ rows, labelField, labelHeader }) {
         <TableBody>
           {rows.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={5} align="center" sx={{ color: "text.secondary" }}>
+              <TableCell
+                colSpan={5}
+                align="center"
+                sx={{ color: "text.secondary" }}
+              >
                 No data
               </TableCell>
             </TableRow>
@@ -234,11 +268,16 @@ function RollupTable({ rows, labelField, labelHeader }) {
               <TableRow key={i} hover>
                 <TableCell>{r[labelField] || "—"}</TableCell>
                 <TableCell align="right">{r.loanCount}</TableCell>
-                <TableCell align="right">{fmtMoney(r.realizedIncome)}</TableCell>
+                <TableCell align="right">
+                  {fmtMoney(r.realizedIncome)}
+                </TableCell>
                 <TableCell align="right">{fmtMoney(r.modeledCost)}</TableCell>
                 <TableCell
                   align="right"
-                  sx={{ color: r.netProfit < 0 ? "error.main" : "success.main", fontWeight: 600 }}
+                  sx={{
+                    color: r.netProfit < 0 ? "error.main" : "success.main",
+                    fontWeight: 600,
+                  }}
                 >
                   {fmtMoney(r.netProfit)}
                 </TableCell>
@@ -270,10 +309,6 @@ export default function ProfitabilityReport() {
   const [selectedBranchId, setSelectedBranchId] = useState(null);
   const [startDate, setStartDate] = useState(firstOfMonth);
   const [endDate, setEndDate] = useState(todayStr);
-
-  const [enrichedData, setEnrichedData] = useState(null); // null = not loaded yet
-  const [enrichLoading, setEnrichLoading] = useState(false);
-  const [enrichError, setEnrichError] = useState(null);
 
   // Cost assumptions (modeled, client-side only)
   const [assumptions, setAssumptions] = useState({ ...DEFAULT_ASSUMPTIONS });
@@ -308,7 +343,9 @@ export default function ProfitabilityReport() {
   }, [summaries]);
 
   const products = useMemo(() => {
-    const set = new Set(summaries.map((s) => s.loanProductName).filter(Boolean));
+    const set = new Set(
+      summaries.map((s) => s.loanProductName).filter(Boolean),
+    );
     return ["ALL", ...Array.from(set).sort()];
   }, [summaries]);
 
@@ -319,109 +356,86 @@ export default function ProfitabilityReport() {
     return ["ALL", ...Array.from(set).sort()];
   }, [summaries]);
 
-  // ── Load enriched data ───────────────────────────────────────────────────
-  const loadEnrichedData = useCallback(async () => {
-    setEnrichLoading(true);
-    setEnrichError(null);
-    try {
-      const client = generateClient();
-      const loanRows = [];
-
-      const relevantSummaries = summaries.filter(
-        (s) => s.displayStatus !== LOAN_DISPLAY_STATUS.VOIDED.code,
-      );
-
-      for (const summary of relevantSummaries) {
-        try {
-          const result = await client.graphql({
-            query: GET_REPORT_LOAN_SOURCE_QUERY,
-            variables: { id: summary.loanID || summary.id },
-          });
-          const loan = result?.data?.getLoan;
-          if (!loan) continue;
-
-          const payments = loan.payments?.items || [];
-          const realized = computeLoanRealizedIncome(payments, startDate, endDate);
-          const cost = computeLoanModeledCost(summary, assumptions, startDate, endDate);
-          const netProfit = realized.total - cost.total;
-
-          loanRows.push({
-            id: summary.loanID || summary.id,
-            loanId: summary.loanID || summary.id,
-            loanNumber: summary.loanNumber || loan.loanNumber || "—",
-            borrowerDisplayName: summary.borrowerDisplayName || "—",
-            branchID: summary.branchID,
-            branchName: branchMap[summary.branchID] || summary.branchID || "—",
-            loanOfficerDisplayName: summary.loanOfficerDisplayName || "—",
-            loanProductName: summary.loanProductName || "—",
-            displayStatus: summary.displayStatus || "—",
-            displayStatusLabel:
-              STATUS_LABELS[summary.displayStatus] || summary.displayStatus || "—",
-            startDate: summary.startDate,
-            startDateFmt: fmtReportDate(summary.startDate),
-            maturityDate: summary.maturityDateEffective,
-            maturityDateFmt: fmtReportDate(summary.maturityDateEffective),
-            loanBalanceAmount: safeNum(summary.loanBalanceAmount),
-            arrearsAmount: safeNum(summary.arrearsAmount),
-            // Realized income (from actual payment allocations)
-            interestCollected: realized.interest,
-            feesCollected: realized.fees,
-            penaltiesCollected: realized.penalties,
-            realizedIncome: realized.total,
-            // Modeled costs (client-side assumptions — not sourced from repo fields)
-            modeledCost: cost.total,
-            modeledOrigination: cost.origination,
-            modeledServicing: cost.servicing,
-            modeledFunding: cost.funding,
-            modeledCredit: cost.credit,
-            // Net profit proxy
-            netProfit,
-            band: profitabilityBand(netProfit, realized.total),
-            // Payment rows for monthly trend
-            paymentRows: realized.paymentRows,
-          });
-        } catch {
-          // Skip individual loan errors — don't abort the full load
-        }
-      }
-
-      setEnrichedData({ loanRows, loadedAt: Date.now() });
-    } catch (err) {
-      console.error("[ProfitabilityReport] load error:", err);
-      setEnrichError("Failed to load payment data. Please try again.");
-    } finally {
-      setEnrichLoading(false);
-    }
-  }, [summaries, branchMap, assumptions, startDate, endDate]);
-
-  // ── Derived loan rows — recompute costs when assumptions change without reload ──
+  // ── Derived loan rows ──────────────────────────────────────────────────────
   const loanRows = useMemo(() => {
-    if (!enrichedData?.loanRows) return [];
-    return enrichedData.loanRows.map((row) => {
-      const cost = computeLoanModeledCost(row, assumptions, startDate, endDate);
-      const netProfit = row.realizedIncome - cost.total;
-      return {
-        ...row,
-        modeledCost: cost.total,
-        modeledOrigination: cost.origination,
-        modeledServicing: cost.servicing,
-        modeledFunding: cost.funding,
-        modeledCredit: cost.credit,
-        netProfit,
-        band: profitabilityBand(netProfit, row.realizedIncome),
-      };
-    });
-  }, [enrichedData, assumptions, startDate, endDate]);
+    return summaries
+      .filter(
+        (summary) => summary.displayStatus !== LOAN_DISPLAY_STATUS.VOIDED.code,
+      )
+      .map((summary) => {
+        const payments = Array.isArray(summary.reportSourcePayments)
+          ? summary.reportSourcePayments
+          : [];
+        const realized = computeLoanRealizedIncome(
+          payments,
+          startDate,
+          endDate,
+        );
+        const cost = computeLoanModeledCost(
+          summary,
+          assumptions,
+          startDate,
+          endDate,
+        );
+        const netProfit = realized.total - cost.total;
+
+        return {
+          id: summary.loanID || summary.id,
+          loanId: summary.loanID || summary.id,
+          loanNumber: summary.loanNumber || "—",
+          borrowerDisplayName: summary.borrowerDisplayName || "—",
+          branchID: summary.branchID,
+          branchName: branchMap[summary.branchID] || summary.branchID || "—",
+          loanOfficerDisplayName: summary.loanOfficerDisplayName || "—",
+          loanProductName: summary.loanProductName || "—",
+          displayStatus: summary.displayStatus || "—",
+          displayStatusLabel:
+            STATUS_LABELS[summary.displayStatus] ||
+            summary.displayStatus ||
+            "—",
+          startDate: summary.startDate,
+          startDateFmt: fmtReportDate(summary.startDate),
+          maturityDate: summary.maturityDateEffective,
+          maturityDateFmt: fmtReportDate(summary.maturityDateEffective),
+          loanBalanceAmount: safeNum(summary.loanBalanceAmount),
+          arrearsAmount: safeNum(summary.arrearsAmount),
+          interestCollected: realized.interest,
+          feesCollected: realized.fees,
+          penaltiesCollected: realized.penalties,
+          realizedIncome: realized.total,
+          modeledCost: cost.total,
+          modeledOrigination: cost.origination,
+          modeledServicing: cost.servicing,
+          modeledFunding: cost.funding,
+          modeledCredit: cost.credit,
+          netProfit,
+          band: profitabilityBand(netProfit, realized.total),
+          paymentRows: realized.paymentRows,
+        };
+      });
+  }, [assumptions, branchMap, endDate, startDate, summaries]);
 
   // ── KPIs ─────────────────────────────────────────────────────────────────
   const kpis = useMemo(() => {
-    if (!enrichedData) return null;
+    if (loading) return null;
     const count = loanRows.length;
-    const outstandingBalance = loanRows.reduce((acc, r) => acc + r.loanBalanceAmount, 0);
-    const interestCollected = loanRows.reduce((acc, r) => acc + r.interestCollected, 0);
+    const outstandingBalance = loanRows.reduce(
+      (acc, r) => acc + r.loanBalanceAmount,
+      0,
+    );
+    const interestCollected = loanRows.reduce(
+      (acc, r) => acc + r.interestCollected,
+      0,
+    );
     const feesCollected = loanRows.reduce((acc, r) => acc + r.feesCollected, 0);
-    const penaltiesCollected = loanRows.reduce((acc, r) => acc + r.penaltiesCollected, 0);
-    const realizedIncome = loanRows.reduce((acc, r) => acc + r.realizedIncome, 0);
+    const penaltiesCollected = loanRows.reduce(
+      (acc, r) => acc + r.penaltiesCollected,
+      0,
+    );
+    const realizedIncome = loanRows.reduce(
+      (acc, r) => acc + r.realizedIncome,
+      0,
+    );
     const modeledCost = loanRows.reduce((acc, r) => acc + r.modeledCost, 0);
     const netProfit = realizedIncome - modeledCost;
     const avgNetProfit = count > 0 ? netProfit / count : 0;
@@ -436,7 +450,7 @@ export default function ProfitabilityReport() {
       netProfit,
       avgNetProfit,
     };
-  }, [enrichedData, loanRows]);
+  }, [loanRows, loading]);
 
   // ── Monthly trend ─────────────────────────────────────────────────────────
   const monthlyTrend = useMemo(
@@ -543,8 +557,16 @@ export default function ProfitabilityReport() {
 
   // ── Rollup tab label config ───────────────────────────────────────────────
   const rollupConfig = {
-    product: { rows: productRollup, labelField: "product", labelHeader: "Product" },
-    officer: { rows: officerRollup, labelField: "officer", labelHeader: "Loan Officer" },
+    product: {
+      rows: productRollup,
+      labelField: "product",
+      labelHeader: "Product",
+    },
+    officer: {
+      rows: officerRollup,
+      labelField: "officer",
+      labelHeader: "Loan Officer",
+    },
     status: { rows: statusRollup, labelField: "status", labelHeader: "Status" },
     branch: { rows: branchRollup, labelField: "branch", labelHeader: "Branch" },
   };
@@ -575,7 +597,6 @@ export default function ProfitabilityReport() {
       selectedBranchId={selectedBranchId}
       onBranchChange={(v) => {
         setSelectedBranchId(v);
-        setEnrichedData(null);
       }}
       startDate={startDate}
       endDate={endDate}
@@ -583,11 +604,10 @@ export default function ProfitabilityReport() {
       onEndDateChange={setEndDate}
       onRefresh={() => {
         refresh();
-        setEnrichedData(null);
       }}
-      loading={loading || enrichLoading}
-      loadError={error || enrichError}
-      onExportCsv={enrichedData ? handleExportCsv : undefined}
+      loading={loading}
+      loadError={error}
+      onExportCsv={loanRows.length ? handleExportCsv : undefined}
     >
       {/* ── Assumptions panel ────────────────────────────────────────────── */}
       <Box
@@ -671,31 +691,6 @@ export default function ProfitabilityReport() {
         </Stack>
       </Box>
 
-      {/* ── Load trigger ────────────────────────────────────────────────── */}
-      {!enrichedData && !enrichLoading && (
-        <Alert
-          severity="info"
-          sx={{ mb: 3 }}
-          action={
-            <Button size="small" variant="contained" onClick={loadEnrichedData}>
-              Load Payment Data
-            </Button>
-          }
-        >
-          Payment allocation data requires fetching raw loan records for the
-          current scope. After loading, the date window and assumption changes
-          are applied client-side without a reload.
-        </Alert>
-      )}
-      {enrichLoading && (
-        <Box sx={{ mb: 3 }}>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-            Loading payment allocations…
-          </Typography>
-          <LinearProgress />
-        </Box>
-      )}
-
       {/* ── KPI blocks ──────────────────────────────────────────────────── */}
       {kpis && (
         <Grid container spacing={1.5} sx={{ mb: 3 }}>
@@ -727,21 +722,24 @@ export default function ProfitabilityReport() {
               value: fmtMoney(kpis.realizedIncome),
               color: "primary.main",
               sub: "Interest + fees + penalties",
-              tooltip: "Actual payment allocations from transaction data. This is sourced data.",
+              tooltip:
+                "Actual payment allocations from transaction data. This is sourced data.",
             },
             {
               label: "Modeled Cost Total",
               value: fmtMoney(kpis.modeledCost),
               color: "warning.main",
               sub: "From assumptions above",
-              tooltip: "Derived from client-side assumption inputs — not sourced from repo fields.",
+              tooltip:
+                "Derived from client-side assumption inputs — not sourced from repo fields.",
             },
             {
               label: "Net Profit Proxy",
               value: fmtMoney(kpis.netProfit),
               color: kpis.netProfit < 0 ? "error.main" : "success.main",
               sub: "Realized income − modeled cost",
-              tooltip: "Modeled output — deduct assumptions from actual income. Not a ledger figure.",
+              tooltip:
+                "Modeled output — deduct assumptions from actual income. Not a ledger figure.",
             },
             {
               label: "Avg Net Profit / Loan",
@@ -757,7 +755,7 @@ export default function ProfitabilityReport() {
         </Grid>
       )}
 
-      {enrichedData && (
+      {loanRows.length > 0 && (
         <>
           <Divider sx={{ mb: 3, borderColor: sf.sf_borderLight }} />
 
@@ -776,7 +774,8 @@ export default function ProfitabilityReport() {
                   mb: 1,
                 }}
               >
-                Monthly Trend — Realized Income vs Modeled Costs vs Net Profit Proxy
+                Monthly Trend — Realized Income vs Modeled Costs vs Net Profit
+                Proxy
               </Typography>
               <Box
                 sx={{
@@ -831,12 +830,20 @@ export default function ProfitabilityReport() {
             >
               Ranked Rollups
             </Typography>
-            <Stack direction="row" spacing={1} sx={{ mb: 1.5 }} flexWrap="wrap" useFlexGap>
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{ mb: 1.5 }}
+              flexWrap="wrap"
+              useFlexGap
+            >
               {[
                 { key: "product", label: "By Product" },
                 { key: "officer", label: "By Officer" },
                 { key: "status", label: "By Status" },
-                ...(scope?.isAdmin ? [{ key: "branch", label: "By Branch" }] : []),
+                ...(scope?.isAdmin
+                  ? [{ key: "branch", label: "By Branch" }]
+                  : []),
               ].map((tab) => (
                 <Button
                   key={tab.key}
@@ -875,7 +882,13 @@ export default function ProfitabilityReport() {
             </Typography>
 
             {/* Exception view tabs */}
-            <Stack direction="row" spacing={1} sx={{ mb: 1.5 }} flexWrap="wrap" useFlexGap>
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{ mb: 1.5 }}
+              flexWrap="wrap"
+              useFlexGap
+            >
               {[
                 { key: "all", label: `All (${loanRows.length})` },
                 { key: "top", label: "Top 20 Profit" },
@@ -967,27 +980,71 @@ export default function ProfitabilityReport() {
             <TableContainer
               component={Paper}
               variant="outlined"
-              sx={{ borderColor: sf.sf_borderLight, maxHeight: 480, overflow: "auto" }}
+              sx={{
+                borderColor: sf.sf_borderLight,
+                maxHeight: 480,
+                overflow: "auto",
+              }}
             >
               <Table size="small" stickyHeader>
                 <TableHead>
                   <TableRow sx={{ bgcolor: sf.sf_sectionBg }}>
                     {[
-                      { key: "borrowerDisplayName", label: "Borrower", numeric: false },
+                      {
+                        key: "borrowerDisplayName",
+                        label: "Borrower",
+                        numeric: false,
+                      },
                       { key: "loanNumber", label: "Loan #", numeric: false },
                       { key: "branchName", label: "Branch", numeric: false },
-                      { key: "loanOfficerDisplayName", label: "Officer", numeric: false },
-                      { key: "loanProductName", label: "Product", numeric: false },
-                      { key: "displayStatusLabel", label: "Status", numeric: false },
+                      {
+                        key: "loanOfficerDisplayName",
+                        label: "Officer",
+                        numeric: false,
+                      },
+                      {
+                        key: "loanProductName",
+                        label: "Product",
+                        numeric: false,
+                      },
+                      {
+                        key: "displayStatusLabel",
+                        label: "Status",
+                        numeric: false,
+                      },
                       { key: "startDate", label: "Date Taken", numeric: false },
-                      { key: "maturityDate", label: "Maturity", numeric: false },
-                      { key: "loanBalanceAmount", label: "Balance", numeric: true },
+                      {
+                        key: "maturityDate",
+                        label: "Maturity",
+                        numeric: false,
+                      },
+                      {
+                        key: "loanBalanceAmount",
+                        label: "Balance",
+                        numeric: true,
+                      },
                       { key: "arrearsAmount", label: "Arrears", numeric: true },
-                      { key: "interestCollected", label: "Interest", numeric: true },
+                      {
+                        key: "interestCollected",
+                        label: "Interest",
+                        numeric: true,
+                      },
                       { key: "feesCollected", label: "Fees", numeric: true },
-                      { key: "penaltiesCollected", label: "Penalties", numeric: true },
-                      { key: "realizedIncome", label: "Realized Income", numeric: true },
-                      { key: "modeledCost", label: "Modeled Cost*", numeric: true },
+                      {
+                        key: "penaltiesCollected",
+                        label: "Penalties",
+                        numeric: true,
+                      },
+                      {
+                        key: "realizedIncome",
+                        label: "Realized Income",
+                        numeric: true,
+                      },
+                      {
+                        key: "modeledCost",
+                        label: "Modeled Cost*",
+                        numeric: true,
+                      },
                       { key: "netProfit", label: "Net Profit*", numeric: true },
                       { key: "band", label: "Band", numeric: false },
                     ].map((col) => (
@@ -1061,7 +1118,10 @@ export default function ProfitabilityReport() {
                         </TableCell>
                         <TableCell
                           align="right"
-                          sx={{ color: r.arrearsAmount > 0 ? "warning.main" : undefined }}
+                          sx={{
+                            color:
+                              r.arrearsAmount > 0 ? "warning.main" : undefined,
+                          }}
                         >
                           {fmtMoney(r.arrearsAmount)}
                         </TableCell>
@@ -1084,7 +1144,8 @@ export default function ProfitabilityReport() {
                           align="right"
                           sx={{
                             fontWeight: 700,
-                            color: r.netProfit < 0 ? "error.main" : "success.main",
+                            color:
+                              r.netProfit < 0 ? "error.main" : "success.main",
                           }}
                         >
                           {fmtMoney(r.netProfit)}
@@ -1129,9 +1190,9 @@ export default function ProfitabilityReport() {
               variant="caption"
               sx={{ color: sf.sf_textTertiary, mt: 0.5, display: "block" }}
             >
-              * Modeled Cost and Net Profit Proxy are client-side estimates derived from
-              the assumption inputs above — they are not sourced from repo ledger or
-              cost-of-funds data.
+              * Modeled Cost and Net Profit Proxy are client-side estimates
+              derived from the assumption inputs above — they are not sourced
+              from repo ledger or cost-of-funds data.
             </Typography>
           </Box>
         </>

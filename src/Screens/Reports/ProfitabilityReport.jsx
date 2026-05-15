@@ -18,7 +18,8 @@
  * throughout the UI.
  */
 
-import React, { useState, useMemo, useContext } from "react";
+import React, { useState, useMemo, useContext, useEffect } from "react";
+import { generateClient } from "aws-amplify/api";
 import {
   Box,
   Typography,
@@ -51,6 +52,7 @@ import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { BarChart } from "@mui/x-charts/BarChart";
 import { UserContext } from "../../App";
 import { getPresetRange } from "../../ModelAssets/DateFilters";
+import { GET_LOAN_STATEMENT_READY_QUERY } from "../../Models/Loans/loanDataQueries";
 import ReportShell from "./ReportShell";
 import { useReportData } from "./useReportData";
 import {
@@ -305,6 +307,8 @@ export default function ProfitabilityReport() {
   const [selectedBranchId, setSelectedBranchId] = useState(null);
   const [startDate, setStartDate] = useState(defaultDateRange?.from || "");
   const [endDate, setEndDate] = useState(defaultDateRange?.to || "");
+  const [paymentsByLoanId, setPaymentsByLoanId] = useState({});
+  const [paymentsLoading, setPaymentsLoading] = useState(false);
 
   // Cost assumptions (modeled, client-side only)
   const [assumptions, setAssumptions] = useState({ ...DEFAULT_ASSUMPTIONS });
@@ -352,6 +356,78 @@ export default function ProfitabilityReport() {
     return ["ALL", ...Array.from(set).sort()];
   }, [summaries]);
 
+  useEffect(() => {
+    let isCancelled = false;
+
+    const relevantSummaries = summaries.filter(
+      (summary) => summary.displayStatus !== LOAN_DISPLAY_STATUS.VOIDED.code,
+    );
+
+    if (!relevantSummaries.length) {
+      setPaymentsByLoanId({});
+      setPaymentsLoading(false);
+      return () => {
+        isCancelled = true;
+      };
+    }
+
+    const loadPayments = async () => {
+      setPaymentsLoading(true);
+      const client = generateClient();
+
+      const entries = await Promise.all(
+        relevantSummaries.map(async (summary) => {
+          const loanId = summary.loanID || summary.id;
+          const fallbackPayments = Array.isArray(summary.reportSourcePayments)
+            ? summary.reportSourcePayments.filter(Boolean)
+            : [];
+
+          if (!loanId) {
+            return [summary.id || "unknown", fallbackPayments];
+          }
+
+          try {
+            const result = await client.graphql({
+              query: GET_LOAN_STATEMENT_READY_QUERY,
+              variables: { id: loanId },
+            });
+            const payments = Array.isArray(
+              result?.data?.getLoan?.payments?.items,
+            )
+              ? result.data.getLoan.payments.items.filter(Boolean)
+              : [];
+            return [loanId, payments];
+          } catch (loadError) {
+            console.error(
+              `[ProfitabilityReport] failed to refresh payments for loan ${loanId}:`,
+              loadError,
+            );
+            return [loanId, fallbackPayments];
+          }
+        }),
+      );
+
+      if (isCancelled) {
+        return;
+      }
+
+      setPaymentsByLoanId(Object.fromEntries(entries));
+      setPaymentsLoading(false);
+    };
+
+    loadPayments().catch((loadError) => {
+      if (isCancelled) {
+        return;
+      }
+      console.error("[ProfitabilityReport] payment refresh failed:", loadError);
+      setPaymentsLoading(false);
+    });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [summaries]);
+
   // ── Derived loan rows ──────────────────────────────────────────────────────
   const loanRows = useMemo(() => {
     return summaries
@@ -359,9 +435,12 @@ export default function ProfitabilityReport() {
         (summary) => summary.displayStatus !== LOAN_DISPLAY_STATUS.VOIDED.code,
       )
       .map((summary) => {
-        const payments = Array.isArray(summary.reportSourcePayments)
-          ? summary.reportSourcePayments
-          : [];
+        const loanId = summary.loanID || summary.id;
+        const payments = Array.isArray(paymentsByLoanId[loanId])
+          ? paymentsByLoanId[loanId]
+          : Array.isArray(summary.reportSourcePayments)
+            ? summary.reportSourcePayments
+            : [];
         const realized = computeLoanRealizedIncome(
           payments,
           startDate,
@@ -409,7 +488,7 @@ export default function ProfitabilityReport() {
           paymentRows: realized.paymentRows,
         };
       });
-  }, [assumptions, branchMap, endDate, startDate, summaries]);
+  }, [assumptions, branchMap, endDate, paymentsByLoanId, startDate, summaries]);
 
   // ── KPIs ─────────────────────────────────────────────────────────────────
   const kpis = useMemo(() => {
@@ -606,6 +685,8 @@ export default function ProfitabilityReport() {
       loadError={error}
       onExportCsv={loanRows.length ? handleExportCsv : undefined}
     >
+      {paymentsLoading && <LinearProgress sx={{ mb: 2 }} />}
+
       {/* ── Assumptions panel ────────────────────────────────────────────── */}
       <Box
         sx={{

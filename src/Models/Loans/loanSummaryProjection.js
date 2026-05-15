@@ -185,18 +185,46 @@ const getSortedSchedule = (loan) =>
       new Date(left?.dueDate || 0).getTime() - new Date(right?.dueDate || 0).getTime(),
   );
 
-export const getTotalPaid = (loan) =>
-  loan?.totalPaidComputed != null
-    ? loan.totalPaidComputed
-    : computeTotalPaid(loan?.payments);
+const getDerivedStatementTotals = (loan) => {
+  if (loan?.derivedStatement?.totals) {
+    return loan.derivedStatement.totals;
+  }
+
+  try {
+    return buildStatementLedger(loan)?.totals || null;
+  } catch {
+    return null;
+  }
+};
+
+export const getTotalPaid = (loan) => {
+  if (loan?.totalPaidComputed != null) {
+    return loan.totalPaidComputed;
+  }
+
+  const derivedTotals = getDerivedStatementTotals(loan);
+  if (derivedTotals?.totalPaymentsApplied != null) {
+    return derivedTotals.totalPaymentsApplied;
+  }
+
+  return computeTotalPaid(loan?.payments);
+};
 
 export const getBalance = (loan) => {
   if (loan?.amountDueComputed != null) return loan.amountDueComputed;
+  const derivedTotals = getDerivedStatementTotals(loan);
+  if (derivedTotals?.totalRemaining != null) {
+    return derivedTotals.totalRemaining;
+  }
   return normalizeMoneyValue(loan?.principal) - getTotalPaid(loan);
 };
 
 export const getPrincipalBalance = (loan) => {
   if (loan?.loanBalanceComputed != null) return loan.loanBalanceComputed;
+  const derivedTotals = getDerivedStatementTotals(loan);
+  if (derivedTotals?.remainingPrincipal != null) {
+    return derivedTotals.remainingPrincipal;
+  }
   return Math.max(normalizeMoneyValue(loan?.principal) - getTotalPaid(loan), 0);
 };
 

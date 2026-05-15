@@ -32,7 +32,12 @@ import LoanInfoPopup from "./LoanInfoPopup";
 import ManagePaymentsPopup from "../../Payments/ManagePaymentsPopup";
 import LoanStatementPopup from "../LoanStatements/LoanStatementPopup";
 import { buildLoanDisplayName } from "../loanDisplayHelpers";
-import { LOAN_DISPLAY_STATUS } from "../loanSummaryProjection";
+import {
+  LOAN_DISPLAY_STATUS,
+  getBalance,
+  getPrincipalBalance,
+  getTotalPaid,
+} from "../loanSummaryProjection";
 import { LoanExplorerContext } from "./LoanExplorerContext";
 import { downloadFile, toCsv } from "../../../Screens/Reports/reportUtils";
 
@@ -67,33 +72,6 @@ const normalizeMoneyValue = (value) => {
       : Number(value);
   return Number.isFinite(numericValue) ? numericValue : 0;
 };
-
-const computeTotalPaid = (payments) => {
-  if (!payments?.items?.length) return 0;
-  return payments.items
-    .filter((p) => {
-      const st = (p.paymentStatusEnum || p.status || "").toUpperCase();
-      return st !== "REVERSED" && st !== "VOIDED" && st !== "FAILED";
-    })
-    .reduce((sum, p) => sum + normalizeMoneyValue(p?.amount), 0);
-};
-
-const getBalance = (loan) => {
-  if (loan?.amountDueComputed != null) return loan.amountDueComputed;
-  const paid = computeTotalPaid(loan.payments);
-  return (loan.principal || 0) - paid;
-};
-
-const getPrincipalBalance = (loan) => {
-  if (loan?.loanBalanceComputed != null) return loan.loanBalanceComputed;
-  const paid = computeTotalPaid(loan.payments);
-  return Math.max((loan.principal || 0) - paid, 0);
-};
-
-const getTotalPaid = (loan) =>
-  loan?.totalPaidComputed != null
-    ? loan.totalPaidComputed
-    : computeTotalPaid(loan?.payments);
 
 const formatRateInterval = (interval) => {
   if (!interval) return "month";
@@ -754,7 +732,6 @@ export default function LoansDisplay() {
             "N/A";
           const balance = getBalance(loan);
           const totalPaid = getTotalPaid(loan);
-          const principalBal = getPrincipalBalance(loan);
           return (
             <Box
               sx={{
@@ -779,7 +756,7 @@ export default function LoansDisplay() {
                 daysLeftIsOverdue={daysLeftIsOverdue}
                 totalPaid={totalPaid}
                 amountDue={balance}
-                loanBalance={principalBal}
+                loanBalance={balance}
                 productName={loan.loanProduct?.name || "N/A"}
                 officerName={officerName}
                 statusColors={statusColors}
@@ -1108,13 +1085,13 @@ export default function LoansDisplay() {
         flex: 0.85,
         minWidth: 120,
         type: "number",
-        valueGetter: (value, row) => getPrincipalBalance(row),
+        valueGetter: (value, row) => getBalance(row),
         renderCell: (params) => {
-          const principalBal = params.value;
+          const loanBalance = params.value;
           return (
             <Box sx={STACKED_CELL_SX}>
               <MoneyText
-                value={principalBal}
+                value={loanBalance}
                 numberSx={getMoneyTextSx(sf.sf_textPrimary)}
               />
               <SFClickableText
@@ -1363,7 +1340,7 @@ export default function LoansDisplay() {
         amountDue: formatCsvMoney(getBalance(loan)),
         status: statusMeta.label,
         totalPaid: formatCsvMoney(getTotalPaid(loan)),
-        loanBalance: formatCsvMoney(getPrincipalBalance(loan)),
+        loanBalance: formatCsvMoney(getBalance(loan)),
         loanOfficer:
           [officer.firstName, officer.lastName].filter(Boolean).join(" ") ||
           officer.email ||

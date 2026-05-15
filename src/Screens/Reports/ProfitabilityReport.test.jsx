@@ -17,6 +17,10 @@ import { UserContext } from "../../App";
 import { themeSettings } from "../../theme";
 import ProfitabilityReport from "./ProfitabilityReport";
 
+jest.mock("aws-amplify/api", () => ({
+  generateClient: jest.fn(),
+}));
+
 // ---------------------------------------------------------------------------
 // Mocks
 // ---------------------------------------------------------------------------
@@ -73,6 +77,15 @@ jest.mock("@mui/x-charts/BarChart", () => ({
 const {
   fetchAllReportLoanSummariesForBranch: mockFetchSummaries,
 } = require("./reportLoanData");
+const { generateClient } = require("aws-amplify/api");
+
+const mockGraphql = jest.fn();
+
+beforeEach(() => {
+  generateClient.mockReturnValue({ graphql: mockGraphql });
+  mockGraphql.mockReset();
+  mockGraphql.mockResolvedValue({ data: { getLoan: null } });
+});
 
 function renderReport(userDetails) {
   const theme = createTheme(themeSettings("light"));
@@ -107,7 +120,7 @@ const SAMPLE_SUMMARIES = [
     reportSourcePayments: [
       {
         id: "pay-1",
-        paymentDate: "2026-01-15",
+        paymentDate: "2026-04-15",
         status: "COMPLETED",
         paymentStatusEnum: "COMPLETED",
         amount: 500,
@@ -160,6 +173,16 @@ describe("ProfitabilityReport — main rendered state", () => {
 
   it("loads profitability data with the report and does not require a second payment fetch", async () => {
     mockFetchSummaries.mockResolvedValue(SAMPLE_SUMMARIES);
+    mockGraphql.mockResolvedValue({
+      data: {
+        getLoan: {
+          id: "loan-1",
+          payments: {
+            items: SAMPLE_SUMMARIES[0].reportSourcePayments,
+          },
+        },
+      },
+    });
 
     renderReport(BRANCH_USER);
 
@@ -184,6 +207,16 @@ describe("ProfitabilityReport — main rendered state", () => {
 
   it("shows KPI blocks and detail grid after the initial report load", async () => {
     mockFetchSummaries.mockResolvedValue(SAMPLE_SUMMARIES);
+    mockGraphql.mockResolvedValue({
+      data: {
+        getLoan: {
+          id: "loan-1",
+          payments: {
+            items: SAMPLE_SUMMARIES[0].reportSourcePayments,
+          },
+        },
+      },
+    });
 
     renderReport(BRANCH_USER);
 
@@ -198,6 +231,55 @@ describe("ProfitabilityReport — main rendered state", () => {
       0,
     );
   });
+
+  it("uses fresh statement-ready loan payments instead of stale summary payment copies", async () => {
+    mockFetchSummaries.mockResolvedValue([
+      {
+        ...SAMPLE_SUMMARIES[0],
+        reportSourcePayments: [
+          {
+            ...SAMPLE_SUMMARIES[0].reportSourcePayments[0],
+            amountAllocatedToInterest: 5,
+            amountAllocatedToFees: 0,
+          },
+        ],
+      },
+    ]);
+    mockGraphql.mockResolvedValue({
+      data: {
+        getLoan: {
+          id: "loan-1",
+          payments: {
+            items: [
+              {
+                id: "pay-1",
+                paymentDate: "2026-04-15",
+                status: "COMPLETED",
+                paymentStatusEnum: "COMPLETED",
+                amount: 500,
+                amountAllocatedToInterest: 80,
+                amountAllocatedToFees: 20,
+                amountAllocatedToPenalty: 0,
+                amountAllocatedToPrincipal: 400,
+              },
+            ],
+          },
+        },
+      },
+    });
+
+    renderReport(BRANCH_USER);
+
+    await waitFor(() => {
+      expect(screen.getAllByText("80.00").length).toBeGreaterThan(0);
+    });
+    expect(screen.getAllByText("100.00").length).toBeGreaterThan(0);
+    expect(mockGraphql).toHaveBeenCalledWith(
+      expect.objectContaining({
+        variables: { id: "loan-1" },
+      }),
+    );
+  });
 });
 
 describe("ProfitabilityReport — assumption-driven recalculation", () => {
@@ -207,6 +289,16 @@ describe("ProfitabilityReport — assumption-driven recalculation", () => {
 
   it("recalculates net profit when servicing cost assumption is changed", async () => {
     mockFetchSummaries.mockResolvedValue(SAMPLE_SUMMARIES);
+    mockGraphql.mockResolvedValue({
+      data: {
+        getLoan: {
+          id: "loan-1",
+          payments: {
+            items: SAMPLE_SUMMARIES[0].reportSourcePayments,
+          },
+        },
+      },
+    });
 
     renderReport(BRANCH_USER);
 

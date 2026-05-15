@@ -763,7 +763,7 @@ export default function CustomerLoans() {
         flex: 0.85,
         minWidth: 125,
         type: "number",
-        valueGetter: (value, row) => getPrincipalBalance(row),
+        valueGetter: (value, row) => getBalance(row),
         renderCell: (params) => (
           <Box sx={STACKED_CELL_SX}>
             <MoneyText

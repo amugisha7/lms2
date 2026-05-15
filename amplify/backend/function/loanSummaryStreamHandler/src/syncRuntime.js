@@ -249,7 +249,7 @@ const fetchLoanSource = async (loanId) => {
 
   const institutionId =
     loan.institutionID ||
-    branch?.institutionBranchesId ||
+    branch?.institutionID ||
     branch?.institutionID ||
     null;
   const institution = await getItemById("institution", institutionId);

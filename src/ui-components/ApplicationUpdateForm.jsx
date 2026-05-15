@@ -41,6 +41,7 @@ export default function ApplicationUpdateForm(props) {
     applicationDate: "",
     status: "",
     applicationRecord: "",
+    branchID: "",
     customFieldsData: "",
     customApplicationDetails: "",
   };
@@ -66,6 +67,7 @@ export default function ApplicationUpdateForm(props) {
   const [applicationRecord, setApplicationRecord] = React.useState(
     initialValues.applicationRecord
   );
+  const [branchID, setBranchID] = React.useState(initialValues.branchID);
   const [customFieldsData, setCustomFieldsData] = React.useState(
     initialValues.customFieldsData
   );
@@ -90,6 +92,7 @@ export default function ApplicationUpdateForm(props) {
         ? cleanValues.applicationRecord
         : JSON.stringify(cleanValues.applicationRecord)
     );
+    setBranchID(cleanValues.branchID);
     setCustomFieldsData(
       typeof cleanValues.customFieldsData === "string" ||
         cleanValues.customFieldsData === null
@@ -131,6 +134,7 @@ export default function ApplicationUpdateForm(props) {
     applicationDate: [],
     status: [],
     applicationRecord: [{ type: "JSON" }],
+    branchID: [],
     customFieldsData: [{ type: "JSON" }],
     customApplicationDetails: [{ type: "JSON" }],
   };
@@ -169,6 +173,7 @@ export default function ApplicationUpdateForm(props) {
           applicationDate: applicationDate ?? null,
           status: status ?? null,
           applicationRecord: applicationRecord ?? null,
+          branchID: branchID ?? null,
           customFieldsData: customFieldsData ?? null,
           customApplicationDetails: customApplicationDetails ?? null,
         };
@@ -240,6 +245,7 @@ export default function ApplicationUpdateForm(props) {
               applicationDate,
               status,
               applicationRecord,
+              branchID,
               customFieldsData,
               customApplicationDetails,
             };
@@ -274,6 +280,7 @@ export default function ApplicationUpdateForm(props) {
               applicationDate,
               status,
               applicationRecord,
+              branchID,
               customFieldsData,
               customApplicationDetails,
             };
@@ -308,6 +315,7 @@ export default function ApplicationUpdateForm(props) {
               applicationDate,
               status,
               applicationRecord,
+              branchID,
               customFieldsData,
               customApplicationDetails,
             };
@@ -348,6 +356,7 @@ export default function ApplicationUpdateForm(props) {
               applicationDate,
               status,
               applicationRecord,
+              branchID,
               customFieldsData,
               customApplicationDetails,
             };
@@ -391,6 +400,7 @@ export default function ApplicationUpdateForm(props) {
               applicationDate,
               status,
               applicationRecord,
+              branchID,
               customFieldsData,
               customApplicationDetails,
             };
@@ -427,6 +437,7 @@ export default function ApplicationUpdateForm(props) {
               applicationDate,
               status,
               applicationRecord,
+              branchID,
               customFieldsData,
               customApplicationDetails,
             };
@@ -500,6 +511,7 @@ export default function ApplicationUpdateForm(props) {
               applicationDate: value,
               status,
               applicationRecord,
+              branchID,
               customFieldsData,
               customApplicationDetails,
             };
@@ -534,6 +546,7 @@ export default function ApplicationUpdateForm(props) {
               applicationDate,
               status: value,
               applicationRecord,
+              branchID,
               customFieldsData,
               customApplicationDetails,
             };
@@ -568,6 +581,7 @@ export default function ApplicationUpdateForm(props) {
               applicationDate,
               status,
               applicationRecord: value,
+              branchID,
               customFieldsData,
               customApplicationDetails,
             };
@@ -586,6 +600,41 @@ export default function ApplicationUpdateForm(props) {
         hasError={errors.applicationRecord?.hasError}
         {...getOverrideProps(overrides, "applicationRecord")}
       ></TextAreaField>
+      <TextField
+        label="Branch id"
+        isRequired={false}
+        isReadOnly={false}
+        value={branchID}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              name,
+              description,
+              applicationNumber,
+              requestedPrincipalAmount,
+              requestedTermMonths,
+              requestedFrequency,
+              applicationDate,
+              status,
+              applicationRecord,
+              branchID: value,
+              customFieldsData,
+              customApplicationDetails,
+            };
+            const result = onChange(modelFields);
+            value = result?.branchID ?? value;
+          }
+          if (errors.branchID?.hasError) {
+            runValidationTasks("branchID", value);
+          }
+          setBranchID(value);
+        }}
+        onBlur={() => runValidationTasks("branchID", branchID)}
+        errorMessage={errors.branchID?.errorMessage}
+        hasError={errors.branchID?.hasError}
+        {...getOverrideProps(overrides, "branchID")}
+      ></TextField>
       <TextAreaField
         label="Custom fields data"
         isRequired={false}
@@ -604,6 +653,7 @@ export default function ApplicationUpdateForm(props) {
               applicationDate,
               status,
               applicationRecord,
+              branchID,
               customFieldsData: value,
               customApplicationDetails,
             };
@@ -638,6 +688,7 @@ export default function ApplicationUpdateForm(props) {
               applicationDate,
               status,
               applicationRecord,
+              branchID,
               customFieldsData,
               customApplicationDetails: value,
             };

@@ -117,8 +117,8 @@ function App({ signOut, user }) {
                 userPermissions
                 createdAt
                 updatedAt
-                institutionUsersId
-                branchUsersId
+                institutionID
+                branchID
                 branch {
                   id
                   name
@@ -127,7 +127,7 @@ function App({ signOut, user }) {
                   status
                   createdAt
                   updatedAt
-                  institutionBranchesId
+                  institutionID
                 }
                 institution {
                   id
@@ -272,7 +272,7 @@ function App({ signOut, user }) {
         status
         createdAt
         updatedAt
-        institutionBranchesId
+        institutionID
         __typename
       }
       userNotifications {
@@ -297,8 +297,8 @@ function App({ signOut, user }) {
       }
       createdAt
       updatedAt
-      institutionUsersId
-      branchUsersId
+      institutionID
+      branchID
       __typename
     }
   }

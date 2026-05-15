@@ -85,7 +85,7 @@ export const buildLoanProductInput = (values, userDetails) => {
   };
 
   return {
-    institutionLoanProductsId: userDetails.institutionUsersId,
+    institutionLoanProductsId: userDetails.institutionID,
     name: values.name,
     status: values.status || "Active",
     description: "",

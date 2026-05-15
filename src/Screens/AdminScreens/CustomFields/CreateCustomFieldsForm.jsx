@@ -53,7 +53,7 @@ export default function CreateCustomFieldsForm(props) {
   const [optionsList, setOptionsList] = React.useState([]);
 
   const client = generateClient();
-  const branchId = userDetails?.branchUsersId;
+  const branchId = userDetails?.branchID;
 
   const formik = useFormik({
     initialValues: {
@@ -89,7 +89,7 @@ export default function CreateCustomFieldsForm(props) {
           required: values.required,
           branchCustomFormFieldsId: branchId,
           institutionCustomFormFieldsId:
-            userDetails?.institutionUsersId || null,
+            userDetails?.institutionID || null,
         };
         // console.log("input::: ", input);
 

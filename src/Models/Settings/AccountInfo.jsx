@@ -62,9 +62,9 @@ const AccountInfo = () => {
     dateOfBirth: userDetails?.dateOfBirth || "",
     nationalID: userDetails?.nationalID || "",
     institutionName: userDetails?.institution?.name || "",
-    institutionUsersId: userDetails?.institutionUsersId || "",
+    institutionID: userDetails?.institutionID || "",
     branchName: userDetails?.branch?.name || "",
-    branchUsersId: userDetails?.branchUsersId || "",
+    branchID: userDetails?.branchID || "",
     id: userDetails?.id || "",
     status: userDetails?.status || "",
     createdAt: userDetails?.createdAt

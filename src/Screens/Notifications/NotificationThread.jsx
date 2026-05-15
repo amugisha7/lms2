@@ -84,8 +84,8 @@ const NotificationThread = ({ notification, onBack, onNotificationAction }) => {
             userType
             status
             description
-            institutionUsersId
-            branchUsersId
+            institutionID
+            branchID
             customFieldsData
           }
         }
@@ -156,7 +156,7 @@ const NotificationThread = ({ notification, onBack, onNotificationAction }) => {
             status: "unread",
             senderUserId: user.userId, // The admin is the sender
             recipientUserId: senderUserId, // The original user is the recipient
-            institutionMessagesId: user.institutionUsersId,
+            institutionMessagesId: user.institutionID,
           },
         },
       });

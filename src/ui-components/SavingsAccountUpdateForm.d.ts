@@ -25,6 +25,7 @@ export declare type SavingsAccountUpdateFormInputValues = {
     accountNumber?: string;
     balance?: number;
     status?: string;
+    branchID?: string;
     lockedAmount?: number;
     lockedForLoanID?: string;
     customSavingsAccountDetails?: string;
@@ -33,6 +34,7 @@ export declare type SavingsAccountUpdateFormValidationValues = {
     accountNumber?: ValidationFunction<string>;
     balance?: ValidationFunction<number>;
     status?: ValidationFunction<string>;
+    branchID?: ValidationFunction<string>;
     lockedAmount?: ValidationFunction<number>;
     lockedForLoanID?: ValidationFunction<string>;
     customSavingsAccountDetails?: ValidationFunction<string>;
@@ -43,6 +45,7 @@ export declare type SavingsAccountUpdateFormOverridesProps = {
     accountNumber?: PrimitiveOverrideProps<TextFieldProps>;
     balance?: PrimitiveOverrideProps<TextFieldProps>;
     status?: PrimitiveOverrideProps<TextFieldProps>;
+    branchID?: PrimitiveOverrideProps<TextFieldProps>;
     lockedAmount?: PrimitiveOverrideProps<TextFieldProps>;
     lockedForLoanID?: PrimitiveOverrideProps<TextFieldProps>;
     customSavingsAccountDetails?: PrimitiveOverrideProps<TextAreaFieldProps>;

@@ -31,8 +31,8 @@ export const fetchUserById = async (userId) => {
         description
         customFieldsData
         userDocuments
-        institutionUsersId
-        branchUsersId
+        institutionID
+        branchID
         createdAt
         updatedAt
       }
@@ -91,8 +91,8 @@ export const updateUserById = async (userId, updateData) => {
         userPermissions
         description
         customFieldsData
-        institutionUsersId
-        branchUsersId
+        institutionID
+        branchID
         createdAt
         updatedAt
       }

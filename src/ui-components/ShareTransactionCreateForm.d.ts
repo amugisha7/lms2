@@ -26,6 +26,7 @@ export declare type ShareTransactionCreateFormInputValues = {
     numberOfShares?: number;
     amount?: number;
     date?: string;
+    branchID?: string;
     customShareTransactionDetails?: string;
 };
 export declare type ShareTransactionCreateFormValidationValues = {
@@ -33,6 +34,7 @@ export declare type ShareTransactionCreateFormValidationValues = {
     numberOfShares?: ValidationFunction<number>;
     amount?: ValidationFunction<number>;
     date?: ValidationFunction<string>;
+    branchID?: ValidationFunction<string>;
     customShareTransactionDetails?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
@@ -42,6 +44,7 @@ export declare type ShareTransactionCreateFormOverridesProps = {
     numberOfShares?: PrimitiveOverrideProps<TextFieldProps>;
     amount?: PrimitiveOverrideProps<TextFieldProps>;
     date?: PrimitiveOverrideProps<TextFieldProps>;
+    branchID?: PrimitiveOverrideProps<TextFieldProps>;
     customShareTransactionDetails?: PrimitiveOverrideProps<TextAreaFieldProps>;
 } & EscapeHatchProps;
 export declare type ShareTransactionCreateFormProps = React.PropsWithChildren<{

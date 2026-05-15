@@ -25,11 +25,11 @@
         },
         "loanSummaryScheduledRefresh": {
           "deploymentBucketName": "amplify-lms2-dev-b93de-deployment",
-          "s3Key": "amplify-builds/loanSummaryScheduledRefresh-5173475a4b4978336d39-build.zip"
+          "s3Key": "amplify-builds/loanSummaryScheduledRefresh-514d4f56704e506d4247-build.zip"
         },
         "loanSummaryStreamHandler": {
           "deploymentBucketName": "amplify-lms2-dev-b93de-deployment",
-          "s3Key": "amplify-builds/loanSummaryStreamHandler-6857522b783061707952-build.zip"
+          "s3Key": "amplify-builds/loanSummaryStreamHandler-546f635835616430396b-build.zip"
         }
       },
       "storage": {

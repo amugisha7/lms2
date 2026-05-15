@@ -25,12 +25,14 @@ export declare type ShareAccountCreateFormInputValues = {
     numberOfShares?: number;
     shareValue?: number;
     totalValue?: number;
+    branchID?: string;
     customShareAccountDetails?: string;
 };
 export declare type ShareAccountCreateFormValidationValues = {
     numberOfShares?: ValidationFunction<number>;
     shareValue?: ValidationFunction<number>;
     totalValue?: ValidationFunction<number>;
+    branchID?: ValidationFunction<string>;
     customShareAccountDetails?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
@@ -39,6 +41,7 @@ export declare type ShareAccountCreateFormOverridesProps = {
     numberOfShares?: PrimitiveOverrideProps<TextFieldProps>;
     shareValue?: PrimitiveOverrideProps<TextFieldProps>;
     totalValue?: PrimitiveOverrideProps<TextFieldProps>;
+    branchID?: PrimitiveOverrideProps<TextFieldProps>;
     customShareAccountDetails?: PrimitiveOverrideProps<TextAreaFieldProps>;
 } & EscapeHatchProps;
 export declare type ShareAccountCreateFormProps = React.PropsWithChildren<{

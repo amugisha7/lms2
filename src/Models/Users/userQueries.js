@@ -2,7 +2,7 @@
 export const LIST_USERS_QUERY = `
   query ListUsers($institutionId: ID!, $nextToken: String) {
     listUsers(
-      filter: { institutionUsersId: { eq: $institutionId } }
+      filter: { institutionID: { eq: $institutionId } }
       limit: 100
       nextToken: $nextToken
     ) {

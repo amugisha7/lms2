@@ -7,7 +7,7 @@ import { resolveEmployeeIdForUser } from "../../Employees/employeeHelpers";
 const LIST_ACCOUNTS_MINIMAL_QUERY = `
   query ListAccounts($institutionId: ID!, $nextToken: String) {
     listAccounts(
-      filter: { institutionAccountsId: { eq: $institutionId } }
+      filter: { institutionID: { eq: $institutionId } }
       limit: 100
       nextToken: $nextToken
     ) {
@@ -44,7 +44,7 @@ const LIST_BORROWERS_QUERY = `
 const LIST_BRANCHES_QUERY = `
   query ListBranches($institutionId: ID!, $nextToken: String) {
     listBranches(
-      filter: { institutionBranchesId: { eq: $institutionId } }
+      filter: { institutionID: { eq: $institutionId } }
       limit: 100
       nextToken: $nextToken
     ) {
@@ -453,19 +453,19 @@ export const createLoanWithSchedule = async (values, userDetails) => {
     values?.borrowerBranchID || values?.borrowerObj?.branchBorrowersId || null;
   const actorEmployeeId = await resolveEmployeeIdForUser({
     userDetails,
-    branchId: borrowerBranchId || userDetails?.branchUsersId || null,
+    branchId: borrowerBranchId || userDetails?.branchID || null,
   });
   const loanOfficerEmployeeId = await resolveEmployeeIdForUser({
     userDetails,
     preferredEmployeeId: values?.employeeId || values?.assignedToEmployeeID,
-    branchId: borrowerBranchId || userDetails?.branchUsersId || null,
+    branchId: borrowerBranchId || userDetails?.branchID || null,
   });
   
   // 1. Prepare Loan Input
   const loanInput = {
     loanNumber: `LN-${Date.now()}`,
     borrowerID: borrowerId,
-    branchID: borrowerBranchId || userDetails?.branchUsersId || null,
+    branchID: borrowerBranchId || userDetails?.branchID || null,
     ...(values?.loanProduct ? { loanProductID: values.loanProduct } : {}),
     principal: Number(values?.principalAmount),
     interestRate: Number(values?.interestRate),
@@ -579,7 +579,7 @@ export const buildLoanInput = (values, userDetails) => ({
   branchID:
     values.borrowerBranchID ||
     values.borrowerObj?.branchBorrowersId ||
-    userDetails?.branchUsersId ||
+    userDetails?.branchID ||
     null,
   ...(values.loanProduct ? { loanProductID: values.loanProduct } : {}),
   principal: values.principalAmount ? Number(values.principalAmount) : null,
@@ -601,7 +601,7 @@ export const fetchInstitutionAdmins = async (institutionId) => {
     query ListUsers($institutionId: ID!, $nextToken: String) {
       listUsers(
         filter: {
-          institutionUsersId: { eq: $institutionId }
+          institutionID: { eq: $institutionId }
           userType: { eq: "admin" }
         }
         limit: 100

@@ -113,7 +113,7 @@ const useBranchEmployees = (branchId, userDetails) => {
           listEmployeesByBranch(branchId),
           getDefaultEmployeeForUserContext({
             ...userDetails,
-            branchUsersId: branchId,
+            branchID: branchId,
           }),
         ]);
 

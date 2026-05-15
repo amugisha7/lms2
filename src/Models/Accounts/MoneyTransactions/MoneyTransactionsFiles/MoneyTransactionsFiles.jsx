@@ -148,7 +148,7 @@ const MoneyTransactionsFiles = ({
           status: "active",
           // Link to branch if available in transaction or user details
           branchDocumentsId:
-            transaction.account?.branchAccountsId || userDetails?.branchUsersId,
+            transaction.account?.branchAccountsId || userDetails?.branchID,
           createdByEmployeeID: userDetails?.id, // Assuming user is an employee
         };
 
@@ -232,7 +232,7 @@ const MoneyTransactionsFiles = ({
           contentType: "link", // Custom type for link
           status: "active",
           branchDocumentsId:
-            transaction.account?.branchAccountsId || userDetails?.branchUsersId,
+            transaction.account?.branchAccountsId || userDetails?.branchID,
           createdByEmployeeID: userDetails?.id,
         };
 

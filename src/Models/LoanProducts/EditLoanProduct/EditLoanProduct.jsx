@@ -383,11 +383,11 @@ const EditLoanProduct = forwardRef(
 
     useEffect(() => {
       const fetchData = async () => {
-        if (!editMode || !userDetails?.institutionUsersId) return;
+        if (!editMode || !userDetails?.institutionID) return;
 
         try {
           const { branches: fetchedBranches, loanFees: fetchedFees } =
-            await fetchBranchesAndFees(userDetails.institutionUsersId);
+            await fetchBranchesAndFees(userDetails.institutionID);
           setBranches(fetchedBranches);
           setLoanFees(fetchedFees);
         } catch (err) {
@@ -396,7 +396,7 @@ const EditLoanProduct = forwardRef(
       };
 
       fetchData();
-    }, [editMode, userDetails?.institutionUsersId]);
+    }, [editMode, userDetails?.institutionID]);
 
     const mapDbFieldsToFormFields = (dbData) => {
       if (!dbData) return {};

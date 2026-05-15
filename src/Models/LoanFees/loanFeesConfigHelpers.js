@@ -3,7 +3,7 @@ import { generateClient } from "aws-amplify/api";
 const LIST_BRANCHES_QUERY = `
   query ListBranches($institutionId: ID!, $nextToken: String) {
     listBranches(
-      filter: { institutionBranchesId: { eq: $institutionId } }
+      filter: { institutionID: { eq: $institutionId } }
       limit: 100
       nextToken: $nextToken
     ) {

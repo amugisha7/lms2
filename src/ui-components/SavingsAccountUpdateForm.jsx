@@ -34,6 +34,7 @@ export default function SavingsAccountUpdateForm(props) {
     accountNumber: "",
     balance: "",
     status: "",
+    branchID: "",
     lockedAmount: "",
     lockedForLoanID: "",
     customSavingsAccountDetails: "",
@@ -43,6 +44,7 @@ export default function SavingsAccountUpdateForm(props) {
   );
   const [balance, setBalance] = React.useState(initialValues.balance);
   const [status, setStatus] = React.useState(initialValues.status);
+  const [branchID, setBranchID] = React.useState(initialValues.branchID);
   const [lockedAmount, setLockedAmount] = React.useState(
     initialValues.lockedAmount
   );
@@ -59,6 +61,7 @@ export default function SavingsAccountUpdateForm(props) {
     setAccountNumber(cleanValues.accountNumber);
     setBalance(cleanValues.balance);
     setStatus(cleanValues.status);
+    setBranchID(cleanValues.branchID);
     setLockedAmount(cleanValues.lockedAmount);
     setLockedForLoanID(cleanValues.lockedForLoanID);
     setCustomSavingsAccountDetails(
@@ -91,6 +94,7 @@ export default function SavingsAccountUpdateForm(props) {
     accountNumber: [],
     balance: [],
     status: [],
+    branchID: [],
     lockedAmount: [],
     lockedForLoanID: [],
     customSavingsAccountDetails: [{ type: "JSON" }],
@@ -124,6 +128,7 @@ export default function SavingsAccountUpdateForm(props) {
           accountNumber: accountNumber ?? null,
           balance: balance ?? null,
           status: status ?? null,
+          branchID: branchID ?? null,
           lockedAmount: lockedAmount ?? null,
           lockedForLoanID: lockedForLoanID ?? null,
           customSavingsAccountDetails: customSavingsAccountDetails ?? null,
@@ -190,6 +195,7 @@ export default function SavingsAccountUpdateForm(props) {
               accountNumber: value,
               balance,
               status,
+              branchID,
               lockedAmount,
               lockedForLoanID,
               customSavingsAccountDetails,
@@ -223,6 +229,7 @@ export default function SavingsAccountUpdateForm(props) {
               accountNumber,
               balance: value,
               status,
+              branchID,
               lockedAmount,
               lockedForLoanID,
               customSavingsAccountDetails,
@@ -252,6 +259,7 @@ export default function SavingsAccountUpdateForm(props) {
               accountNumber,
               balance,
               status: value,
+              branchID,
               lockedAmount,
               lockedForLoanID,
               customSavingsAccountDetails,
@@ -270,6 +278,36 @@ export default function SavingsAccountUpdateForm(props) {
         {...getOverrideProps(overrides, "status")}
       ></TextField>
       <TextField
+        label="Branch id"
+        isRequired={false}
+        isReadOnly={false}
+        value={branchID}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              accountNumber,
+              balance,
+              status,
+              branchID: value,
+              lockedAmount,
+              lockedForLoanID,
+              customSavingsAccountDetails,
+            };
+            const result = onChange(modelFields);
+            value = result?.branchID ?? value;
+          }
+          if (errors.branchID?.hasError) {
+            runValidationTasks("branchID", value);
+          }
+          setBranchID(value);
+        }}
+        onBlur={() => runValidationTasks("branchID", branchID)}
+        errorMessage={errors.branchID?.errorMessage}
+        hasError={errors.branchID?.hasError}
+        {...getOverrideProps(overrides, "branchID")}
+      ></TextField>
+      <TextField
         label="Locked amount"
         isRequired={false}
         isReadOnly={false}
@@ -285,6 +323,7 @@ export default function SavingsAccountUpdateForm(props) {
               accountNumber,
               balance,
               status,
+              branchID,
               lockedAmount: value,
               lockedForLoanID,
               customSavingsAccountDetails,
@@ -314,6 +353,7 @@ export default function SavingsAccountUpdateForm(props) {
               accountNumber,
               balance,
               status,
+              branchID,
               lockedAmount,
               lockedForLoanID: value,
               customSavingsAccountDetails,
@@ -343,6 +383,7 @@ export default function SavingsAccountUpdateForm(props) {
               accountNumber,
               balance,
               status,
+              branchID,
               lockedAmount,
               lockedForLoanID,
               customSavingsAccountDetails: value,

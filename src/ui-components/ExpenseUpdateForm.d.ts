@@ -35,6 +35,7 @@ export declare type ExpenseUpdateFormInputValues = {
     approvedDate?: string;
     type?: string;
     category?: string;
+    branchID?: string;
     customExpenseDetails?: string;
 };
 export declare type ExpenseUpdateFormValidationValues = {
@@ -51,6 +52,7 @@ export declare type ExpenseUpdateFormValidationValues = {
     approvedDate?: ValidationFunction<string>;
     type?: ValidationFunction<string>;
     category?: ValidationFunction<string>;
+    branchID?: ValidationFunction<string>;
     customExpenseDetails?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
@@ -69,6 +71,7 @@ export declare type ExpenseUpdateFormOverridesProps = {
     approvedDate?: PrimitiveOverrideProps<TextFieldProps>;
     type?: PrimitiveOverrideProps<TextFieldProps>;
     category?: PrimitiveOverrideProps<TextFieldProps>;
+    branchID?: PrimitiveOverrideProps<TextFieldProps>;
     customExpenseDetails?: PrimitiveOverrideProps<TextAreaFieldProps>;
 } & EscapeHatchProps;
 export declare type ExpenseUpdateFormProps = React.PropsWithChildren<{

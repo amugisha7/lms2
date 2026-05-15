@@ -939,7 +939,7 @@ export const createLoanDraft = async ({
 
   const borrowerBranchId =
     borrower?.branchBorrowersId || draftRecord?.borrowerBranchID || null;
-  const branchId = borrowerBranchId || userDetails?.branchUsersId || null;
+  const branchId = borrowerBranchId || userDetails?.branchID || null;
   const actorEmployeeId = await resolveEmployeeIdForUser({
     userDetails,
     branchId,
@@ -1052,7 +1052,7 @@ export const updateLoanDraft = async ({
     existing?.branchID ||
     null;
   const branchId =
-    existingDraftRecord.borrowerBranchID || userDetails?.branchUsersId || null;
+    existingDraftRecord.borrowerBranchID || userDetails?.branchID || null;
   const actorEmployeeId = await resolveEmployeeIdForUser({
     userDetails,
     branchId,
@@ -1109,7 +1109,7 @@ export const updateLoanDraft = async ({
 
   if (!existing?.branchID) {
     const resolvedBranchId =
-      existingDraftRecord.borrowerBranchID || userDetails?.branchUsersId || null;
+      existingDraftRecord.borrowerBranchID || userDetails?.branchID || null;
     if (resolvedBranchId) {
       input.branchID = resolvedBranchId;
     }

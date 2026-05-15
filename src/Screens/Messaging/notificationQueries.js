@@ -108,7 +108,7 @@ export const LIST_USERS_IN_INSTITUTION_QUERY = `
         email
         userType
         status
-        institutionUsersId
+        institutionID
       }
       nextToken
     }

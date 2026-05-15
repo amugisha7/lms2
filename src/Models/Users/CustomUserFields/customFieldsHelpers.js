@@ -101,7 +101,7 @@ export const mapCustomFieldsToFormValues = (user, customFields) => {
 };
 
 // Update user custom fields API call
-export const updateUserCustomFields = async (userId, customFields, formValues, institutionUsersId, branchUsersId) => {
+export const updateUserCustomFields = async (userId, customFields, formValues, institutionID, branchID) => {
   const client = generateClient();
 
   const customFieldsData = {};
@@ -118,8 +118,8 @@ export const updateUserCustomFields = async (userId, customFields, formValues, i
   const input = {
     id: userId,
     customFieldsData: JSON.stringify(customFieldsData),
-    institutionUsersId,
-    branchUsersId,
+    institutionID,
+    branchID,
   };
 
   console.log("API Call: Updating user custom fields"); // <-- Add this log
@@ -130,8 +130,8 @@ export const updateUserCustomFields = async (userId, customFields, formValues, i
         id
         userType
         status
-        institutionUsersId
-        branchUsersId
+        institutionID
+        branchID
         customFieldsData
         updatedAt
         institution {

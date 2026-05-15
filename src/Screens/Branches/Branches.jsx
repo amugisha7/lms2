@@ -14,7 +14,7 @@ let __branchesFetchedOnce = false;
 const LIST_BRANCHES_QUERY = `
   query ListBranches($institutionId: ID!, $nextToken: String) {
     listBranches(
-      filter: { institutionBranchesId: { eq: $institutionId } }
+      filter: { institutionID: { eq: $institutionId } }
       limit: 100
       nextToken: $nextToken
     ) {
@@ -237,7 +237,7 @@ export default function Branches() {
 
   // API handler for creating branch
   const handleCreateBranchAPI = async (values) => {
-    if (!userDetails?.institutionUsersId) {
+    if (!userDetails?.institutionID) {
       throw new Error("Error: Please try refreshing the page.");
     }
 
@@ -246,7 +246,7 @@ export default function Branches() {
       branchCode: values.branchCode?.trim() || null,
       address: values.address?.trim() || null,
       status: values.status || "active",
-      institutionBranchesId: userDetails.institutionUsersId,
+      institutionID: userDetails.institutionID,
     };
 
     console.log("API Mutation: CREATE_BRANCH_MUTATION", {
@@ -265,7 +265,7 @@ export default function Branches() {
       query: CREATE_ACCOUNT_MUTATION,
       variables: {
         input: {
-          institutionAccountsId: userDetails.institutionUsersId,
+          institutionID: userDetails.institutionID,
           name: buildDefaultBranchAccountName(createdBranch.name),
           openingBalance: 0,
           status: "active",
@@ -382,11 +382,11 @@ export default function Branches() {
   };
 
   React.useEffect(() => {
-    if (userDetails?.institutionUsersId && !__branchesFetchedOnce) {
+    if (userDetails?.institutionID && !__branchesFetchedOnce) {
       __branchesFetchedOnce = true;
-      fetchBranches({ institutionId: userDetails.institutionUsersId });
+      fetchBranches({ institutionId: userDetails.institutionID });
     }
-  }, [userDetails?.institutionUsersId, fetchBranches]);
+  }, [userDetails?.institutionID, fetchBranches]);
 
   React.useEffect(() => {
     if (allBranches && Array.isArray(allBranches)) {

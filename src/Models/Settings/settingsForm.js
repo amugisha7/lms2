@@ -40,7 +40,7 @@ export const settingsForm = [
   
   {
     label: "Institution ID",
-    name: "institutionUsersId",
+    name: "institutionID",
     type: "text",
     span: 12,
     helperText: "The unique identifier for your institution.",

@@ -62,7 +62,7 @@ const EMPLOYEE_FIELDS = `
   branch {
     id
     name
-    institutionBranchesId
+    institutionID
   }
 `;
 
@@ -263,16 +263,16 @@ export const listEmployeesForUserContext = async (userDetails) => {
 
   const normalizedUserType = String(userDetails.userType || "").toLowerCase();
   if (normalizedUserType !== "admin") {
-    return listEmployeesByBranch(userDetails.branchUsersId || userDetails.branch?.id);
+    return listEmployeesByBranch(userDetails.branchID || userDetails.branch?.id);
   }
 
-  const institutionId = userDetails.institutionUsersId || userDetails.institution?.id;
+  const institutionId = userDetails.institutionID || userDetails.institution?.id;
   if (!institutionId) return [];
 
   const branchesResponse = await fetchAllPages(
     listBranches,
     {
-      filter: { institutionBranchesId: { eq: institutionId } },
+      filter: { institutionID: { eq: institutionId } },
       limit: 100,
     },
     (response) => response?.data?.listBranches,
@@ -316,7 +316,7 @@ export const fetchEmployeeByRelatedUserId = async (relatedUserID, branchId) => {
 export const getDefaultEmployeeForUserContext = async (userDetails) => {
   if (!userDetails) return null;
 
-  const branchId = userDetails.branchUsersId || userDetails.branch?.id || null;
+  const branchId = userDetails.branchID || userDetails.branch?.id || null;
   const linkedEmployee = await fetchEmployeeByRelatedUserId(userDetails.id, branchId);
   if (linkedEmployee) {
     return linkedEmployee;
@@ -337,7 +337,7 @@ export const resolveEmployeeIdForUser = async ({
 
   const resolved = await getDefaultEmployeeForUserContext({
     ...userDetails,
-    branchUsersId: branchId || userDetails?.branchUsersId,
+    branchID: branchId || userDetails?.branchID,
   });
 
   return resolved?.id || null;

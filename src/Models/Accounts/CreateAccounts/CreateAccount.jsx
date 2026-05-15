@@ -139,7 +139,7 @@ const CreateAccountForm = forwardRef(
     // Fetch branches - for admin: all active branches; for non-admin in edit mode: need branch names for display
     useEffect(() => {
       const fetchBranches = async () => {
-        if (!userDetails?.institutionUsersId) {
+        if (!userDetails?.institutionID) {
           return;
         }
 
@@ -174,7 +174,7 @@ const CreateAccountForm = forwardRef(
               query: `
                 query ListBranches($institutionId: ID!, $nextToken: String) {
                   listBranches(
-                    filter: { institutionBranchesId: { eq: $institutionId } }
+                    filter: { institutionID: { eq: $institutionId } }
                     limit: 100
                     nextToken: $nextToken
                   ) {
@@ -188,7 +188,7 @@ const CreateAccountForm = forwardRef(
                 }
               `,
               variables: {
-                institutionId: userDetails.institutionUsersId,
+                institutionId: userDetails.institutionID,
                 nextToken,
               },
             });
@@ -260,9 +260,9 @@ const CreateAccountForm = forwardRef(
     if (
       !isEditMode &&
       userDetails?.userType !== "Admin" &&
-      userDetails?.branchUsersId
+      userDetails?.branchID
     ) {
-      formInitialValues.branches = [userDetails.branchUsersId];
+      formInitialValues.branches = [userDetails.branchID];
     }
 
     useImperativeHandle(ref, () => ({

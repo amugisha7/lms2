@@ -30,7 +30,7 @@ export default function CreateBorrowerPage() {
 
     if (!isAdmin) {
       setSelectedBranchId(
-        userDetails.branchUsersId || userDetails.branch?.id || "",
+        userDetails.branchID || userDetails.branch?.id || "",
       );
     }
   }, [isAdmin, userDetails]);
@@ -50,7 +50,7 @@ export default function CreateBorrowerPage() {
           variables: {
             limit: 1000,
             filter: {
-              institutionBranchesId: { eq: userDetails.institution.id },
+              institutionID: { eq: userDetails.institution.id },
             },
           },
         });
@@ -83,7 +83,7 @@ export default function CreateBorrowerPage() {
   const hasMultipleAdminBranches = isAdmin && branchOptions.length > 1;
   const effectiveBranchId =
     selectedBranchId ||
-    userDetails?.branchUsersId ||
+    userDetails?.branchID ||
     userDetails?.branch?.id ||
     "";
 
@@ -162,7 +162,7 @@ export default function CreateBorrowerPage() {
 
       // Ensure branchBorrowersId is set for non-Admin users
       if (userDetails.userType !== "Admin" && !input.branchBorrowersId) {
-        input.branchBorrowersId = userDetails.branchUsersId;
+        input.branchBorrowersId = userDetails.branchID;
       }
 
       console.log("API Call: Creating borrower");

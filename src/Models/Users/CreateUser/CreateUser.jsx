@@ -44,7 +44,7 @@ const baseInitialValues = createUserForm.reduce((acc, field) => {
 const LIST_BRANCHES_QUERY = `
   query ListBranches($institutionId: ID!, $nextToken: String) {
     listBranches(
-      filter: { institutionBranchesId: { eq: $institutionId } }
+      filter: { institutionID: { eq: $institutionId } }
       limit: 100
       nextToken: $nextToken
     ) {
@@ -184,7 +184,7 @@ const CreateUser = forwardRef(
 
     useEffect(() => {
       const fetchBranches = async () => {
-        if (!userDetails?.institutionUsersId) return;
+        if (!userDetails?.institutionID) return;
 
         try {
           let allBranchesList = [];
@@ -193,7 +193,7 @@ const CreateUser = forwardRef(
             const result = await client.graphql({
               query: LIST_BRANCHES_QUERY,
               variables: {
-                institutionId: userDetails.institutionUsersId,
+                institutionId: userDetails.institutionID,
                 nextToken,
               },
             });
@@ -217,7 +217,7 @@ const CreateUser = forwardRef(
       };
 
       fetchBranches();
-    }, [userDetails?.institutionUsersId, client]);
+    }, [userDetails?.institutionID, client]);
 
     // Map database field names to form field names
     const mapDbFieldsToFormFields = (dbData) => {
@@ -242,7 +242,7 @@ const CreateUser = forwardRef(
         userType: dbData.userType || "",
         status: normalizeStatusValue(dbData.status),
         description: dbData.description || "",
-        branch: dbData.branchUsersId || "",
+        branch: dbData.branchID || "",
         // Handle custom fields if they exist
         ...(dbData.customFieldsData
           ? (() => {
@@ -373,25 +373,25 @@ const CreateUser = forwardRef(
 
       // Preserve institution and branch IDs for updates
       if (isEditMode && propInitialValues) {
-        processedValues.institutionUsersId =
-          propInitialValues.institutionUsersId;
+        processedValues.institutionID =
+          propInitialValues.institutionID;
         if (processedValues.status) {
           processedValues.status = normalizeStatusValue(processedValues.status);
         }
-        // Map 'branch' field to 'branchUsersId' for database
+        // Map 'branch' field to 'branchID' for database
         if (processedValues.branch) {
-          processedValues.branchUsersId = processedValues.branch;
+          processedValues.branchID = processedValues.branch;
           delete processedValues.branch;
         } else {
-          processedValues.branchUsersId = propInitialValues.branchUsersId;
+          processedValues.branchID = propInitialValues.branchID;
         }
       } else {
-        // For create mode, also map branch to branchUsersId
+        // For create mode, also map branch to branchID
         if (processedValues.status) {
           processedValues.status = normalizeStatusValue(processedValues.status);
         }
         if (processedValues.branch) {
-          processedValues.branchUsersId = processedValues.branch;
+          processedValues.branchID = processedValues.branch;
           delete processedValues.branch;
         }
       }
@@ -443,8 +443,8 @@ const CreateUser = forwardRef(
                     userType
                     status
                     description
-                    branchUsersId
-                    institutionUsersId
+                    branchID
+                    institutionID
                     customFieldsData
                   }
                 }

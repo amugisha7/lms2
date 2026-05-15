@@ -25,12 +25,14 @@ export declare type SavingsTransactionCreateFormInputValues = {
     amount?: number;
     type?: string;
     date?: string;
+    branchID?: string;
     customSavingsTransactionDetails?: string;
 };
 export declare type SavingsTransactionCreateFormValidationValues = {
     amount?: ValidationFunction<number>;
     type?: ValidationFunction<string>;
     date?: ValidationFunction<string>;
+    branchID?: ValidationFunction<string>;
     customSavingsTransactionDetails?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
@@ -39,6 +41,7 @@ export declare type SavingsTransactionCreateFormOverridesProps = {
     amount?: PrimitiveOverrideProps<TextFieldProps>;
     type?: PrimitiveOverrideProps<TextFieldProps>;
     date?: PrimitiveOverrideProps<TextFieldProps>;
+    branchID?: PrimitiveOverrideProps<TextFieldProps>;
     customSavingsTransactionDetails?: PrimitiveOverrideProps<TextAreaFieldProps>;
 } & EscapeHatchProps;
 export declare type SavingsTransactionCreateFormProps = React.PropsWithChildren<{

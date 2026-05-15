@@ -73,11 +73,11 @@ const EditLoanFeesForm = forwardRef(function EditLoanFeesForm(
     let cancelled = false;
 
     const loadBranches = async () => {
-      if (!userDetails?.institutionUsersId) return;
+      if (!userDetails?.institutionID) return;
 
       try {
         const items = await fetchInstitutionBranches(
-          userDetails.institutionUsersId,
+          userDetails.institutionID,
         );
         if (!cancelled) {
           setBranches(items);
@@ -92,7 +92,7 @@ const EditLoanFeesForm = forwardRef(function EditLoanFeesForm(
     return () => {
       cancelled = true;
     };
-  }, [userDetails?.institutionUsersId]);
+  }, [userDetails?.institutionID]);
 
   React.useEffect(() => {
     const items = initialValues?.branches?.items || [];
@@ -154,7 +154,7 @@ const EditLoanFeesForm = forwardRef(function EditLoanFeesForm(
       setSubmitSuccess("");
       setSubmitting(true);
 
-      if (!userDetails || !userDetails.institutionUsersId) {
+      if (!userDetails || !userDetails.institutionID) {
         setSubmitError("ERROR. Please reload the page or contact support.");
         setSubmitting(false);
         return;
@@ -172,7 +172,7 @@ const EditLoanFeesForm = forwardRef(function EditLoanFeesForm(
               ? values.percentageBase
               : null,
           status: values.status,
-          institutionLoanFeesConfigsId: userDetails.institutionUsersId,
+          institutionLoanFeesConfigsId: userDetails.institutionID,
           rate: values.feeValue,
         };
 

@@ -60,6 +60,7 @@ export declare type EmployeeUpdateFormInputValues = {
     taxIdentificationNumber?: string;
     taxExemptStatus?: string;
     customFieldsData?: string;
+    institutionID?: string;
     relatedUserID?: string;
     relatedBorrowerID?: string;
     customEmployeeDetails?: string;
@@ -103,6 +104,7 @@ export declare type EmployeeUpdateFormValidationValues = {
     taxIdentificationNumber?: ValidationFunction<string>;
     taxExemptStatus?: ValidationFunction<string>;
     customFieldsData?: ValidationFunction<string>;
+    institutionID?: ValidationFunction<string>;
     relatedUserID?: ValidationFunction<string>;
     relatedBorrowerID?: ValidationFunction<string>;
     customEmployeeDetails?: ValidationFunction<string>;
@@ -148,6 +150,7 @@ export declare type EmployeeUpdateFormOverridesProps = {
     taxIdentificationNumber?: PrimitiveOverrideProps<TextFieldProps>;
     taxExemptStatus?: PrimitiveOverrideProps<TextFieldProps>;
     customFieldsData?: PrimitiveOverrideProps<TextAreaFieldProps>;
+    institutionID?: PrimitiveOverrideProps<TextFieldProps>;
     relatedUserID?: PrimitiveOverrideProps<TextFieldProps>;
     relatedBorrowerID?: PrimitiveOverrideProps<TextFieldProps>;
     customEmployeeDetails?: PrimitiveOverrideProps<TextAreaFieldProps>;

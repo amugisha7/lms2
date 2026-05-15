@@ -42,6 +42,7 @@ export default function ExpenseCreateForm(props) {
     approvedDate: "",
     type: "",
     category: "",
+    branchID: "",
     customExpenseDetails: "",
   };
   const [transactionDate, setTransactionDate] = React.useState(
@@ -71,6 +72,7 @@ export default function ExpenseCreateForm(props) {
   );
   const [type, setType] = React.useState(initialValues.type);
   const [category, setCategory] = React.useState(initialValues.category);
+  const [branchID, setBranchID] = React.useState(initialValues.branchID);
   const [customExpenseDetails, setCustomExpenseDetails] = React.useState(
     initialValues.customExpenseDetails
   );
@@ -89,6 +91,7 @@ export default function ExpenseCreateForm(props) {
     setApprovedDate(initialValues.approvedDate);
     setType(initialValues.type);
     setCategory(initialValues.category);
+    setBranchID(initialValues.branchID);
     setCustomExpenseDetails(initialValues.customExpenseDetails);
     setErrors({});
   };
@@ -106,6 +109,7 @@ export default function ExpenseCreateForm(props) {
     approvedDate: [],
     type: [],
     category: [],
+    branchID: [],
     customExpenseDetails: [{ type: "JSON" }],
   };
   const runValidationTasks = async (
@@ -147,6 +151,7 @@ export default function ExpenseCreateForm(props) {
           approvedDate,
           type,
           category,
+          branchID,
           customExpenseDetails,
         };
         const validationResponses = await Promise.all(
@@ -224,6 +229,7 @@ export default function ExpenseCreateForm(props) {
               approvedDate,
               type,
               category,
+              branchID,
               customExpenseDetails,
             };
             const result = onChange(modelFields);
@@ -265,6 +271,7 @@ export default function ExpenseCreateForm(props) {
               approvedDate,
               type,
               category,
+              branchID,
               customExpenseDetails,
             };
             const result = onChange(modelFields);
@@ -302,6 +309,7 @@ export default function ExpenseCreateForm(props) {
               approvedDate,
               type,
               category,
+              branchID,
               customExpenseDetails,
             };
             const result = onChange(modelFields);
@@ -339,6 +347,7 @@ export default function ExpenseCreateForm(props) {
               approvedDate,
               type,
               category,
+              branchID,
               customExpenseDetails,
             };
             const result = onChange(modelFields);
@@ -376,6 +385,7 @@ export default function ExpenseCreateForm(props) {
               approvedDate,
               type,
               category,
+              branchID,
               customExpenseDetails,
             };
             const result = onChange(modelFields);
@@ -415,6 +425,7 @@ export default function ExpenseCreateForm(props) {
               approvedDate,
               type,
               category,
+              branchID,
               customExpenseDetails,
             };
             const result = onChange(modelFields);
@@ -452,6 +463,7 @@ export default function ExpenseCreateForm(props) {
               approvedDate,
               type,
               category,
+              branchID,
               customExpenseDetails,
             };
             const result = onChange(modelFields);
@@ -489,6 +501,7 @@ export default function ExpenseCreateForm(props) {
               approvedDate,
               type,
               category,
+              branchID,
               customExpenseDetails,
             };
             const result = onChange(modelFields);
@@ -526,6 +539,7 @@ export default function ExpenseCreateForm(props) {
               approvedDate,
               type,
               category,
+              branchID,
               customExpenseDetails,
             };
             const result = onChange(modelFields);
@@ -563,6 +577,7 @@ export default function ExpenseCreateForm(props) {
               approvedDate,
               type,
               category,
+              branchID,
               customExpenseDetails,
             };
             const result = onChange(modelFields);
@@ -601,6 +616,7 @@ export default function ExpenseCreateForm(props) {
               approvedDate: value,
               type,
               category,
+              branchID,
               customExpenseDetails,
             };
             const result = onChange(modelFields);
@@ -638,6 +654,7 @@ export default function ExpenseCreateForm(props) {
               approvedDate,
               type: value,
               category,
+              branchID,
               customExpenseDetails,
             };
             const result = onChange(modelFields);
@@ -675,6 +692,7 @@ export default function ExpenseCreateForm(props) {
               approvedDate,
               type,
               category: value,
+              branchID,
               customExpenseDetails,
             };
             const result = onChange(modelFields);
@@ -689,6 +707,44 @@ export default function ExpenseCreateForm(props) {
         errorMessage={errors.category?.errorMessage}
         hasError={errors.category?.hasError}
         {...getOverrideProps(overrides, "category")}
+      ></TextField>
+      <TextField
+        label="Branch id"
+        isRequired={false}
+        isReadOnly={false}
+        value={branchID}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              transactionDate,
+              amount,
+              description,
+              referenceNumber,
+              receiptDocumentS3Key,
+              status,
+              notes,
+              payee,
+              paymentMethod,
+              checkNumber,
+              approvedDate,
+              type,
+              category,
+              branchID: value,
+              customExpenseDetails,
+            };
+            const result = onChange(modelFields);
+            value = result?.branchID ?? value;
+          }
+          if (errors.branchID?.hasError) {
+            runValidationTasks("branchID", value);
+          }
+          setBranchID(value);
+        }}
+        onBlur={() => runValidationTasks("branchID", branchID)}
+        errorMessage={errors.branchID?.errorMessage}
+        hasError={errors.branchID?.hasError}
+        {...getOverrideProps(overrides, "branchID")}
       ></TextField>
       <TextAreaField
         label="Custom expense details"
@@ -711,6 +767,7 @@ export default function ExpenseCreateForm(props) {
               approvedDate,
               type,
               category,
+              branchID,
               customExpenseDetails: value,
             };
             const result = onChange(modelFields);

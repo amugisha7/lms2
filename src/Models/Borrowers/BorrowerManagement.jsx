@@ -317,8 +317,8 @@ export default function BorrowerManagement() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const fetchedBorrowerIdRef = React.useRef();
   const fetchedCustomFieldsRef = React.useRef({
-    institutionUsersId: null,
-    branchUsersId: null,
+    institutionID: null,
+    branchID: null,
   }); // <-- Add ref
 
   const canEditBorrower = useHasPermission("update", "borrower");
@@ -356,7 +356,7 @@ export default function BorrowerManagement() {
   // Fetch custom fields
   useEffect(() => {
     const fetchCustomFields = async () => {
-      if (!userDetails?.institutionUsersId || !userDetails?.branchUsersId) {
+      if (!userDetails?.institutionID || !userDetails?.branchID) {
         setCustomFieldsLoading(false);
         return;
       }
@@ -364,12 +364,12 @@ export default function BorrowerManagement() {
       try {
         setCustomFieldsLoading(true);
         console.log("API Call: Fetching custom fields for borrower", {
-          institutionUsersId: userDetails.institutionUsersId,
-          branchUsersId: userDetails.branchUsersId,
+          institutionID: userDetails.institutionID,
+          branchID: userDetails.branchID,
         });
         const fields = await fetchCustomFieldsForBorrower(
-          userDetails.institutionUsersId,
-          userDetails.branchUsersId,
+          userDetails.institutionID,
+          userDetails.branchID,
         );
         console.log("API Call: Custom fields fetched successfully", fields);
         setCustomFields(fields);
@@ -380,22 +380,22 @@ export default function BorrowerManagement() {
       }
     };
 
-    // Only fetch if institutionUsersId or branchUsersId changed
+    // Only fetch if institutionID or branchID changed
     if (
-      userDetails?.institutionUsersId &&
-      userDetails?.branchUsersId &&
-      (fetchedCustomFieldsRef.current.institutionUsersId !==
-        userDetails.institutionUsersId ||
-        fetchedCustomFieldsRef.current.branchUsersId !==
-          userDetails.branchUsersId)
+      userDetails?.institutionID &&
+      userDetails?.branchID &&
+      (fetchedCustomFieldsRef.current.institutionID !==
+        userDetails.institutionID ||
+        fetchedCustomFieldsRef.current.branchID !==
+          userDetails.branchID)
     ) {
       fetchCustomFields();
       fetchedCustomFieldsRef.current = {
-        institutionUsersId: userDetails.institutionUsersId,
-        branchUsersId: userDetails.branchUsersId,
+        institutionID: userDetails.institutionID,
+        branchID: userDetails.branchID,
       };
     }
-  }, [userDetails?.institutionUsersId, userDetails?.branchUsersId]);
+  }, [userDetails?.institutionID, userDetails?.branchID]);
 
   // API handler for updating borrower
   const handleUpdateBorrowerAPI = async (values, initialValues) => {

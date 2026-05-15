@@ -42,6 +42,7 @@ export default function PenaltyCreateForm(props) {
     penaltyAttribute1: "",
     penaltyAttribute2: "",
     status: "",
+    branchID: "",
     customPenaltyDetails: "",
   };
   const [amount, setAmount] = React.useState(initialValues.amount);
@@ -76,6 +77,7 @@ export default function PenaltyCreateForm(props) {
     initialValues.penaltyAttribute2
   );
   const [status, setStatus] = React.useState(initialValues.status);
+  const [branchID, setBranchID] = React.useState(initialValues.branchID);
   const [customPenaltyDetails, setCustomPenaltyDetails] = React.useState(
     initialValues.customPenaltyDetails
   );
@@ -94,6 +96,7 @@ export default function PenaltyCreateForm(props) {
     setPenaltyAttribute1(initialValues.penaltyAttribute1);
     setPenaltyAttribute2(initialValues.penaltyAttribute2);
     setStatus(initialValues.status);
+    setBranchID(initialValues.branchID);
     setCustomPenaltyDetails(initialValues.customPenaltyDetails);
     setErrors({});
   };
@@ -111,6 +114,7 @@ export default function PenaltyCreateForm(props) {
     penaltyAttribute1: [],
     penaltyAttribute2: [],
     status: [],
+    branchID: [],
     customPenaltyDetails: [{ type: "JSON" }],
   };
   const runValidationTasks = async (
@@ -152,6 +156,7 @@ export default function PenaltyCreateForm(props) {
           penaltyAttribute1,
           penaltyAttribute2,
           status,
+          branchID,
           customPenaltyDetails,
         };
         const validationResponses = await Promise.all(
@@ -232,6 +237,7 @@ export default function PenaltyCreateForm(props) {
               penaltyAttribute1,
               penaltyAttribute2,
               status,
+              branchID,
               customPenaltyDetails,
             };
             const result = onChange(modelFields);
@@ -269,6 +275,7 @@ export default function PenaltyCreateForm(props) {
               penaltyAttribute1,
               penaltyAttribute2,
               status,
+              branchID,
               customPenaltyDetails,
             };
             const result = onChange(modelFields);
@@ -306,6 +313,7 @@ export default function PenaltyCreateForm(props) {
               penaltyAttribute1,
               penaltyAttribute2,
               status,
+              branchID,
               customPenaltyDetails,
             };
             const result = onChange(modelFields);
@@ -343,6 +351,7 @@ export default function PenaltyCreateForm(props) {
               penaltyAttribute1,
               penaltyAttribute2,
               status,
+              branchID,
               customPenaltyDetails,
             };
             const result = onChange(modelFields);
@@ -389,6 +398,7 @@ export default function PenaltyCreateForm(props) {
               penaltyAttribute1,
               penaltyAttribute2,
               status,
+              branchID,
               customPenaltyDetails,
             };
             const result = onChange(modelFields);
@@ -427,6 +437,7 @@ export default function PenaltyCreateForm(props) {
               penaltyAttribute1,
               penaltyAttribute2,
               status,
+              branchID,
               customPenaltyDetails,
             };
             const result = onChange(modelFields);
@@ -464,6 +475,7 @@ export default function PenaltyCreateForm(props) {
               penaltyAttribute1,
               penaltyAttribute2,
               status,
+              branchID,
               customPenaltyDetails,
             };
             const result = onChange(modelFields);
@@ -501,6 +513,7 @@ export default function PenaltyCreateForm(props) {
               penaltyAttribute1,
               penaltyAttribute2,
               status,
+              branchID,
               customPenaltyDetails,
             };
             const result = onChange(modelFields);
@@ -538,6 +551,7 @@ export default function PenaltyCreateForm(props) {
               penaltyAttribute1,
               penaltyAttribute2,
               status,
+              branchID,
               customPenaltyDetails,
             };
             const result = onChange(modelFields);
@@ -575,6 +589,7 @@ export default function PenaltyCreateForm(props) {
               penaltyAttribute1,
               penaltyAttribute2,
               status,
+              branchID,
               customPenaltyDetails,
             };
             const result = onChange(modelFields);
@@ -614,6 +629,7 @@ export default function PenaltyCreateForm(props) {
               penaltyAttribute1: value,
               penaltyAttribute2,
               status,
+              branchID,
               customPenaltyDetails,
             };
             const result = onChange(modelFields);
@@ -653,6 +669,7 @@ export default function PenaltyCreateForm(props) {
               penaltyAttribute1,
               penaltyAttribute2: value,
               status,
+              branchID,
               customPenaltyDetails,
             };
             const result = onChange(modelFields);
@@ -692,6 +709,7 @@ export default function PenaltyCreateForm(props) {
               penaltyAttribute1,
               penaltyAttribute2,
               status: value,
+              branchID,
               customPenaltyDetails,
             };
             const result = onChange(modelFields);
@@ -706,6 +724,44 @@ export default function PenaltyCreateForm(props) {
         errorMessage={errors.status?.errorMessage}
         hasError={errors.status?.hasError}
         {...getOverrideProps(overrides, "status")}
+      ></TextField>
+      <TextField
+        label="Branch id"
+        isRequired={false}
+        isReadOnly={false}
+        value={branchID}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              amount,
+              penaltyName,
+              penaltyCategory,
+              penaltyCalculationMethod,
+              penaltyRate,
+              penaltyDate,
+              penaltyStatus,
+              notes,
+              penaltyType,
+              penaltyDescription,
+              penaltyAttribute1,
+              penaltyAttribute2,
+              status,
+              branchID: value,
+              customPenaltyDetails,
+            };
+            const result = onChange(modelFields);
+            value = result?.branchID ?? value;
+          }
+          if (errors.branchID?.hasError) {
+            runValidationTasks("branchID", value);
+          }
+          setBranchID(value);
+        }}
+        onBlur={() => runValidationTasks("branchID", branchID)}
+        errorMessage={errors.branchID?.errorMessage}
+        hasError={errors.branchID?.hasError}
+        {...getOverrideProps(overrides, "branchID")}
       ></TextField>
       <TextAreaField
         label="Custom penalty details"
@@ -728,6 +784,7 @@ export default function PenaltyCreateForm(props) {
               penaltyAttribute1,
               penaltyAttribute2,
               status,
+              branchID,
               customPenaltyDetails: value,
             };
             const result = onChange(modelFields);

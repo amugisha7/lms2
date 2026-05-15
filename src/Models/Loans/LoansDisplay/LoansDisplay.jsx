@@ -34,6 +34,7 @@ import LoanStatementPopup from "../LoanStatements/LoanStatementPopup";
 import { buildLoanDisplayName } from "../loanDisplayHelpers";
 import {
   LOAN_DISPLAY_STATUS,
+  getAmountDue,
   getBalance,
   getPrincipalBalance,
   getTotalPaid,
@@ -730,6 +731,7 @@ export default function LoansDisplay() {
             loan.loanProduct?.interestCalculationMethod ||
             loan.loanType ||
             "N/A";
+          const amountDue = getAmountDue(loan);
           const balance = getBalance(loan);
           const totalPaid = getTotalPaid(loan);
           return (
@@ -755,7 +757,7 @@ export default function LoansDisplay() {
                 daysLeftText={daysLeftText}
                 daysLeftIsOverdue={daysLeftIsOverdue}
                 totalPaid={totalPaid}
-                amountDue={balance}
+                amountDue={amountDue}
                 loanBalance={balance}
                 productName={loan.loanProduct?.name || "N/A"}
                 officerName={officerName}
@@ -1006,7 +1008,7 @@ export default function LoansDisplay() {
         flex: 0.65,
         minWidth: 100,
         type: "number",
-        valueGetter: (value, row) => getBalance(row),
+        valueGetter: (value, row) => getAmountDue(row),
         renderCell: (params) => {
           const statusMeta = getLoanStatusMeta(params.row);
           const statusColors = getStatusColor(statusMeta, sf);
@@ -1337,7 +1339,7 @@ export default function LoansDisplay() {
           loan.loanProduct?.interestCalculationMethod ||
           loan.loanType ||
           "N/A",
-        amountDue: formatCsvMoney(getBalance(loan)),
+        amountDue: formatCsvMoney(getAmountDue(loan)),
         status: statusMeta.label,
         totalPaid: formatCsvMoney(getTotalPaid(loan)),
         loanBalance: formatCsvMoney(getBalance(loan)),
@@ -1380,7 +1382,10 @@ export default function LoansDisplay() {
       (s, l) => s + (l.principal || 0),
       0,
     );
-    const totalOutstanding = sourceLoans.reduce((s, l) => s + getBalance(l), 0);
+    const totalOutstanding = sourceLoans.reduce(
+      (s, l) => s + getAmountDue(l),
+      0,
+    );
     const totalPayments = sourceLoans.reduce((s, l) => s + getTotalPaid(l), 0);
 
     return {

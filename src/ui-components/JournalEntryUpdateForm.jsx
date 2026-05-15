@@ -34,6 +34,7 @@ export default function JournalEntryUpdateForm(props) {
     date: "",
     description: "",
     reference: "",
+    branchID: "",
     status: "",
     customJournalEntryDetails: "",
   };
@@ -42,6 +43,7 @@ export default function JournalEntryUpdateForm(props) {
     initialValues.description
   );
   const [reference, setReference] = React.useState(initialValues.reference);
+  const [branchID, setBranchID] = React.useState(initialValues.branchID);
   const [status, setStatus] = React.useState(initialValues.status);
   const [customJournalEntryDetails, setCustomJournalEntryDetails] =
     React.useState(initialValues.customJournalEntryDetails);
@@ -53,6 +55,7 @@ export default function JournalEntryUpdateForm(props) {
     setDate(cleanValues.date);
     setDescription(cleanValues.description);
     setReference(cleanValues.reference);
+    setBranchID(cleanValues.branchID);
     setStatus(cleanValues.status);
     setCustomJournalEntryDetails(
       typeof cleanValues.customJournalEntryDetails === "string" ||
@@ -84,6 +87,7 @@ export default function JournalEntryUpdateForm(props) {
     date: [],
     description: [],
     reference: [],
+    branchID: [],
     status: [],
     customJournalEntryDetails: [{ type: "JSON" }],
   };
@@ -116,6 +120,7 @@ export default function JournalEntryUpdateForm(props) {
           date: date ?? null,
           description: description ?? null,
           reference: reference ?? null,
+          branchID: branchID ?? null,
           status: status ?? null,
           customJournalEntryDetails: customJournalEntryDetails ?? null,
         };
@@ -182,6 +187,7 @@ export default function JournalEntryUpdateForm(props) {
               date: value,
               description,
               reference,
+              branchID,
               status,
               customJournalEntryDetails,
             };
@@ -210,6 +216,7 @@ export default function JournalEntryUpdateForm(props) {
               date,
               description: value,
               reference,
+              branchID,
               status,
               customJournalEntryDetails,
             };
@@ -238,6 +245,7 @@ export default function JournalEntryUpdateForm(props) {
               date,
               description,
               reference: value,
+              branchID,
               status,
               customJournalEntryDetails,
             };
@@ -255,6 +263,35 @@ export default function JournalEntryUpdateForm(props) {
         {...getOverrideProps(overrides, "reference")}
       ></TextField>
       <TextField
+        label="Branch id"
+        isRequired={false}
+        isReadOnly={false}
+        value={branchID}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              date,
+              description,
+              reference,
+              branchID: value,
+              status,
+              customJournalEntryDetails,
+            };
+            const result = onChange(modelFields);
+            value = result?.branchID ?? value;
+          }
+          if (errors.branchID?.hasError) {
+            runValidationTasks("branchID", value);
+          }
+          setBranchID(value);
+        }}
+        onBlur={() => runValidationTasks("branchID", branchID)}
+        errorMessage={errors.branchID?.errorMessage}
+        hasError={errors.branchID?.hasError}
+        {...getOverrideProps(overrides, "branchID")}
+      ></TextField>
+      <TextField
         label="Status"
         isRequired={false}
         isReadOnly={false}
@@ -266,6 +303,7 @@ export default function JournalEntryUpdateForm(props) {
               date,
               description,
               reference,
+              branchID,
               status: value,
               customJournalEntryDetails,
             };
@@ -294,6 +332,7 @@ export default function JournalEntryUpdateForm(props) {
               date,
               description,
               reference,
+              branchID,
               status,
               customJournalEntryDetails: value,
             };

@@ -11,8 +11,8 @@ export const CREATE_USER_MUTATION = `mutation CreateUser($input: CreateUserInput
     id
     userType
     status
-    institutionUsersId
-    branchUsersId
+    institutionID
+    branchID
   }
 }`;
 

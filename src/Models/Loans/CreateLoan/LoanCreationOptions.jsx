@@ -40,12 +40,12 @@ export default function LoanCreationOptions(props) {
     const loadBorrowers = async () => {
       const isAdmin = userDetails?.userType?.toLowerCase() === "admin";
 
-      if (!isAdmin && !userDetails?.branchUsersId) {
+      if (!isAdmin && !userDetails?.branchID) {
         setBorrowersLoading(false);
         return;
       }
 
-      if (isAdmin && !userDetails?.institutionUsersId) {
+      if (isAdmin && !userDetails?.institutionID) {
         setBorrowersLoading(false);
         return;
       }
@@ -59,10 +59,10 @@ export default function LoanCreationOptions(props) {
         let borrowersList;
         if (isAdmin) {
           borrowersList = await fetchBorrowersByInstitution(
-            userDetails.institutionUsersId,
+            userDetails.institutionID,
           );
         } else {
-          borrowersList = await fetchBorrowers(userDetails.branchUsersId);
+          borrowersList = await fetchBorrowers(userDetails.branchID);
         }
 
         setBorrowers(borrowersList);
@@ -111,13 +111,13 @@ export default function LoanCreationOptions(props) {
   useEffect(() => {
     const loadLoanProducts = async () => {
       // Require both institution and branch to determine branch-scoped products
-      if (!userDetails?.institutionUsersId || !userDetails?.branchUsersId) {
+      if (!userDetails?.institutionID || !userDetails?.branchID) {
         setLoanProductsLoading(false);
         return;
       }
 
       // Create a cache key that includes admin status to ensure re-fetch if role changes
-      const cacheKey = `${userDetails.branchUsersId}-${isAdmin}`;
+      const cacheKey = `${userDetails.branchID}-${isAdmin}`;
 
       // If we've already fetched for this branch/admin combination, skip
       if (loanProductsFetchedRef.current === cacheKey) {
@@ -127,8 +127,8 @@ export default function LoanCreationOptions(props) {
 
       try {
         const productsList = await fetchLoanProducts(
-          userDetails.institutionUsersId,
-          userDetails.branchUsersId,
+          userDetails.institutionID,
+          userDetails.branchID,
           isAdmin,
         );
         setLoanProducts(productsList);
@@ -141,7 +141,7 @@ export default function LoanCreationOptions(props) {
     };
 
     loadLoanProducts();
-  }, [userDetails?.institutionUsersId, userDetails?.branchUsersId, isAdmin]);
+  }, [userDetails?.institutionID, userDetails?.branchID, isAdmin]);
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);

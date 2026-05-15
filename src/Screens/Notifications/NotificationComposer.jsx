@@ -42,7 +42,7 @@ const MessageComposer = ({ recipient, onClose, onMessageSent }) => {
             status: "unread",
             senderUserId: userDetails.id,
             recipientUserId: recipient.id,
-            institutionMessagesId: userDetails.institutionUsersId,
+            institutionMessagesId: userDetails.institutionID,
           },
         },
       });

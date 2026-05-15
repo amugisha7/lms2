@@ -1466,6 +1466,35 @@ export const getBalance = (loan) => {
   return normalizeMoneyValue(loan?.principal) - getTotalPaid(loan);
 };
 
+export const getAmountDue = (loan, referenceDate = new Date()) => {
+  if (loan?.amountDueAmount != null) {
+    return normalizeMoneyValue(loan.amountDueAmount);
+  }
+
+  if (loan?.amountDueToDateComputed != null) {
+    return normalizeMoneyValue(loan.amountDueToDateComputed);
+  }
+
+  const schedule = getSortedSchedule(loan);
+  if (!schedule.length) {
+    return getBalance(loan);
+  }
+
+  const today = startOfDay(referenceDate) || startOfDay(new Date());
+  let dueToDate = 0;
+
+  schedule.forEach((installment) => {
+    const dueDate = startOfDay(installment?.dueDate);
+    if (!dueDate || dueDate > today) {
+      return;
+    }
+
+    dueToDate = round2(dueToDate + getInstallmentDueAmount(installment));
+  });
+
+  return round2(Math.max(0, dueToDate - getTotalPaid(loan)));
+};
+
 export const getPrincipalBalance = (loan) => {
   if (loan?.loanBalanceComputed != null) return loan.loanBalanceComputed;
   return Math.max(normalizeMoneyValue(loan?.principal) - getTotalPaid(loan), 0);
@@ -1598,12 +1627,22 @@ export const attachDerivedLoanData = (loan, options = {}) => {
   const amountDueComputed = derivedStatement?.totals?.totalRemaining || 0;
   const loanBalanceComputed = derivedStatement?.totals?.remainingPrincipal || 0;
 
-  const baseLoan = {
+  const baseLoanWithoutAmountDueToDate = {
     ...normalizedLoan,
     derivedStatement,
     totalPaidComputed,
     amountDueComputed,
     loanBalanceComputed,
+  };
+
+  const amountDueToDateComputed = getAmountDue(
+    baseLoanWithoutAmountDueToDate,
+    referenceDate,
+  );
+
+  const baseLoan = {
+    ...baseLoanWithoutAmountDueToDate,
+    amountDueToDateComputed,
   };
 
   const scheduleMetrics = computeScheduleMetrics(baseLoan, referenceDate);
@@ -1664,7 +1703,7 @@ export const buildLoanSummaryRecord = (loan, options = {}) => {
     loanProductName: derivedLoan.loanProduct?.name || null,
     principalAmount: normalizeMoneyValue(derivedLoan.principal),
     totalPaidAmount: getTotalPaid(derivedLoan),
-    amountDueAmount: getBalance(derivedLoan),
+    amountDueAmount: getAmountDue(derivedLoan, options.referenceDate),
     loanBalanceAmount: getPrincipalBalance(derivedLoan),
     arrearsAmount: derivedLoan.arrearsAmountComputed || 0,
     missedInstallmentCount: derivedLoan.missedInstallmentCountComputed || 0,

@@ -78,7 +78,7 @@ describe("reports data loading", () => {
 
     renderWithUser(<HookHarness />, {
       userType: "LoanOfficer",
-      branchUsersId: "branch-1",
+      branchID: "branch-1",
     });
 
     await waitFor(() =>

@@ -118,7 +118,7 @@ export const buildLoanProductUpdateInput = (values, userDetails, id) => {
 
   return {
     id: id,
-    institutionLoanProductsId: userDetails.institutionUsersId,
+    institutionLoanProductsId: userDetails.institutionID,
     name: values.name,
     status: values.status || "Active",
     principalAmountMin: values.minPrincipal ? Number(values.minPrincipal) : null,
@@ -160,7 +160,7 @@ export const buildLoanProductUpdateInput = (values, userDetails, id) => {
 export const LIST_BRANCHES_QUERY = `
   query ListBranches($institutionId: ID!, $nextToken: String) {
     listBranches(
-      filter: { institutionBranchesId: { eq: $institutionId } }
+      filter: { institutionID: { eq: $institutionId } }
       limit: 100
       nextToken: $nextToken
     ) {

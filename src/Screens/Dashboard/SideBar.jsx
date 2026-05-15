@@ -208,10 +208,10 @@ const SideBar = ({ open = true, onClose }) => {
             User Type: {userDetails?.userType || "N/A"}
           </Typography>
           <Typography variant="body2" sx={{ color: "white" }}>
-            Institution ID: {userDetails?.institutionUsersId || "N/A"}
+            Institution ID: {userDetails?.institutionID || "N/A"}
           </Typography>
           <Typography variant="body2" sx={{ color: "white" }}>
-            Branch ID: {userDetails?.branchUsersId || "N/A"}
+            Branch ID: {userDetails?.branchID || "N/A"}
           </Typography>
         </Box>
       </Box>

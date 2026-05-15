@@ -234,7 +234,7 @@ const useBranchEmployees = (branchId, userDetails, assignedEmployeeId) => {
           listEmployeesByBranch(branchId),
           getDefaultEmployeeForUserContext({
             ...userDetails,
-            branchUsersId: branchId,
+            branchID: branchId,
           }),
         ]);
 

@@ -67,8 +67,8 @@ const DELETE_CUSTOM_FORM_FIELD = `
 
 export default function ModifyCustomFields(props) {
   const { userDetails } = useContext(UserContext);
-  const institutionId = userDetails?.institutionUsersId;
-  const branchId = userDetails?.branchUsersId;
+  const institutionId = userDetails?.institutionID;
+  const branchId = userDetails?.branchID;
 
   // State for form selection and fields
   const [formKey, setFormKey] = React.useState('');

@@ -34,6 +34,7 @@ export default function ShareAccountUpdateForm(props) {
     numberOfShares: "",
     shareValue: "",
     totalValue: "",
+    branchID: "",
     customShareAccountDetails: "",
   };
   const [numberOfShares, setNumberOfShares] = React.useState(
@@ -41,6 +42,7 @@ export default function ShareAccountUpdateForm(props) {
   );
   const [shareValue, setShareValue] = React.useState(initialValues.shareValue);
   const [totalValue, setTotalValue] = React.useState(initialValues.totalValue);
+  const [branchID, setBranchID] = React.useState(initialValues.branchID);
   const [customShareAccountDetails, setCustomShareAccountDetails] =
     React.useState(initialValues.customShareAccountDetails);
   const [errors, setErrors] = React.useState({});
@@ -51,6 +53,7 @@ export default function ShareAccountUpdateForm(props) {
     setNumberOfShares(cleanValues.numberOfShares);
     setShareValue(cleanValues.shareValue);
     setTotalValue(cleanValues.totalValue);
+    setBranchID(cleanValues.branchID);
     setCustomShareAccountDetails(
       typeof cleanValues.customShareAccountDetails === "string" ||
         cleanValues.customShareAccountDetails === null
@@ -81,6 +84,7 @@ export default function ShareAccountUpdateForm(props) {
     numberOfShares: [],
     shareValue: [],
     totalValue: [],
+    branchID: [],
     customShareAccountDetails: [{ type: "JSON" }],
   };
   const runValidationTasks = async (
@@ -112,6 +116,7 @@ export default function ShareAccountUpdateForm(props) {
           numberOfShares: numberOfShares ?? null,
           shareValue: shareValue ?? null,
           totalValue: totalValue ?? null,
+          branchID: branchID ?? null,
           customShareAccountDetails: customShareAccountDetails ?? null,
         };
         const validationResponses = await Promise.all(
@@ -180,6 +185,7 @@ export default function ShareAccountUpdateForm(props) {
               numberOfShares: value,
               shareValue,
               totalValue,
+              branchID,
               customShareAccountDetails,
             };
             const result = onChange(modelFields);
@@ -211,6 +217,7 @@ export default function ShareAccountUpdateForm(props) {
               numberOfShares,
               shareValue: value,
               totalValue,
+              branchID,
               customShareAccountDetails,
             };
             const result = onChange(modelFields);
@@ -242,6 +249,7 @@ export default function ShareAccountUpdateForm(props) {
               numberOfShares,
               shareValue,
               totalValue: value,
+              branchID,
               customShareAccountDetails,
             };
             const result = onChange(modelFields);
@@ -257,6 +265,34 @@ export default function ShareAccountUpdateForm(props) {
         hasError={errors.totalValue?.hasError}
         {...getOverrideProps(overrides, "totalValue")}
       ></TextField>
+      <TextField
+        label="Branch id"
+        isRequired={false}
+        isReadOnly={false}
+        value={branchID}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              numberOfShares,
+              shareValue,
+              totalValue,
+              branchID: value,
+              customShareAccountDetails,
+            };
+            const result = onChange(modelFields);
+            value = result?.branchID ?? value;
+          }
+          if (errors.branchID?.hasError) {
+            runValidationTasks("branchID", value);
+          }
+          setBranchID(value);
+        }}
+        onBlur={() => runValidationTasks("branchID", branchID)}
+        errorMessage={errors.branchID?.errorMessage}
+        hasError={errors.branchID?.hasError}
+        {...getOverrideProps(overrides, "branchID")}
+      ></TextField>
       <TextAreaField
         label="Custom share account details"
         isRequired={false}
@@ -269,6 +305,7 @@ export default function ShareAccountUpdateForm(props) {
               numberOfShares,
               shareValue,
               totalValue,
+              branchID,
               customShareAccountDetails: value,
             };
             const result = onChange(modelFields);

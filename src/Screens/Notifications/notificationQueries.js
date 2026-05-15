@@ -120,8 +120,8 @@ export const UPDATE_USER_MUTATION = `
       userType
       status
       description
-      institutionUsersId
-      branchUsersId
+      institutionID
+      branchID
       customFieldsData
     }
   }
@@ -137,7 +137,7 @@ export const LIST_USERS_IN_INSTITUTION_QUERY = `
         email
         userType
         status
-        institutionUsersId
+        institutionID
       }
       nextToken
     }

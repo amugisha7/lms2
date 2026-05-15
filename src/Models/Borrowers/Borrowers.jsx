@@ -82,7 +82,7 @@ export default function Borrowers() {
     const isAdminUser = userDetails?.userType === "Admin";
     const effectiveBranchId = isAdminUser
       ? selectedBranchId
-      : userDetails?.branchUsersId;
+      : userDetails?.branchID;
 
     if (!effectiveBranchId) {
       setBorrowers([]);
@@ -207,7 +207,7 @@ export default function Borrowers() {
 
       // However, for extra safety given the prompt:
       if (userDetails.userType !== "Admin" && !input.branchBorrowersId) {
-        input.branchBorrowersId = userDetails.branchUsersId;
+        input.branchBorrowersId = userDetails.branchID;
       }
 
       console.log("API Call: Creating borrower"); // <-- Added
@@ -277,7 +277,7 @@ export default function Borrowers() {
 
       // If non-admin, ensure it stays in their branch (or set it if missing)
       if (userDetails.userType !== "Admin" && !input.branchBorrowersId) {
-        input.branchBorrowersId = userDetails.branchUsersId;
+        input.branchBorrowersId = userDetails.branchID;
       }
 
       console.log("API Call: Updating borrower"); // <-- Added
@@ -428,7 +428,7 @@ export default function Borrowers() {
             variables: {
               limit: 1000,
               filter: {
-                institutionBranchesId: { eq: userDetails.institution.id },
+                institutionID: { eq: userDetails.institution.id },
               },
             },
           });
@@ -452,7 +452,7 @@ export default function Borrowers() {
     const fetchKey =
       userDetails.userType === "Admin"
         ? selectedBranchId
-        : userDetails.branchUsersId;
+        : userDetails.branchID;
 
     if (fetchKey && fetchKey !== hasFetchedRef.current) {
       fetchBorrowers();

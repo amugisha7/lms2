@@ -31,7 +31,7 @@ export const GET_BRANCH_BORROWERS_QUERY = `
           branch {
             id
             name
-            institutionBranchesId
+            institutionID
           }
           createdAt
           updatedAt
@@ -76,7 +76,7 @@ export const LIST_BORROWERS_QUERY = `
         branch {
           id
           name
-          institutionBranchesId
+          institutionID
         }
         createdAt
         updatedAt

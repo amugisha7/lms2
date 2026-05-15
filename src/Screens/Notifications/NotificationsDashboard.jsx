@@ -86,7 +86,7 @@ const NotificationsDashboard = () => {
           }
         }`,
         variables: {
-          filter: { institutionBranchesId: { eq: user.institutionUsersId } },
+          filter: { institutionID: { eq: user.institutionID } },
         },
       });
       const branchId = branchesRes.data.listBranches.items[0]?.id;
@@ -104,7 +104,7 @@ const NotificationsDashboard = () => {
           input: {
             id: notification.reference,
             status: "active",
-            branchUsersId: branchId,
+            branchID: branchId,
           },
         },
       });
@@ -121,7 +121,7 @@ const NotificationsDashboard = () => {
             name: "Join Request Approved",
             description:
               "Your request to join the institution has been approved.",
-            reference: user.institutionUsersId,
+            reference: user.institutionID,
             message: `Your access has been approved on ${currentDate}. You can now access all features.`,
             status: "unread",
             userUserNotificationsId: notification.reference,
@@ -176,7 +176,7 @@ const NotificationsDashboard = () => {
             name: "Join Request Declined",
             description:
               "Your request to join the institution has been declined.",
-            reference: user.institutionUsersId,
+            reference: user.institutionID,
             message: `Your access request was declined on ${currentDate}. Please contact your administrator for more information.`,
             status: "unread",
             userUserNotificationsId: notification.reference,

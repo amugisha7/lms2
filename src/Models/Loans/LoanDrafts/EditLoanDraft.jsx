@@ -205,11 +205,11 @@ export default function EditLoanDraft({
       return;
     }
 
-    const institutionId = userDetails?.institutionUsersId;
+    const institutionId = userDetails?.institutionID;
     const branchId =
       borrower?.branchBorrowersId ||
       draftData?.branchID ||
-      userDetails?.branchUsersId ||
+      userDetails?.branchID ||
       null;
 
     if (!institutionId) {
@@ -255,17 +255,17 @@ export default function EditLoanDraft({
     draftData?.branchID,
     isPrivileged,
     isViewMode,
-    userDetails?.branchUsersId,
-    userDetails?.institutionUsersId,
+    userDetails?.branchID,
+    userDetails?.institutionID,
   ]);
 
   // Fetch loan fees configs so the schedule can display fee information
   useEffect(() => {
-    const institutionId = userDetails?.institutionUsersId;
+    const institutionId = userDetails?.institutionID;
     const branchId =
       borrower?.branchBorrowersId ||
       draftData?.branchID ||
-      userDetails?.branchUsersId ||
+      userDetails?.branchID ||
       null;
     if (!institutionId) {
       setLoanFeesConfigs([]);
@@ -277,8 +277,8 @@ export default function EditLoanDraft({
   }, [
     borrower?.branchBorrowersId,
     draftData?.branchID,
-    userDetails?.branchUsersId,
-    userDetails?.institutionUsersId,
+    userDetails?.branchID,
+    userDetails?.institutionID,
   ]);
 
   const totalLoanFee = useMemo(() => {
@@ -375,8 +375,8 @@ export default function EditLoanDraft({
         onDraftUpdated(nextDraft);
       }
 
-      if (userDetails?.institutionUsersId) {
-        fetchInstitutionAdmins(userDetails.institutionUsersId).then(
+      if (userDetails?.institutionID) {
+        fetchInstitutionAdmins(userDetails.institutionID).then(
           (admins) => {
             const draftValues = parseDraftRecord(nextDraft);
             const borrowerName =
@@ -399,7 +399,7 @@ export default function EditLoanDraft({
               sendLoanApprovalRequest(
                 loanData,
                 admin.id,
-                userDetails.institutionUsersId,
+                userDetails.institutionID,
               ).catch((err) =>
                 console.error(
                   `Failed to notify admin ${admin.firstName}:`,

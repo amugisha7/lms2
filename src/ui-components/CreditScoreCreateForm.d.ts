@@ -29,6 +29,7 @@ export declare type CreditScoreCreateFormInputValues = {
     scoreSource?: string;
     scoreStatus?: string;
     status?: string;
+    branchID?: string;
     customCreditScoreDetails?: string;
 };
 export declare type CreditScoreCreateFormValidationValues = {
@@ -39,6 +40,7 @@ export declare type CreditScoreCreateFormValidationValues = {
     scoreSource?: ValidationFunction<string>;
     scoreStatus?: ValidationFunction<string>;
     status?: ValidationFunction<string>;
+    branchID?: ValidationFunction<string>;
     customCreditScoreDetails?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
@@ -51,6 +53,7 @@ export declare type CreditScoreCreateFormOverridesProps = {
     scoreSource?: PrimitiveOverrideProps<TextFieldProps>;
     scoreStatus?: PrimitiveOverrideProps<TextFieldProps>;
     status?: PrimitiveOverrideProps<TextFieldProps>;
+    branchID?: PrimitiveOverrideProps<TextFieldProps>;
     customCreditScoreDetails?: PrimitiveOverrideProps<TextAreaFieldProps>;
 } & EscapeHatchProps;
 export declare type CreditScoreCreateFormProps = React.PropsWithChildren<{

@@ -14,9 +14,9 @@ export function resolveReportScope(userDetails) {
   const userType = (userDetails?.userType || "").toLowerCase();
   const isAdmin = userType === "admin";
   const institutionId =
-    userDetails?.institution?.id || userDetails?.institutionUsersId || null;
+    userDetails?.institution?.id || userDetails?.institutionID || null;
   const branchId =
-    userDetails?.branchUsersId || userDetails?.branch?.id || null;
+    userDetails?.branchID || userDetails?.branch?.id || null;
   const currencyCode =
     userDetails?.institution?.currencyCode || userDetails?.currencyCode || null;
 

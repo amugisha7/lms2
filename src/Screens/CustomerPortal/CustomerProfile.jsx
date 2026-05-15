@@ -62,7 +62,7 @@ export default function CustomerProfile() {
           }`,
           variables: {
             filter: {
-              institutionBranchesId: { eq: institution.id },
+              institutionID: { eq: institution.id },
             },
           },
         });

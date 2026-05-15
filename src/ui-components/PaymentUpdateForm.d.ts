@@ -35,6 +35,7 @@ export declare type PaymentUpdateFormInputValues = {
     amountAllocatedToInterest?: number;
     amountAllocatedToFees?: number;
     amountAllocatedToPenalty?: number;
+    branchID?: string;
     customPaymentDetails?: string;
 };
 export declare type PaymentUpdateFormValidationValues = {
@@ -51,6 +52,7 @@ export declare type PaymentUpdateFormValidationValues = {
     amountAllocatedToInterest?: ValidationFunction<number>;
     amountAllocatedToFees?: ValidationFunction<number>;
     amountAllocatedToPenalty?: ValidationFunction<number>;
+    branchID?: ValidationFunction<string>;
     customPaymentDetails?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
@@ -69,6 +71,7 @@ export declare type PaymentUpdateFormOverridesProps = {
     amountAllocatedToInterest?: PrimitiveOverrideProps<TextFieldProps>;
     amountAllocatedToFees?: PrimitiveOverrideProps<TextFieldProps>;
     amountAllocatedToPenalty?: PrimitiveOverrideProps<TextFieldProps>;
+    branchID?: PrimitiveOverrideProps<TextFieldProps>;
     customPaymentDetails?: PrimitiveOverrideProps<TextAreaFieldProps>;
 } & EscapeHatchProps;
 export declare type PaymentUpdateFormProps = React.PropsWithChildren<{

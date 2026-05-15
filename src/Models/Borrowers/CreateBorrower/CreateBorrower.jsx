@@ -187,7 +187,7 @@ const CreateBorrower = forwardRef(
     const effectiveBranchId =
       selectedBranchId ||
       propInitialValues?.branchBorrowersId ||
-      userDetails?.branchUsersId ||
+      userDetails?.branchID ||
       userDetails?.branch?.id ||
       "";
     const isAdmin =
@@ -207,7 +207,7 @@ const CreateBorrower = forwardRef(
               variables: {
                 limit: 1000,
                 filter: {
-                  institutionBranchesId: { eq: userDetails.institution.id },
+                  institutionID: { eq: userDetails.institution.id },
                 },
               },
             });
@@ -340,7 +340,7 @@ const CreateBorrower = forwardRef(
           const scopedUserDetails = effectiveBranchId
             ? {
                 ...userDetails,
-                branchUsersId: effectiveBranchId,
+                branchID: effectiveBranchId,
                 branch: {
                   ...(userDetails?.branch || {}),
                   id: effectiveBranchId,
@@ -401,7 +401,7 @@ const CreateBorrower = forwardRef(
         submissionValues.branchBorrowersId = selectedBranchId;
       } else if (userDetails?.userType !== "Admin") {
         submissionValues.branchBorrowersId =
-          userDetails?.branchUsersId || userDetails?.branch?.id;
+          userDetails?.branchID || userDetails?.branch?.id;
       }
       if (!submissionValues.employeeId) {
         submissionValues.employeeId = defaultEmployeeId || "";

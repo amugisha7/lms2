@@ -54,7 +54,7 @@ export default function YourModelTemplate() {
 
   // TODO: Replace with your model's fetch logic
   const fetchItems = async () => {
-    if (!userDetails?.branchUsersId) return;
+    if (!userDetails?.branchID) return;
 
     setLoading(true);
     try {
@@ -65,7 +65,7 @@ export default function YourModelTemplate() {
         const result = await client.graphql({
           query: "YOUR_LIST_QUERY", // Replace with your LIST_QUERY
           variables: {
-            branchId: userDetails.branchUsersId,
+            branchId: userDetails.branchID,
             ...(nextToken && { nextToken }),
           },
         });
@@ -101,7 +101,7 @@ export default function YourModelTemplate() {
       const input = {
         ...formData,
         // TODO: Add any required relationship fields
-        branchYourModelsId: userDetails.branchUsersId, // Replace with your branch relationship field
+        branchYourModelsId: userDetails.branchID, // Replace with your branch relationship field
       };
 
       const result = await client.graphql({
@@ -243,7 +243,7 @@ export default function YourModelTemplate() {
   // Effects
   useEffect(() => {
     fetchItems();
-  }, [userDetails?.branchUsersId]);
+  }, [userDetails?.branchID]);
 
   return (
     <>

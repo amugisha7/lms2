@@ -22,12 +22,14 @@ export declare type ValidationResponse = {
 };
 export declare type ValidationFunction<T> = (value: T, validationResponse: ValidationResponse) => ValidationResponse | Promise<ValidationResponse>;
 export declare type JournalLineUpdateFormInputValues = {
+    branchID?: string;
     debit?: number;
     credit?: number;
     description?: string;
     customJournalLineDetails?: string;
 };
 export declare type JournalLineUpdateFormValidationValues = {
+    branchID?: ValidationFunction<string>;
     debit?: ValidationFunction<number>;
     credit?: ValidationFunction<number>;
     description?: ValidationFunction<string>;
@@ -36,6 +38,7 @@ export declare type JournalLineUpdateFormValidationValues = {
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type JournalLineUpdateFormOverridesProps = {
     JournalLineUpdateFormGrid?: PrimitiveOverrideProps<GridProps>;
+    branchID?: PrimitiveOverrideProps<TextFieldProps>;
     debit?: PrimitiveOverrideProps<TextFieldProps>;
     credit?: PrimitiveOverrideProps<TextFieldProps>;
     description?: PrimitiveOverrideProps<TextFieldProps>;

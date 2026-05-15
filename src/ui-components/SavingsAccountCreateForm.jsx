@@ -32,6 +32,7 @@ export default function SavingsAccountCreateForm(props) {
     accountNumber: "",
     balance: "",
     status: "",
+    branchID: "",
     lockedAmount: "",
     lockedForLoanID: "",
     customSavingsAccountDetails: "",
@@ -41,6 +42,7 @@ export default function SavingsAccountCreateForm(props) {
   );
   const [balance, setBalance] = React.useState(initialValues.balance);
   const [status, setStatus] = React.useState(initialValues.status);
+  const [branchID, setBranchID] = React.useState(initialValues.branchID);
   const [lockedAmount, setLockedAmount] = React.useState(
     initialValues.lockedAmount
   );
@@ -54,6 +56,7 @@ export default function SavingsAccountCreateForm(props) {
     setAccountNumber(initialValues.accountNumber);
     setBalance(initialValues.balance);
     setStatus(initialValues.status);
+    setBranchID(initialValues.branchID);
     setLockedAmount(initialValues.lockedAmount);
     setLockedForLoanID(initialValues.lockedForLoanID);
     setCustomSavingsAccountDetails(initialValues.customSavingsAccountDetails);
@@ -63,6 +66,7 @@ export default function SavingsAccountCreateForm(props) {
     accountNumber: [],
     balance: [],
     status: [],
+    branchID: [],
     lockedAmount: [],
     lockedForLoanID: [],
     customSavingsAccountDetails: [{ type: "JSON" }],
@@ -96,6 +100,7 @@ export default function SavingsAccountCreateForm(props) {
           accountNumber,
           balance,
           status,
+          branchID,
           lockedAmount,
           lockedForLoanID,
           customSavingsAccountDetails,
@@ -164,6 +169,7 @@ export default function SavingsAccountCreateForm(props) {
               accountNumber: value,
               balance,
               status,
+              branchID,
               lockedAmount,
               lockedForLoanID,
               customSavingsAccountDetails,
@@ -197,6 +203,7 @@ export default function SavingsAccountCreateForm(props) {
               accountNumber,
               balance: value,
               status,
+              branchID,
               lockedAmount,
               lockedForLoanID,
               customSavingsAccountDetails,
@@ -226,6 +233,7 @@ export default function SavingsAccountCreateForm(props) {
               accountNumber,
               balance,
               status: value,
+              branchID,
               lockedAmount,
               lockedForLoanID,
               customSavingsAccountDetails,
@@ -244,6 +252,36 @@ export default function SavingsAccountCreateForm(props) {
         {...getOverrideProps(overrides, "status")}
       ></TextField>
       <TextField
+        label="Branch id"
+        isRequired={false}
+        isReadOnly={false}
+        value={branchID}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              accountNumber,
+              balance,
+              status,
+              branchID: value,
+              lockedAmount,
+              lockedForLoanID,
+              customSavingsAccountDetails,
+            };
+            const result = onChange(modelFields);
+            value = result?.branchID ?? value;
+          }
+          if (errors.branchID?.hasError) {
+            runValidationTasks("branchID", value);
+          }
+          setBranchID(value);
+        }}
+        onBlur={() => runValidationTasks("branchID", branchID)}
+        errorMessage={errors.branchID?.errorMessage}
+        hasError={errors.branchID?.hasError}
+        {...getOverrideProps(overrides, "branchID")}
+      ></TextField>
+      <TextField
         label="Locked amount"
         isRequired={false}
         isReadOnly={false}
@@ -259,6 +297,7 @@ export default function SavingsAccountCreateForm(props) {
               accountNumber,
               balance,
               status,
+              branchID,
               lockedAmount: value,
               lockedForLoanID,
               customSavingsAccountDetails,
@@ -288,6 +327,7 @@ export default function SavingsAccountCreateForm(props) {
               accountNumber,
               balance,
               status,
+              branchID,
               lockedAmount,
               lockedForLoanID: value,
               customSavingsAccountDetails,
@@ -316,6 +356,7 @@ export default function SavingsAccountCreateForm(props) {
               accountNumber,
               balance,
               status,
+              branchID,
               lockedAmount,
               lockedForLoanID,
               customSavingsAccountDetails: value,

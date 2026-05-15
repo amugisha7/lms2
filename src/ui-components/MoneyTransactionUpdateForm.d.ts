@@ -35,6 +35,7 @@ export declare type MoneyTransactionUpdateFormInputValues = {
     paymentMethod?: string;
     deviceInfo?: string;
     status?: string;
+    branchID?: string;
     customMoneyTransactionDetails?: string;
 };
 export declare type MoneyTransactionUpdateFormValidationValues = {
@@ -51,6 +52,7 @@ export declare type MoneyTransactionUpdateFormValidationValues = {
     paymentMethod?: ValidationFunction<string>;
     deviceInfo?: ValidationFunction<string>;
     status?: ValidationFunction<string>;
+    branchID?: ValidationFunction<string>;
     customMoneyTransactionDetails?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
@@ -69,6 +71,7 @@ export declare type MoneyTransactionUpdateFormOverridesProps = {
     paymentMethod?: PrimitiveOverrideProps<TextFieldProps>;
     deviceInfo?: PrimitiveOverrideProps<TextFieldProps>;
     status?: PrimitiveOverrideProps<TextFieldProps>;
+    branchID?: PrimitiveOverrideProps<TextFieldProps>;
     customMoneyTransactionDetails?: PrimitiveOverrideProps<TextAreaFieldProps>;
 } & EscapeHatchProps;
 export declare type MoneyTransactionUpdateFormProps = React.PropsWithChildren<{

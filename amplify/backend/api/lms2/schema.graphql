@@ -99,20 +99,26 @@ type Institution @model {
   apiIntegrationSettings: AWSJSON
 
   # --- Relationships (⇢ hasMany) ---
-  users: [User] @hasMany
-  branches: [Branch] @hasMany
-  loanProducts: [LoanProduct] @hasMany
-  customFormFields: [CustomFormField] @hasMany
+  users: [User] @hasMany(indexName: "byInstitution", fields: ["id"])
+  branches: [Branch] @hasMany(indexName: "byInstitution", fields: ["id"])
+  loanProducts: [LoanProduct]
+    @hasMany(indexName: "byInstitution", fields: ["id"])
+  customFormFields: [CustomFormField]
+    @hasMany(indexName: "byInstitution", fields: ["id"])
 
   # --- LoanFeesConfig relationship ---
-  loanFeesConfigs: [LoanFeesConfig] @hasMany
+  loanFeesConfigs: [LoanFeesConfig]
+    @hasMany(indexName: "byInstitution", fields: ["id"])
 
-  accounts: [Account] @hasMany
+  accounts: [Account] @hasMany(indexName: "byInstitution", fields: ["id"])
 
   status: String
-  savingsProducts: [SavingsProduct] @hasMany
-  chartOfAccounts: [ChartOfAccounts] @hasMany
-  dividendDeclarations: [DividendDeclaration] @hasMany
+  savingsProducts: [SavingsProduct]
+    @hasMany(indexName: "byInstitution", fields: ["id"])
+  chartOfAccounts: [ChartOfAccounts]
+    @hasMany(indexName: "byInstitution", fields: ["id"])
+  dividendDeclarations: [DividendDeclaration]
+    @hasMany(indexName: "byInstitution", fields: ["id"])
 
   # --- Custom document header ---
   customDocumentHeader: AWSJSON
@@ -126,25 +132,33 @@ type Branch @model {
   branchCode: String
   address: String
   status: String
+  institutionID: ID @index(name: "byInstitution")
 
   # --- Relationships ---
-  institution: Institution @belongsTo
-  users: [User] @hasMany
-  borrowers: [Borrower] @hasMany
-  employees: [Employee] @hasMany
+  institution: Institution @belongsTo(fields: ["institutionID"])
+  users: [User] @hasMany(indexName: "byBranch", fields: ["id"])
+  borrowers: [Borrower] @hasMany(indexName: "byBranch", fields: ["id"])
+  employees: [Employee] @hasMany(indexName: "byBranch", fields: ["id"])
   accounts: [Account] @manyToMany(relationName: "AccountBranch")
-  documents: [Document] @hasMany
+  documents: [Document] @hasMany(indexName: "byBranch", fields: ["id"])
   loanProducts: [LoanProduct] @manyToMany(relationName: "BranchLoanProduct")
 
-  payrolls: [Payroll] @hasMany
-  financialReports: [FinancialReport] @hasMany
-  customFormFields: [CustomFormField] @hasMany
+  payrolls: [Payroll] @hasMany(indexName: "byBranch", fields: ["id"])
+  financialReports: [FinancialReport]
+    @hasMany(indexName: "byBranch", fields: ["id"])
+  customFormFields: [CustomFormField]
+    @hasMany(indexName: "byBranch", fields: ["id"])
   loans: [Loan] @hasMany(indexName: "byBranch", fields: ["id"])
+  investments: [Investment] @hasMany(indexName: "byBranch", fields: ["id"])
+  otherIncomes: [OtherIncome] @hasMany(indexName: "byBranch", fields: ["id"])
+  chartOfAccounts: [ChartOfAccounts]
+    @hasMany(indexName: "byBranch", fields: ["id"])
+  meetings: [Meeting] @hasMany(indexName: "byBranch", fields: ["id"])
 
   # --- LoanFeesConfig relationship ---
   loanFeesConfigs: [LoanFeesConfig]
     @manyToMany(relationName: "BranchLoanFeesConfig")
-  groups: [Group] @hasMany
+  groups: [Group] @hasMany(indexName: "byBranch", fields: ["id"])
 
   customBranchDetails: AWSJSON
 }
@@ -172,8 +186,10 @@ type User @model {
   description: String
   customFieldsData: AWSJSON
   userDocuments: AWSJSON
-  institution: Institution @belongsTo
-  branch: Branch @belongsTo
+  institutionID: ID @index(name: "byInstitution")
+  branchID: ID @index(name: "byBranch")
+  institution: Institution @belongsTo(fields: ["institutionID"])
+  branch: Branch @belongsTo(fields: ["branchID"])
   userNotifications: [UserNotification] @hasMany
   sentMessages: [Message] @hasMany(indexName: "bySender", fields: ["id"])
   receivedMessages: [Message] @hasMany(indexName: "byRecipient", fields: ["id"])
@@ -225,7 +241,9 @@ type Employee @model {
   taxIdentificationNumber: String
   taxExemptStatus: String
   customFieldsData: AWSJSON
-  branch: Branch @belongsTo
+  institutionID: ID @index(name: "byInstitution")
+  branchID: ID @index(name: "byBranch")
+  branch: Branch @belongsTo(fields: ["branchID"])
   relatedUserID: ID @index(name: "byRelatedUserID")
   relatedBorrowerID: ID @index(name: "byRelatedBorrowerID")
   payroll: [Payroll] @manyToMany(relationName: "PayrollEmployee")
@@ -295,12 +313,13 @@ type Borrower @model {
   borrowerDocuments: AWSJSON
   customFieldsData: AWSJSON
   status: String
-  branch: Branch @belongsTo
+  branchID: ID @index(name: "byBranch")
+  branch: Branch @belongsTo(fields: ["branchID"])
   loans: [Loan] @hasMany(indexName: "byBorrower", fields: ["id"])
-  guarantors: [Guarantor] @hasMany
-  securities: [Security] @hasMany
-  applications: [Application] @hasMany
-  contracts: [Contract] @hasMany
+  guarantors: [Guarantor] @hasMany(indexName: "byBorrower", fields: ["id"])
+  securities: [Security] @hasMany(indexName: "byBorrower", fields: ["id"])
+  applications: [Application] @hasMany(indexName: "byBorrower", fields: ["id"])
+  contracts: [Contract] @hasMany(indexName: "byBorrower", fields: ["id"])
   documents: [Document] @manyToMany(relationName: "BorrowerDocument")
   employees: [Employee] @manyToMany(relationName: "BorrowerLoanOfficer")
   collaterals: [Collateral] @hasMany
@@ -317,7 +336,8 @@ type Borrower @model {
   # Add MemberType
   memberType: String # "Individual", "GroupMember", "Corporate"
   # --- Member Assets (SACCO) ---
-  savingsAccounts: [SavingsAccount] @hasMany
+  savingsAccounts: [SavingsAccount]
+    @hasMany(indexName: "byBorrower", fields: ["id"])
   shareAccount: ShareAccount @hasOne
 
   # --- Governance ---
@@ -334,13 +354,15 @@ type Guarantor @model {
   address: String
   customFieldsData: AWSJSON
   status: String
-  borrower: Borrower @belongsTo
   loans: [Loan] @manyToMany(relationName: "LoanGuarantor")
   applications: [Application] @manyToMany(relationName: "ApplicationGuarantor")
   isExistingMember: Boolean
   memberID: ID # Link to Borrower table if they are a member
   lockedSavingsAmount: Float # If using their savings as collateral
   collaterals: [Collateral] @manyToMany(relationName: "GuarantorCollateral")
+  branchID: ID @index(name: "byBranch")
+  borrowerID: ID @index(name: "byBorrower")
+  borrower: Borrower @belongsTo(fields: ["borrowerID"])
 
   customGuarantorDetails: AWSJSON
 }
@@ -352,7 +374,9 @@ type Security @model {
   description: String
   value: Float
   status: String
-  borrower: Borrower @belongsTo
+  branchID: ID @index(name: "byBranch")
+  borrowerID: ID @index(name: "byBorrower")
+  borrower: Borrower @belongsTo(fields: ["borrowerID"])
 
   customSecurityDetails: AWSJSON
 }
@@ -407,7 +431,8 @@ type LoanProduct @model {
   status: String
 
   # Relationships
-  institution: Institution @belongsTo
+  institutionID: ID @index(name: "byInstitution")
+  institution: Institution @belongsTo(fields: ["institutionID"])
   branches: [Branch] @manyToMany(relationName: "BranchLoanProduct")
   loanFees: [LoanFees] @manyToMany(relationName: "LoanProductLoanFees")
   loanFeesConfigs: [LoanFeesConfig]
@@ -433,6 +458,7 @@ type CreditScore @model {
   borrower: Borrower @belongsTo(fields: ["borrowerID"])
   createdByEmployeeID: ID @index(name: "byCreatedByEmployeeID")
   createdByEmployee: Employee @belongsTo(fields: ["createdByEmployeeID"])
+  branchID: ID @index(name: "byBranch")
 
   customCreditScoreDetails: AWSJSON
 }
@@ -448,7 +474,8 @@ type Document @model {
   fileName: String
   contentType: String
   status: String
-  branch: Branch @belongsTo
+  branchID: ID @index(name: "byBranch")
+  branch: Branch @belongsTo(fields: ["branchID"])
   borrowers: [Borrower] @manyToMany(relationName: "BorrowerDocument")
   loans: [Loan] @manyToMany(relationName: "LoanDocument")
   applications: [Application] @manyToMany(relationName: "ApplicationDocument")
@@ -471,7 +498,9 @@ type Contract @model {
   contractStatus: String
   contractRecord: AWSJSON
   status: String
-  borrower: Borrower @belongsTo
+  branchID: ID @index(name: "byBranch")
+  borrowerID: ID @index(name: "byBorrower")
+  borrower: Borrower @belongsTo(fields: ["borrowerID"])
   applications: [Application] @manyToMany(relationName: "ApplicationContract")
   collaterals: [Collateral] @manyToMany(relationName: "CollateralContract")
   documents: [Document] @manyToMany(relationName: "ContractDocument")
@@ -491,7 +520,9 @@ type Application @model {
   applicationDate: AWSDate
   status: String
   applicationRecord: AWSJSON
-  borrower: Borrower @belongsTo
+  branchID: ID @index(name: "byBranch")
+  borrowerID: ID @index(name: "byBorrower")
+  borrower: Borrower @belongsTo(fields: ["borrowerID"])
   guarantors: [Guarantor] @manyToMany(relationName: "ApplicationGuarantor")
   collateral: [Collateral] @manyToMany(relationName: "ApplicationCollateral")
   contracts: [Contract] @manyToMany(relationName: "ApplicationContract")
@@ -522,6 +553,7 @@ type Collateral @model {
   storedAt: String
   customFieldsData: AWSJSON
   status: String
+  branchID: ID @index(name: "byBranch")
   borrower: Borrower @belongsTo
   loans: [Loan] @manyToMany(relationName: "LoanCollateral")
   applications: [Application] @manyToMany(relationName: "ApplicationCollateral")
@@ -555,9 +587,9 @@ type Loan @model {
   paymentFrequency: String
   customFieldsData: AWSJSON
   status: String
+  branchID: ID @index(name: "byBranch", sortKeyFields: ["startDate"])
   borrowerID: ID @index(name: "byBorrower", sortKeyFields: ["startDate"])
   borrower: Borrower @belongsTo(fields: ["borrowerID"])
-  branchID: ID @index(name: "byBranch", sortKeyFields: ["startDate"])
   branch: Branch @belongsTo(fields: ["branchID"])
   payments: [Payment] @hasMany(indexName: "byLoan", fields: ["id"])
   events: [LoanEvent] @hasMany(indexName: "byLoan", fields: ["id"])
@@ -593,6 +625,7 @@ type Loan @model {
 
 type LoanComment @model {
   id: ID!
+  branchID: ID @index(name: "byBranch")
   loanID: ID! @index(name: "byLoan", sortKeyFields: ["commentAt"])
   loan: Loan @belongsTo(fields: ["loanID"])
   commentAt: AWSDateTime!
@@ -606,6 +639,7 @@ type LoanComment @model {
 
 type LoanEvent @model {
   id: ID!
+  branchID: ID @index(name: "byBranch")
   loanID: ID! @index(name: "byLoan", sortKeyFields: ["eventAt"])
   loan: Loan @belongsTo(fields: ["loanID"])
   eventAt: AWSDateTime!
@@ -639,6 +673,8 @@ type Investment @model {
   numberOfPayments: Float
   paymentFrequency: Float
   status: String
+  branchID: ID @index(name: "byBranch")
+  branch: Branch @belongsTo(fields: ["branchID"])
   accounts: [Account] @manyToMany(relationName: "InvestmentAccount")
 
   customInvestmentDetails: AWSJSON
@@ -659,6 +695,7 @@ type LoanFees @model {
   loanFeesAttribute1: String
   loanFeesAttribute2: String
   status: String
+  branchID: ID @index(name: "byBranch")
   loan: Loan @belongsTo
   loanProducts: [LoanProduct] @manyToMany(relationName: "LoanProductLoanFees")
   accountID: ID @index(name: "byAccountID")
@@ -684,6 +721,7 @@ type Penalty @model {
   penaltyAttribute1: String
   penaltyAttribute2: String
   status: String
+  branchID: ID @index(name: "byBranch")
   loan: Loan @belongsTo
   loanProducts: [LoanProduct] @manyToMany(relationName: "LoanProductPenalty")
   accountID: ID @index(name: "byAccountID")
@@ -705,7 +743,8 @@ type Payroll @model {
   totalShareDeductions: Float
   totalNetPay: Float
   details: String
-  branch: Branch @belongsTo
+  branchID: ID @index(name: "byBranch")
+  branch: Branch @belongsTo(fields: ["branchID"])
   employees: [Employee] @manyToMany(relationName: "PayrollEmployee")
 
   customPayrollDetails: AWSJSON
@@ -728,7 +767,8 @@ type Account @model {
   interestAccruedDate: AWSDate
   accountStatus: String
   status: String
-  institution: Institution @belongsTo
+  institutionID: ID @index(name: "byInstitution")
+  institution: Institution @belongsTo(fields: ["institutionID"])
   branches: [Branch] @manyToMany(relationName: "AccountBranch")
   moneyTransactions: [MoneyTransaction] @hasMany
   expenses: [Expense] @hasMany
@@ -759,6 +799,7 @@ type MoneyTransaction @model {
   paymentMethod: String
   deviceInfo: String
   status: String
+  branchID: ID @index(name: "byBranch")
   account: Account @belongsTo
   loanID: ID @index(name: "byLoan", sortKeyFields: ["transactionDate"])
   loan: Loan @belongsTo(fields: ["loanID"])
@@ -801,6 +842,7 @@ type Payment @model {
   amountAllocatedToInterest: Float
   amountAllocatedToFees: Float
   amountAllocatedToPenalty: Float
+  branchID: ID @index(name: "byBranch")
   # --- Accounting Traceability ---
   # Link to the Journal Entry that recorded this payment
   relatedJournalEntries: [JournalEntry]
@@ -824,6 +866,7 @@ type Expense @model {
   approvedDate: AWSDate
   type: String
   category: String
+  branchID: ID @index(name: "byBranch")
   account: Account @belongsTo
   loans: [Loan] @manyToMany(relationName: "LoanExpense")
   applications: [Application] @manyToMany(relationName: "ApplicationExpense")
@@ -845,6 +888,8 @@ type OtherIncome @model {
   incomeDate: AWSDate
   incomeType: String
   status: String
+  branchID: ID @index(name: "byBranch")
+  branch: Branch @belongsTo(fields: ["branchID"])
   accounts: [Account] @manyToMany(relationName: "OtherIncomeAccount")
 
   customOtherIncomeDetails: AWSJSON
@@ -859,7 +904,8 @@ type FinancialReport @model {
   endDate: AWSDate
   reportData: AWSJSON
   status: String
-  branch: Branch @belongsTo
+  branchID: ID @index(name: "byBranch")
+  branch: Branch @belongsTo(fields: ["branchID"])
 
   customFinancialReportDetails: AWSJSON
 }
@@ -874,8 +920,10 @@ type CustomFormField @model {
   order: Int
   createdBy: String
   status: String
-  branch: Branch @belongsTo
-  institution: Institution @belongsTo
+  branchID: ID @index(name: "byBranch")
+  institutionID: ID @index(name: "byInstitution")
+  branch: Branch @belongsTo(fields: ["branchID"])
+  institution: Institution @belongsTo(fields: ["institutionID"])
 
   customCustomFormFieldDetails: AWSJSON
 }
@@ -889,7 +937,8 @@ type LoanFeesConfig @model {
   percentageBase: String # "principal", "interest", or "principal_interest" (nullable, only for percentage)
   rate: Float # For percentage-based fees (nullable)
   status: String
-  institution: Institution @belongsTo
+  institutionID: ID @index(name: "byInstitution")
+  institution: Institution @belongsTo(fields: ["institutionID"])
   branches: [Branch] @manyToMany(relationName: "BranchLoanFeesConfig")
   loanFees: [LoanFees] @manyToMany(relationName: "LoanFeesLoanFeesConfig")
   loanProducts: [LoanProduct]
@@ -904,6 +953,8 @@ type Message @model {
   body: String
   status: String
   createdAt: AWSDateTime
+  institutionID: ID @index(name: "byInstitution")
+  branchID: ID @index(name: "byBranch")
   sender: User @belongsTo(fields: ["senderUserId"])
   senderUserId: ID! @index(name: "bySender")
   recipient: User @belongsTo(fields: ["recipientUserId"])
@@ -925,7 +976,8 @@ type Notification @model {
   senderUserId: ID! @index(name: "bySender")
   recipient: User @belongsTo(fields: ["recipientUserId"])
   recipientUserId: ID! @index(name: "byRecipient")
-  institutionMessagesId: ID @index(name: "byInstitution")
+  institutionID: ID @index(name: "byInstitution")
+  branchID: ID @index(name: "byBranch")
 
   customNotificationDetails: AWSJSON
 }
@@ -945,7 +997,8 @@ type Group @model {
 
   status: String # Active, Dissolved
   # Relationships
-  branch: Branch @belongsTo
+  branchID: ID @index(name: "byBranch")
+  branch: Branch @belongsTo(fields: ["branchID"])
   members: [Borrower] @hasMany(indexName: "byGroup", fields: ["id"])
   loans: [Loan] @hasMany(indexName: "byGroupLoan", fields: ["id"])
   groupSavingsAccount: SavingsAccount @hasOne # Groups often save collectively
@@ -960,7 +1013,8 @@ type SavingsProduct @model {
   interestRate: Float
   interestPostingFrequency: String # "Monthly", "Annually"
   minBalance: Float
-  institution: Institution @belongsTo
+  institutionID: ID @index(name: "byInstitution")
+  institution: Institution @belongsTo(fields: ["institutionID"])
   savingsAccounts: [SavingsAccount] @hasMany
 
   customSavingsProductDetails: AWSJSON
@@ -973,7 +1027,9 @@ type SavingsAccount @model {
   balance: Float
   status: String # Active, Dormant, Frozen
   # Relationships
-  borrower: Borrower @belongsTo
+  branchID: ID @index(name: "byBranch")
+  borrowerID: ID @index(name: "byBorrower")
+  borrower: Borrower @belongsTo(fields: ["borrowerID"])
   savingsProduct: SavingsProduct @belongsTo
 
   # For Locking savings against a loan (Self-guarantee)
@@ -990,6 +1046,7 @@ type SavingsTransaction @model {
   amount: Float
   type: String # Deposit, Withdrawal, Interest, Fee
   date: AWSDateTime
+  branchID: ID @index(name: "byBranch")
   savingsAccount: SavingsAccount @belongsTo
   initiatedBy: Employee @belongsTo
 
@@ -1003,6 +1060,7 @@ type ShareAccount @model {
   shareValue: Float # Current value per share
   totalValue: Float
 
+  branchID: ID @index(name: "byBranch")
   borrower: Borrower @belongsTo
   transactions: [ShareTransaction] @hasMany
 
@@ -1015,6 +1073,7 @@ type ShareTransaction @model {
   numberOfShares: Float
   amount: Float
   date: AWSDateTime
+  branchID: ID @index(name: "byBranch")
   shareAccount: ShareAccount @belongsTo
 
   customShareTransactionDetails: AWSJSON
@@ -1027,7 +1086,10 @@ type ChartOfAccounts @model {
   type: String! # Asset, Liability, Equity, Income, Expense
   subtype: String # e.g., "Current Asset"
   balance: Float
-  institution: Institution @belongsTo
+  institutionID: ID @index(name: "byInstitution")
+  branchID: ID @index(name: "byBranch")
+  institution: Institution @belongsTo(fields: ["institutionID"])
+  branch: Branch @belongsTo(fields: ["branchID"])
 
   journalLines: [JournalLine] @hasMany
 
@@ -1039,6 +1101,7 @@ type JournalEntry @model {
   date: AWSDate
   description: String
   reference: String
+  branchID: ID @index(name: "byBranch")
   postedBy: Employee @belongsTo
   status: String # Draft, Posted
   # The double-entry lines
@@ -1057,6 +1120,7 @@ type JournalEntry @model {
 
 type JournalLine @model {
   id: ID!
+  branchID: ID @index(name: "byBranch")
   journalEntry: JournalEntry @belongsTo
   chartOfAccounts: ChartOfAccounts @belongsTo
   debit: Float
@@ -1076,6 +1140,8 @@ type Meeting @model {
   attendanceRecord: AWSJSON
   # Resolutions stored as JSON array of { title, description, votesFor, votesAgainst, status }
   resolutionsRecord: AWSJSON
+  branchID: ID @index(name: "byBranch")
+  branch: Branch @belongsTo(fields: ["branchID"])
 
   customMeetingDetails: AWSJSON
 }
@@ -1087,7 +1153,8 @@ type DividendDeclaration @model {
   dividendRate: Float # Percentage on Shares
   interestRebateRate: Float # Percentage on Interest Paid (Patronage)
   status: String # Draft, Approved, Distributed
-  institution: Institution @belongsTo
+  institutionID: ID @index(name: "byInstitution")
+  institution: Institution @belongsTo(fields: ["institutionID"])
 
   customDividendDeclarationDetails: AWSJSON
 }
@@ -1099,6 +1166,7 @@ type Approval @model {
   approvalDate: AWSDate
   status: String # Pending, Approved, Rejected
   notes: String
+  branchID: ID @index(name: "byBranch")
   employee: Employee @belongsTo
 
   customApprovalDetails: AWSJSON

@@ -35,6 +35,7 @@ export declare type ExpenseCreateFormInputValues = {
     approvedDate?: string;
     type?: string;
     category?: string;
+    branchID?: string;
     customExpenseDetails?: string;
 };
 export declare type ExpenseCreateFormValidationValues = {
@@ -51,6 +52,7 @@ export declare type ExpenseCreateFormValidationValues = {
     approvedDate?: ValidationFunction<string>;
     type?: ValidationFunction<string>;
     category?: ValidationFunction<string>;
+    branchID?: ValidationFunction<string>;
     customExpenseDetails?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
@@ -69,6 +71,7 @@ export declare type ExpenseCreateFormOverridesProps = {
     approvedDate?: PrimitiveOverrideProps<TextFieldProps>;
     type?: PrimitiveOverrideProps<TextFieldProps>;
     category?: PrimitiveOverrideProps<TextFieldProps>;
+    branchID?: PrimitiveOverrideProps<TextFieldProps>;
     customExpenseDetails?: PrimitiveOverrideProps<TextAreaFieldProps>;
 } & EscapeHatchProps;
 export declare type ExpenseCreateFormProps = React.PropsWithChildren<{

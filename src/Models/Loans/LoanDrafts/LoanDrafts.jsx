@@ -27,12 +27,11 @@ export default function LoanDrafts() {
   const [selectedBranchId, setSelectedBranchId] = React.useState("");
 
   const isAdmin = userDetails?.userType === "Admin";
-  const activeBranchId = userDetails?.branchUsersId || null;
+  const activeBranchId = userDetails?.branchID || null;
   const institutionId =
-    userDetails?.institution?.id || userDetails?.institutionUsersId || null;
+    userDetails?.institution?.id || userDetails?.institutionID || null;
   const hasMultipleAdminBranches = isAdmin && branches.length > 1;
   const shouldShowLoanDraftsView = !isAdmin || Boolean(selectedBranchId);
-  const hasNoLoanDrafts = !loading && filteredRows.length === 0;
 
   const refresh = React.useCallback(async () => {
     setLoading(true);
@@ -74,7 +73,7 @@ export default function LoanDrafts() {
           query: listBranches,
           variables: {
             limit: 1000,
-            filter: { institutionBranchesId: { eq: institutionId } },
+            filter: { institutionID: { eq: institutionId } },
           },
         });
         const items = branchData?.data?.listBranches?.items || [];
@@ -134,6 +133,8 @@ export default function LoanDrafts() {
     }
     return rows;
   }, [rows, selectedTab]);
+
+  const hasNoLoanDrafts = !loading && filteredRows.length === 0;
 
   const borrowerName = React.useCallback((borrowerID, borrower) => {
     // If borrower object is passed directly (nested from query), use it

@@ -100,7 +100,7 @@ function renderReport(userDetails) {
 
 const BRANCH_USER = {
   userType: "LoanOfficer",
-  branchUsersId: "branch-1",
+  branchID: "branch-1",
 };
 
 const SAMPLE_SUMMARIES = [

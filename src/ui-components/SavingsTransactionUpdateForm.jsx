@@ -34,11 +34,13 @@ export default function SavingsTransactionUpdateForm(props) {
     amount: "",
     type: "",
     date: "",
+    branchID: "",
     customSavingsTransactionDetails: "",
   };
   const [amount, setAmount] = React.useState(initialValues.amount);
   const [type, setType] = React.useState(initialValues.type);
   const [date, setDate] = React.useState(initialValues.date);
+  const [branchID, setBranchID] = React.useState(initialValues.branchID);
   const [customSavingsTransactionDetails, setCustomSavingsTransactionDetails] =
     React.useState(initialValues.customSavingsTransactionDetails);
   const [errors, setErrors] = React.useState({});
@@ -49,6 +51,7 @@ export default function SavingsTransactionUpdateForm(props) {
     setAmount(cleanValues.amount);
     setType(cleanValues.type);
     setDate(cleanValues.date);
+    setBranchID(cleanValues.branchID);
     setCustomSavingsTransactionDetails(
       typeof cleanValues.customSavingsTransactionDetails === "string" ||
         cleanValues.customSavingsTransactionDetails === null
@@ -78,6 +81,7 @@ export default function SavingsTransactionUpdateForm(props) {
     amount: [],
     type: [],
     date: [],
+    branchID: [],
     customSavingsTransactionDetails: [{ type: "JSON" }],
   };
   const runValidationTasks = async (
@@ -126,6 +130,7 @@ export default function SavingsTransactionUpdateForm(props) {
           amount: amount ?? null,
           type: type ?? null,
           date: date ?? null,
+          branchID: branchID ?? null,
           customSavingsTransactionDetails:
             customSavingsTransactionDetails ?? null,
         };
@@ -195,6 +200,7 @@ export default function SavingsTransactionUpdateForm(props) {
               amount: value,
               type,
               date,
+              branchID,
               customSavingsTransactionDetails,
             };
             const result = onChange(modelFields);
@@ -222,6 +228,7 @@ export default function SavingsTransactionUpdateForm(props) {
               amount,
               type: value,
               date,
+              branchID,
               customSavingsTransactionDetails,
             };
             const result = onChange(modelFields);
@@ -251,6 +258,7 @@ export default function SavingsTransactionUpdateForm(props) {
               amount,
               type,
               date: value,
+              branchID,
               customSavingsTransactionDetails,
             };
             const result = onChange(modelFields);
@@ -266,6 +274,34 @@ export default function SavingsTransactionUpdateForm(props) {
         hasError={errors.date?.hasError}
         {...getOverrideProps(overrides, "date")}
       ></TextField>
+      <TextField
+        label="Branch id"
+        isRequired={false}
+        isReadOnly={false}
+        value={branchID}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              amount,
+              type,
+              date,
+              branchID: value,
+              customSavingsTransactionDetails,
+            };
+            const result = onChange(modelFields);
+            value = result?.branchID ?? value;
+          }
+          if (errors.branchID?.hasError) {
+            runValidationTasks("branchID", value);
+          }
+          setBranchID(value);
+        }}
+        onBlur={() => runValidationTasks("branchID", branchID)}
+        errorMessage={errors.branchID?.errorMessage}
+        hasError={errors.branchID?.hasError}
+        {...getOverrideProps(overrides, "branchID")}
+      ></TextField>
       <TextAreaField
         label="Custom savings transaction details"
         isRequired={false}
@@ -278,6 +314,7 @@ export default function SavingsTransactionUpdateForm(props) {
               amount,
               type,
               date,
+              branchID,
               customSavingsTransactionDetails: value,
             };
             const result = onChange(modelFields);

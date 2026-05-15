@@ -32,6 +32,7 @@ export default function JournalEntryCreateForm(props) {
     date: "",
     description: "",
     reference: "",
+    branchID: "",
     status: "",
     customJournalEntryDetails: "",
   };
@@ -40,6 +41,7 @@ export default function JournalEntryCreateForm(props) {
     initialValues.description
   );
   const [reference, setReference] = React.useState(initialValues.reference);
+  const [branchID, setBranchID] = React.useState(initialValues.branchID);
   const [status, setStatus] = React.useState(initialValues.status);
   const [customJournalEntryDetails, setCustomJournalEntryDetails] =
     React.useState(initialValues.customJournalEntryDetails);
@@ -48,6 +50,7 @@ export default function JournalEntryCreateForm(props) {
     setDate(initialValues.date);
     setDescription(initialValues.description);
     setReference(initialValues.reference);
+    setBranchID(initialValues.branchID);
     setStatus(initialValues.status);
     setCustomJournalEntryDetails(initialValues.customJournalEntryDetails);
     setErrors({});
@@ -56,6 +59,7 @@ export default function JournalEntryCreateForm(props) {
     date: [],
     description: [],
     reference: [],
+    branchID: [],
     status: [],
     customJournalEntryDetails: [{ type: "JSON" }],
   };
@@ -88,6 +92,7 @@ export default function JournalEntryCreateForm(props) {
           date,
           description,
           reference,
+          branchID,
           status,
           customJournalEntryDetails,
         };
@@ -156,6 +161,7 @@ export default function JournalEntryCreateForm(props) {
               date: value,
               description,
               reference,
+              branchID,
               status,
               customJournalEntryDetails,
             };
@@ -184,6 +190,7 @@ export default function JournalEntryCreateForm(props) {
               date,
               description: value,
               reference,
+              branchID,
               status,
               customJournalEntryDetails,
             };
@@ -212,6 +219,7 @@ export default function JournalEntryCreateForm(props) {
               date,
               description,
               reference: value,
+              branchID,
               status,
               customJournalEntryDetails,
             };
@@ -229,6 +237,35 @@ export default function JournalEntryCreateForm(props) {
         {...getOverrideProps(overrides, "reference")}
       ></TextField>
       <TextField
+        label="Branch id"
+        isRequired={false}
+        isReadOnly={false}
+        value={branchID}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              date,
+              description,
+              reference,
+              branchID: value,
+              status,
+              customJournalEntryDetails,
+            };
+            const result = onChange(modelFields);
+            value = result?.branchID ?? value;
+          }
+          if (errors.branchID?.hasError) {
+            runValidationTasks("branchID", value);
+          }
+          setBranchID(value);
+        }}
+        onBlur={() => runValidationTasks("branchID", branchID)}
+        errorMessage={errors.branchID?.errorMessage}
+        hasError={errors.branchID?.hasError}
+        {...getOverrideProps(overrides, "branchID")}
+      ></TextField>
+      <TextField
         label="Status"
         isRequired={false}
         isReadOnly={false}
@@ -240,6 +277,7 @@ export default function JournalEntryCreateForm(props) {
               date,
               description,
               reference,
+              branchID,
               status: value,
               customJournalEntryDetails,
             };
@@ -267,6 +305,7 @@ export default function JournalEntryCreateForm(props) {
               date,
               description,
               reference,
+              branchID,
               status,
               customJournalEntryDetails: value,
             };

@@ -25,6 +25,7 @@ export declare type JournalEntryCreateFormInputValues = {
     date?: string;
     description?: string;
     reference?: string;
+    branchID?: string;
     status?: string;
     customJournalEntryDetails?: string;
 };
@@ -32,6 +33,7 @@ export declare type JournalEntryCreateFormValidationValues = {
     date?: ValidationFunction<string>;
     description?: ValidationFunction<string>;
     reference?: ValidationFunction<string>;
+    branchID?: ValidationFunction<string>;
     status?: ValidationFunction<string>;
     customJournalEntryDetails?: ValidationFunction<string>;
 };
@@ -41,6 +43,7 @@ export declare type JournalEntryCreateFormOverridesProps = {
     date?: PrimitiveOverrideProps<TextFieldProps>;
     description?: PrimitiveOverrideProps<TextFieldProps>;
     reference?: PrimitiveOverrideProps<TextFieldProps>;
+    branchID?: PrimitiveOverrideProps<TextFieldProps>;
     status?: PrimitiveOverrideProps<TextFieldProps>;
     customJournalEntryDetails?: PrimitiveOverrideProps<TextAreaFieldProps>;
 } & EscapeHatchProps;

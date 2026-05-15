@@ -32,6 +32,7 @@ export declare type GuarantorCreateFormInputValues = {
     isExistingMember?: boolean;
     memberID?: string;
     lockedSavingsAmount?: number;
+    branchID?: string;
     customGuarantorDetails?: string;
 };
 export declare type GuarantorCreateFormValidationValues = {
@@ -45,6 +46,7 @@ export declare type GuarantorCreateFormValidationValues = {
     isExistingMember?: ValidationFunction<boolean>;
     memberID?: ValidationFunction<string>;
     lockedSavingsAmount?: ValidationFunction<number>;
+    branchID?: ValidationFunction<string>;
     customGuarantorDetails?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
@@ -60,6 +62,7 @@ export declare type GuarantorCreateFormOverridesProps = {
     isExistingMember?: PrimitiveOverrideProps<SwitchFieldProps>;
     memberID?: PrimitiveOverrideProps<TextFieldProps>;
     lockedSavingsAmount?: PrimitiveOverrideProps<TextFieldProps>;
+    branchID?: PrimitiveOverrideProps<TextFieldProps>;
     customGuarantorDetails?: PrimitiveOverrideProps<TextAreaFieldProps>;
 } & EscapeHatchProps;
 export declare type GuarantorCreateFormProps = React.PropsWithChildren<{

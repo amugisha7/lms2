@@ -236,7 +236,7 @@ const CreateMoneyTransaction = forwardRef(function CreateMoneyTransaction(
             contentType: fileItem.fileType,
             status: "active",
             branchDocumentsId:
-              account?.branchAccountsId || userDetails?.branchUsersId,
+              account?.branchAccountsId || userDetails?.branchID,
             createdByEmployeeID: userDetails?.id,
           };
 
@@ -273,7 +273,7 @@ const CreateMoneyTransaction = forwardRef(function CreateMoneyTransaction(
             contentType: "link",
             status: "active",
             branchDocumentsId:
-              account?.branchAccountsId || userDetails?.branchUsersId,
+              account?.branchAccountsId || userDetails?.branchID,
             createdByEmployeeID: userDetails?.id,
           };
 

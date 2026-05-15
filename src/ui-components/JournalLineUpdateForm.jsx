@@ -31,11 +31,13 @@ export default function JournalLineUpdateForm(props) {
     ...rest
   } = props;
   const initialValues = {
+    branchID: "",
     debit: "",
     credit: "",
     description: "",
     customJournalLineDetails: "",
   };
+  const [branchID, setBranchID] = React.useState(initialValues.branchID);
   const [debit, setDebit] = React.useState(initialValues.debit);
   const [credit, setCredit] = React.useState(initialValues.credit);
   const [description, setDescription] = React.useState(
@@ -48,6 +50,7 @@ export default function JournalLineUpdateForm(props) {
     const cleanValues = journalLineRecord
       ? { ...initialValues, ...journalLineRecord }
       : initialValues;
+    setBranchID(cleanValues.branchID);
     setDebit(cleanValues.debit);
     setCredit(cleanValues.credit);
     setDescription(cleanValues.description);
@@ -77,6 +80,7 @@ export default function JournalLineUpdateForm(props) {
   }, [idProp, journalLineModelProp]);
   React.useEffect(resetStateValues, [journalLineRecord]);
   const validations = {
+    branchID: [],
     debit: [],
     credit: [],
     description: [],
@@ -108,6 +112,7 @@ export default function JournalLineUpdateForm(props) {
       onSubmit={async (event) => {
         event.preventDefault();
         let modelFields = {
+          branchID: branchID ?? null,
           debit: debit ?? null,
           credit: credit ?? null,
           description: description ?? null,
@@ -164,6 +169,34 @@ export default function JournalLineUpdateForm(props) {
       {...rest}
     >
       <TextField
+        label="Branch id"
+        isRequired={false}
+        isReadOnly={false}
+        value={branchID}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              branchID: value,
+              debit,
+              credit,
+              description,
+              customJournalLineDetails,
+            };
+            const result = onChange(modelFields);
+            value = result?.branchID ?? value;
+          }
+          if (errors.branchID?.hasError) {
+            runValidationTasks("branchID", value);
+          }
+          setBranchID(value);
+        }}
+        onBlur={() => runValidationTasks("branchID", branchID)}
+        errorMessage={errors.branchID?.errorMessage}
+        hasError={errors.branchID?.hasError}
+        {...getOverrideProps(overrides, "branchID")}
+      ></TextField>
+      <TextField
         label="Debit"
         isRequired={false}
         isReadOnly={false}
@@ -176,6 +209,7 @@ export default function JournalLineUpdateForm(props) {
             : parseFloat(e.target.value);
           if (onChange) {
             const modelFields = {
+              branchID,
               debit: value,
               credit,
               description,
@@ -207,6 +241,7 @@ export default function JournalLineUpdateForm(props) {
             : parseFloat(e.target.value);
           if (onChange) {
             const modelFields = {
+              branchID,
               debit,
               credit: value,
               description,
@@ -234,6 +269,7 @@ export default function JournalLineUpdateForm(props) {
           let { value } = e.target;
           if (onChange) {
             const modelFields = {
+              branchID,
               debit,
               credit,
               description: value,
@@ -261,6 +297,7 @@ export default function JournalLineUpdateForm(props) {
           let { value } = e.target;
           if (onChange) {
             const modelFields = {
+              branchID,
               debit,
               credit,
               description,

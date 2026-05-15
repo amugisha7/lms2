@@ -215,7 +215,7 @@ const AccountSettingsForm = () => {
       const branchInput = {
         name: "Branch #001",
         status: "system",
-        institutionBranchesId: institutionId,
+        institutionID: institutionId,
       };
 
       const branchRes = await client.graphql({
@@ -227,7 +227,7 @@ const AccountSettingsForm = () => {
 
       // 4. Create default Account for the Branch
       const accountInput = {
-        institutionAccountsId: institutionId,
+        institutionID: institutionId,
         name: "Cash_System_Default",
         openingBalance: 0,
         status: "active",
@@ -254,8 +254,8 @@ const AccountSettingsForm = () => {
       // 5. Create User with more details
       const userInput = {
         id: authenticatedUserId,
-        branchUsersId: branchId,
-        institutionUsersId: institutionId,
+        branchID: branchId,
+        institutionID: institutionId,
         email: authenticatedUserEmail,
         userType: "Admin",
         status: "active",
@@ -317,7 +317,7 @@ const AccountSettingsForm = () => {
       // 2. Create User if Institution exists
       const userInput = {
         id: authenticatedUserId,
-        institutionUsersId: businessID,
+        institutionID: businessID,
         // userType intentionally left blank - admin must select during review
         email: authenticatedUserEmail,
         status: "pending",
@@ -333,7 +333,7 @@ const AccountSettingsForm = () => {
         query: LIST_USERS_QUERY,
         variables: {
           filter: {
-            institutionUsersId: { eq: businessID },
+            institutionID: { eq: businessID },
             userType: { eq: "Admin" },
           },
         },

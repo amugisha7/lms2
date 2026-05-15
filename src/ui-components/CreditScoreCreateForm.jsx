@@ -36,6 +36,7 @@ export default function CreditScoreCreateForm(props) {
     scoreSource: "",
     scoreStatus: "",
     status: "",
+    branchID: "",
     customCreditScoreDetails: "",
   };
   const [name, setName] = React.useState(initialValues.name);
@@ -51,6 +52,7 @@ export default function CreditScoreCreateForm(props) {
     initialValues.scoreStatus
   );
   const [status, setStatus] = React.useState(initialValues.status);
+  const [branchID, setBranchID] = React.useState(initialValues.branchID);
   const [customCreditScoreDetails, setCustomCreditScoreDetails] =
     React.useState(initialValues.customCreditScoreDetails);
   const [errors, setErrors] = React.useState({});
@@ -62,6 +64,7 @@ export default function CreditScoreCreateForm(props) {
     setScoreSource(initialValues.scoreSource);
     setScoreStatus(initialValues.scoreStatus);
     setStatus(initialValues.status);
+    setBranchID(initialValues.branchID);
     setCustomCreditScoreDetails(initialValues.customCreditScoreDetails);
     setErrors({});
   };
@@ -73,6 +76,7 @@ export default function CreditScoreCreateForm(props) {
     scoreSource: [],
     scoreStatus: [],
     status: [],
+    branchID: [],
     customCreditScoreDetails: [{ type: "JSON" }],
   };
   const runValidationTasks = async (
@@ -108,6 +112,7 @@ export default function CreditScoreCreateForm(props) {
           scoreSource,
           scoreStatus,
           status,
+          branchID,
           customCreditScoreDetails,
         };
         const validationResponses = await Promise.all(
@@ -178,6 +183,7 @@ export default function CreditScoreCreateForm(props) {
               scoreSource,
               scoreStatus,
               status,
+              branchID,
               customCreditScoreDetails,
             };
             const result = onChange(modelFields);
@@ -209,6 +215,7 @@ export default function CreditScoreCreateForm(props) {
               scoreSource,
               scoreStatus,
               status,
+              branchID,
               customCreditScoreDetails,
             };
             const result = onChange(modelFields);
@@ -244,6 +251,7 @@ export default function CreditScoreCreateForm(props) {
               scoreSource,
               scoreStatus,
               status,
+              branchID,
               customCreditScoreDetails,
             };
             const result = onChange(modelFields);
@@ -276,6 +284,7 @@ export default function CreditScoreCreateForm(props) {
               scoreSource,
               scoreStatus,
               status,
+              branchID,
               customCreditScoreDetails,
             };
             const result = onChange(modelFields);
@@ -307,6 +316,7 @@ export default function CreditScoreCreateForm(props) {
               scoreSource: value,
               scoreStatus,
               status,
+              branchID,
               customCreditScoreDetails,
             };
             const result = onChange(modelFields);
@@ -338,6 +348,7 @@ export default function CreditScoreCreateForm(props) {
               scoreSource,
               scoreStatus: value,
               status,
+              branchID,
               customCreditScoreDetails,
             };
             const result = onChange(modelFields);
@@ -369,6 +380,7 @@ export default function CreditScoreCreateForm(props) {
               scoreSource,
               scoreStatus,
               status: value,
+              branchID,
               customCreditScoreDetails,
             };
             const result = onChange(modelFields);
@@ -383,6 +395,38 @@ export default function CreditScoreCreateForm(props) {
         errorMessage={errors.status?.errorMessage}
         hasError={errors.status?.hasError}
         {...getOverrideProps(overrides, "status")}
+      ></TextField>
+      <TextField
+        label="Branch id"
+        isRequired={false}
+        isReadOnly={false}
+        value={branchID}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              name,
+              description,
+              score,
+              scoreDate,
+              scoreSource,
+              scoreStatus,
+              status,
+              branchID: value,
+              customCreditScoreDetails,
+            };
+            const result = onChange(modelFields);
+            value = result?.branchID ?? value;
+          }
+          if (errors.branchID?.hasError) {
+            runValidationTasks("branchID", value);
+          }
+          setBranchID(value);
+        }}
+        onBlur={() => runValidationTasks("branchID", branchID)}
+        errorMessage={errors.branchID?.errorMessage}
+        hasError={errors.branchID?.hasError}
+        {...getOverrideProps(overrides, "branchID")}
       ></TextField>
       <TextAreaField
         label="Custom credit score details"
@@ -399,6 +443,7 @@ export default function CreditScoreCreateForm(props) {
               scoreSource,
               scoreStatus,
               status,
+              branchID,
               customCreditScoreDetails: value,
             };
             const result = onChange(modelFields);

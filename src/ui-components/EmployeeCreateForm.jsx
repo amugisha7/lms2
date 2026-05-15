@@ -67,6 +67,7 @@ export default function EmployeeCreateForm(props) {
     taxIdentificationNumber: "",
     taxExemptStatus: "",
     customFieldsData: "",
+    institutionID: "",
     relatedUserID: "",
     relatedBorrowerID: "",
     customEmployeeDetails: "",
@@ -165,6 +166,9 @@ export default function EmployeeCreateForm(props) {
   const [customFieldsData, setCustomFieldsData] = React.useState(
     initialValues.customFieldsData
   );
+  const [institutionID, setInstitutionID] = React.useState(
+    initialValues.institutionID
+  );
   const [relatedUserID, setRelatedUserID] = React.useState(
     initialValues.relatedUserID
   );
@@ -214,6 +218,7 @@ export default function EmployeeCreateForm(props) {
     setTaxIdentificationNumber(initialValues.taxIdentificationNumber);
     setTaxExemptStatus(initialValues.taxExemptStatus);
     setCustomFieldsData(initialValues.customFieldsData);
+    setInstitutionID(initialValues.institutionID);
     setRelatedUserID(initialValues.relatedUserID);
     setRelatedBorrowerID(initialValues.relatedBorrowerID);
     setCustomEmployeeDetails(initialValues.customEmployeeDetails);
@@ -258,6 +263,7 @@ export default function EmployeeCreateForm(props) {
     taxIdentificationNumber: [],
     taxExemptStatus: [],
     customFieldsData: [{ type: "JSON" }],
+    institutionID: [],
     relatedUserID: [],
     relatedBorrowerID: [],
     customEmployeeDetails: [{ type: "JSON" }],
@@ -326,6 +332,7 @@ export default function EmployeeCreateForm(props) {
           taxIdentificationNumber,
           taxExemptStatus,
           customFieldsData,
+          institutionID,
           relatedUserID,
           relatedBorrowerID,
           customEmployeeDetails,
@@ -429,6 +436,7 @@ export default function EmployeeCreateForm(props) {
               taxIdentificationNumber,
               taxExemptStatus,
               customFieldsData,
+              institutionID,
               relatedUserID,
               relatedBorrowerID,
               customEmployeeDetails,
@@ -493,6 +501,7 @@ export default function EmployeeCreateForm(props) {
               taxIdentificationNumber,
               taxExemptStatus,
               customFieldsData,
+              institutionID,
               relatedUserID,
               relatedBorrowerID,
               customEmployeeDetails,
@@ -557,6 +566,7 @@ export default function EmployeeCreateForm(props) {
               taxIdentificationNumber,
               taxExemptStatus,
               customFieldsData,
+              institutionID,
               relatedUserID,
               relatedBorrowerID,
               customEmployeeDetails,
@@ -621,6 +631,7 @@ export default function EmployeeCreateForm(props) {
               taxIdentificationNumber,
               taxExemptStatus,
               customFieldsData,
+              institutionID,
               relatedUserID,
               relatedBorrowerID,
               customEmployeeDetails,
@@ -685,6 +696,7 @@ export default function EmployeeCreateForm(props) {
               taxIdentificationNumber,
               taxExemptStatus,
               customFieldsData,
+              institutionID,
               relatedUserID,
               relatedBorrowerID,
               customEmployeeDetails,
@@ -749,6 +761,7 @@ export default function EmployeeCreateForm(props) {
               taxIdentificationNumber,
               taxExemptStatus,
               customFieldsData,
+              institutionID,
               relatedUserID,
               relatedBorrowerID,
               customEmployeeDetails,
@@ -813,6 +826,7 @@ export default function EmployeeCreateForm(props) {
               taxIdentificationNumber,
               taxExemptStatus,
               customFieldsData,
+              institutionID,
               relatedUserID,
               relatedBorrowerID,
               customEmployeeDetails,
@@ -877,6 +891,7 @@ export default function EmployeeCreateForm(props) {
               taxIdentificationNumber,
               taxExemptStatus,
               customFieldsData,
+              institutionID,
               relatedUserID,
               relatedBorrowerID,
               customEmployeeDetails,
@@ -941,6 +956,7 @@ export default function EmployeeCreateForm(props) {
               taxIdentificationNumber,
               taxExemptStatus,
               customFieldsData,
+              institutionID,
               relatedUserID,
               relatedBorrowerID,
               customEmployeeDetails,
@@ -1005,6 +1021,7 @@ export default function EmployeeCreateForm(props) {
               taxIdentificationNumber,
               taxExemptStatus,
               customFieldsData,
+              institutionID,
               relatedUserID,
               relatedBorrowerID,
               customEmployeeDetails,
@@ -1069,6 +1086,7 @@ export default function EmployeeCreateForm(props) {
               taxIdentificationNumber,
               taxExemptStatus,
               customFieldsData,
+              institutionID,
               relatedUserID,
               relatedBorrowerID,
               customEmployeeDetails,
@@ -1133,6 +1151,7 @@ export default function EmployeeCreateForm(props) {
               taxIdentificationNumber,
               taxExemptStatus,
               customFieldsData,
+              institutionID,
               relatedUserID,
               relatedBorrowerID,
               customEmployeeDetails,
@@ -1197,6 +1216,7 @@ export default function EmployeeCreateForm(props) {
               taxIdentificationNumber,
               taxExemptStatus,
               customFieldsData,
+              institutionID,
               relatedUserID,
               relatedBorrowerID,
               customEmployeeDetails,
@@ -1261,6 +1281,7 @@ export default function EmployeeCreateForm(props) {
               taxIdentificationNumber,
               taxExemptStatus,
               customFieldsData,
+              institutionID,
               relatedUserID,
               relatedBorrowerID,
               customEmployeeDetails,
@@ -1325,6 +1346,7 @@ export default function EmployeeCreateForm(props) {
               taxIdentificationNumber,
               taxExemptStatus,
               customFieldsData,
+              institutionID,
               relatedUserID,
               relatedBorrowerID,
               customEmployeeDetails,
@@ -1391,6 +1413,7 @@ export default function EmployeeCreateForm(props) {
               taxIdentificationNumber,
               taxExemptStatus,
               customFieldsData,
+              institutionID,
               relatedUserID,
               relatedBorrowerID,
               customEmployeeDetails,
@@ -1455,6 +1478,7 @@ export default function EmployeeCreateForm(props) {
               taxIdentificationNumber,
               taxExemptStatus,
               customFieldsData,
+              institutionID,
               relatedUserID,
               relatedBorrowerID,
               customEmployeeDetails,
@@ -1521,6 +1545,7 @@ export default function EmployeeCreateForm(props) {
               taxIdentificationNumber,
               taxExemptStatus,
               customFieldsData,
+              institutionID,
               relatedUserID,
               relatedBorrowerID,
               customEmployeeDetails,
@@ -1585,6 +1610,7 @@ export default function EmployeeCreateForm(props) {
               taxIdentificationNumber,
               taxExemptStatus,
               customFieldsData,
+              institutionID,
               relatedUserID,
               relatedBorrowerID,
               customEmployeeDetails,
@@ -1649,6 +1675,7 @@ export default function EmployeeCreateForm(props) {
               taxIdentificationNumber,
               taxExemptStatus,
               customFieldsData,
+              institutionID,
               relatedUserID,
               relatedBorrowerID,
               customEmployeeDetails,
@@ -1713,6 +1740,7 @@ export default function EmployeeCreateForm(props) {
               taxIdentificationNumber,
               taxExemptStatus,
               customFieldsData,
+              institutionID,
               relatedUserID,
               relatedBorrowerID,
               customEmployeeDetails,
@@ -1777,6 +1805,7 @@ export default function EmployeeCreateForm(props) {
               taxIdentificationNumber,
               taxExemptStatus,
               customFieldsData,
+              institutionID,
               relatedUserID,
               relatedBorrowerID,
               customEmployeeDetails,
@@ -1841,6 +1870,7 @@ export default function EmployeeCreateForm(props) {
               taxIdentificationNumber,
               taxExemptStatus,
               customFieldsData,
+              institutionID,
               relatedUserID,
               relatedBorrowerID,
               customEmployeeDetails,
@@ -1905,6 +1935,7 @@ export default function EmployeeCreateForm(props) {
               taxIdentificationNumber,
               taxExemptStatus,
               customFieldsData,
+              institutionID,
               relatedUserID,
               relatedBorrowerID,
               customEmployeeDetails,
@@ -1970,6 +2001,7 @@ export default function EmployeeCreateForm(props) {
               taxIdentificationNumber,
               taxExemptStatus,
               customFieldsData,
+              institutionID,
               relatedUserID,
               relatedBorrowerID,
               customEmployeeDetails,
@@ -2037,6 +2069,7 @@ export default function EmployeeCreateForm(props) {
               taxIdentificationNumber,
               taxExemptStatus,
               customFieldsData,
+              institutionID,
               relatedUserID,
               relatedBorrowerID,
               customEmployeeDetails,
@@ -2103,6 +2136,7 @@ export default function EmployeeCreateForm(props) {
               taxIdentificationNumber,
               taxExemptStatus,
               customFieldsData,
+              institutionID,
               relatedUserID,
               relatedBorrowerID,
               customEmployeeDetails,
@@ -2169,6 +2203,7 @@ export default function EmployeeCreateForm(props) {
               taxIdentificationNumber,
               taxExemptStatus,
               customFieldsData,
+              institutionID,
               relatedUserID,
               relatedBorrowerID,
               customEmployeeDetails,
@@ -2235,6 +2270,7 @@ export default function EmployeeCreateForm(props) {
               taxIdentificationNumber,
               taxExemptStatus,
               customFieldsData,
+              institutionID,
               relatedUserID,
               relatedBorrowerID,
               customEmployeeDetails,
@@ -2299,6 +2335,7 @@ export default function EmployeeCreateForm(props) {
               taxIdentificationNumber,
               taxExemptStatus,
               customFieldsData,
+              institutionID,
               relatedUserID,
               relatedBorrowerID,
               customEmployeeDetails,
@@ -2369,6 +2406,7 @@ export default function EmployeeCreateForm(props) {
               taxIdentificationNumber,
               taxExemptStatus,
               customFieldsData,
+              institutionID,
               relatedUserID,
               relatedBorrowerID,
               customEmployeeDetails,
@@ -2433,6 +2471,7 @@ export default function EmployeeCreateForm(props) {
               taxIdentificationNumber,
               taxExemptStatus,
               customFieldsData,
+              institutionID,
               relatedUserID,
               relatedBorrowerID,
               customEmployeeDetails,
@@ -2499,6 +2538,7 @@ export default function EmployeeCreateForm(props) {
               taxIdentificationNumber,
               taxExemptStatus,
               customFieldsData,
+              institutionID,
               relatedUserID,
               relatedBorrowerID,
               customEmployeeDetails,
@@ -2563,6 +2603,7 @@ export default function EmployeeCreateForm(props) {
               taxIdentificationNumber,
               taxExemptStatus,
               customFieldsData,
+              institutionID,
               relatedUserID,
               relatedBorrowerID,
               customEmployeeDetails,
@@ -2627,6 +2668,7 @@ export default function EmployeeCreateForm(props) {
               taxIdentificationNumber,
               taxExemptStatus,
               customFieldsData,
+              institutionID,
               relatedUserID,
               relatedBorrowerID,
               customEmployeeDetails,
@@ -2693,6 +2735,7 @@ export default function EmployeeCreateForm(props) {
               taxIdentificationNumber: value,
               taxExemptStatus,
               customFieldsData,
+              institutionID,
               relatedUserID,
               relatedBorrowerID,
               customEmployeeDetails,
@@ -2759,6 +2802,7 @@ export default function EmployeeCreateForm(props) {
               taxIdentificationNumber,
               taxExemptStatus: value,
               customFieldsData,
+              institutionID,
               relatedUserID,
               relatedBorrowerID,
               customEmployeeDetails,
@@ -2822,6 +2866,7 @@ export default function EmployeeCreateForm(props) {
               taxIdentificationNumber,
               taxExemptStatus,
               customFieldsData: value,
+              institutionID,
               relatedUserID,
               relatedBorrowerID,
               customEmployeeDetails,
@@ -2839,6 +2884,71 @@ export default function EmployeeCreateForm(props) {
         hasError={errors.customFieldsData?.hasError}
         {...getOverrideProps(overrides, "customFieldsData")}
       ></TextAreaField>
+      <TextField
+        label="Institution id"
+        isRequired={false}
+        isReadOnly={false}
+        value={institutionID}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              firstName,
+              lastName,
+              middleName,
+              dateOfBirth,
+              phoneNumber1,
+              phoneNumber2,
+              email,
+              title,
+              addressLine1,
+              addressLine2,
+              city,
+              stateProvince,
+              postalCode,
+              nextOfKinName,
+              nextOfKinPhoneNumber,
+              nextOfKinEmail,
+              nextOfKinRelationship,
+              nextOfKinAddress,
+              nationalID,
+              passportNumber,
+              nationality,
+              status,
+              employmentType,
+              employmentStatus,
+              employmentStartDate,
+              employmentEndDate,
+              employmentPosition,
+              employmentDepartment,
+              employmentGrade,
+              employmentLocation,
+              grossSalary,
+              bankAccountNumber,
+              bankName,
+              bankBranchCode,
+              socialSecurityNumber,
+              taxIdentificationNumber,
+              taxExemptStatus,
+              customFieldsData,
+              institutionID: value,
+              relatedUserID,
+              relatedBorrowerID,
+              customEmployeeDetails,
+            };
+            const result = onChange(modelFields);
+            value = result?.institutionID ?? value;
+          }
+          if (errors.institutionID?.hasError) {
+            runValidationTasks("institutionID", value);
+          }
+          setInstitutionID(value);
+        }}
+        onBlur={() => runValidationTasks("institutionID", institutionID)}
+        errorMessage={errors.institutionID?.errorMessage}
+        hasError={errors.institutionID?.hasError}
+        {...getOverrideProps(overrides, "institutionID")}
+      ></TextField>
       <TextField
         label="Related user id"
         isRequired={false}
@@ -2886,6 +2996,7 @@ export default function EmployeeCreateForm(props) {
               taxIdentificationNumber,
               taxExemptStatus,
               customFieldsData,
+              institutionID,
               relatedUserID: value,
               relatedBorrowerID,
               customEmployeeDetails,
@@ -2950,6 +3061,7 @@ export default function EmployeeCreateForm(props) {
               taxIdentificationNumber,
               taxExemptStatus,
               customFieldsData,
+              institutionID,
               relatedUserID,
               relatedBorrowerID: value,
               customEmployeeDetails,
@@ -3015,6 +3127,7 @@ export default function EmployeeCreateForm(props) {
               taxIdentificationNumber,
               taxExemptStatus,
               customFieldsData,
+              institutionID,
               relatedUserID,
               relatedBorrowerID,
               customEmployeeDetails: value,

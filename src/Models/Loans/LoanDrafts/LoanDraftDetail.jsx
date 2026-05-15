@@ -100,8 +100,8 @@ export default function LoanDraftDetail() {
       const draft = await getLoanDraftById(draftId);
       let attachedBorrower = null;
 
-      if (userDetails?.branchUsersId) {
-        const list = await fetchBorrowers(userDetails.branchUsersId);
+      if (userDetails?.branchID) {
+        const list = await fetchBorrowers(userDetails.branchID);
         const b = list.find((x) => x.id === draft?.borrowerID);
         attachedBorrower = b || null;
         setBorrower(attachedBorrower);
@@ -133,7 +133,7 @@ export default function LoanDraftDetail() {
     } finally {
       setLoading(false);
     }
-  }, [draftId, userDetails?.branchUsersId, userDetails?.institutionUsersId]);
+  }, [draftId, userDetails?.branchID, userDetails?.institutionID]);
 
   React.useEffect(() => {
     load();

@@ -27,6 +27,7 @@ export declare type ApprovalUpdateFormInputValues = {
     approvalDate?: string;
     status?: string;
     notes?: string;
+    branchID?: string;
     customApprovalDetails?: string;
 };
 export declare type ApprovalUpdateFormValidationValues = {
@@ -35,6 +36,7 @@ export declare type ApprovalUpdateFormValidationValues = {
     approvalDate?: ValidationFunction<string>;
     status?: ValidationFunction<string>;
     notes?: ValidationFunction<string>;
+    branchID?: ValidationFunction<string>;
     customApprovalDetails?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
@@ -45,6 +47,7 @@ export declare type ApprovalUpdateFormOverridesProps = {
     approvalDate?: PrimitiveOverrideProps<TextFieldProps>;
     status?: PrimitiveOverrideProps<TextFieldProps>;
     notes?: PrimitiveOverrideProps<TextFieldProps>;
+    branchID?: PrimitiveOverrideProps<TextFieldProps>;
     customApprovalDetails?: PrimitiveOverrideProps<TextAreaFieldProps>;
 } & EscapeHatchProps;
 export declare type ApprovalUpdateFormProps = React.PropsWithChildren<{

@@ -331,11 +331,11 @@ const CreateLoan = forwardRef(
     }, [draftId]);
 
     useEffect(() => {
-      const currentInstitutionId = userDetails?.institutionUsersId;
+      const currentInstitutionId = userDetails?.institutionID;
       const effectiveBranchId =
         propBorrower?.branchBorrowersId ||
         loanDraft?.branchID ||
-        userDetails?.branchUsersId ||
+        userDetails?.branchID ||
         null;
 
       if (!currentInstitutionId) {
@@ -358,8 +358,8 @@ const CreateLoan = forwardRef(
     }, [
       loanDraft?.branchID,
       propBorrower?.branchBorrowersId,
-      userDetails?.branchUsersId,
-      userDetails?.institutionUsersId,
+      userDetails?.branchID,
+      userDetails?.institutionID,
     ]);
 
     useEffect(() => {
@@ -369,14 +369,14 @@ const CreateLoan = forwardRef(
         const effectiveBranchId =
           propBorrower?.branchBorrowersId ||
           loanDraft?.branchID ||
-          userDetails?.branchUsersId ||
+          userDetails?.branchID ||
           null;
         if (!effectiveBranchId) return;
 
         try {
           const scopedUserDetails = {
             ...userDetails,
-            branchUsersId: effectiveBranchId,
+            branchID: effectiveBranchId,
           };
           const [employeeItems, defaultEmployee] = await Promise.all([
             listEmployeesByBranch(effectiveBranchId),
@@ -538,8 +538,8 @@ const CreateLoan = forwardRef(
         setLoanDraft(updated);
 
         // Notify Admins
-        if (userDetails?.institutionUsersId) {
-          fetchInstitutionAdmins(userDetails.institutionUsersId).then(
+        if (userDetails?.institutionID) {
+          fetchInstitutionAdmins(userDetails.institutionID).then(
             (admins) => {
               // Parse draft values if needed
               let draftValues = {};
@@ -574,7 +574,7 @@ const CreateLoan = forwardRef(
                 sendLoanApprovalRequest(
                   loanData,
                   admin.id,
-                  userDetails.institutionUsersId,
+                  userDetails.institutionID,
                 ).catch((err) =>
                   console.error(
                     `Failed to notify admin ${admin.firstName}:`,
@@ -612,7 +612,7 @@ const CreateLoan = forwardRef(
       try {
         const actorEmployeeId = await resolveEmployeeIdForUser({
           userDetails,
-          branchId: userDetails?.branchUsersId,
+          branchId: userDetails?.branchID,
         });
         let currentDraft = loanDraft;
 

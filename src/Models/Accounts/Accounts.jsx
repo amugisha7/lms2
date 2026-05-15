@@ -109,12 +109,12 @@ export default function Accounts() {
   const handleTransactionSuccess = () => {
     const isAdmin = userDetails?.userType === "Admin";
     const institutionId =
-      userDetails?.institutionUsersId || userDetails?.institution?.id;
+      userDetails?.institutionID || userDetails?.institution?.id;
 
     if (isAdmin && institutionId) {
       fetchAccounts({ institutionId });
-    } else if (!isAdmin && userDetails?.branchUsersId) {
-      fetchAccounts({ branchId: userDetails.branchUsersId });
+    } else if (!isAdmin && userDetails?.branchID) {
+      fetchAccounts({ branchId: userDetails.branchID });
     }
   };
 
@@ -253,12 +253,12 @@ export default function Accounts() {
 
   // API handler for creating account
   const handleCreateAccountAPI = async (values) => {
-    if (!userDetails?.institutionUsersId) {
+    if (!userDetails?.institutionID) {
       throw new Error("Error: Please try refreshing the page.");
     }
 
     const input = {
-      institutionAccountsId: userDetails.institutionUsersId,
+      institutionID: userDetails.institutionID,
       name: values.name?.trim() || null,
       openingBalance: parseFloat(values.openingBalance) || 0,
       status: "active",
@@ -508,7 +508,7 @@ export default function Accounts() {
   React.useEffect(() => {
     const isAdmin = userDetails?.userType === "Admin";
     const institutionId =
-      userDetails?.institutionUsersId || userDetails?.institution?.id;
+      userDetails?.institutionID || userDetails?.institution?.id;
 
     if (isAdmin && institutionId && !hasFetchedRef.current) {
       // Admin: fetch all accounts in the institution
@@ -516,17 +516,17 @@ export default function Accounts() {
       fetchAccounts({ institutionId });
     } else if (
       !isAdmin &&
-      userDetails?.branchUsersId &&
+      userDetails?.branchID &&
       !hasFetchedRef.current
     ) {
       // Non-admin: fetch accounts linked to their branch
       hasFetchedRef.current = true;
-      fetchAccounts({ branchId: userDetails.branchUsersId });
+      fetchAccounts({ branchId: userDetails.branchID });
     }
   }, [
-    userDetails?.institutionUsersId,
+    userDetails?.institutionID,
     userDetails?.institution?.id,
-    userDetails?.branchUsersId,
+    userDetails?.branchID,
     userDetails?.userType,
     fetchAccounts,
   ]);
@@ -535,7 +535,7 @@ export default function Accounts() {
     const fetchBranchesForAdmin = async () => {
       const isAdmin = userDetails?.userType === "Admin";
       const institutionId =
-        userDetails?.institution?.id || userDetails?.institutionUsersId;
+        userDetails?.institution?.id || userDetails?.institutionID;
 
       if (!isAdmin || !institutionId) {
         setBranches([]);
@@ -549,7 +549,7 @@ export default function Accounts() {
           variables: {
             limit: 1000,
             filter: {
-              institutionBranchesId: { eq: institutionId },
+              institutionID: { eq: institutionId },
             },
           },
         });

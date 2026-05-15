@@ -44,6 +44,7 @@ export default function LoanFeesUpdateForm(props) {
     loanFeesAttribute1: "",
     loanFeesAttribute2: "",
     status: "",
+    branchID: "",
     customLoanFeesDetails: "",
   };
   const [amount, setAmount] = React.useState(initialValues.amount);
@@ -78,6 +79,7 @@ export default function LoanFeesUpdateForm(props) {
     initialValues.loanFeesAttribute2
   );
   const [status, setStatus] = React.useState(initialValues.status);
+  const [branchID, setBranchID] = React.useState(initialValues.branchID);
   const [customLoanFeesDetails, setCustomLoanFeesDetails] = React.useState(
     initialValues.customLoanFeesDetails
   );
@@ -99,6 +101,7 @@ export default function LoanFeesUpdateForm(props) {
     setLoanFeesAttribute1(cleanValues.loanFeesAttribute1);
     setLoanFeesAttribute2(cleanValues.loanFeesAttribute2);
     setStatus(cleanValues.status);
+    setBranchID(cleanValues.branchID);
     setCustomLoanFeesDetails(
       typeof cleanValues.customLoanFeesDetails === "string" ||
         cleanValues.customLoanFeesDetails === null
@@ -137,6 +140,7 @@ export default function LoanFeesUpdateForm(props) {
     loanFeesAttribute1: [],
     loanFeesAttribute2: [],
     status: [],
+    branchID: [],
     customLoanFeesDetails: [{ type: "JSON" }],
   };
   const runValidationTasks = async (
@@ -178,6 +182,7 @@ export default function LoanFeesUpdateForm(props) {
           loanFeesAttribute1: loanFeesAttribute1 ?? null,
           loanFeesAttribute2: loanFeesAttribute2 ?? null,
           status: status ?? null,
+          branchID: branchID ?? null,
           customLoanFeesDetails: customLoanFeesDetails ?? null,
         };
         const validationResponses = await Promise.all(
@@ -256,6 +261,7 @@ export default function LoanFeesUpdateForm(props) {
               loanFeesAttribute1,
               loanFeesAttribute2,
               status,
+              branchID,
               customLoanFeesDetails,
             };
             const result = onChange(modelFields);
@@ -293,6 +299,7 @@ export default function LoanFeesUpdateForm(props) {
               loanFeesAttribute1,
               loanFeesAttribute2,
               status,
+              branchID,
               customLoanFeesDetails,
             };
             const result = onChange(modelFields);
@@ -330,6 +337,7 @@ export default function LoanFeesUpdateForm(props) {
               loanFeesAttribute1,
               loanFeesAttribute2,
               status,
+              branchID,
               customLoanFeesDetails,
             };
             const result = onChange(modelFields);
@@ -367,6 +375,7 @@ export default function LoanFeesUpdateForm(props) {
               loanFeesAttribute1,
               loanFeesAttribute2,
               status,
+              branchID,
               customLoanFeesDetails,
             };
             const result = onChange(modelFields);
@@ -413,6 +422,7 @@ export default function LoanFeesUpdateForm(props) {
               loanFeesAttribute1,
               loanFeesAttribute2,
               status,
+              branchID,
               customLoanFeesDetails,
             };
             const result = onChange(modelFields);
@@ -451,6 +461,7 @@ export default function LoanFeesUpdateForm(props) {
               loanFeesAttribute1,
               loanFeesAttribute2,
               status,
+              branchID,
               customLoanFeesDetails,
             };
             const result = onChange(modelFields);
@@ -488,6 +499,7 @@ export default function LoanFeesUpdateForm(props) {
               loanFeesAttribute1,
               loanFeesAttribute2,
               status,
+              branchID,
               customLoanFeesDetails,
             };
             const result = onChange(modelFields);
@@ -525,6 +537,7 @@ export default function LoanFeesUpdateForm(props) {
               loanFeesAttribute1,
               loanFeesAttribute2,
               status,
+              branchID,
               customLoanFeesDetails,
             };
             const result = onChange(modelFields);
@@ -562,6 +575,7 @@ export default function LoanFeesUpdateForm(props) {
               loanFeesAttribute1,
               loanFeesAttribute2,
               status,
+              branchID,
               customLoanFeesDetails,
             };
             const result = onChange(modelFields);
@@ -599,6 +613,7 @@ export default function LoanFeesUpdateForm(props) {
               loanFeesAttribute1,
               loanFeesAttribute2,
               status,
+              branchID,
               customLoanFeesDetails,
             };
             const result = onChange(modelFields);
@@ -638,6 +653,7 @@ export default function LoanFeesUpdateForm(props) {
               loanFeesAttribute1: value,
               loanFeesAttribute2,
               status,
+              branchID,
               customLoanFeesDetails,
             };
             const result = onChange(modelFields);
@@ -677,6 +693,7 @@ export default function LoanFeesUpdateForm(props) {
               loanFeesAttribute1,
               loanFeesAttribute2: value,
               status,
+              branchID,
               customLoanFeesDetails,
             };
             const result = onChange(modelFields);
@@ -716,6 +733,7 @@ export default function LoanFeesUpdateForm(props) {
               loanFeesAttribute1,
               loanFeesAttribute2,
               status: value,
+              branchID,
               customLoanFeesDetails,
             };
             const result = onChange(modelFields);
@@ -730,6 +748,44 @@ export default function LoanFeesUpdateForm(props) {
         errorMessage={errors.status?.errorMessage}
         hasError={errors.status?.hasError}
         {...getOverrideProps(overrides, "status")}
+      ></TextField>
+      <TextField
+        label="Branch id"
+        isRequired={false}
+        isReadOnly={false}
+        value={branchID}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              amount,
+              loanFeesName,
+              loanFeesCategory,
+              loanFeesCalculationMethod,
+              loanFeesRate,
+              loanFeesDate,
+              loanFeesStatus,
+              notes,
+              loanFeesType,
+              loanFeesDescription,
+              loanFeesAttribute1,
+              loanFeesAttribute2,
+              status,
+              branchID: value,
+              customLoanFeesDetails,
+            };
+            const result = onChange(modelFields);
+            value = result?.branchID ?? value;
+          }
+          if (errors.branchID?.hasError) {
+            runValidationTasks("branchID", value);
+          }
+          setBranchID(value);
+        }}
+        onBlur={() => runValidationTasks("branchID", branchID)}
+        errorMessage={errors.branchID?.errorMessage}
+        hasError={errors.branchID?.hasError}
+        {...getOverrideProps(overrides, "branchID")}
       ></TextField>
       <TextAreaField
         label="Custom loan fees details"
@@ -753,6 +809,7 @@ export default function LoanFeesUpdateForm(props) {
               loanFeesAttribute1,
               loanFeesAttribute2,
               status,
+              branchID,
               customLoanFeesDetails: value,
             };
             const result = onChange(modelFields);

@@ -34,6 +34,7 @@ export default function SecurityCreateForm(props) {
     description: "",
     value: "",
     status: "",
+    branchID: "",
     customSecurityDetails: "",
   };
   const [name, setName] = React.useState(initialValues.name);
@@ -43,6 +44,7 @@ export default function SecurityCreateForm(props) {
   );
   const [value, setValue] = React.useState(initialValues.value);
   const [status, setStatus] = React.useState(initialValues.status);
+  const [branchID, setBranchID] = React.useState(initialValues.branchID);
   const [customSecurityDetails, setCustomSecurityDetails] = React.useState(
     initialValues.customSecurityDetails
   );
@@ -53,6 +55,7 @@ export default function SecurityCreateForm(props) {
     setDescription(initialValues.description);
     setValue(initialValues.value);
     setStatus(initialValues.status);
+    setBranchID(initialValues.branchID);
     setCustomSecurityDetails(initialValues.customSecurityDetails);
     setErrors({});
   };
@@ -62,6 +65,7 @@ export default function SecurityCreateForm(props) {
     description: [],
     value: [],
     status: [],
+    branchID: [],
     customSecurityDetails: [{ type: "JSON" }],
   };
   const runValidationTasks = async (
@@ -95,6 +99,7 @@ export default function SecurityCreateForm(props) {
           description,
           value,
           status,
+          branchID,
           customSecurityDetails,
         };
         const validationResponses = await Promise.all(
@@ -163,6 +168,7 @@ export default function SecurityCreateForm(props) {
               description,
               value,
               status,
+              branchID,
               customSecurityDetails,
             };
             const result = onChange(modelFields);
@@ -192,6 +198,7 @@ export default function SecurityCreateForm(props) {
               description,
               value,
               status,
+              branchID,
               customSecurityDetails,
             };
             const result = onChange(modelFields);
@@ -221,6 +228,7 @@ export default function SecurityCreateForm(props) {
               description: value,
               value,
               status,
+              branchID,
               customSecurityDetails,
             };
             const result = onChange(modelFields);
@@ -254,6 +262,7 @@ export default function SecurityCreateForm(props) {
               description,
               value: value,
               status,
+              branchID,
               customSecurityDetails,
             };
             const result = onChange(modelFields);
@@ -283,6 +292,7 @@ export default function SecurityCreateForm(props) {
               description,
               value,
               status: value,
+              branchID,
               customSecurityDetails,
             };
             const result = onChange(modelFields);
@@ -298,6 +308,36 @@ export default function SecurityCreateForm(props) {
         hasError={errors.status?.hasError}
         {...getOverrideProps(overrides, "status")}
       ></TextField>
+      <TextField
+        label="Branch id"
+        isRequired={false}
+        isReadOnly={false}
+        value={branchID}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              name,
+              type,
+              description,
+              value,
+              status,
+              branchID: value,
+              customSecurityDetails,
+            };
+            const result = onChange(modelFields);
+            value = result?.branchID ?? value;
+          }
+          if (errors.branchID?.hasError) {
+            runValidationTasks("branchID", value);
+          }
+          setBranchID(value);
+        }}
+        onBlur={() => runValidationTasks("branchID", branchID)}
+        errorMessage={errors.branchID?.errorMessage}
+        hasError={errors.branchID?.hasError}
+        {...getOverrideProps(overrides, "branchID")}
+      ></TextField>
       <TextAreaField
         label="Custom security details"
         isRequired={false}
@@ -311,6 +351,7 @@ export default function SecurityCreateForm(props) {
               description,
               value,
               status,
+              branchID,
               customSecurityDetails: value,
             };
             const result = onChange(modelFields);

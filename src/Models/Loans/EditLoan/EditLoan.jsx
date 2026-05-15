@@ -357,7 +357,7 @@ const EditLoan = forwardRef(
     }, [readOnly]);
 
     useEffect(() => {
-      const currentInstitutionId = userDetails?.institutionUsersId;
+      const currentInstitutionId = userDetails?.institutionID;
       const effectiveBranchId =
         localDraft?.branchID || localDraft?.borrower?.branchBorrowersId || null;
       if (!currentInstitutionId) return;
@@ -376,7 +376,7 @@ const EditLoan = forwardRef(
     }, [
       localDraft?.borrower?.branchBorrowersId,
       localDraft?.branchID,
-      userDetails?.institutionUsersId,
+      userDetails?.institutionID,
     ]);
 
     const formInitialValues = propInitialValues
@@ -517,8 +517,8 @@ const EditLoan = forwardRef(
         setLocalDraft(newLocalDraft);
 
         // 2. Notify Admins
-        if (userDetails?.institutionUsersId) {
-          fetchInstitutionAdmins(userDetails.institutionUsersId).then(
+        if (userDetails?.institutionID) {
+          fetchInstitutionAdmins(userDetails.institutionID).then(
             (admins) => {
               let draftValues = {};
               try {
@@ -554,7 +554,7 @@ const EditLoan = forwardRef(
                 sendLoanApprovalRequest(
                   loanData,
                   admin.id,
-                  userDetails.institutionUsersId,
+                  userDetails.institutionID,
                 ).catch((err) =>
                   console.error(
                     `Failed to notify admin ${admin.firstName}:`,

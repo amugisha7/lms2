@@ -29,11 +29,13 @@ export default function JournalLineCreateForm(props) {
     ...rest
   } = props;
   const initialValues = {
+    branchID: "",
     debit: "",
     credit: "",
     description: "",
     customJournalLineDetails: "",
   };
+  const [branchID, setBranchID] = React.useState(initialValues.branchID);
   const [debit, setDebit] = React.useState(initialValues.debit);
   const [credit, setCredit] = React.useState(initialValues.credit);
   const [description, setDescription] = React.useState(
@@ -43,6 +45,7 @@ export default function JournalLineCreateForm(props) {
     React.useState(initialValues.customJournalLineDetails);
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
+    setBranchID(initialValues.branchID);
     setDebit(initialValues.debit);
     setCredit(initialValues.credit);
     setDescription(initialValues.description);
@@ -50,6 +53,7 @@ export default function JournalLineCreateForm(props) {
     setErrors({});
   };
   const validations = {
+    branchID: [],
     debit: [],
     credit: [],
     description: [],
@@ -81,6 +85,7 @@ export default function JournalLineCreateForm(props) {
       onSubmit={async (event) => {
         event.preventDefault();
         let modelFields = {
+          branchID,
           debit,
           credit,
           description,
@@ -139,6 +144,34 @@ export default function JournalLineCreateForm(props) {
       {...rest}
     >
       <TextField
+        label="Branch id"
+        isRequired={false}
+        isReadOnly={false}
+        value={branchID}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              branchID: value,
+              debit,
+              credit,
+              description,
+              customJournalLineDetails,
+            };
+            const result = onChange(modelFields);
+            value = result?.branchID ?? value;
+          }
+          if (errors.branchID?.hasError) {
+            runValidationTasks("branchID", value);
+          }
+          setBranchID(value);
+        }}
+        onBlur={() => runValidationTasks("branchID", branchID)}
+        errorMessage={errors.branchID?.errorMessage}
+        hasError={errors.branchID?.hasError}
+        {...getOverrideProps(overrides, "branchID")}
+      ></TextField>
+      <TextField
         label="Debit"
         isRequired={false}
         isReadOnly={false}
@@ -151,6 +184,7 @@ export default function JournalLineCreateForm(props) {
             : parseFloat(e.target.value);
           if (onChange) {
             const modelFields = {
+              branchID,
               debit: value,
               credit,
               description,
@@ -182,6 +216,7 @@ export default function JournalLineCreateForm(props) {
             : parseFloat(e.target.value);
           if (onChange) {
             const modelFields = {
+              branchID,
               debit,
               credit: value,
               description,
@@ -209,6 +244,7 @@ export default function JournalLineCreateForm(props) {
           let { value } = e.target;
           if (onChange) {
             const modelFields = {
+              branchID,
               debit,
               credit,
               description: value,
@@ -235,6 +271,7 @@ export default function JournalLineCreateForm(props) {
           let { value } = e.target;
           if (onChange) {
             const modelFields = {
+              branchID,
               debit,
               credit,
               description,

@@ -35,6 +35,7 @@ export default function ShareTransactionUpdateForm(props) {
     numberOfShares: "",
     amount: "",
     date: "",
+    branchID: "",
     customShareTransactionDetails: "",
   };
   const [type, setType] = React.useState(initialValues.type);
@@ -43,6 +44,7 @@ export default function ShareTransactionUpdateForm(props) {
   );
   const [amount, setAmount] = React.useState(initialValues.amount);
   const [date, setDate] = React.useState(initialValues.date);
+  const [branchID, setBranchID] = React.useState(initialValues.branchID);
   const [customShareTransactionDetails, setCustomShareTransactionDetails] =
     React.useState(initialValues.customShareTransactionDetails);
   const [errors, setErrors] = React.useState({});
@@ -54,6 +56,7 @@ export default function ShareTransactionUpdateForm(props) {
     setNumberOfShares(cleanValues.numberOfShares);
     setAmount(cleanValues.amount);
     setDate(cleanValues.date);
+    setBranchID(cleanValues.branchID);
     setCustomShareTransactionDetails(
       typeof cleanValues.customShareTransactionDetails === "string" ||
         cleanValues.customShareTransactionDetails === null
@@ -85,6 +88,7 @@ export default function ShareTransactionUpdateForm(props) {
     numberOfShares: [],
     amount: [],
     date: [],
+    branchID: [],
     customShareTransactionDetails: [{ type: "JSON" }],
   };
   const runValidationTasks = async (
@@ -134,6 +138,7 @@ export default function ShareTransactionUpdateForm(props) {
           numberOfShares: numberOfShares ?? null,
           amount: amount ?? null,
           date: date ?? null,
+          branchID: branchID ?? null,
           customShareTransactionDetails: customShareTransactionDetails ?? null,
         };
         const validationResponses = await Promise.all(
@@ -199,6 +204,7 @@ export default function ShareTransactionUpdateForm(props) {
               numberOfShares,
               amount,
               date,
+              branchID,
               customShareTransactionDetails,
             };
             const result = onChange(modelFields);
@@ -231,6 +237,7 @@ export default function ShareTransactionUpdateForm(props) {
               numberOfShares: value,
               amount,
               date,
+              branchID,
               customShareTransactionDetails,
             };
             const result = onChange(modelFields);
@@ -263,6 +270,7 @@ export default function ShareTransactionUpdateForm(props) {
               numberOfShares,
               amount: value,
               date,
+              branchID,
               customShareTransactionDetails,
             };
             const result = onChange(modelFields);
@@ -293,6 +301,7 @@ export default function ShareTransactionUpdateForm(props) {
               numberOfShares,
               amount,
               date: value,
+              branchID,
               customShareTransactionDetails,
             };
             const result = onChange(modelFields);
@@ -308,6 +317,35 @@ export default function ShareTransactionUpdateForm(props) {
         hasError={errors.date?.hasError}
         {...getOverrideProps(overrides, "date")}
       ></TextField>
+      <TextField
+        label="Branch id"
+        isRequired={false}
+        isReadOnly={false}
+        value={branchID}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              type,
+              numberOfShares,
+              amount,
+              date,
+              branchID: value,
+              customShareTransactionDetails,
+            };
+            const result = onChange(modelFields);
+            value = result?.branchID ?? value;
+          }
+          if (errors.branchID?.hasError) {
+            runValidationTasks("branchID", value);
+          }
+          setBranchID(value);
+        }}
+        onBlur={() => runValidationTasks("branchID", branchID)}
+        errorMessage={errors.branchID?.errorMessage}
+        hasError={errors.branchID?.hasError}
+        {...getOverrideProps(overrides, "branchID")}
+      ></TextField>
       <TextAreaField
         label="Custom share transaction details"
         isRequired={false}
@@ -321,6 +359,7 @@ export default function ShareTransactionUpdateForm(props) {
               numberOfShares,
               amount,
               date,
+              branchID,
               customShareTransactionDetails: value,
             };
             const result = onChange(modelFields);

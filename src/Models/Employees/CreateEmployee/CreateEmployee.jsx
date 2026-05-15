@@ -141,7 +141,7 @@ const CreateEmployee = forwardRef(
         }
 
         const institutionId =
-          userDetails?.institutionUsersId || userDetails?.institution?.id;
+          userDetails?.institutionID || userDetails?.institution?.id;
         if (!institutionId) {
           return;
         }
@@ -152,7 +152,7 @@ const CreateEmployee = forwardRef(
             query: listBranches,
             variables: {
               filter: {
-                institutionBranchesId: { eq: institutionId },
+                institutionID: { eq: institutionId },
               },
               limit: 100,
             },
@@ -183,7 +183,7 @@ const CreateEmployee = forwardRef(
       ...propInitialValues,
       branchEmployeesId:
         propInitialValues?.branchEmployeesId ||
-        userDetails?.branchUsersId ||
+        userDetails?.branchID ||
         userDetails?.branch?.id ||
         "",
       status: propInitialValues?.status || "active",
@@ -232,7 +232,7 @@ const CreateEmployee = forwardRef(
         branchEmployeesId:
           normalizedUserType === "admin"
             ? values.branchEmployeesId
-            : userDetails?.branchUsersId || userDetails?.branch?.id || null,
+            : userDetails?.branchID || userDetails?.branch?.id || null,
       };
 
       try {

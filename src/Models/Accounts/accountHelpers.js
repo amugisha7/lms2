@@ -1,7 +1,7 @@
 export const LIST_ACCOUNTS_QUERY = `
   query ListAccounts($institutionId: ID!, $nextToken: String) {
     listAccounts(
-      filter: { institutionAccountsId: { eq: $institutionId } }
+      filter: { institutionID: { eq: $institutionId } }
       limit: 100
       nextToken: $nextToken
     ) {

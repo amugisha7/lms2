@@ -206,7 +206,7 @@ function BorrowerIdLoginScreen({
               id
               name
               branchCode
-              institutionBranchesId
+              institutionID
             }
           } 
         }`,
@@ -224,7 +224,7 @@ function BorrowerIdLoginScreen({
       // Verify the borrower belongs to this institution
       if (
         institutionId &&
-        borrower.branch?.institutionBranchesId !== institutionId
+        borrower.branch?.institutionID !== institutionId
       ) {
         setError("This Borrower Key is not associated with this institution.");
         setLoading(false);
@@ -408,7 +408,7 @@ function CustomerAppBorrowerId({ borrower, institution, onLogout }) {
     userType: "Customer",
     email: borrower.email,
     customUserDetails: JSON.stringify({ borrowerId: borrower.id }),
-    institutionUsersId: institution.id,
+    institutionID: institution.id,
   };
 
   return (
@@ -468,7 +468,7 @@ function CustomerApp({ signOut, user }) {
               id 
               userType 
               customUserDetails 
-              institutionUsersId
+              institutionID
               email
             } 
           }`,
@@ -535,7 +535,7 @@ function CustomerApp({ signOut, user }) {
                 userType 
                 email
                 customUserDetails
-                institutionUsersId
+                institutionID
               } 
             }`,
             variables: {
@@ -544,7 +544,7 @@ function CustomerApp({ signOut, user }) {
                 email: user.signInDetails?.loginId,
                 userType: "Customer",
                 status: "active",
-                institutionUsersId: institutionId,
+                institutionID: institutionId,
               },
             },
           });

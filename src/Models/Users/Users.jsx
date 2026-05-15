@@ -137,7 +137,7 @@ export default function Users() {
             variables: {
               limit: 1000,
               filter: {
-                institutionBranchesId: { eq: userDetails.institution.id },
+                institutionID: { eq: userDetails.institution.id },
               },
             },
           });
@@ -157,7 +157,7 @@ export default function Users() {
 
   // Fetch users
   const fetchUsers = async () => {
-    if (!userDetails?.institutionUsersId) return;
+    if (!userDetails?.institutionID) return;
 
     setLoading(true);
     setWorkingOverlayOpen(true);
@@ -170,7 +170,7 @@ export default function Users() {
         const result = await client.graphql({
           query: LIST_USERS_QUERY,
           variables: {
-            institutionId: userDetails.institutionUsersId,
+            institutionId: userDetails.institutionID,
             ...(nextToken && { nextToken }),
           },
         });
@@ -342,13 +342,13 @@ export default function Users() {
   // Effects
   useEffect(() => {
     if (
-      userDetails?.institutionUsersId &&
-      userDetails.institutionUsersId !== hasFetchedRef.current
+      userDetails?.institutionID &&
+      userDetails.institutionID !== hasFetchedRef.current
     ) {
       fetchUsers();
-      hasFetchedRef.current = userDetails.institutionUsersId;
+      hasFetchedRef.current = userDetails.institutionID;
     }
-  }, [userDetails?.institutionUsersId]);
+  }, [userDetails?.institutionID]);
 
   const canCreateUser = useHasPermission("create", "user");
 
@@ -357,7 +357,7 @@ export default function Users() {
     if (userDetails?.userType !== "Admin") {
       // Non-admins only see users from their own branch
       const userBranchId =
-        userDetails?.branchUsersId || userDetails?.branch?.id;
+        userDetails?.branchID || userDetails?.branch?.id;
       if (userBranchId) {
         return users.filter((u) => u.branch?.id === userBranchId);
       }
@@ -435,7 +435,7 @@ export default function Users() {
         <AddUserInstructions
           open={instructionsDialogOpen}
           onClose={() => setInstructionsDialogOpen(false)}
-          institutionId={userDetails?.institutionUsersId}
+          institutionId={userDetails?.institutionID}
         />
 
         {/* Edit Dialog */}

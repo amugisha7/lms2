@@ -27,6 +27,7 @@ export declare type SecurityUpdateFormInputValues = {
     description?: string;
     value?: number;
     status?: string;
+    branchID?: string;
     customSecurityDetails?: string;
 };
 export declare type SecurityUpdateFormValidationValues = {
@@ -35,6 +36,7 @@ export declare type SecurityUpdateFormValidationValues = {
     description?: ValidationFunction<string>;
     value?: ValidationFunction<number>;
     status?: ValidationFunction<string>;
+    branchID?: ValidationFunction<string>;
     customSecurityDetails?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
@@ -45,6 +47,7 @@ export declare type SecurityUpdateFormOverridesProps = {
     description?: PrimitiveOverrideProps<TextFieldProps>;
     value?: PrimitiveOverrideProps<TextFieldProps>;
     status?: PrimitiveOverrideProps<TextFieldProps>;
+    branchID?: PrimitiveOverrideProps<TextFieldProps>;
     customSecurityDetails?: PrimitiveOverrideProps<TextAreaFieldProps>;
 } & EscapeHatchProps;
 export declare type SecurityUpdateFormProps = React.PropsWithChildren<{

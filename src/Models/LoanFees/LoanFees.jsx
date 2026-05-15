@@ -79,7 +79,7 @@ export default function LoanFees() {
     setLoading(true);
     try {
       const client = generateClient();
-      if (!userDetails?.institutionUsersId) {
+      if (!userDetails?.institutionID) {
         setItems([]);
         setLoading(false);
         return;
@@ -115,7 +115,7 @@ export default function LoanFees() {
             }
           `,
         variables: {
-          institutionId: userDetails.institutionUsersId,
+          institutionId: userDetails.institutionID,
         },
       });
       setItems(result.data.listLoanFeesConfigs.items || []);
@@ -128,10 +128,10 @@ export default function LoanFees() {
   };
 
   useEffect(() => {
-    if (userDetails?.institutionUsersId) {
+    if (userDetails?.institutionID) {
       fetchItems();
     }
-  }, [userDetails?.institutionUsersId]);
+  }, [userDetails?.institutionID]);
 
   const handleCreateSuccess = (newItem) => {
     setItems((prev) => [newItem, ...prev]);

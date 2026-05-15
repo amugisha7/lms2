@@ -556,7 +556,7 @@ export default function CustomerLoanProductForm() {
           }`,
           variables: {
             filter: {
-              institutionBranchesId: { eq: institution.id },
+              institutionID: { eq: institution.id },
             },
           },
         });
@@ -665,8 +665,8 @@ export default function CustomerLoanProductForm() {
     try {
       const userDetails = {
         id: customerUser.id,
-        institutionUsersId: institution.id,
-        branchUsersId: branches[0]?.id || null,
+        institutionID: institution.id,
+        branchID: branches[0]?.id || null,
       };
 
       // Create with DRAFT status - customer applications need staff approval

@@ -133,7 +133,7 @@ export default function Employees() {
             variables: {
               limit: 1000,
               filter: {
-                institutionBranchesId: { eq: userDetails.institution.id },
+                institutionID: { eq: userDetails.institution.id },
               },
             },
           });

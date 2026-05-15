@@ -31,6 +31,7 @@ export declare type ApplicationUpdateFormInputValues = {
     applicationDate?: string;
     status?: string;
     applicationRecord?: string;
+    branchID?: string;
     customFieldsData?: string;
     customApplicationDetails?: string;
 };
@@ -44,6 +45,7 @@ export declare type ApplicationUpdateFormValidationValues = {
     applicationDate?: ValidationFunction<string>;
     status?: ValidationFunction<string>;
     applicationRecord?: ValidationFunction<string>;
+    branchID?: ValidationFunction<string>;
     customFieldsData?: ValidationFunction<string>;
     customApplicationDetails?: ValidationFunction<string>;
 };
@@ -59,6 +61,7 @@ export declare type ApplicationUpdateFormOverridesProps = {
     applicationDate?: PrimitiveOverrideProps<TextFieldProps>;
     status?: PrimitiveOverrideProps<TextFieldProps>;
     applicationRecord?: PrimitiveOverrideProps<TextAreaFieldProps>;
+    branchID?: PrimitiveOverrideProps<TextFieldProps>;
     customFieldsData?: PrimitiveOverrideProps<TextAreaFieldProps>;
     customApplicationDetails?: PrimitiveOverrideProps<TextAreaFieldProps>;
 } & EscapeHatchProps;

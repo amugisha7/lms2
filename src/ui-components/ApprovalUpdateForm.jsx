@@ -37,6 +37,7 @@ export default function ApprovalUpdateForm(props) {
     approvalDate: "",
     status: "",
     notes: "",
+    branchID: "",
     customApprovalDetails: "",
   };
   const [approvalType, setApprovalType] = React.useState(
@@ -48,6 +49,7 @@ export default function ApprovalUpdateForm(props) {
   );
   const [status, setStatus] = React.useState(initialValues.status);
   const [notes, setNotes] = React.useState(initialValues.notes);
+  const [branchID, setBranchID] = React.useState(initialValues.branchID);
   const [customApprovalDetails, setCustomApprovalDetails] = React.useState(
     initialValues.customApprovalDetails
   );
@@ -61,6 +63,7 @@ export default function ApprovalUpdateForm(props) {
     setApprovalDate(cleanValues.approvalDate);
     setStatus(cleanValues.status);
     setNotes(cleanValues.notes);
+    setBranchID(cleanValues.branchID);
     setCustomApprovalDetails(
       typeof cleanValues.customApprovalDetails === "string" ||
         cleanValues.customApprovalDetails === null
@@ -91,6 +94,7 @@ export default function ApprovalUpdateForm(props) {
     approvalDate: [],
     status: [],
     notes: [],
+    branchID: [],
     customApprovalDetails: [{ type: "JSON" }],
   };
   const runValidationTasks = async (
@@ -124,6 +128,7 @@ export default function ApprovalUpdateForm(props) {
           approvalDate: approvalDate ?? null,
           status: status ?? null,
           notes: notes ?? null,
+          branchID: branchID ?? null,
           customApprovalDetails: customApprovalDetails ?? null,
         };
         const validationResponses = await Promise.all(
@@ -190,6 +195,7 @@ export default function ApprovalUpdateForm(props) {
               approvalDate,
               status,
               notes,
+              branchID,
               customApprovalDetails,
             };
             const result = onChange(modelFields);
@@ -250,6 +256,7 @@ export default function ApprovalUpdateForm(props) {
               approvalDate,
               status,
               notes,
+              branchID,
               customApprovalDetails,
             };
             const result = onChange(modelFields);
@@ -280,6 +287,7 @@ export default function ApprovalUpdateForm(props) {
               approvalDate: value,
               status,
               notes,
+              branchID,
               customApprovalDetails,
             };
             const result = onChange(modelFields);
@@ -309,6 +317,7 @@ export default function ApprovalUpdateForm(props) {
               approvalDate,
               status: value,
               notes,
+              branchID,
               customApprovalDetails,
             };
             const result = onChange(modelFields);
@@ -338,6 +347,7 @@ export default function ApprovalUpdateForm(props) {
               approvalDate,
               status,
               notes: value,
+              branchID,
               customApprovalDetails,
             };
             const result = onChange(modelFields);
@@ -353,6 +363,36 @@ export default function ApprovalUpdateForm(props) {
         hasError={errors.notes?.hasError}
         {...getOverrideProps(overrides, "notes")}
       ></TextField>
+      <TextField
+        label="Branch id"
+        isRequired={false}
+        isReadOnly={false}
+        value={branchID}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              approvalType,
+              recordID,
+              approvalDate,
+              status,
+              notes,
+              branchID: value,
+              customApprovalDetails,
+            };
+            const result = onChange(modelFields);
+            value = result?.branchID ?? value;
+          }
+          if (errors.branchID?.hasError) {
+            runValidationTasks("branchID", value);
+          }
+          setBranchID(value);
+        }}
+        onBlur={() => runValidationTasks("branchID", branchID)}
+        errorMessage={errors.branchID?.errorMessage}
+        hasError={errors.branchID?.hasError}
+        {...getOverrideProps(overrides, "branchID")}
+      ></TextField>
       <TextAreaField
         label="Custom approval details"
         isRequired={false}
@@ -367,6 +407,7 @@ export default function ApprovalUpdateForm(props) {
               approvalDate,
               status,
               notes,
+              branchID,
               customApprovalDetails: value,
             };
             const result = onChange(modelFields);

@@ -40,6 +40,7 @@ export default function GuarantorCreateForm(props) {
     isExistingMember: false,
     memberID: "",
     lockedSavingsAmount: "",
+    branchID: "",
     customGuarantorDetails: "",
   };
   const [name, setName] = React.useState(initialValues.name);
@@ -62,6 +63,7 @@ export default function GuarantorCreateForm(props) {
   const [lockedSavingsAmount, setLockedSavingsAmount] = React.useState(
     initialValues.lockedSavingsAmount
   );
+  const [branchID, setBranchID] = React.useState(initialValues.branchID);
   const [customGuarantorDetails, setCustomGuarantorDetails] = React.useState(
     initialValues.customGuarantorDetails
   );
@@ -77,6 +79,7 @@ export default function GuarantorCreateForm(props) {
     setIsExistingMember(initialValues.isExistingMember);
     setMemberID(initialValues.memberID);
     setLockedSavingsAmount(initialValues.lockedSavingsAmount);
+    setBranchID(initialValues.branchID);
     setCustomGuarantorDetails(initialValues.customGuarantorDetails);
     setErrors({});
   };
@@ -91,6 +94,7 @@ export default function GuarantorCreateForm(props) {
     isExistingMember: [],
     memberID: [],
     lockedSavingsAmount: [],
+    branchID: [],
     customGuarantorDetails: [{ type: "JSON" }],
   };
   const runValidationTasks = async (
@@ -129,6 +133,7 @@ export default function GuarantorCreateForm(props) {
           isExistingMember,
           memberID,
           lockedSavingsAmount,
+          branchID,
           customGuarantorDetails,
         };
         const validationResponses = await Promise.all(
@@ -202,6 +207,7 @@ export default function GuarantorCreateForm(props) {
               isExistingMember,
               memberID,
               lockedSavingsAmount,
+              branchID,
               customGuarantorDetails,
             };
             const result = onChange(modelFields);
@@ -236,6 +242,7 @@ export default function GuarantorCreateForm(props) {
               isExistingMember,
               memberID,
               lockedSavingsAmount,
+              branchID,
               customGuarantorDetails,
             };
             const result = onChange(modelFields);
@@ -270,6 +277,7 @@ export default function GuarantorCreateForm(props) {
               isExistingMember,
               memberID,
               lockedSavingsAmount,
+              branchID,
               customGuarantorDetails,
             };
             const result = onChange(modelFields);
@@ -304,6 +312,7 @@ export default function GuarantorCreateForm(props) {
               isExistingMember,
               memberID,
               lockedSavingsAmount,
+              branchID,
               customGuarantorDetails,
             };
             const result = onChange(modelFields);
@@ -338,6 +347,7 @@ export default function GuarantorCreateForm(props) {
               isExistingMember,
               memberID,
               lockedSavingsAmount,
+              branchID,
               customGuarantorDetails,
             };
             const result = onChange(modelFields);
@@ -371,6 +381,7 @@ export default function GuarantorCreateForm(props) {
               isExistingMember,
               memberID,
               lockedSavingsAmount,
+              branchID,
               customGuarantorDetails,
             };
             const result = onChange(modelFields);
@@ -405,6 +416,7 @@ export default function GuarantorCreateForm(props) {
               isExistingMember,
               memberID,
               lockedSavingsAmount,
+              branchID,
               customGuarantorDetails,
             };
             const result = onChange(modelFields);
@@ -439,6 +451,7 @@ export default function GuarantorCreateForm(props) {
               isExistingMember: value,
               memberID,
               lockedSavingsAmount,
+              branchID,
               customGuarantorDetails,
             };
             const result = onChange(modelFields);
@@ -473,6 +486,7 @@ export default function GuarantorCreateForm(props) {
               isExistingMember,
               memberID: value,
               lockedSavingsAmount,
+              branchID,
               customGuarantorDetails,
             };
             const result = onChange(modelFields);
@@ -511,6 +525,7 @@ export default function GuarantorCreateForm(props) {
               isExistingMember,
               memberID,
               lockedSavingsAmount: value,
+              branchID,
               customGuarantorDetails,
             };
             const result = onChange(modelFields);
@@ -527,6 +542,41 @@ export default function GuarantorCreateForm(props) {
         errorMessage={errors.lockedSavingsAmount?.errorMessage}
         hasError={errors.lockedSavingsAmount?.hasError}
         {...getOverrideProps(overrides, "lockedSavingsAmount")}
+      ></TextField>
+      <TextField
+        label="Branch id"
+        isRequired={false}
+        isReadOnly={false}
+        value={branchID}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              name,
+              relationship,
+              phoneNumber,
+              email,
+              address,
+              customFieldsData,
+              status,
+              isExistingMember,
+              memberID,
+              lockedSavingsAmount,
+              branchID: value,
+              customGuarantorDetails,
+            };
+            const result = onChange(modelFields);
+            value = result?.branchID ?? value;
+          }
+          if (errors.branchID?.hasError) {
+            runValidationTasks("branchID", value);
+          }
+          setBranchID(value);
+        }}
+        onBlur={() => runValidationTasks("branchID", branchID)}
+        errorMessage={errors.branchID?.errorMessage}
+        hasError={errors.branchID?.hasError}
+        {...getOverrideProps(overrides, "branchID")}
       ></TextField>
       <TextAreaField
         label="Custom guarantor details"
@@ -546,6 +596,7 @@ export default function GuarantorCreateForm(props) {
               isExistingMember,
               memberID,
               lockedSavingsAmount,
+              branchID,
               customGuarantorDetails: value,
             };
             const result = onChange(modelFields);

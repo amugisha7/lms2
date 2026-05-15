@@ -176,7 +176,7 @@ export const schema = {
                     "association": {
                         "connectionType": "HAS_MANY",
                         "associatedWith": [
-                            "institutionUsersId"
+                            "institutionID"
                         ]
                     }
                 },
@@ -192,7 +192,7 @@ export const schema = {
                     "association": {
                         "connectionType": "HAS_MANY",
                         "associatedWith": [
-                            "institutionBranchesId"
+                            "institutionID"
                         ]
                     }
                 },
@@ -256,7 +256,7 @@ export const schema = {
                     "association": {
                         "connectionType": "HAS_MANY",
                         "associatedWith": [
-                            "institutionAccountsId"
+                            "institutionID"
                         ]
                     }
                 },
@@ -404,7 +404,7 @@ export const schema = {
                     "association": {
                         "connectionType": "BELONGS_TO",
                         "targetNames": [
-                            "institutionBranchesId"
+                            "institutionID"
                         ]
                     }
                 },
@@ -420,7 +420,7 @@ export const schema = {
                     "association": {
                         "connectionType": "HAS_MANY",
                         "associatedWith": [
-                            "branchUsersId"
+                            "branchID"
                         ]
                     }
                 },
@@ -623,8 +623,8 @@ export const schema = {
                     "attributes": [],
                     "isReadOnly": true
                 },
-                "institutionBranchesId": {
-                    "name": "institutionBranchesId",
+                "institutionID": {
+                    "name": "institutionID",
                     "isArray": false,
                     "type": "ID",
                     "isRequired": false,
@@ -808,7 +808,7 @@ export const schema = {
                     "association": {
                         "connectionType": "BELONGS_TO",
                         "targetNames": [
-                            "institutionUsersId"
+                            "institutionID"
                         ]
                     }
                 },
@@ -823,7 +823,7 @@ export const schema = {
                     "association": {
                         "connectionType": "BELONGS_TO",
                         "targetNames": [
-                            "branchUsersId"
+                            "branchID"
                         ]
                     }
                 },
@@ -930,15 +930,15 @@ export const schema = {
                     "attributes": [],
                     "isReadOnly": true
                 },
-                "institutionUsersId": {
-                    "name": "institutionUsersId",
+                "institutionID": {
+                    "name": "institutionID",
                     "isArray": false,
                     "type": "ID",
                     "isRequired": false,
                     "attributes": []
                 },
-                "branchUsersId": {
-                    "name": "branchUsersId",
+                "branchID": {
+                    "name": "branchID",
                     "isArray": false,
                     "type": "ID",
                     "isRequired": false,
@@ -5625,7 +5625,7 @@ export const schema = {
                     "association": {
                         "connectionType": "BELONGS_TO",
                         "targetNames": [
-                            "institutionAccountsId"
+                            "institutionID"
                         ]
                     }
                 },
@@ -5818,8 +5818,8 @@ export const schema = {
                     "attributes": [],
                     "isReadOnly": true
                 },
-                "institutionAccountsId": {
-                    "name": "institutionAccountsId",
+                "institutionID": {
+                    "name": "institutionID",
                     "isArray": false,
                     "type": "ID",
                     "isRequired": false,

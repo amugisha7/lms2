@@ -256,8 +256,8 @@ export default function EmployeeManagement() {
 
   const fetchedEmployeeIdRef = useRef();
   const fetchedCustomFieldsRef = useRef({
-    institutionUsersId: null,
-    branchUsersId: null,
+    institutionID: null,
+    branchID: null,
   });
 
   const canEditEmployee = useHasPermission("update", "employee");
@@ -290,15 +290,15 @@ export default function EmployeeManagement() {
 
   useEffect(() => {
     const fetchCustomFields = async () => {
-      if (!userDetails?.institutionUsersId || !userDetails?.branchUsersId) {
+      if (!userDetails?.institutionID || !userDetails?.branchID) {
         setCustomFieldsLoading(false);
         return;
       }
       try {
         setCustomFieldsLoading(true);
         const fields = await fetchCustomFieldsForEmployee(
-          userDetails.institutionUsersId,
-          userDetails.branchUsersId,
+          userDetails.institutionID,
+          userDetails.branchID,
         );
         setCustomFields(fields);
       } catch (err) {
@@ -309,20 +309,20 @@ export default function EmployeeManagement() {
     };
 
     if (
-      userDetails?.institutionUsersId &&
-      userDetails?.branchUsersId &&
-      (fetchedCustomFieldsRef.current.institutionUsersId !==
-        userDetails.institutionUsersId ||
-        fetchedCustomFieldsRef.current.branchUsersId !==
-          userDetails.branchUsersId)
+      userDetails?.institutionID &&
+      userDetails?.branchID &&
+      (fetchedCustomFieldsRef.current.institutionID !==
+        userDetails.institutionID ||
+        fetchedCustomFieldsRef.current.branchID !==
+          userDetails.branchID)
     ) {
       fetchCustomFields();
       fetchedCustomFieldsRef.current = {
-        institutionUsersId: userDetails.institutionUsersId,
-        branchUsersId: userDetails.branchUsersId,
+        institutionID: userDetails.institutionID,
+        branchID: userDetails.branchID,
       };
     }
-  }, [userDetails?.institutionUsersId, userDetails?.branchUsersId]);
+  }, [userDetails?.institutionID, userDetails?.branchID]);
 
   const getEmployeeName = () => getEmployeeDisplayName(employee);
   const handleTabChange = (_, newValue) => setTabValue(newValue);

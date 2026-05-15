@@ -63,7 +63,7 @@ const UPDATE_USER_MUTATION = `
         status
         createdAt
         updatedAt
-        institutionBranchesId
+        institutionID
       }
       userNotifications {
         nextToken
@@ -83,8 +83,8 @@ const UPDATE_USER_MUTATION = `
       customUserDetails
       createdAt
       updatedAt
-      institutionUsersId
-      branchUsersId
+      institutionID
+      branchID
     }
   }
 `;

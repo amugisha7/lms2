@@ -42,6 +42,7 @@ export default function CollateralCreateForm(props) {
     storedAt: "",
     customFieldsData: "",
     status: "",
+    branchID: "",
     customCollateralDetails: "",
   };
   const [name, setName] = React.useState(initialValues.name);
@@ -71,6 +72,7 @@ export default function CollateralCreateForm(props) {
     initialValues.customFieldsData
   );
   const [status, setStatus] = React.useState(initialValues.status);
+  const [branchID, setBranchID] = React.useState(initialValues.branchID);
   const [customCollateralDetails, setCustomCollateralDetails] = React.useState(
     initialValues.customCollateralDetails
   );
@@ -89,6 +91,7 @@ export default function CollateralCreateForm(props) {
     setStoredAt(initialValues.storedAt);
     setCustomFieldsData(initialValues.customFieldsData);
     setStatus(initialValues.status);
+    setBranchID(initialValues.branchID);
     setCustomCollateralDetails(initialValues.customCollateralDetails);
     setErrors({});
   };
@@ -106,6 +109,7 @@ export default function CollateralCreateForm(props) {
     storedAt: [],
     customFieldsData: [{ type: "JSON" }],
     status: [],
+    branchID: [],
     customCollateralDetails: [{ type: "JSON" }],
   };
   const runValidationTasks = async (
@@ -147,6 +151,7 @@ export default function CollateralCreateForm(props) {
           storedAt,
           customFieldsData,
           status,
+          branchID,
           customCollateralDetails,
         };
         const validationResponses = await Promise.all(
@@ -223,6 +228,7 @@ export default function CollateralCreateForm(props) {
               storedAt,
               customFieldsData,
               status,
+              branchID,
               customCollateralDetails,
             };
             const result = onChange(modelFields);
@@ -260,6 +266,7 @@ export default function CollateralCreateForm(props) {
               storedAt,
               customFieldsData,
               status,
+              branchID,
               customCollateralDetails,
             };
             const result = onChange(modelFields);
@@ -297,6 +304,7 @@ export default function CollateralCreateForm(props) {
               storedAt,
               customFieldsData,
               status,
+              branchID,
               customCollateralDetails,
             };
             const result = onChange(modelFields);
@@ -334,6 +342,7 @@ export default function CollateralCreateForm(props) {
               storedAt,
               customFieldsData,
               status,
+              branchID,
               customCollateralDetails,
             };
             const result = onChange(modelFields);
@@ -375,6 +384,7 @@ export default function CollateralCreateForm(props) {
               storedAt,
               customFieldsData,
               status,
+              branchID,
               customCollateralDetails,
             };
             const result = onChange(modelFields);
@@ -412,6 +422,7 @@ export default function CollateralCreateForm(props) {
               storedAt,
               customFieldsData,
               status,
+              branchID,
               customCollateralDetails,
             };
             const result = onChange(modelFields);
@@ -449,6 +460,7 @@ export default function CollateralCreateForm(props) {
               storedAt,
               customFieldsData,
               status,
+              branchID,
               customCollateralDetails,
             };
             const result = onChange(modelFields);
@@ -488,6 +500,7 @@ export default function CollateralCreateForm(props) {
               storedAt,
               customFieldsData,
               status,
+              branchID,
               customCollateralDetails,
             };
             const result = onChange(modelFields);
@@ -526,6 +539,7 @@ export default function CollateralCreateForm(props) {
               storedAt,
               customFieldsData,
               status,
+              branchID,
               customCollateralDetails,
             };
             const result = onChange(modelFields);
@@ -565,6 +579,7 @@ export default function CollateralCreateForm(props) {
               storedAt,
               customFieldsData,
               status,
+              branchID,
               customCollateralDetails,
             };
             const result = onChange(modelFields);
@@ -602,6 +617,7 @@ export default function CollateralCreateForm(props) {
               storedAt: value,
               customFieldsData,
               status,
+              branchID,
               customCollateralDetails,
             };
             const result = onChange(modelFields);
@@ -638,6 +654,7 @@ export default function CollateralCreateForm(props) {
               storedAt,
               customFieldsData: value,
               status,
+              branchID,
               customCollateralDetails,
             };
             const result = onChange(modelFields);
@@ -675,6 +692,7 @@ export default function CollateralCreateForm(props) {
               storedAt,
               customFieldsData,
               status: value,
+              branchID,
               customCollateralDetails,
             };
             const result = onChange(modelFields);
@@ -689,6 +707,44 @@ export default function CollateralCreateForm(props) {
         errorMessage={errors.status?.errorMessage}
         hasError={errors.status?.hasError}
         {...getOverrideProps(overrides, "status")}
+      ></TextField>
+      <TextField
+        label="Branch id"
+        isRequired={false}
+        isReadOnly={false}
+        value={branchID}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              name,
+              type,
+              description,
+              location,
+              value,
+              serialNumber,
+              registrationNumber,
+              insuranceDetails,
+              insuranceExpiryDate,
+              insuranceCompany,
+              storedAt,
+              customFieldsData,
+              status,
+              branchID: value,
+              customCollateralDetails,
+            };
+            const result = onChange(modelFields);
+            value = result?.branchID ?? value;
+          }
+          if (errors.branchID?.hasError) {
+            runValidationTasks("branchID", value);
+          }
+          setBranchID(value);
+        }}
+        onBlur={() => runValidationTasks("branchID", branchID)}
+        errorMessage={errors.branchID?.errorMessage}
+        hasError={errors.branchID?.hasError}
+        {...getOverrideProps(overrides, "branchID")}
       ></TextField>
       <TextAreaField
         label="Custom collateral details"
@@ -711,6 +767,7 @@ export default function CollateralCreateForm(props) {
               storedAt,
               customFieldsData,
               status,
+              branchID,
               customCollateralDetails: value,
             };
             const result = onChange(modelFields);

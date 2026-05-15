@@ -44,6 +44,7 @@ export default function MoneyTransactionUpdateForm(props) {
     paymentMethod: "",
     deviceInfo: "",
     status: "",
+    branchID: "",
     customMoneyTransactionDetails: "",
   };
   const [transactionType, setTransactionType] = React.useState(
@@ -75,6 +76,7 @@ export default function MoneyTransactionUpdateForm(props) {
   );
   const [deviceInfo, setDeviceInfo] = React.useState(initialValues.deviceInfo);
   const [status, setStatus] = React.useState(initialValues.status);
+  const [branchID, setBranchID] = React.useState(initialValues.branchID);
   const [customMoneyTransactionDetails, setCustomMoneyTransactionDetails] =
     React.useState(initialValues.customMoneyTransactionDetails);
   const [errors, setErrors] = React.useState({});
@@ -95,6 +97,7 @@ export default function MoneyTransactionUpdateForm(props) {
     setPaymentMethod(cleanValues.paymentMethod);
     setDeviceInfo(cleanValues.deviceInfo);
     setStatus(cleanValues.status);
+    setBranchID(cleanValues.branchID);
     setCustomMoneyTransactionDetails(
       typeof cleanValues.customMoneyTransactionDetails === "string" ||
         cleanValues.customMoneyTransactionDetails === null
@@ -135,6 +138,7 @@ export default function MoneyTransactionUpdateForm(props) {
     paymentMethod: [],
     deviceInfo: [],
     status: [],
+    branchID: [],
     customMoneyTransactionDetails: [{ type: "JSON" }],
   };
   const runValidationTasks = async (
@@ -176,6 +180,7 @@ export default function MoneyTransactionUpdateForm(props) {
           paymentMethod: paymentMethod ?? null,
           deviceInfo: deviceInfo ?? null,
           status: status ?? null,
+          branchID: branchID ?? null,
           customMoneyTransactionDetails: customMoneyTransactionDetails ?? null,
         };
         const validationResponses = await Promise.all(
@@ -250,6 +255,7 @@ export default function MoneyTransactionUpdateForm(props) {
               paymentMethod,
               deviceInfo,
               status,
+              branchID,
               customMoneyTransactionDetails,
             };
             const result = onChange(modelFields);
@@ -288,6 +294,7 @@ export default function MoneyTransactionUpdateForm(props) {
               paymentMethod,
               deviceInfo,
               status,
+              branchID,
               customMoneyTransactionDetails,
             };
             const result = onChange(modelFields);
@@ -329,6 +336,7 @@ export default function MoneyTransactionUpdateForm(props) {
               paymentMethod,
               deviceInfo,
               status,
+              branchID,
               customMoneyTransactionDetails,
             };
             const result = onChange(modelFields);
@@ -366,6 +374,7 @@ export default function MoneyTransactionUpdateForm(props) {
               paymentMethod,
               deviceInfo,
               status,
+              branchID,
               customMoneyTransactionDetails,
             };
             const result = onChange(modelFields);
@@ -403,6 +412,7 @@ export default function MoneyTransactionUpdateForm(props) {
               paymentMethod,
               deviceInfo,
               status,
+              branchID,
               customMoneyTransactionDetails,
             };
             const result = onChange(modelFields);
@@ -440,6 +450,7 @@ export default function MoneyTransactionUpdateForm(props) {
               paymentMethod,
               deviceInfo,
               status,
+              branchID,
               customMoneyTransactionDetails,
             };
             const result = onChange(modelFields);
@@ -479,6 +490,7 @@ export default function MoneyTransactionUpdateForm(props) {
               paymentMethod,
               deviceInfo,
               status,
+              branchID,
               customMoneyTransactionDetails,
             };
             const result = onChange(modelFields);
@@ -517,6 +529,7 @@ export default function MoneyTransactionUpdateForm(props) {
               paymentMethod,
               deviceInfo,
               status,
+              branchID,
               customMoneyTransactionDetails,
             };
             const result = onChange(modelFields);
@@ -554,6 +567,7 @@ export default function MoneyTransactionUpdateForm(props) {
               paymentMethod,
               deviceInfo,
               status,
+              branchID,
               customMoneyTransactionDetails,
             };
             const result = onChange(modelFields);
@@ -591,6 +605,7 @@ export default function MoneyTransactionUpdateForm(props) {
               paymentMethod,
               deviceInfo,
               status,
+              branchID,
               customMoneyTransactionDetails,
             };
             const result = onChange(modelFields);
@@ -628,6 +643,7 @@ export default function MoneyTransactionUpdateForm(props) {
               paymentMethod: value,
               deviceInfo,
               status,
+              branchID,
               customMoneyTransactionDetails,
             };
             const result = onChange(modelFields);
@@ -665,6 +681,7 @@ export default function MoneyTransactionUpdateForm(props) {
               paymentMethod,
               deviceInfo: value,
               status,
+              branchID,
               customMoneyTransactionDetails,
             };
             const result = onChange(modelFields);
@@ -702,6 +719,7 @@ export default function MoneyTransactionUpdateForm(props) {
               paymentMethod,
               deviceInfo,
               status: value,
+              branchID,
               customMoneyTransactionDetails,
             };
             const result = onChange(modelFields);
@@ -716,6 +734,44 @@ export default function MoneyTransactionUpdateForm(props) {
         errorMessage={errors.status?.errorMessage}
         hasError={errors.status?.hasError}
         {...getOverrideProps(overrides, "status")}
+      ></TextField>
+      <TextField
+        label="Branch id"
+        isRequired={false}
+        isReadOnly={false}
+        value={branchID}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              transactionType,
+              transactionDate,
+              amount,
+              description,
+              referenceNumber,
+              relatedEntityType,
+              approvalStatus,
+              approvedDate,
+              category,
+              notes,
+              paymentMethod,
+              deviceInfo,
+              status,
+              branchID: value,
+              customMoneyTransactionDetails,
+            };
+            const result = onChange(modelFields);
+            value = result?.branchID ?? value;
+          }
+          if (errors.branchID?.hasError) {
+            runValidationTasks("branchID", value);
+          }
+          setBranchID(value);
+        }}
+        onBlur={() => runValidationTasks("branchID", branchID)}
+        errorMessage={errors.branchID?.errorMessage}
+        hasError={errors.branchID?.hasError}
+        {...getOverrideProps(overrides, "branchID")}
       ></TextField>
       <TextAreaField
         label="Custom money transaction details"
@@ -739,6 +795,7 @@ export default function MoneyTransactionUpdateForm(props) {
               paymentMethod,
               deviceInfo,
               status,
+              branchID,
               customMoneyTransactionDetails: value,
             };
             const result = onChange(modelFields);

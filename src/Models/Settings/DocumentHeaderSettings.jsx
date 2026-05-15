@@ -128,7 +128,7 @@ const DocumentHeaderSettings = () => {
 
     try {
       const timestamp = new Date().getTime();
-      const fileName = `institution-header-image/${userDetails.institutionUsersId}-${timestamp}-${uploadFileData.file.name}`;
+      const fileName = `institution-header-image/${userDetails.institutionID}-${timestamp}-${uploadFileData.file.name}`;
       const path = `public/${fileName}`;
 
       await amplifyUploadData({
@@ -163,7 +163,7 @@ const DocumentHeaderSettings = () => {
       };
 
       const updateData = {
-        id: userDetails.institutionUsersId,
+        id: userDetails.institutionID,
         customDocumentHeader: JSON.stringify(newHeader),
       };
 

@@ -149,9 +149,9 @@ const Settings = () => {
         defaultDateFormat: institution.defaultDateFormat || "dd-mmm-yyyy",
         defaultLanguage: institution.defaultLanguage || "",
         institutionName: institution.name || "",
-        institutionUsersId: userDetails.institutionUsersId || "",
+        institutionID: userDetails.institutionID || "",
         branchName: userDetails.branch?.name || "",
-        branchUsersId: userDetails.branchUsersId || "",
+        branchID: userDetails.branchID || "",
       });
     }
   }, [userDetails?.institution, userDetails?.branch]);
@@ -163,7 +163,7 @@ const Settings = () => {
 
     try {
       // Validate institution ID exists
-      if (!userDetails?.institutionUsersId) {
+      if (!userDetails?.institutionID) {
         throw new Error(
           "Institution ID not found. Please refresh the page and try again.",
         );
@@ -171,7 +171,7 @@ const Settings = () => {
 
       // Prepare update data with only the required fields
       const updateData = {
-        id: userDetails.institutionUsersId,
+        id: userDetails.institutionID,
         name: values.name,
         regulatoryRegion: values.regulatoryRegion,
         currencyCode: values.currencyCode,

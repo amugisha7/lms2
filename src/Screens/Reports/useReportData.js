@@ -75,7 +75,7 @@ export function useReportData({ selectedBranchId = null } = {}) {
         const result = await client.graphql({
           query: listBranches,
           variables: {
-            filter: { institutionBranchesId: { eq: scope.institutionId } },
+            filter: { institutionID: { eq: scope.institutionId } },
             limit: 1000,
           },
         });

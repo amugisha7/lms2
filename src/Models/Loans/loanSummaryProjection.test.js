@@ -5,6 +5,7 @@ jest.mock("./LoanStatements/statementHelpers", () => ({
 }));
 
 import {
+  getAmountDue,
   getBalance,
   getPrincipalBalance,
   getTotalPaid,
@@ -71,5 +72,39 @@ describe("loanSummaryProjection balance helpers", () => {
     expect(getBalance(loan)).toBe(955);
     expect(getPrincipalBalance(loan)).toBe(970);
     expect(buildStatementLedger).toHaveBeenCalled();
+  });
+
+  it("computes amount due from installments that have fallen due", () => {
+    const loan = {
+      payments: {
+        items: [
+          {
+            id: "payment-1",
+            paymentStatusEnum: "COMPLETED",
+            amount: 150,
+          },
+        ],
+      },
+      derivedStatement: {
+        schedule: [
+          { dueDate: "2026-01-10", totalDue: 100 },
+          { dueDate: "2026-02-10", totalDue: 100 },
+          { dueDate: "2026-03-10", totalDue: 100 },
+        ],
+      },
+    };
+
+    expect(getAmountDue(loan, "2026-02-15")).toBe(50);
+  });
+
+  it("falls back to loan summary amountDueAmount when available", () => {
+    const loan = {
+      amountDueAmount: 123.45,
+      derivedStatement: {
+        schedule: [{ dueDate: "2026-01-10", totalDue: 100 }],
+      },
+    };
+
+    expect(getAmountDue(loan, "2026-01-20")).toBe(123.45);
   });
 });

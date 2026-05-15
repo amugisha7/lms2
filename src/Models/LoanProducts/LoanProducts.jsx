@@ -19,7 +19,7 @@ export default function LoanProducts() {
   React.useEffect(() => {
     console.log("LoanProducts useEffect triggered");
     console.log("userDetails:", userDetails);
-    console.log("userDetails?.branchUsersId:", userDetails?.branchUsersId);
+    console.log("userDetails?.branchID:", userDetails?.branchID);
     console.log("lastBranchIdRef.current:", lastBranchIdRef.current);
 
     const fetchLoanProducts = async () => {
@@ -27,8 +27,8 @@ export default function LoanProducts() {
       setLoading(true);
       try {
         const client = generateClient();
-        if (!userDetails?.branchUsersId) {
-          console.log("No branchUsersId, returning early");
+        if (!userDetails?.branchID) {
+          console.log("No branchID, returning early");
           setLoanProducts([]);
           setLoading(false);
           return;
@@ -95,7 +95,7 @@ export default function LoanProducts() {
               }
             `,
             variables: {
-              institutionId: userDetails.institutionUsersId,
+              institutionId: userDetails.institutionID,
               nextToken: nextToken,
             },
           });
@@ -122,19 +122,19 @@ export default function LoanProducts() {
       }
     };
     if (
-      userDetails?.branchUsersId &&
-      userDetails.branchUsersId !== lastBranchIdRef.current
+      userDetails?.branchID &&
+      userDetails.branchID !== lastBranchIdRef.current
     ) {
       console.log("Condition met - calling fetchLoanProducts");
-      lastBranchIdRef.current = userDetails.branchUsersId;
+      lastBranchIdRef.current = userDetails.branchID;
       fetchLoanProducts();
-    } else if (!userDetails?.branchUsersId) {
-      console.log("No branchUsersId - setting loading to false");
+    } else if (!userDetails?.branchID) {
+      console.log("No branchID - setting loading to false");
       setLoading(false);
     } else {
-      console.log("branchUsersId same as last time, skipping fetch");
+      console.log("branchID same as last time, skipping fetch");
     }
-  }, [userDetails?.branchUsersId]);
+  }, [userDetails?.branchID]);
 
   const handleViewLoanProduct = (row) => {
     navigate(`/admin/loan-products/id/${row.id}/view`);

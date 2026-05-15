@@ -112,6 +112,26 @@ const getCurrentPageToken = (pageIndex, prevTokens) => {
   return prevTokens[pageIndex - 1] || null;
 };
 
+const assertGraphqlResult = (operationName, result) => {
+  const graphQLErrors = Array.isArray(result?.errors)
+    ? result.errors.filter(Boolean)
+    : [];
+
+  if (!graphQLErrors.length) {
+    return;
+  }
+
+  console.groupCollapsed(`[LoanExplorer] GraphQL errors in ${operationName}`);
+  console.error("GraphQL errors:", graphQLErrors);
+  console.error("Partial response data:", result?.data || null);
+  console.groupEnd();
+
+  const error = new Error(`${operationName} returned GraphQL errors`);
+  error.errors = graphQLErrors;
+  error.data = result?.data;
+  throw error;
+};
+
 const getScopedSummaryMatch = ({
   summary,
   isAdminUser,
@@ -230,9 +250,15 @@ export function LoanExplorerProvider({ children, userDetails }) {
   const normalizedUserType = (userDetails?.userType || "").toLowerCase();
   const isAdminUser = normalizedUserType === "admin";
   const activeBranchId =
-    userDetails?.branchUsersId || userDetails?.branch?.id || null;
+    userDetails?.branchID ||
+    userDetails?.branchID ||
+    userDetails?.branch?.id ||
+    null;
   const activeInstitutionId =
-    userDetails?.institution?.id || userDetails?.institutionUsersId || null;
+    userDetails?.institution?.id ||
+    userDetails?.institutionID ||
+    userDetails?.institutionID ||
+    null;
   const currencyCode =
     userDetails?.institution?.currencyCode || userDetails?.currencyCode || null;
   const scopeKey = isAdminUser
@@ -378,6 +404,7 @@ export function LoanExplorerProvider({ children, userDetails }) {
         query: GET_LOAN_STATEMENT_READY_QUERY,
         variables: { id: loanId },
       });
+      assertGraphqlResult("GetLoanStatementReady", result);
       const fetchedLoan = normalizeLoanRecord(result?.data?.getLoan || null);
 
       if (fetchedLoan) {
@@ -469,6 +496,7 @@ export function LoanExplorerProvider({ children, userDetails }) {
               nextToken: nextTokens[currentBranchId] || null,
             },
           });
+          assertGraphqlResult("BranchLoansStatementReady", result);
 
           const listResult = result?.data?.loansByBranchIDAndStartDate || {};
           const batch = Array.isArray(listResult.items)
@@ -612,9 +640,10 @@ export function LoanExplorerProvider({ children, userDetails }) {
             variables: {
               limit: BRANCH_LIST_PAGE_SIZE,
               nextToken: branchNextToken,
-              filter: { institutionBranchesId: { eq: activeInstitutionId } },
+              filter: { institutionID: { eq: activeInstitutionId } },
             },
           });
+          assertGraphqlResult("ListBranches", result);
 
           const listResult = result?.data?.listBranches || {};
           const items = Array.isArray(listResult.items)
@@ -934,7 +963,10 @@ export function LoanExplorerProvider({ children, userDetails }) {
             .filter((branch) => branch?.id)
             .map((branch) => [
               branch.id,
-              branch.institutionBranchesId || activeInstitutionId || null,
+              branch.institutionID ||
+                branch.institutionID ||
+                activeInstitutionId ||
+                null,
             ]),
         )
       : activeBranchId

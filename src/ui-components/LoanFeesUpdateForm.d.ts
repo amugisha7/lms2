@@ -35,6 +35,7 @@ export declare type LoanFeesUpdateFormInputValues = {
     loanFeesAttribute1?: string;
     loanFeesAttribute2?: string;
     status?: string;
+    branchID?: string;
     customLoanFeesDetails?: string;
 };
 export declare type LoanFeesUpdateFormValidationValues = {
@@ -51,6 +52,7 @@ export declare type LoanFeesUpdateFormValidationValues = {
     loanFeesAttribute1?: ValidationFunction<string>;
     loanFeesAttribute2?: ValidationFunction<string>;
     status?: ValidationFunction<string>;
+    branchID?: ValidationFunction<string>;
     customLoanFeesDetails?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
@@ -69,6 +71,7 @@ export declare type LoanFeesUpdateFormOverridesProps = {
     loanFeesAttribute1?: PrimitiveOverrideProps<TextFieldProps>;
     loanFeesAttribute2?: PrimitiveOverrideProps<TextFieldProps>;
     status?: PrimitiveOverrideProps<TextFieldProps>;
+    branchID?: PrimitiveOverrideProps<TextFieldProps>;
     customLoanFeesDetails?: PrimitiveOverrideProps<TextAreaFieldProps>;
 } & EscapeHatchProps;
 export declare type LoanFeesUpdateFormProps = React.PropsWithChildren<{

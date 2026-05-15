@@ -379,7 +379,7 @@ const renderFormField = (field, formikValues) => {
 const LIST_BRANCHES_QUERY = `
   query ListBranches($institutionId: ID!, $nextToken: String) {
     listBranches(
-      filter: { institutionBranchesId: { eq: $institutionId } }
+      filter: { institutionID: { eq: $institutionId } }
       limit: 100
       nextToken: $nextToken
     ) {
@@ -444,7 +444,7 @@ const CreateLoanProduct = forwardRef(
 
     useEffect(() => {
       const fetchBranchesAndFees = async () => {
-        if (!userDetails?.institutionUsersId || hasFetchedRef.current) return;
+        if (!userDetails?.institutionID || hasFetchedRef.current) return;
 
         hasFetchedRef.current = true;
 
@@ -454,13 +454,13 @@ const CreateLoanProduct = forwardRef(
           let nextToken = null;
           while (true) {
             console.log("API Call: LIST_BRANCHES_QUERY", {
-              institutionId: userDetails.institutionUsersId,
+              institutionId: userDetails.institutionID,
               nextToken,
             });
             const result = await client.graphql({
               query: LIST_BRANCHES_QUERY,
               variables: {
-                institutionId: userDetails.institutionUsersId,
+                institutionId: userDetails.institutionID,
                 nextToken,
               },
             });
@@ -484,13 +484,13 @@ const CreateLoanProduct = forwardRef(
           nextToken = null;
           while (true) {
             console.log("API Call: LIST_LOAN_FEES_QUERY", {
-              institutionId: userDetails.institutionUsersId,
+              institutionId: userDetails.institutionID,
               nextToken,
             });
             const result = await client.graphql({
               query: LIST_LOAN_FEES_QUERY,
               variables: {
-                institutionId: userDetails.institutionUsersId,
+                institutionId: userDetails.institutionID,
                 nextToken,
               },
             });
@@ -514,7 +514,7 @@ const CreateLoanProduct = forwardRef(
       };
 
       fetchBranchesAndFees();
-    }, [userDetails?.institutionUsersId, client]);
+    }, [userDetails?.institutionID, client]);
 
     // Map database field names to form field names
     const mapDbFieldsToFormFields = (dbData) => {

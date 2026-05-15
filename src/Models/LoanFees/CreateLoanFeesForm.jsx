@@ -56,11 +56,11 @@ export default function CreateLoanFeesForm({ onSuccess, onClose }) {
     let cancelled = false;
 
     const loadBranches = async () => {
-      if (!userDetails?.institutionUsersId) return;
+      if (!userDetails?.institutionID) return;
 
       try {
         const items = await fetchInstitutionBranches(
-          userDetails.institutionUsersId,
+          userDetails.institutionID,
         );
         if (!cancelled) {
           setBranches(items);
@@ -75,7 +75,7 @@ export default function CreateLoanFeesForm({ onSuccess, onClose }) {
     return () => {
       cancelled = true;
     };
-  }, [userDetails?.institutionUsersId]);
+  }, [userDetails?.institutionID]);
 
   const formik = useFormik({
     initialValues: {
@@ -117,7 +117,7 @@ export default function CreateLoanFeesForm({ onSuccess, onClose }) {
       setSubmitSuccess("");
       setSubmitting(true);
 
-      if (!userDetails || !userDetails.institutionUsersId) {
+      if (!userDetails || !userDetails.institutionID) {
         setSubmitError("ERROR. Please reload the page or contact support.");
         setSubmitting(false);
         return;
@@ -134,7 +134,7 @@ export default function CreateLoanFeesForm({ onSuccess, onClose }) {
               ? values.percentageBase
               : null,
           status: "active",
-          institutionLoanFeesConfigsId: userDetails.institutionUsersId,
+          institutionLoanFeesConfigsId: userDetails.institutionID,
           rate: values.feeValue,
         };
 

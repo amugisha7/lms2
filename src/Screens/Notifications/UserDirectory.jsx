@@ -34,23 +34,23 @@ const UserDirectory = ({ onSelectUser, selectedUserId }) => {
   const hasFetchedRef = useRef(false);
 
   useEffect(() => {
-    if (!hasFetchedRef.current && userDetails?.institutionUsersId) {
+    if (!hasFetchedRef.current && userDetails?.institutionID) {
       fetchUsers();
       hasFetchedRef.current = true;
     }
-  }, [userDetails?.institutionUsersId]);
+  }, [userDetails?.institutionID]);
 
   const fetchUsers = async () => {
     try {
       setLoading(true);
       console.log("API Call: LIST_USERS_IN_INSTITUTION_QUERY", {
-        institutionUsersId: userDetails.institutionUsersId,
+        institutionID: userDetails.institutionID,
       });
       const response = await client.graphql({
         query: LIST_USERS_IN_INSTITUTION_QUERY,
         variables: {
           filter: {
-            institutionUsersId: { eq: userDetails.institutionUsersId },
+            institutionID: { eq: userDetails.institutionID },
             status: { eq: "active" },
           },
           limit: 100,

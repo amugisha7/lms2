@@ -43,6 +43,7 @@ export default function PaymentCreateForm(props) {
     amountAllocatedToInterest: "",
     amountAllocatedToFees: "",
     amountAllocatedToPenalty: "",
+    branchID: "",
     customPaymentDetails: "",
   };
   const [paymentDate, setPaymentDate] = React.useState(
@@ -75,6 +76,7 @@ export default function PaymentCreateForm(props) {
   );
   const [amountAllocatedToPenalty, setAmountAllocatedToPenalty] =
     React.useState(initialValues.amountAllocatedToPenalty);
+  const [branchID, setBranchID] = React.useState(initialValues.branchID);
   const [customPaymentDetails, setCustomPaymentDetails] = React.useState(
     initialValues.customPaymentDetails
   );
@@ -93,6 +95,7 @@ export default function PaymentCreateForm(props) {
     setAmountAllocatedToInterest(initialValues.amountAllocatedToInterest);
     setAmountAllocatedToFees(initialValues.amountAllocatedToFees);
     setAmountAllocatedToPenalty(initialValues.amountAllocatedToPenalty);
+    setBranchID(initialValues.branchID);
     setCustomPaymentDetails(initialValues.customPaymentDetails);
     setErrors({});
   };
@@ -110,6 +113,7 @@ export default function PaymentCreateForm(props) {
     amountAllocatedToInterest: [],
     amountAllocatedToFees: [],
     amountAllocatedToPenalty: [],
+    branchID: [],
     customPaymentDetails: [{ type: "JSON" }],
   };
   const runValidationTasks = async (
@@ -151,6 +155,7 @@ export default function PaymentCreateForm(props) {
           amountAllocatedToInterest,
           amountAllocatedToFees,
           amountAllocatedToPenalty,
+          branchID,
           customPaymentDetails,
         };
         const validationResponses = await Promise.all(
@@ -228,6 +233,7 @@ export default function PaymentCreateForm(props) {
               amountAllocatedToInterest,
               amountAllocatedToFees,
               amountAllocatedToPenalty,
+              branchID,
               customPaymentDetails,
             };
             const result = onChange(modelFields);
@@ -265,6 +271,7 @@ export default function PaymentCreateForm(props) {
               amountAllocatedToInterest,
               amountAllocatedToFees,
               amountAllocatedToPenalty,
+              branchID,
               customPaymentDetails,
             };
             const result = onChange(modelFields);
@@ -306,6 +313,7 @@ export default function PaymentCreateForm(props) {
               amountAllocatedToInterest,
               amountAllocatedToFees,
               amountAllocatedToPenalty,
+              branchID,
               customPaymentDetails,
             };
             const result = onChange(modelFields);
@@ -343,6 +351,7 @@ export default function PaymentCreateForm(props) {
               amountAllocatedToInterest,
               amountAllocatedToFees,
               amountAllocatedToPenalty,
+              branchID,
               customPaymentDetails,
             };
             const result = onChange(modelFields);
@@ -380,6 +389,7 @@ export default function PaymentCreateForm(props) {
               amountAllocatedToInterest,
               amountAllocatedToFees,
               amountAllocatedToPenalty,
+              branchID,
               customPaymentDetails,
             };
             const result = onChange(modelFields);
@@ -417,6 +427,7 @@ export default function PaymentCreateForm(props) {
               amountAllocatedToInterest,
               amountAllocatedToFees,
               amountAllocatedToPenalty,
+              branchID,
               customPaymentDetails,
             };
             const result = onChange(modelFields);
@@ -454,6 +465,7 @@ export default function PaymentCreateForm(props) {
               amountAllocatedToInterest,
               amountAllocatedToFees,
               amountAllocatedToPenalty,
+              branchID,
               customPaymentDetails,
             };
             const result = onChange(modelFields);
@@ -491,6 +503,7 @@ export default function PaymentCreateForm(props) {
               amountAllocatedToInterest,
               amountAllocatedToFees,
               amountAllocatedToPenalty,
+              branchID,
               customPaymentDetails,
             };
             const result = onChange(modelFields);
@@ -551,6 +564,7 @@ export default function PaymentCreateForm(props) {
               amountAllocatedToInterest,
               amountAllocatedToFees,
               amountAllocatedToPenalty,
+              branchID,
               customPaymentDetails,
             };
             const result = onChange(modelFields);
@@ -592,6 +606,7 @@ export default function PaymentCreateForm(props) {
               amountAllocatedToInterest,
               amountAllocatedToFees,
               amountAllocatedToPenalty,
+              branchID,
               customPaymentDetails,
             };
             const result = onChange(modelFields);
@@ -638,6 +653,7 @@ export default function PaymentCreateForm(props) {
               amountAllocatedToInterest: value,
               amountAllocatedToFees,
               amountAllocatedToPenalty,
+              branchID,
               customPaymentDetails,
             };
             const result = onChange(modelFields);
@@ -684,6 +700,7 @@ export default function PaymentCreateForm(props) {
               amountAllocatedToInterest,
               amountAllocatedToFees: value,
               amountAllocatedToPenalty,
+              branchID,
               customPaymentDetails,
             };
             const result = onChange(modelFields);
@@ -727,6 +744,7 @@ export default function PaymentCreateForm(props) {
               amountAllocatedToInterest,
               amountAllocatedToFees,
               amountAllocatedToPenalty: value,
+              branchID,
               customPaymentDetails,
             };
             const result = onChange(modelFields);
@@ -746,6 +764,44 @@ export default function PaymentCreateForm(props) {
         errorMessage={errors.amountAllocatedToPenalty?.errorMessage}
         hasError={errors.amountAllocatedToPenalty?.hasError}
         {...getOverrideProps(overrides, "amountAllocatedToPenalty")}
+      ></TextField>
+      <TextField
+        label="Branch id"
+        isRequired={false}
+        isReadOnly={false}
+        value={branchID}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              paymentDate,
+              paymentType,
+              amount,
+              description,
+              referenceNumber,
+              paymentMethod,
+              status,
+              paymentStatusEnum,
+              notes,
+              amountAllocatedToPrincipal,
+              amountAllocatedToInterest,
+              amountAllocatedToFees,
+              amountAllocatedToPenalty,
+              branchID: value,
+              customPaymentDetails,
+            };
+            const result = onChange(modelFields);
+            value = result?.branchID ?? value;
+          }
+          if (errors.branchID?.hasError) {
+            runValidationTasks("branchID", value);
+          }
+          setBranchID(value);
+        }}
+        onBlur={() => runValidationTasks("branchID", branchID)}
+        errorMessage={errors.branchID?.errorMessage}
+        hasError={errors.branchID?.hasError}
+        {...getOverrideProps(overrides, "branchID")}
       ></TextField>
       <TextAreaField
         label="Custom payment details"
@@ -768,6 +824,7 @@ export default function PaymentCreateForm(props) {
               amountAllocatedToInterest,
               amountAllocatedToFees,
               amountAllocatedToPenalty,
+              branchID,
               customPaymentDetails: value,
             };
             const result = onChange(modelFields);

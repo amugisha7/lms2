@@ -35,6 +35,7 @@ export default function ContractCreateForm(props) {
     contractStatus: "",
     contractRecord: "",
     status: "",
+    branchID: "",
     customContractDetails: "",
   };
   const [contractNumber, setContractNumber] = React.useState(
@@ -53,6 +54,7 @@ export default function ContractCreateForm(props) {
     initialValues.contractRecord
   );
   const [status, setStatus] = React.useState(initialValues.status);
+  const [branchID, setBranchID] = React.useState(initialValues.branchID);
   const [customContractDetails, setCustomContractDetails] = React.useState(
     initialValues.customContractDetails
   );
@@ -64,6 +66,7 @@ export default function ContractCreateForm(props) {
     setContractStatus(initialValues.contractStatus);
     setContractRecord(initialValues.contractRecord);
     setStatus(initialValues.status);
+    setBranchID(initialValues.branchID);
     setCustomContractDetails(initialValues.customContractDetails);
     setErrors({});
   };
@@ -74,6 +77,7 @@ export default function ContractCreateForm(props) {
     contractStatus: [],
     contractRecord: [{ type: "JSON" }],
     status: [],
+    branchID: [],
     customContractDetails: [{ type: "JSON" }],
   };
   const runValidationTasks = async (
@@ -108,6 +112,7 @@ export default function ContractCreateForm(props) {
           contractStatus,
           contractRecord,
           status,
+          branchID,
           customContractDetails,
         };
         const validationResponses = await Promise.all(
@@ -177,6 +182,7 @@ export default function ContractCreateForm(props) {
               contractStatus,
               contractRecord,
               status,
+              branchID,
               customContractDetails,
             };
             const result = onChange(modelFields);
@@ -207,6 +213,7 @@ export default function ContractCreateForm(props) {
               contractStatus,
               contractRecord,
               status,
+              branchID,
               customContractDetails,
             };
             const result = onChange(modelFields);
@@ -238,6 +245,7 @@ export default function ContractCreateForm(props) {
               contractStatus,
               contractRecord,
               status,
+              branchID,
               customContractDetails,
             };
             const result = onChange(modelFields);
@@ -268,6 +276,7 @@ export default function ContractCreateForm(props) {
               contractStatus: value,
               contractRecord,
               status,
+              branchID,
               customContractDetails,
             };
             const result = onChange(modelFields);
@@ -297,6 +306,7 @@ export default function ContractCreateForm(props) {
               contractStatus,
               contractRecord: value,
               status,
+              branchID,
               customContractDetails,
             };
             const result = onChange(modelFields);
@@ -327,6 +337,7 @@ export default function ContractCreateForm(props) {
               contractStatus,
               contractRecord,
               status: value,
+              branchID,
               customContractDetails,
             };
             const result = onChange(modelFields);
@@ -342,6 +353,37 @@ export default function ContractCreateForm(props) {
         hasError={errors.status?.hasError}
         {...getOverrideProps(overrides, "status")}
       ></TextField>
+      <TextField
+        label="Branch id"
+        isRequired={false}
+        isReadOnly={false}
+        value={branchID}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              contractNumber,
+              contractType,
+              contractDate,
+              contractStatus,
+              contractRecord,
+              status,
+              branchID: value,
+              customContractDetails,
+            };
+            const result = onChange(modelFields);
+            value = result?.branchID ?? value;
+          }
+          if (errors.branchID?.hasError) {
+            runValidationTasks("branchID", value);
+          }
+          setBranchID(value);
+        }}
+        onBlur={() => runValidationTasks("branchID", branchID)}
+        errorMessage={errors.branchID?.errorMessage}
+        hasError={errors.branchID?.hasError}
+        {...getOverrideProps(overrides, "branchID")}
+      ></TextField>
       <TextAreaField
         label="Custom contract details"
         isRequired={false}
@@ -356,6 +398,7 @@ export default function ContractCreateForm(props) {
               contractStatus,
               contractRecord,
               status,
+              branchID,
               customContractDetails: value,
             };
             const result = onChange(modelFields);

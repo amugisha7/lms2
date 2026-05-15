@@ -44,6 +44,7 @@ export default function CollateralUpdateForm(props) {
     storedAt: "",
     customFieldsData: "",
     status: "",
+    branchID: "",
     customCollateralDetails: "",
   };
   const [name, setName] = React.useState(initialValues.name);
@@ -73,6 +74,7 @@ export default function CollateralUpdateForm(props) {
     initialValues.customFieldsData
   );
   const [status, setStatus] = React.useState(initialValues.status);
+  const [branchID, setBranchID] = React.useState(initialValues.branchID);
   const [customCollateralDetails, setCustomCollateralDetails] = React.useState(
     initialValues.customCollateralDetails
   );
@@ -99,6 +101,7 @@ export default function CollateralUpdateForm(props) {
         : JSON.stringify(cleanValues.customFieldsData)
     );
     setStatus(cleanValues.status);
+    setBranchID(cleanValues.branchID);
     setCustomCollateralDetails(
       typeof cleanValues.customCollateralDetails === "string" ||
         cleanValues.customCollateralDetails === null
@@ -138,6 +141,7 @@ export default function CollateralUpdateForm(props) {
     storedAt: [],
     customFieldsData: [{ type: "JSON" }],
     status: [],
+    branchID: [],
     customCollateralDetails: [{ type: "JSON" }],
   };
   const runValidationTasks = async (
@@ -179,6 +183,7 @@ export default function CollateralUpdateForm(props) {
           storedAt: storedAt ?? null,
           customFieldsData: customFieldsData ?? null,
           status: status ?? null,
+          branchID: branchID ?? null,
           customCollateralDetails: customCollateralDetails ?? null,
         };
         const validationResponses = await Promise.all(
@@ -253,6 +258,7 @@ export default function CollateralUpdateForm(props) {
               storedAt,
               customFieldsData,
               status,
+              branchID,
               customCollateralDetails,
             };
             const result = onChange(modelFields);
@@ -290,6 +296,7 @@ export default function CollateralUpdateForm(props) {
               storedAt,
               customFieldsData,
               status,
+              branchID,
               customCollateralDetails,
             };
             const result = onChange(modelFields);
@@ -327,6 +334,7 @@ export default function CollateralUpdateForm(props) {
               storedAt,
               customFieldsData,
               status,
+              branchID,
               customCollateralDetails,
             };
             const result = onChange(modelFields);
@@ -364,6 +372,7 @@ export default function CollateralUpdateForm(props) {
               storedAt,
               customFieldsData,
               status,
+              branchID,
               customCollateralDetails,
             };
             const result = onChange(modelFields);
@@ -405,6 +414,7 @@ export default function CollateralUpdateForm(props) {
               storedAt,
               customFieldsData,
               status,
+              branchID,
               customCollateralDetails,
             };
             const result = onChange(modelFields);
@@ -442,6 +452,7 @@ export default function CollateralUpdateForm(props) {
               storedAt,
               customFieldsData,
               status,
+              branchID,
               customCollateralDetails,
             };
             const result = onChange(modelFields);
@@ -479,6 +490,7 @@ export default function CollateralUpdateForm(props) {
               storedAt,
               customFieldsData,
               status,
+              branchID,
               customCollateralDetails,
             };
             const result = onChange(modelFields);
@@ -518,6 +530,7 @@ export default function CollateralUpdateForm(props) {
               storedAt,
               customFieldsData,
               status,
+              branchID,
               customCollateralDetails,
             };
             const result = onChange(modelFields);
@@ -556,6 +569,7 @@ export default function CollateralUpdateForm(props) {
               storedAt,
               customFieldsData,
               status,
+              branchID,
               customCollateralDetails,
             };
             const result = onChange(modelFields);
@@ -595,6 +609,7 @@ export default function CollateralUpdateForm(props) {
               storedAt,
               customFieldsData,
               status,
+              branchID,
               customCollateralDetails,
             };
             const result = onChange(modelFields);
@@ -632,6 +647,7 @@ export default function CollateralUpdateForm(props) {
               storedAt: value,
               customFieldsData,
               status,
+              branchID,
               customCollateralDetails,
             };
             const result = onChange(modelFields);
@@ -669,6 +685,7 @@ export default function CollateralUpdateForm(props) {
               storedAt,
               customFieldsData: value,
               status,
+              branchID,
               customCollateralDetails,
             };
             const result = onChange(modelFields);
@@ -706,6 +723,7 @@ export default function CollateralUpdateForm(props) {
               storedAt,
               customFieldsData,
               status: value,
+              branchID,
               customCollateralDetails,
             };
             const result = onChange(modelFields);
@@ -720,6 +738,44 @@ export default function CollateralUpdateForm(props) {
         errorMessage={errors.status?.errorMessage}
         hasError={errors.status?.hasError}
         {...getOverrideProps(overrides, "status")}
+      ></TextField>
+      <TextField
+        label="Branch id"
+        isRequired={false}
+        isReadOnly={false}
+        value={branchID}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              name,
+              type,
+              description,
+              location,
+              value,
+              serialNumber,
+              registrationNumber,
+              insuranceDetails,
+              insuranceExpiryDate,
+              insuranceCompany,
+              storedAt,
+              customFieldsData,
+              status,
+              branchID: value,
+              customCollateralDetails,
+            };
+            const result = onChange(modelFields);
+            value = result?.branchID ?? value;
+          }
+          if (errors.branchID?.hasError) {
+            runValidationTasks("branchID", value);
+          }
+          setBranchID(value);
+        }}
+        onBlur={() => runValidationTasks("branchID", branchID)}
+        errorMessage={errors.branchID?.errorMessage}
+        hasError={errors.branchID?.hasError}
+        {...getOverrideProps(overrides, "branchID")}
       ></TextField>
       <TextAreaField
         label="Custom collateral details"
@@ -743,6 +799,7 @@ export default function CollateralUpdateForm(props) {
               storedAt,
               customFieldsData,
               status,
+              branchID,
               customCollateralDetails: value,
             };
             const result = onChange(modelFields);

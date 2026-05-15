@@ -123,6 +123,7 @@ export const getBranch = /* GraphQL */ `
       branchCode
       address
       status
+      institutionID
       institution {
         id
         name
@@ -194,6 +195,22 @@ export const getBranch = /* GraphQL */ `
         nextToken
         __typename
       }
+      investments {
+        nextToken
+        __typename
+      }
+      otherIncomes {
+        nextToken
+        __typename
+      }
+      chartOfAccounts {
+        nextToken
+        __typename
+      }
+      meetings {
+        nextToken
+        __typename
+      }
       loanFeesConfigs {
         nextToken
         __typename
@@ -205,7 +222,6 @@ export const getBranch = /* GraphQL */ `
       customBranchDetails
       createdAt
       updatedAt
-      institutionBranchesId
       __typename
     }
   }
@@ -223,10 +239,10 @@ export const listBranches = /* GraphQL */ `
         branchCode
         address
         status
+        institutionID
         customBranchDetails
         createdAt
         updatedAt
-        institutionBranchesId
         __typename
       }
       nextToken
@@ -259,6 +275,8 @@ export const getUser = /* GraphQL */ `
       description
       customFieldsData
       userDocuments
+      institutionID
+      branchID
       institution {
         id
         name
@@ -296,10 +314,10 @@ export const getUser = /* GraphQL */ `
         branchCode
         address
         status
+        institutionID
         customBranchDetails
         createdAt
         updatedAt
-        institutionBranchesId
         __typename
       }
       userNotifications {
@@ -325,8 +343,6 @@ export const getUser = /* GraphQL */ `
       customUserDetails
       createdAt
       updatedAt
-      institutionUsersId
-      branchUsersId
       __typename
     }
   }
@@ -361,11 +377,11 @@ export const listUsers = /* GraphQL */ `
         description
         customFieldsData
         userDocuments
+        institutionID
+        branchID
         customUserDetails
         createdAt
         updatedAt
-        institutionUsersId
-        branchUsersId
         __typename
       }
       nextToken
@@ -415,16 +431,18 @@ export const getEmployee = /* GraphQL */ `
       taxIdentificationNumber
       taxExemptStatus
       customFieldsData
+      institutionID
+      branchID
       branch {
         id
         name
         branchCode
         address
         status
+        institutionID
         customBranchDetails
         createdAt
         updatedAt
-        institutionBranchesId
         __typename
       }
       relatedUserID
@@ -478,13 +496,14 @@ export const getEmployee = /* GraphQL */ `
         taxIdentificationNumber
         taxExemptStatus
         customFieldsData
+        institutionID
+        branchID
         relatedUserID
         relatedBorrowerID
         supervisorID
         customEmployeeDetails
         createdAt
         updatedAt
-        branchEmployeesId
         __typename
       }
       subordinates {
@@ -542,7 +561,6 @@ export const getEmployee = /* GraphQL */ `
       customEmployeeDetails
       createdAt
       updatedAt
-      branchEmployeesId
       __typename
     }
   }
@@ -594,13 +612,14 @@ export const listEmployees = /* GraphQL */ `
         taxIdentificationNumber
         taxExemptStatus
         customFieldsData
+        institutionID
+        branchID
         relatedUserID
         relatedBorrowerID
         supervisorID
         customEmployeeDetails
         createdAt
         updatedAt
-        branchEmployeesId
         __typename
       }
       nextToken
@@ -642,16 +661,17 @@ export const getBorrower = /* GraphQL */ `
       borrowerDocuments
       customFieldsData
       status
+      branchID
       branch {
         id
         name
         branchCode
         address
         status
+        institutionID
         customBranchDetails
         createdAt
         updatedAt
-        institutionBranchesId
         __typename
       }
       loans {
@@ -703,10 +723,10 @@ export const getBorrower = /* GraphQL */ `
         viceChairpersonID
         treasurerID
         status
+        branchID
         customGroupDetails
         createdAt
         updatedAt
-        branchGroupsId
         groupGroupSavingsAccountId
         __typename
       }
@@ -720,6 +740,7 @@ export const getBorrower = /* GraphQL */ `
         numberOfShares
         shareValue
         totalValue
+        branchID
         customShareAccountDetails
         createdAt
         updatedAt
@@ -729,7 +750,6 @@ export const getBorrower = /* GraphQL */ `
       customBorrowerDetails
       createdAt
       updatedAt
-      branchBorrowersId
       borrowerShareAccountId
       __typename
     }
@@ -774,12 +794,12 @@ export const listBorrowers = /* GraphQL */ `
         borrowerDocuments
         customFieldsData
         status
+        branchID
         groupID
         memberType
         customBorrowerDetails
         createdAt
         updatedAt
-        branchBorrowersId
         borrowerShareAccountId
         __typename
       }
@@ -799,6 +819,23 @@ export const getGuarantor = /* GraphQL */ `
       address
       customFieldsData
       status
+      loans {
+        nextToken
+        __typename
+      }
+      applications {
+        nextToken
+        __typename
+      }
+      isExistingMember
+      memberID
+      lockedSavingsAmount
+      collaterals {
+        nextToken
+        __typename
+      }
+      branchID
+      borrowerID
       borrower {
         id
         firstname
@@ -831,34 +868,18 @@ export const getGuarantor = /* GraphQL */ `
         borrowerDocuments
         customFieldsData
         status
+        branchID
         groupID
         memberType
         customBorrowerDetails
         createdAt
         updatedAt
-        branchBorrowersId
         borrowerShareAccountId
-        __typename
-      }
-      loans {
-        nextToken
-        __typename
-      }
-      applications {
-        nextToken
-        __typename
-      }
-      isExistingMember
-      memberID
-      lockedSavingsAmount
-      collaterals {
-        nextToken
         __typename
       }
       customGuarantorDetails
       createdAt
       updatedAt
-      borrowerGuarantorsId
       __typename
     }
   }
@@ -882,10 +903,11 @@ export const listGuarantors = /* GraphQL */ `
         isExistingMember
         memberID
         lockedSavingsAmount
+        branchID
+        borrowerID
         customGuarantorDetails
         createdAt
         updatedAt
-        borrowerGuarantorsId
         __typename
       }
       nextToken
@@ -902,6 +924,8 @@ export const getSecurity = /* GraphQL */ `
       description
       value
       status
+      branchID
+      borrowerID
       borrower {
         id
         firstname
@@ -934,19 +958,18 @@ export const getSecurity = /* GraphQL */ `
         borrowerDocuments
         customFieldsData
         status
+        branchID
         groupID
         memberType
         customBorrowerDetails
         createdAt
         updatedAt
-        branchBorrowersId
         borrowerShareAccountId
         __typename
       }
       customSecurityDetails
       createdAt
       updatedAt
-      borrowerSecuritiesId
       __typename
     }
   }
@@ -965,10 +988,11 @@ export const listSecurities = /* GraphQL */ `
         description
         value
         status
+        branchID
+        borrowerID
         customSecurityDetails
         createdAt
         updatedAt
-        borrowerSecuritiesId
         __typename
       }
       nextToken
@@ -1009,11 +1033,11 @@ export const getUserNotification = /* GraphQL */ `
         description
         customFieldsData
         userDocuments
+        institutionID
+        branchID
         customUserDetails
         createdAt
         updatedAt
-        institutionUsersId
-        branchUsersId
         __typename
       }
       customUserNotificationDetails
@@ -1081,6 +1105,7 @@ export const getLoanProduct = /* GraphQL */ `
       loanInterestRateAfterMaturity
       recurringPeriodAfterMaturityUnit
       status
+      institutionID
       institution {
         id
         name
@@ -1139,7 +1164,6 @@ export const getLoanProduct = /* GraphQL */ `
       customLoanProductDetails
       createdAt
       updatedAt
-      institutionLoanProductsId
       __typename
     }
   }
@@ -1176,10 +1200,10 @@ export const listLoanProducts = /* GraphQL */ `
         loanInterestRateAfterMaturity
         recurringPeriodAfterMaturityUnit
         status
+        institutionID
         customLoanProductDetails
         createdAt
         updatedAt
-        institutionLoanProductsId
         __typename
       }
       nextToken
@@ -1231,12 +1255,12 @@ export const getCreditScore = /* GraphQL */ `
         borrowerDocuments
         customFieldsData
         status
+        branchID
         groupID
         memberType
         customBorrowerDetails
         createdAt
         updatedAt
-        branchBorrowersId
         borrowerShareAccountId
         __typename
       }
@@ -1281,15 +1305,17 @@ export const getCreditScore = /* GraphQL */ `
         taxIdentificationNumber
         taxExemptStatus
         customFieldsData
+        institutionID
+        branchID
         relatedUserID
         relatedBorrowerID
         supervisorID
         customEmployeeDetails
         createdAt
         updatedAt
-        branchEmployeesId
         __typename
       }
+      branchID
       customCreditScoreDetails
       createdAt
       updatedAt
@@ -1315,6 +1341,7 @@ export const listCreditScores = /* GraphQL */ `
         status
         borrowerID
         createdByEmployeeID
+        branchID
         customCreditScoreDetails
         createdAt
         updatedAt
@@ -1338,16 +1365,17 @@ export const getDocument = /* GraphQL */ `
       fileName
       contentType
       status
+      branchID
       branch {
         id
         name
         branchCode
         address
         status
+        institutionID
         customBranchDetails
         createdAt
         updatedAt
-        institutionBranchesId
         __typename
       }
       borrowers {
@@ -1419,19 +1447,19 @@ export const getDocument = /* GraphQL */ `
         taxIdentificationNumber
         taxExemptStatus
         customFieldsData
+        institutionID
+        branchID
         relatedUserID
         relatedBorrowerID
         supervisorID
         customEmployeeDetails
         createdAt
         updatedAt
-        branchEmployeesId
         __typename
       }
       customDocumentDetails
       createdAt
       updatedAt
-      branchDocumentsId
       __typename
     }
   }
@@ -1454,11 +1482,11 @@ export const listDocuments = /* GraphQL */ `
         fileName
         contentType
         status
+        branchID
         createdByEmployeeID
         customDocumentDetails
         createdAt
         updatedAt
-        branchDocumentsId
         __typename
       }
       nextToken
@@ -1476,6 +1504,8 @@ export const getContract = /* GraphQL */ `
       contractStatus
       contractRecord
       status
+      branchID
+      borrowerID
       borrower {
         id
         firstname
@@ -1508,12 +1538,12 @@ export const getContract = /* GraphQL */ `
         borrowerDocuments
         customFieldsData
         status
+        branchID
         groupID
         memberType
         customBorrowerDetails
         createdAt
         updatedAt
-        branchBorrowersId
         borrowerShareAccountId
         __typename
       }
@@ -1536,7 +1566,6 @@ export const getContract = /* GraphQL */ `
       customContractDetails
       createdAt
       updatedAt
-      borrowerContractsId
       __typename
     }
   }
@@ -1556,10 +1585,11 @@ export const listContracts = /* GraphQL */ `
         contractStatus
         contractRecord
         status
+        branchID
+        borrowerID
         customContractDetails
         createdAt
         updatedAt
-        borrowerContractsId
         __typename
       }
       nextToken
@@ -1580,6 +1610,8 @@ export const getApplication = /* GraphQL */ `
       applicationDate
       status
       applicationRecord
+      branchID
+      borrowerID
       borrower {
         id
         firstname
@@ -1612,12 +1644,12 @@ export const getApplication = /* GraphQL */ `
         borrowerDocuments
         customFieldsData
         status
+        branchID
         groupID
         memberType
         customBorrowerDetails
         createdAt
         updatedAt
-        branchBorrowersId
         borrowerShareAccountId
         __typename
       }
@@ -1671,10 +1703,10 @@ export const getApplication = /* GraphQL */ `
         loanInterestRateAfterMaturity
         recurringPeriodAfterMaturityUnit
         status
+        institutionID
         customLoanProductDetails
         createdAt
         updatedAt
-        institutionLoanProductsId
         __typename
       }
       createdByEmployeeID
@@ -1718,20 +1750,20 @@ export const getApplication = /* GraphQL */ `
         taxIdentificationNumber
         taxExemptStatus
         customFieldsData
+        institutionID
+        branchID
         relatedUserID
         relatedBorrowerID
         supervisorID
         customEmployeeDetails
         createdAt
         updatedAt
-        branchEmployeesId
         __typename
       }
       customFieldsData
       customApplicationDetails
       createdAt
       updatedAt
-      borrowerApplicationsId
       __typename
     }
   }
@@ -1754,13 +1786,14 @@ export const listApplications = /* GraphQL */ `
         applicationDate
         status
         applicationRecord
+        branchID
+        borrowerID
         loanProductID
         createdByEmployeeID
         customFieldsData
         customApplicationDetails
         createdAt
         updatedAt
-        borrowerApplicationsId
         __typename
       }
       nextToken
@@ -1785,6 +1818,7 @@ export const getCollateral = /* GraphQL */ `
       storedAt
       customFieldsData
       status
+      branchID
       borrower {
         id
         firstname
@@ -1817,12 +1851,12 @@ export const getCollateral = /* GraphQL */ `
         borrowerDocuments
         customFieldsData
         status
+        branchID
         groupID
         memberType
         customBorrowerDetails
         createdAt
         updatedAt
-        branchBorrowersId
         borrowerShareAccountId
         __typename
       }
@@ -1872,6 +1906,7 @@ export const listCollaterals = /* GraphQL */ `
         storedAt
         customFieldsData
         status
+        branchID
         customCollateralDetails
         createdAt
         updatedAt
@@ -1909,6 +1944,7 @@ export const getLoan = /* GraphQL */ `
       paymentFrequency
       customFieldsData
       status
+      branchID
       borrowerID
       borrower {
         id
@@ -1942,26 +1978,25 @@ export const getLoan = /* GraphQL */ `
         borrowerDocuments
         customFieldsData
         status
+        branchID
         groupID
         memberType
         customBorrowerDetails
         createdAt
         updatedAt
-        branchBorrowersId
         borrowerShareAccountId
         __typename
       }
-      branchID
       branch {
         id
         name
         branchCode
         address
         status
+        institutionID
         customBranchDetails
         createdAt
         updatedAt
-        institutionBranchesId
         __typename
       }
       payments {
@@ -2042,10 +2077,10 @@ export const getLoan = /* GraphQL */ `
         loanInterestRateAfterMaturity
         recurringPeriodAfterMaturityUnit
         status
+        institutionID
         customLoanProductDetails
         createdAt
         updatedAt
-        institutionLoanProductsId
         __typename
       }
       createdByEmployeeID
@@ -2089,13 +2124,14 @@ export const getLoan = /* GraphQL */ `
         taxIdentificationNumber
         taxExemptStatus
         customFieldsData
+        institutionID
+        branchID
         relatedUserID
         relatedBorrowerID
         supervisorID
         customEmployeeDetails
         createdAt
         updatedAt
-        branchEmployeesId
         __typename
       }
       groupID
@@ -2111,10 +2147,10 @@ export const getLoan = /* GraphQL */ `
         viceChairpersonID
         treasurerID
         status
+        branchID
         customGroupDetails
         createdAt
         updatedAt
-        branchGroupsId
         groupGroupSavingsAccountId
         __typename
       }
@@ -2160,8 +2196,8 @@ export const listLoans = /* GraphQL */ `
         paymentFrequency
         customFieldsData
         status
-        borrowerID
         branchID
+        borrowerID
         loanProductID
         createdByEmployeeID
         groupID
@@ -2179,6 +2215,7 @@ export const getLoanComment = /* GraphQL */ `
   query GetLoanComment($id: ID!) {
     getLoanComment(id: $id) {
       id
+      branchID
       loanID
       loan {
         id
@@ -2204,8 +2241,8 @@ export const getLoanComment = /* GraphQL */ `
         paymentFrequency
         customFieldsData
         status
-        borrowerID
         branchID
+        borrowerID
         loanProductID
         createdByEmployeeID
         groupID
@@ -2258,13 +2295,14 @@ export const getLoanComment = /* GraphQL */ `
         taxIdentificationNumber
         taxExemptStatus
         customFieldsData
+        institutionID
+        branchID
         relatedUserID
         relatedBorrowerID
         supervisorID
         customEmployeeDetails
         createdAt
         updatedAt
-        branchEmployeesId
         __typename
       }
       customLoanCommentDetails
@@ -2283,6 +2321,7 @@ export const listLoanComments = /* GraphQL */ `
     listLoanComments(filter: $filter, limit: $limit, nextToken: $nextToken) {
       items {
         id
+        branchID
         loanID
         commentAt
         body
@@ -2302,6 +2341,7 @@ export const getLoanEvent = /* GraphQL */ `
   query GetLoanEvent($id: ID!) {
     getLoanEvent(id: $id) {
       id
+      branchID
       loanID
       loan {
         id
@@ -2327,8 +2367,8 @@ export const getLoanEvent = /* GraphQL */ `
         paymentFrequency
         customFieldsData
         status
-        borrowerID
         branchID
+        borrowerID
         loanProductID
         createdByEmployeeID
         groupID
@@ -2362,6 +2402,7 @@ export const getLoanEvent = /* GraphQL */ `
         amountAllocatedToInterest
         amountAllocatedToFees
         amountAllocatedToPenalty
+        branchID
         customPaymentDetails
         createdAt
         updatedAt
@@ -2383,6 +2424,7 @@ export const listLoanEvents = /* GraphQL */ `
     listLoanEvents(filter: $filter, limit: $limit, nextToken: $nextToken) {
       items {
         id
+        branchID
         loanID
         eventAt
         eventType
@@ -2422,6 +2464,19 @@ export const getInvestment = /* GraphQL */ `
       numberOfPayments
       paymentFrequency
       status
+      branchID
+      branch {
+        id
+        name
+        branchCode
+        address
+        status
+        institutionID
+        customBranchDetails
+        createdAt
+        updatedAt
+        __typename
+      }
       accounts {
         nextToken
         __typename
@@ -2460,6 +2515,7 @@ export const listInvestments = /* GraphQL */ `
         numberOfPayments
         paymentFrequency
         status
+        branchID
         customInvestmentDetails
         createdAt
         updatedAt
@@ -2487,6 +2543,7 @@ export const getLoanFees = /* GraphQL */ `
       loanFeesAttribute1
       loanFeesAttribute2
       status
+      branchID
       loan {
         id
         loanNumber
@@ -2511,8 +2568,8 @@ export const getLoanFees = /* GraphQL */ `
         paymentFrequency
         customFieldsData
         status
-        borrowerID
         branchID
+        borrowerID
         loanProductID
         createdByEmployeeID
         groupID
@@ -2543,11 +2600,11 @@ export const getLoanFees = /* GraphQL */ `
         interestAccruedDate
         accountStatus
         status
+        institutionID
         createdByEmployeeID
         customAccountDetails
         createdAt
         updatedAt
-        institutionAccountsId
         __typename
       }
       loanFeesConfigs {
@@ -2584,6 +2641,7 @@ export const listLoanFees = /* GraphQL */ `
         loanFeesAttribute1
         loanFeesAttribute2
         status
+        branchID
         accountID
         customLoanFeesDetails
         createdAt
@@ -2613,6 +2671,7 @@ export const getPenalty = /* GraphQL */ `
       penaltyAttribute1
       penaltyAttribute2
       status
+      branchID
       loan {
         id
         loanNumber
@@ -2637,8 +2696,8 @@ export const getPenalty = /* GraphQL */ `
         paymentFrequency
         customFieldsData
         status
-        borrowerID
         branchID
+        borrowerID
         loanProductID
         createdByEmployeeID
         groupID
@@ -2669,11 +2728,11 @@ export const getPenalty = /* GraphQL */ `
         interestAccruedDate
         accountStatus
         status
+        institutionID
         createdByEmployeeID
         customAccountDetails
         createdAt
         updatedAt
-        institutionAccountsId
         __typename
       }
       customPenaltyDetails
@@ -2706,6 +2765,7 @@ export const listPenalties = /* GraphQL */ `
         penaltyAttribute1
         penaltyAttribute2
         status
+        branchID
         accountID
         customPenaltyDetails
         createdAt
@@ -2733,16 +2793,17 @@ export const getPayroll = /* GraphQL */ `
       totalShareDeductions
       totalNetPay
       details
+      branchID
       branch {
         id
         name
         branchCode
         address
         status
+        institutionID
         customBranchDetails
         createdAt
         updatedAt
-        institutionBranchesId
         __typename
       }
       employees {
@@ -2752,7 +2813,6 @@ export const getPayroll = /* GraphQL */ `
       customPayrollDetails
       createdAt
       updatedAt
-      branchPayrollsId
       __typename
     }
   }
@@ -2777,10 +2837,10 @@ export const listPayrolls = /* GraphQL */ `
         totalShareDeductions
         totalNetPay
         details
+        branchID
         customPayrollDetails
         createdAt
         updatedAt
-        branchPayrollsId
         __typename
       }
       nextToken
@@ -2807,6 +2867,7 @@ export const getAccount = /* GraphQL */ `
       interestAccruedDate
       accountStatus
       status
+      institutionID
       institution {
         id
         name
@@ -2915,19 +2976,19 @@ export const getAccount = /* GraphQL */ `
         taxIdentificationNumber
         taxExemptStatus
         customFieldsData
+        institutionID
+        branchID
         relatedUserID
         relatedBorrowerID
         supervisorID
         customEmployeeDetails
         createdAt
         updatedAt
-        branchEmployeesId
         __typename
       }
       customAccountDetails
       createdAt
       updatedAt
-      institutionAccountsId
       __typename
     }
   }
@@ -2956,11 +3017,11 @@ export const listAccounts = /* GraphQL */ `
         interestAccruedDate
         accountStatus
         status
+        institutionID
         createdByEmployeeID
         customAccountDetails
         createdAt
         updatedAt
-        institutionAccountsId
         __typename
       }
       nextToken
@@ -2985,6 +3046,7 @@ export const getMoneyTransaction = /* GraphQL */ `
       paymentMethod
       deviceInfo
       status
+      branchID
       account {
         id
         name
@@ -3002,11 +3064,11 @@ export const getMoneyTransaction = /* GraphQL */ `
         interestAccruedDate
         accountStatus
         status
+        institutionID
         createdByEmployeeID
         customAccountDetails
         createdAt
         updatedAt
-        institutionAccountsId
         __typename
       }
       loanID
@@ -3034,8 +3096,8 @@ export const getMoneyTransaction = /* GraphQL */ `
         paymentFrequency
         customFieldsData
         status
-        borrowerID
         branchID
+        borrowerID
         loanProductID
         createdByEmployeeID
         groupID
@@ -3064,6 +3126,7 @@ export const getMoneyTransaction = /* GraphQL */ `
         amountAllocatedToInterest
         amountAllocatedToFees
         amountAllocatedToPenalty
+        branchID
         customPaymentDetails
         createdAt
         updatedAt
@@ -3114,13 +3177,14 @@ export const getMoneyTransaction = /* GraphQL */ `
         taxIdentificationNumber
         taxExemptStatus
         customFieldsData
+        institutionID
+        branchID
         relatedUserID
         relatedBorrowerID
         supervisorID
         customEmployeeDetails
         createdAt
         updatedAt
-        branchEmployeesId
         __typename
       }
       paymentsLink {
@@ -3161,6 +3225,7 @@ export const listMoneyTransactions = /* GraphQL */ `
         paymentMethod
         deviceInfo
         status
+        branchID
         loanID
         paymentID
         createdByEmployeeID
@@ -3213,8 +3278,8 @@ export const getPayment = /* GraphQL */ `
         paymentFrequency
         customFieldsData
         status
-        borrowerID
         branchID
+        borrowerID
         loanProductID
         createdByEmployeeID
         groupID
@@ -3239,6 +3304,7 @@ export const getPayment = /* GraphQL */ `
         paymentMethod
         deviceInfo
         status
+        branchID
         loanID
         paymentID
         createdByEmployeeID
@@ -3266,11 +3332,11 @@ export const getPayment = /* GraphQL */ `
         interestAccruedDate
         accountStatus
         status
+        institutionID
         createdByEmployeeID
         customAccountDetails
         createdAt
         updatedAt
-        institutionAccountsId
         __typename
       }
       receivingEmployeeID
@@ -3314,13 +3380,14 @@ export const getPayment = /* GraphQL */ `
         taxIdentificationNumber
         taxExemptStatus
         customFieldsData
+        institutionID
+        branchID
         relatedUserID
         relatedBorrowerID
         supervisorID
         customEmployeeDetails
         createdAt
         updatedAt
-        branchEmployeesId
         __typename
       }
       documents {
@@ -3339,6 +3406,7 @@ export const getPayment = /* GraphQL */ `
       amountAllocatedToInterest
       amountAllocatedToFees
       amountAllocatedToPenalty
+      branchID
       relatedJournalEntries {
         nextToken
         __typename
@@ -3376,6 +3444,7 @@ export const listPayments = /* GraphQL */ `
         amountAllocatedToInterest
         amountAllocatedToFees
         amountAllocatedToPenalty
+        branchID
         customPaymentDetails
         createdAt
         updatedAt
@@ -3403,6 +3472,7 @@ export const getExpense = /* GraphQL */ `
       approvedDate
       type
       category
+      branchID
       account {
         id
         name
@@ -3420,11 +3490,11 @@ export const getExpense = /* GraphQL */ `
         interestAccruedDate
         accountStatus
         status
+        institutionID
         createdByEmployeeID
         customAccountDetails
         createdAt
         updatedAt
-        institutionAccountsId
         __typename
       }
       loans {
@@ -3480,13 +3550,14 @@ export const getExpense = /* GraphQL */ `
         taxIdentificationNumber
         taxExemptStatus
         customFieldsData
+        institutionID
+        branchID
         relatedUserID
         relatedBorrowerID
         supervisorID
         customEmployeeDetails
         createdAt
         updatedAt
-        branchEmployeesId
         __typename
       }
       relatedJournalEntries {
@@ -3523,6 +3594,7 @@ export const listExpenses = /* GraphQL */ `
         approvedDate
         type
         category
+        branchID
         createdByEmployeeID
         customExpenseDetails
         createdAt
@@ -3545,6 +3617,19 @@ export const getOtherIncome = /* GraphQL */ `
       incomeDate
       incomeType
       status
+      branchID
+      branch {
+        id
+        name
+        branchCode
+        address
+        status
+        institutionID
+        customBranchDetails
+        createdAt
+        updatedAt
+        __typename
+      }
       accounts {
         nextToken
         __typename
@@ -3571,6 +3656,7 @@ export const listOtherIncomes = /* GraphQL */ `
         incomeDate
         incomeType
         status
+        branchID
         customOtherIncomeDetails
         createdAt
         updatedAt
@@ -3592,22 +3678,22 @@ export const getFinancialReport = /* GraphQL */ `
       endDate
       reportData
       status
+      branchID
       branch {
         id
         name
         branchCode
         address
         status
+        institutionID
         customBranchDetails
         createdAt
         updatedAt
-        institutionBranchesId
         __typename
       }
       customFinancialReportDetails
       createdAt
       updatedAt
-      branchFinancialReportsId
       __typename
     }
   }
@@ -3632,10 +3718,10 @@ export const listFinancialReports = /* GraphQL */ `
         endDate
         reportData
         status
+        branchID
         customFinancialReportDetails
         createdAt
         updatedAt
-        branchFinancialReportsId
         __typename
       }
       nextToken
@@ -3655,16 +3741,18 @@ export const getCustomFormField = /* GraphQL */ `
       order
       createdBy
       status
+      branchID
+      institutionID
       branch {
         id
         name
         branchCode
         address
         status
+        institutionID
         customBranchDetails
         createdAt
         updatedAt
-        institutionBranchesId
         __typename
       }
       institution {
@@ -3701,8 +3789,6 @@ export const getCustomFormField = /* GraphQL */ `
       customCustomFormFieldDetails
       createdAt
       updatedAt
-      institutionCustomFormFieldsId
-      branchCustomFormFieldsId
       __typename
     }
   }
@@ -3728,11 +3814,11 @@ export const listCustomFormFields = /* GraphQL */ `
         order
         createdBy
         status
+        branchID
+        institutionID
         customCustomFormFieldDetails
         createdAt
         updatedAt
-        institutionCustomFormFieldsId
-        branchCustomFormFieldsId
         __typename
       }
       nextToken
@@ -3751,6 +3837,7 @@ export const getLoanFeesConfig = /* GraphQL */ `
       percentageBase
       rate
       status
+      institutionID
       institution {
         id
         name
@@ -3797,7 +3884,6 @@ export const getLoanFeesConfig = /* GraphQL */ `
       customLoanFeesConfigDetails
       createdAt
       updatedAt
-      institutionLoanFeesConfigsId
       __typename
     }
   }
@@ -3818,10 +3904,10 @@ export const listLoanFeesConfigs = /* GraphQL */ `
         percentageBase
         rate
         status
+        institutionID
         customLoanFeesConfigDetails
         createdAt
         updatedAt
-        institutionLoanFeesConfigsId
         __typename
       }
       nextToken
@@ -3837,6 +3923,8 @@ export const getMessage = /* GraphQL */ `
       body
       status
       createdAt
+      institutionID
+      branchID
       sender {
         id
         firstName
@@ -3860,11 +3948,11 @@ export const getMessage = /* GraphQL */ `
         description
         customFieldsData
         userDocuments
+        institutionID
+        branchID
         customUserDetails
         createdAt
         updatedAt
-        institutionUsersId
-        branchUsersId
         __typename
       }
       senderUserId
@@ -3891,11 +3979,11 @@ export const getMessage = /* GraphQL */ `
         description
         customFieldsData
         userDocuments
+        institutionID
+        branchID
         customUserDetails
         createdAt
         updatedAt
-        institutionUsersId
-        branchUsersId
         __typename
       }
       recipientUserId
@@ -3918,6 +4006,8 @@ export const listMessages = /* GraphQL */ `
         body
         status
         createdAt
+        institutionID
+        branchID
         senderUserId
         recipientUserId
         customMessageDetails
@@ -3963,11 +4053,11 @@ export const getNotification = /* GraphQL */ `
         description
         customFieldsData
         userDocuments
+        institutionID
+        branchID
         customUserDetails
         createdAt
         updatedAt
-        institutionUsersId
-        branchUsersId
         __typename
       }
       senderUserId
@@ -3994,15 +4084,16 @@ export const getNotification = /* GraphQL */ `
         description
         customFieldsData
         userDocuments
+        institutionID
+        branchID
         customUserDetails
         createdAt
         updatedAt
-        institutionUsersId
-        branchUsersId
         __typename
       }
       recipientUserId
-      institutionMessagesId
+      institutionID
+      branchID
       customNotificationDetails
       updatedAt
       __typename
@@ -4027,7 +4118,8 @@ export const listNotifications = /* GraphQL */ `
         createdAt
         senderUserId
         recipientUserId
-        institutionMessagesId
+        institutionID
+        branchID
         customNotificationDetails
         updatedAt
         __typename
@@ -4051,16 +4143,17 @@ export const getGroup = /* GraphQL */ `
       viceChairpersonID
       treasurerID
       status
+      branchID
       branch {
         id
         name
         branchCode
         address
         status
+        institutionID
         customBranchDetails
         createdAt
         updatedAt
-        institutionBranchesId
         __typename
       }
       members {
@@ -4076,19 +4169,19 @@ export const getGroup = /* GraphQL */ `
         accountNumber
         balance
         status
+        branchID
+        borrowerID
         lockedAmount
         lockedForLoanID
         customSavingsAccountDetails
         createdAt
         updatedAt
-        borrowerSavingsAccountsId
         savingsProductSavingsAccountsId
         __typename
       }
       customGroupDetails
       createdAt
       updatedAt
-      branchGroupsId
       groupGroupSavingsAccountId
       __typename
     }
@@ -4113,10 +4206,10 @@ export const listGroups = /* GraphQL */ `
         viceChairpersonID
         treasurerID
         status
+        branchID
         customGroupDetails
         createdAt
         updatedAt
-        branchGroupsId
         groupGroupSavingsAccountId
         __typename
       }
@@ -4134,6 +4227,7 @@ export const getSavingsProduct = /* GraphQL */ `
       interestRate
       interestPostingFrequency
       minBalance
+      institutionID
       institution {
         id
         name
@@ -4172,7 +4266,6 @@ export const getSavingsProduct = /* GraphQL */ `
       customSavingsProductDetails
       createdAt
       updatedAt
-      institutionSavingsProductsId
       __typename
     }
   }
@@ -4191,10 +4284,10 @@ export const listSavingsProducts = /* GraphQL */ `
         interestRate
         interestPostingFrequency
         minBalance
+        institutionID
         customSavingsProductDetails
         createdAt
         updatedAt
-        institutionSavingsProductsId
         __typename
       }
       nextToken
@@ -4209,6 +4302,8 @@ export const getSavingsAccount = /* GraphQL */ `
       accountNumber
       balance
       status
+      branchID
+      borrowerID
       borrower {
         id
         firstname
@@ -4241,12 +4336,12 @@ export const getSavingsAccount = /* GraphQL */ `
         borrowerDocuments
         customFieldsData
         status
+        branchID
         groupID
         memberType
         customBorrowerDetails
         createdAt
         updatedAt
-        branchBorrowersId
         borrowerShareAccountId
         __typename
       }
@@ -4257,10 +4352,10 @@ export const getSavingsAccount = /* GraphQL */ `
         interestRate
         interestPostingFrequency
         minBalance
+        institutionID
         customSavingsProductDetails
         createdAt
         updatedAt
-        institutionSavingsProductsId
         __typename
       }
       lockedAmount
@@ -4272,7 +4367,6 @@ export const getSavingsAccount = /* GraphQL */ `
       customSavingsAccountDetails
       createdAt
       updatedAt
-      borrowerSavingsAccountsId
       savingsProductSavingsAccountsId
       __typename
     }
@@ -4290,12 +4384,13 @@ export const listSavingsAccounts = /* GraphQL */ `
         accountNumber
         balance
         status
+        branchID
+        borrowerID
         lockedAmount
         lockedForLoanID
         customSavingsAccountDetails
         createdAt
         updatedAt
-        borrowerSavingsAccountsId
         savingsProductSavingsAccountsId
         __typename
       }
@@ -4311,17 +4406,19 @@ export const getSavingsTransaction = /* GraphQL */ `
       amount
       type
       date
+      branchID
       savingsAccount {
         id
         accountNumber
         balance
         status
+        branchID
+        borrowerID
         lockedAmount
         lockedForLoanID
         customSavingsAccountDetails
         createdAt
         updatedAt
-        borrowerSavingsAccountsId
         savingsProductSavingsAccountsId
         __typename
       }
@@ -4365,13 +4462,14 @@ export const getSavingsTransaction = /* GraphQL */ `
         taxIdentificationNumber
         taxExemptStatus
         customFieldsData
+        institutionID
+        branchID
         relatedUserID
         relatedBorrowerID
         supervisorID
         customEmployeeDetails
         createdAt
         updatedAt
-        branchEmployeesId
         __typename
       }
       customSavingsTransactionDetails
@@ -4399,6 +4497,7 @@ export const listSavingsTransactions = /* GraphQL */ `
         amount
         type
         date
+        branchID
         customSavingsTransactionDetails
         createdAt
         updatedAt
@@ -4418,6 +4517,7 @@ export const getShareAccount = /* GraphQL */ `
       numberOfShares
       shareValue
       totalValue
+      branchID
       borrower {
         id
         firstname
@@ -4450,12 +4550,12 @@ export const getShareAccount = /* GraphQL */ `
         borrowerDocuments
         customFieldsData
         status
+        branchID
         groupID
         memberType
         customBorrowerDetails
         createdAt
         updatedAt
-        branchBorrowersId
         borrowerShareAccountId
         __typename
       }
@@ -4483,6 +4583,7 @@ export const listShareAccounts = /* GraphQL */ `
         numberOfShares
         shareValue
         totalValue
+        branchID
         customShareAccountDetails
         createdAt
         updatedAt
@@ -4502,11 +4603,13 @@ export const getShareTransaction = /* GraphQL */ `
       numberOfShares
       amount
       date
+      branchID
       shareAccount {
         id
         numberOfShares
         shareValue
         totalValue
+        branchID
         customShareAccountDetails
         createdAt
         updatedAt
@@ -4538,6 +4641,7 @@ export const listShareTransactions = /* GraphQL */ `
         numberOfShares
         amount
         date
+        branchID
         customShareTransactionDetails
         createdAt
         updatedAt
@@ -4558,6 +4662,8 @@ export const getChartOfAccounts = /* GraphQL */ `
       type
       subtype
       balance
+      institutionID
+      branchID
       institution {
         id
         name
@@ -4589,6 +4695,18 @@ export const getChartOfAccounts = /* GraphQL */ `
         updatedAt
         __typename
       }
+      branch {
+        id
+        name
+        branchCode
+        address
+        status
+        institutionID
+        customBranchDetails
+        createdAt
+        updatedAt
+        __typename
+      }
       journalLines {
         nextToken
         __typename
@@ -4596,7 +4714,6 @@ export const getChartOfAccounts = /* GraphQL */ `
       customChartOfAccountsDetails
       createdAt
       updatedAt
-      institutionChartOfAccountsId
       __typename
     }
   }
@@ -4615,10 +4732,11 @@ export const listChartOfAccounts = /* GraphQL */ `
         type
         subtype
         balance
+        institutionID
+        branchID
         customChartOfAccountsDetails
         createdAt
         updatedAt
-        institutionChartOfAccountsId
         __typename
       }
       nextToken
@@ -4633,6 +4751,7 @@ export const getJournalEntry = /* GraphQL */ `
       date
       description
       reference
+      branchID
       postedBy {
         id
         firstName
@@ -4673,13 +4792,14 @@ export const getJournalEntry = /* GraphQL */ `
         taxIdentificationNumber
         taxExemptStatus
         customFieldsData
+        institutionID
+        branchID
         relatedUserID
         relatedBorrowerID
         supervisorID
         customEmployeeDetails
         createdAt
         updatedAt
-        branchEmployeesId
         __typename
       }
       status
@@ -4712,8 +4832,8 @@ export const getJournalEntry = /* GraphQL */ `
         paymentFrequency
         customFieldsData
         status
-        borrowerID
         branchID
+        borrowerID
         loanProductID
         createdByEmployeeID
         groupID
@@ -4742,6 +4862,7 @@ export const getJournalEntry = /* GraphQL */ `
         amountAllocatedToInterest
         amountAllocatedToFees
         amountAllocatedToPenalty
+        branchID
         customPaymentDetails
         createdAt
         updatedAt
@@ -4763,6 +4884,7 @@ export const getJournalEntry = /* GraphQL */ `
         approvedDate
         type
         category
+        branchID
         createdByEmployeeID
         customExpenseDetails
         createdAt
@@ -4790,6 +4912,7 @@ export const listJournalEntries = /* GraphQL */ `
         date
         description
         reference
+        branchID
         status
         relatedLoanID
         relatedPaymentID
@@ -4809,11 +4932,13 @@ export const getJournalLine = /* GraphQL */ `
   query GetJournalLine($id: ID!) {
     getJournalLine(id: $id) {
       id
+      branchID
       journalEntry {
         id
         date
         description
         reference
+        branchID
         status
         relatedLoanID
         relatedPaymentID
@@ -4831,10 +4956,11 @@ export const getJournalLine = /* GraphQL */ `
         type
         subtype
         balance
+        institutionID
+        branchID
         customChartOfAccountsDetails
         createdAt
         updatedAt
-        institutionChartOfAccountsId
         __typename
       }
       debit
@@ -4858,6 +4984,7 @@ export const listJournalLines = /* GraphQL */ `
     listJournalLines(filter: $filter, limit: $limit, nextToken: $nextToken) {
       items {
         id
+        branchID
         debit
         credit
         description
@@ -4884,6 +5011,19 @@ export const getMeeting = /* GraphQL */ `
       minutes
       attendanceRecord
       resolutionsRecord
+      branchID
+      branch {
+        id
+        name
+        branchCode
+        address
+        status
+        institutionID
+        customBranchDetails
+        createdAt
+        updatedAt
+        __typename
+      }
       customMeetingDetails
       createdAt
       updatedAt
@@ -4907,6 +5047,7 @@ export const listMeetings = /* GraphQL */ `
         minutes
         attendanceRecord
         resolutionsRecord
+        branchID
         customMeetingDetails
         createdAt
         updatedAt
@@ -4926,6 +5067,7 @@ export const getDividendDeclaration = /* GraphQL */ `
       dividendRate
       interestRebateRate
       status
+      institutionID
       institution {
         id
         name
@@ -4960,7 +5102,6 @@ export const getDividendDeclaration = /* GraphQL */ `
       customDividendDeclarationDetails
       createdAt
       updatedAt
-      institutionDividendDeclarationsId
       __typename
     }
   }
@@ -4983,10 +5124,10 @@ export const listDividendDeclarations = /* GraphQL */ `
         dividendRate
         interestRebateRate
         status
+        institutionID
         customDividendDeclarationDetails
         createdAt
         updatedAt
-        institutionDividendDeclarationsId
         __typename
       }
       nextToken
@@ -5003,6 +5144,7 @@ export const getApproval = /* GraphQL */ `
       approvalDate
       status
       notes
+      branchID
       employee {
         id
         firstName
@@ -5043,13 +5185,14 @@ export const getApproval = /* GraphQL */ `
         taxIdentificationNumber
         taxExemptStatus
         customFieldsData
+        institutionID
+        branchID
         relatedUserID
         relatedBorrowerID
         supervisorID
         customEmployeeDetails
         createdAt
         updatedAt
-        branchEmployeesId
         __typename
       }
       customApprovalDetails
@@ -5074,6 +5217,7 @@ export const listApprovals = /* GraphQL */ `
         approvalDate
         status
         notes
+        branchID
         customApprovalDetails
         createdAt
         updatedAt
@@ -5097,10 +5241,10 @@ export const getAccountBranch = /* GraphQL */ `
         branchCode
         address
         status
+        institutionID
         customBranchDetails
         createdAt
         updatedAt
-        institutionBranchesId
         __typename
       }
       account {
@@ -5120,11 +5264,11 @@ export const getAccountBranch = /* GraphQL */ `
         interestAccruedDate
         accountStatus
         status
+        institutionID
         createdByEmployeeID
         customAccountDetails
         createdAt
         updatedAt
-        institutionAccountsId
         __typename
       }
       createdAt
@@ -5165,10 +5309,10 @@ export const getBranchLoanProduct = /* GraphQL */ `
         branchCode
         address
         status
+        institutionID
         customBranchDetails
         createdAt
         updatedAt
-        institutionBranchesId
         __typename
       }
       loanProduct {
@@ -5196,10 +5340,10 @@ export const getBranchLoanProduct = /* GraphQL */ `
         loanInterestRateAfterMaturity
         recurringPeriodAfterMaturityUnit
         status
+        institutionID
         customLoanProductDetails
         createdAt
         updatedAt
-        institutionLoanProductsId
         __typename
       }
       createdAt
@@ -5244,10 +5388,10 @@ export const getBranchLoanFeesConfig = /* GraphQL */ `
         branchCode
         address
         status
+        institutionID
         customBranchDetails
         createdAt
         updatedAt
-        institutionBranchesId
         __typename
       }
       loanFeesConfig {
@@ -5259,10 +5403,10 @@ export const getBranchLoanFeesConfig = /* GraphQL */ `
         percentageBase
         rate
         status
+        institutionID
         customLoanFeesConfigDetails
         createdAt
         updatedAt
-        institutionLoanFeesConfigsId
         __typename
       }
       createdAt
@@ -5341,13 +5485,14 @@ export const getPayrollEmployee = /* GraphQL */ `
         taxIdentificationNumber
         taxExemptStatus
         customFieldsData
+        institutionID
+        branchID
         relatedUserID
         relatedBorrowerID
         supervisorID
         customEmployeeDetails
         createdAt
         updatedAt
-        branchEmployeesId
         __typename
       }
       payroll {
@@ -5363,10 +5508,10 @@ export const getPayrollEmployee = /* GraphQL */ `
         totalShareDeductions
         totalNetPay
         details
+        branchID
         customPayrollDetails
         createdAt
         updatedAt
-        branchPayrollsId
         __typename
       }
       createdAt
@@ -5445,13 +5590,14 @@ export const getBorrowerLoanOfficer = /* GraphQL */ `
         taxIdentificationNumber
         taxExemptStatus
         customFieldsData
+        institutionID
+        branchID
         relatedUserID
         relatedBorrowerID
         supervisorID
         customEmployeeDetails
         createdAt
         updatedAt
-        branchEmployeesId
         __typename
       }
       borrower {
@@ -5486,12 +5632,12 @@ export const getBorrowerLoanOfficer = /* GraphQL */ `
         borrowerDocuments
         customFieldsData
         status
+        branchID
         groupID
         memberType
         customBorrowerDetails
         createdAt
         updatedAt
-        branchBorrowersId
         borrowerShareAccountId
         __typename
       }
@@ -5563,12 +5709,12 @@ export const getBorrowerDocument = /* GraphQL */ `
         borrowerDocuments
         customFieldsData
         status
+        branchID
         groupID
         memberType
         customBorrowerDetails
         createdAt
         updatedAt
-        branchBorrowersId
         borrowerShareAccountId
         __typename
       }
@@ -5583,11 +5729,11 @@ export const getBorrowerDocument = /* GraphQL */ `
         fileName
         contentType
         status
+        branchID
         createdByEmployeeID
         customDocumentDetails
         createdAt
         updatedAt
-        branchDocumentsId
         __typename
       }
       createdAt
@@ -5638,10 +5784,11 @@ export const getLoanGuarantor = /* GraphQL */ `
         isExistingMember
         memberID
         lockedSavingsAmount
+        branchID
+        borrowerID
         customGuarantorDetails
         createdAt
         updatedAt
-        borrowerGuarantorsId
         __typename
       }
       loan {
@@ -5668,8 +5815,8 @@ export const getLoanGuarantor = /* GraphQL */ `
         paymentFrequency
         customFieldsData
         status
-        borrowerID
         branchID
+        borrowerID
         loanProductID
         createdByEmployeeID
         groupID
@@ -5722,10 +5869,11 @@ export const getApplicationGuarantor = /* GraphQL */ `
         isExistingMember
         memberID
         lockedSavingsAmount
+        branchID
+        borrowerID
         customGuarantorDetails
         createdAt
         updatedAt
-        borrowerGuarantorsId
         __typename
       }
       application {
@@ -5739,13 +5887,14 @@ export const getApplicationGuarantor = /* GraphQL */ `
         applicationDate
         status
         applicationRecord
+        branchID
+        borrowerID
         loanProductID
         createdByEmployeeID
         customFieldsData
         customApplicationDetails
         createdAt
         updatedAt
-        borrowerApplicationsId
         __typename
       }
       createdAt
@@ -5796,10 +5945,11 @@ export const getGuarantorCollateral = /* GraphQL */ `
         isExistingMember
         memberID
         lockedSavingsAmount
+        branchID
+        borrowerID
         customGuarantorDetails
         createdAt
         updatedAt
-        borrowerGuarantorsId
         __typename
       }
       collateral {
@@ -5817,6 +5967,7 @@ export const getGuarantorCollateral = /* GraphQL */ `
         storedAt
         customFieldsData
         status
+        branchID
         customCollateralDetails
         createdAt
         updatedAt
@@ -5884,10 +6035,10 @@ export const getLoanProductLoanFees = /* GraphQL */ `
         loanInterestRateAfterMaturity
         recurringPeriodAfterMaturityUnit
         status
+        institutionID
         customLoanProductDetails
         createdAt
         updatedAt
-        institutionLoanProductsId
         __typename
       }
       loanFees {
@@ -5905,6 +6056,7 @@ export const getLoanProductLoanFees = /* GraphQL */ `
         loanFeesAttribute1
         loanFeesAttribute2
         status
+        branchID
         accountID
         customLoanFeesDetails
         createdAt
@@ -5973,10 +6125,10 @@ export const getLoanProductLoanFeesConfig = /* GraphQL */ `
         loanInterestRateAfterMaturity
         recurringPeriodAfterMaturityUnit
         status
+        institutionID
         customLoanProductDetails
         createdAt
         updatedAt
-        institutionLoanProductsId
         __typename
       }
       loanFeesConfig {
@@ -5988,10 +6140,10 @@ export const getLoanProductLoanFeesConfig = /* GraphQL */ `
         percentageBase
         rate
         status
+        institutionID
         customLoanFeesConfigDetails
         createdAt
         updatedAt
-        institutionLoanFeesConfigsId
         __typename
       }
       createdAt
@@ -6055,10 +6207,10 @@ export const getLoanProductPenalty = /* GraphQL */ `
         loanInterestRateAfterMaturity
         recurringPeriodAfterMaturityUnit
         status
+        institutionID
         customLoanProductDetails
         createdAt
         updatedAt
-        institutionLoanProductsId
         __typename
       }
       penalty {
@@ -6076,6 +6228,7 @@ export const getLoanProductPenalty = /* GraphQL */ `
         penaltyAttribute1
         penaltyAttribute2
         status
+        branchID
         accountID
         customPenaltyDetails
         createdAt
@@ -6130,11 +6283,11 @@ export const getLoanDocument = /* GraphQL */ `
         fileName
         contentType
         status
+        branchID
         createdByEmployeeID
         customDocumentDetails
         createdAt
         updatedAt
-        branchDocumentsId
         __typename
       }
       loan {
@@ -6161,8 +6314,8 @@ export const getLoanDocument = /* GraphQL */ `
         paymentFrequency
         customFieldsData
         status
-        borrowerID
         branchID
+        borrowerID
         loanProductID
         createdByEmployeeID
         groupID
@@ -6214,11 +6367,11 @@ export const getApplicationDocument = /* GraphQL */ `
         fileName
         contentType
         status
+        branchID
         createdByEmployeeID
         customDocumentDetails
         createdAt
         updatedAt
-        branchDocumentsId
         __typename
       }
       application {
@@ -6232,13 +6385,14 @@ export const getApplicationDocument = /* GraphQL */ `
         applicationDate
         status
         applicationRecord
+        branchID
+        borrowerID
         loanProductID
         createdByEmployeeID
         customFieldsData
         customApplicationDetails
         createdAt
         updatedAt
-        borrowerApplicationsId
         __typename
       }
       createdAt
@@ -6288,11 +6442,11 @@ export const getContractDocument = /* GraphQL */ `
         fileName
         contentType
         status
+        branchID
         createdByEmployeeID
         customDocumentDetails
         createdAt
         updatedAt
-        branchDocumentsId
         __typename
       }
       contract {
@@ -6303,10 +6457,11 @@ export const getContractDocument = /* GraphQL */ `
         contractStatus
         contractRecord
         status
+        branchID
+        borrowerID
         customContractDetails
         createdAt
         updatedAt
-        borrowerContractsId
         __typename
       }
       createdAt
@@ -6356,11 +6511,11 @@ export const getExpenseDocument = /* GraphQL */ `
         fileName
         contentType
         status
+        branchID
         createdByEmployeeID
         customDocumentDetails
         createdAt
         updatedAt
-        branchDocumentsId
         __typename
       }
       expense {
@@ -6378,6 +6533,7 @@ export const getExpenseDocument = /* GraphQL */ `
         approvedDate
         type
         category
+        branchID
         createdByEmployeeID
         customExpenseDetails
         createdAt
@@ -6432,11 +6588,11 @@ export const getPaymentDocument = /* GraphQL */ `
         fileName
         contentType
         status
+        branchID
         createdByEmployeeID
         customDocumentDetails
         createdAt
         updatedAt
-        branchDocumentsId
         __typename
       }
       payment {
@@ -6458,6 +6614,7 @@ export const getPaymentDocument = /* GraphQL */ `
         amountAllocatedToInterest
         amountAllocatedToFees
         amountAllocatedToPenalty
+        branchID
         customPaymentDetails
         createdAt
         updatedAt
@@ -6510,11 +6667,11 @@ export const getMoneyTransactionDocument = /* GraphQL */ `
         fileName
         contentType
         status
+        branchID
         createdByEmployeeID
         customDocumentDetails
         createdAt
         updatedAt
-        branchDocumentsId
         __typename
       }
       moneyTransaction {
@@ -6532,6 +6689,7 @@ export const getMoneyTransactionDocument = /* GraphQL */ `
         paymentMethod
         deviceInfo
         status
+        branchID
         loanID
         paymentID
         createdByEmployeeID
@@ -6585,10 +6743,11 @@ export const getApplicationContract = /* GraphQL */ `
         contractStatus
         contractRecord
         status
+        branchID
+        borrowerID
         customContractDetails
         createdAt
         updatedAt
-        borrowerContractsId
         __typename
       }
       application {
@@ -6602,13 +6761,14 @@ export const getApplicationContract = /* GraphQL */ `
         applicationDate
         status
         applicationRecord
+        branchID
+        borrowerID
         loanProductID
         createdByEmployeeID
         customFieldsData
         customApplicationDetails
         createdAt
         updatedAt
-        borrowerApplicationsId
         __typename
       }
       createdAt
@@ -6655,10 +6815,11 @@ export const getCollateralContract = /* GraphQL */ `
         contractStatus
         contractRecord
         status
+        branchID
+        borrowerID
         customContractDetails
         createdAt
         updatedAt
-        borrowerContractsId
         __typename
       }
       collateral {
@@ -6676,6 +6837,7 @@ export const getCollateralContract = /* GraphQL */ `
         storedAt
         customFieldsData
         status
+        branchID
         customCollateralDetails
         createdAt
         updatedAt
@@ -6726,10 +6888,11 @@ export const getLoanContract = /* GraphQL */ `
         contractStatus
         contractRecord
         status
+        branchID
+        borrowerID
         customContractDetails
         createdAt
         updatedAt
-        borrowerContractsId
         __typename
       }
       loan {
@@ -6756,8 +6919,8 @@ export const getLoanContract = /* GraphQL */ `
         paymentFrequency
         customFieldsData
         status
-        borrowerID
         branchID
+        borrowerID
         loanProductID
         createdByEmployeeID
         groupID
@@ -6809,13 +6972,14 @@ export const getApplicationCollateral = /* GraphQL */ `
         applicationDate
         status
         applicationRecord
+        branchID
+        borrowerID
         loanProductID
         createdByEmployeeID
         customFieldsData
         customApplicationDetails
         createdAt
         updatedAt
-        borrowerApplicationsId
         __typename
       }
       collateral {
@@ -6833,6 +6997,7 @@ export const getApplicationCollateral = /* GraphQL */ `
         storedAt
         customFieldsData
         status
+        branchID
         customCollateralDetails
         createdAt
         updatedAt
@@ -6886,13 +7051,14 @@ export const getApplicationExpense = /* GraphQL */ `
         applicationDate
         status
         applicationRecord
+        branchID
+        borrowerID
         loanProductID
         createdByEmployeeID
         customFieldsData
         customApplicationDetails
         createdAt
         updatedAt
-        borrowerApplicationsId
         __typename
       }
       expense {
@@ -6910,6 +7076,7 @@ export const getApplicationExpense = /* GraphQL */ `
         approvedDate
         type
         category
+        branchID
         createdByEmployeeID
         customExpenseDetails
         createdAt
@@ -6964,13 +7131,14 @@ export const getLoanApplication = /* GraphQL */ `
         applicationDate
         status
         applicationRecord
+        branchID
+        borrowerID
         loanProductID
         createdByEmployeeID
         customFieldsData
         customApplicationDetails
         createdAt
         updatedAt
-        borrowerApplicationsId
         __typename
       }
       loan {
@@ -6997,8 +7165,8 @@ export const getLoanApplication = /* GraphQL */ `
         paymentFrequency
         customFieldsData
         status
-        borrowerID
         branchID
+        borrowerID
         loanProductID
         createdByEmployeeID
         groupID
@@ -7058,6 +7226,7 @@ export const getLoanCollateral = /* GraphQL */ `
         storedAt
         customFieldsData
         status
+        branchID
         customCollateralDetails
         createdAt
         updatedAt
@@ -7088,8 +7257,8 @@ export const getLoanCollateral = /* GraphQL */ `
         paymentFrequency
         customFieldsData
         status
-        borrowerID
         branchID
+        borrowerID
         loanProductID
         createdByEmployeeID
         groupID
@@ -7154,8 +7323,8 @@ export const getLoanAccount = /* GraphQL */ `
         paymentFrequency
         customFieldsData
         status
-        borrowerID
         branchID
+        borrowerID
         loanProductID
         createdByEmployeeID
         groupID
@@ -7181,11 +7350,11 @@ export const getLoanAccount = /* GraphQL */ `
         interestAccruedDate
         accountStatus
         status
+        institutionID
         createdByEmployeeID
         customAccountDetails
         createdAt
         updatedAt
-        institutionAccountsId
         __typename
       }
       createdAt
@@ -7244,8 +7413,8 @@ export const getLoanExpense = /* GraphQL */ `
         paymentFrequency
         customFieldsData
         status
-        borrowerID
         branchID
+        borrowerID
         loanProductID
         createdByEmployeeID
         groupID
@@ -7269,6 +7438,7 @@ export const getLoanExpense = /* GraphQL */ `
         approvedDate
         type
         category
+        branchID
         createdByEmployeeID
         customExpenseDetails
         createdAt
@@ -7328,6 +7498,7 @@ export const getInvestmentAccount = /* GraphQL */ `
         numberOfPayments
         paymentFrequency
         status
+        branchID
         customInvestmentDetails
         createdAt
         updatedAt
@@ -7350,11 +7521,11 @@ export const getInvestmentAccount = /* GraphQL */ `
         interestAccruedDate
         accountStatus
         status
+        institutionID
         createdByEmployeeID
         customAccountDetails
         createdAt
         updatedAt
-        institutionAccountsId
         __typename
       }
       createdAt
@@ -7408,6 +7579,7 @@ export const getLoanFeesLoanFeesConfig = /* GraphQL */ `
         loanFeesAttribute1
         loanFeesAttribute2
         status
+        branchID
         accountID
         customLoanFeesDetails
         createdAt
@@ -7424,10 +7596,10 @@ export const getLoanFeesLoanFeesConfig = /* GraphQL */ `
         percentageBase
         rate
         status
+        institutionID
         customLoanFeesConfigDetails
         createdAt
         updatedAt
-        institutionLoanFeesConfigsId
         __typename
       }
       createdAt
@@ -7483,11 +7655,11 @@ export const getOtherIncomeAccount = /* GraphQL */ `
         interestAccruedDate
         accountStatus
         status
+        institutionID
         createdByEmployeeID
         customAccountDetails
         createdAt
         updatedAt
-        institutionAccountsId
         __typename
       }
       otherIncome {
@@ -7498,6 +7670,7 @@ export const getOtherIncomeAccount = /* GraphQL */ `
         incomeDate
         incomeType
         status
+        branchID
         customOtherIncomeDetails
         createdAt
         updatedAt
@@ -7524,6 +7697,278 @@ export const listOtherIncomeAccounts = /* GraphQL */ `
         id
         accountId
         otherIncomeId
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const branchesByInstitutionID = /* GraphQL */ `
+  query BranchesByInstitutionID(
+    $institutionID: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelBranchFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    branchesByInstitutionID(
+      institutionID: $institutionID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        name
+        branchCode
+        address
+        status
+        institutionID
+        customBranchDetails
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const usersByInstitutionID = /* GraphQL */ `
+  query UsersByInstitutionID(
+    $institutionID: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelUserFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    usersByInstitutionID(
+      institutionID: $institutionID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        firstName
+        lastName
+        middleName
+        dateOfBirth
+        phoneNumber1
+        phoneNumber2
+        email
+        addressLine1
+        addressLine2
+        city
+        stateProvince
+        postalCode
+        nationalID
+        passportNumber
+        nationality
+        status
+        userType
+        userPermissions
+        description
+        customFieldsData
+        userDocuments
+        institutionID
+        branchID
+        customUserDetails
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const usersByBranchID = /* GraphQL */ `
+  query UsersByBranchID(
+    $branchID: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelUserFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    usersByBranchID(
+      branchID: $branchID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        firstName
+        lastName
+        middleName
+        dateOfBirth
+        phoneNumber1
+        phoneNumber2
+        email
+        addressLine1
+        addressLine2
+        city
+        stateProvince
+        postalCode
+        nationalID
+        passportNumber
+        nationality
+        status
+        userType
+        userPermissions
+        description
+        customFieldsData
+        userDocuments
+        institutionID
+        branchID
+        customUserDetails
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const employeesByInstitutionID = /* GraphQL */ `
+  query EmployeesByInstitutionID(
+    $institutionID: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelEmployeeFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    employeesByInstitutionID(
+      institutionID: $institutionID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        firstName
+        lastName
+        middleName
+        dateOfBirth
+        phoneNumber1
+        phoneNumber2
+        email
+        title
+        addressLine1
+        addressLine2
+        city
+        stateProvince
+        postalCode
+        nextOfKinName
+        nextOfKinPhoneNumber
+        nextOfKinEmail
+        nextOfKinRelationship
+        nextOfKinAddress
+        nationalID
+        passportNumber
+        nationality
+        status
+        employmentType
+        employmentStatus
+        employmentStartDate
+        employmentEndDate
+        employmentPosition
+        employmentDepartment
+        employmentGrade
+        employmentLocation
+        grossSalary
+        bankAccountNumber
+        bankName
+        bankBranchCode
+        socialSecurityNumber
+        taxIdentificationNumber
+        taxExemptStatus
+        customFieldsData
+        institutionID
+        branchID
+        relatedUserID
+        relatedBorrowerID
+        supervisorID
+        customEmployeeDetails
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const employeesByBranchID = /* GraphQL */ `
+  query EmployeesByBranchID(
+    $branchID: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelEmployeeFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    employeesByBranchID(
+      branchID: $branchID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        firstName
+        lastName
+        middleName
+        dateOfBirth
+        phoneNumber1
+        phoneNumber2
+        email
+        title
+        addressLine1
+        addressLine2
+        city
+        stateProvince
+        postalCode
+        nextOfKinName
+        nextOfKinPhoneNumber
+        nextOfKinEmail
+        nextOfKinRelationship
+        nextOfKinAddress
+        nationalID
+        passportNumber
+        nationality
+        status
+        employmentType
+        employmentStatus
+        employmentStartDate
+        employmentEndDate
+        employmentPosition
+        employmentDepartment
+        employmentGrade
+        employmentLocation
+        grossSalary
+        bankAccountNumber
+        bankName
+        bankBranchCode
+        socialSecurityNumber
+        taxIdentificationNumber
+        taxExemptStatus
+        customFieldsData
+        institutionID
+        branchID
+        relatedUserID
+        relatedBorrowerID
+        supervisorID
+        customEmployeeDetails
         createdAt
         updatedAt
         __typename
@@ -7588,13 +8033,14 @@ export const employeesByRelatedUserID = /* GraphQL */ `
         taxIdentificationNumber
         taxExemptStatus
         customFieldsData
+        institutionID
+        branchID
         relatedUserID
         relatedBorrowerID
         supervisorID
         customEmployeeDetails
         createdAt
         updatedAt
-        branchEmployeesId
         __typename
       }
       nextToken
@@ -7657,13 +8103,14 @@ export const employeesByRelatedBorrowerID = /* GraphQL */ `
         taxIdentificationNumber
         taxExemptStatus
         customFieldsData
+        institutionID
+        branchID
         relatedUserID
         relatedBorrowerID
         supervisorID
         customEmployeeDetails
         createdAt
         updatedAt
-        branchEmployeesId
         __typename
       }
       nextToken
@@ -7726,13 +8173,75 @@ export const employeesBySupervisorID = /* GraphQL */ `
         taxIdentificationNumber
         taxExemptStatus
         customFieldsData
+        institutionID
+        branchID
         relatedUserID
         relatedBorrowerID
         supervisorID
         customEmployeeDetails
         createdAt
         updatedAt
-        branchEmployeesId
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const borrowersByBranchID = /* GraphQL */ `
+  query BorrowersByBranchID(
+    $branchID: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelBorrowerFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    borrowersByBranchID(
+      branchID: $branchID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        firstname
+        othername
+        businessName
+        typeOfBusiness
+        uniqueIdNumber
+        phoneNumber
+        otherPhoneNumber
+        email
+        gender
+        dateOfBirth
+        nationality
+        nationalIdPicture
+        passportPicture
+        address
+        points
+        borrowerOpeningBalance
+        borrowerClosingBalance
+        borrowerInterestRate
+        city
+        state
+        title
+        zipcode
+        employmentStatus
+        employerName
+        creditScore
+        additionalNote1
+        additionalNote2
+        borrowerDocuments
+        customFieldsData
+        status
+        branchID
+        groupID
+        memberType
+        customBorrowerDetails
+        createdAt
+        updatedAt
+        borrowerShareAccountId
         __typename
       }
       nextToken
@@ -7787,13 +8296,210 @@ export const borrowersByGroupID = /* GraphQL */ `
         borrowerDocuments
         customFieldsData
         status
+        branchID
         groupID
         memberType
         customBorrowerDetails
         createdAt
         updatedAt
-        branchBorrowersId
         borrowerShareAccountId
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const guarantorsByBranchID = /* GraphQL */ `
+  query GuarantorsByBranchID(
+    $branchID: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelGuarantorFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    guarantorsByBranchID(
+      branchID: $branchID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        name
+        relationship
+        phoneNumber
+        email
+        address
+        customFieldsData
+        status
+        isExistingMember
+        memberID
+        lockedSavingsAmount
+        branchID
+        borrowerID
+        customGuarantorDetails
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const guarantorsByBorrowerID = /* GraphQL */ `
+  query GuarantorsByBorrowerID(
+    $borrowerID: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelGuarantorFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    guarantorsByBorrowerID(
+      borrowerID: $borrowerID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        name
+        relationship
+        phoneNumber
+        email
+        address
+        customFieldsData
+        status
+        isExistingMember
+        memberID
+        lockedSavingsAmount
+        branchID
+        borrowerID
+        customGuarantorDetails
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const securitiesByBranchID = /* GraphQL */ `
+  query SecuritiesByBranchID(
+    $branchID: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelSecurityFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    securitiesByBranchID(
+      branchID: $branchID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        name
+        type
+        description
+        value
+        status
+        branchID
+        borrowerID
+        customSecurityDetails
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const securitiesByBorrowerID = /* GraphQL */ `
+  query SecuritiesByBorrowerID(
+    $borrowerID: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelSecurityFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    securitiesByBorrowerID(
+      borrowerID: $borrowerID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        name
+        type
+        description
+        value
+        status
+        branchID
+        borrowerID
+        customSecurityDetails
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const loanProductsByInstitutionID = /* GraphQL */ `
+  query LoanProductsByInstitutionID(
+    $institutionID: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelLoanProductFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    loanProductsByInstitutionID(
+      institutionID: $institutionID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        name
+        description
+        principalAmountMin
+        principalAmountMax
+        principalAmountDefault
+        interestRateMin
+        interestRateMax
+        interestRateDefault
+        interestCalculationMethod
+        interestType
+        interestPeriod
+        termDurationMin
+        termDurationMax
+        termDurationDefault
+        durationPeriod
+        repaymentFrequency
+        repaymentOrder
+        extendLoanAfterMaturity
+        interestTypeMaturity
+        calculateInterestOn
+        loanInterestRateAfterMaturity
+        recurringPeriodAfterMaturityUnit
+        status
+        institutionID
+        customLoanProductDetails
+        createdAt
+        updatedAt
         __typename
       }
       nextToken
@@ -7827,6 +8533,7 @@ export const creditScoresByBorrowerID = /* GraphQL */ `
         status
         borrowerID
         createdByEmployeeID
+        branchID
         customCreditScoreDetails
         createdAt
         updatedAt
@@ -7863,7 +8570,83 @@ export const creditScoresByCreatedByEmployeeID = /* GraphQL */ `
         status
         borrowerID
         createdByEmployeeID
+        branchID
         customCreditScoreDetails
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const creditScoresByBranchID = /* GraphQL */ `
+  query CreditScoresByBranchID(
+    $branchID: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelCreditScoreFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    creditScoresByBranchID(
+      branchID: $branchID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        name
+        description
+        score
+        scoreDate
+        scoreSource
+        scoreStatus
+        status
+        borrowerID
+        createdByEmployeeID
+        branchID
+        customCreditScoreDetails
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const documentsByBranchID = /* GraphQL */ `
+  query DocumentsByBranchID(
+    $branchID: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelDocumentFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    documentsByBranchID(
+      branchID: $branchID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        documentType
+        documentName
+        documentDescription
+        serialNumber
+        documentDate
+        s3Key
+        fileName
+        contentType
+        status
+        branchID
+        createdByEmployeeID
+        customDocumentDetails
         createdAt
         updatedAt
         __typename
@@ -7899,11 +8682,163 @@ export const documentsByCreatedByEmployeeID = /* GraphQL */ `
         fileName
         contentType
         status
+        branchID
         createdByEmployeeID
         customDocumentDetails
         createdAt
         updatedAt
-        branchDocumentsId
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const contractsByBranchID = /* GraphQL */ `
+  query ContractsByBranchID(
+    $branchID: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelContractFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    contractsByBranchID(
+      branchID: $branchID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        contractNumber
+        contractType
+        contractDate
+        contractStatus
+        contractRecord
+        status
+        branchID
+        borrowerID
+        customContractDetails
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const contractsByBorrowerID = /* GraphQL */ `
+  query ContractsByBorrowerID(
+    $borrowerID: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelContractFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    contractsByBorrowerID(
+      borrowerID: $borrowerID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        contractNumber
+        contractType
+        contractDate
+        contractStatus
+        contractRecord
+        status
+        branchID
+        borrowerID
+        customContractDetails
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const applicationsByBranchID = /* GraphQL */ `
+  query ApplicationsByBranchID(
+    $branchID: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelApplicationFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    applicationsByBranchID(
+      branchID: $branchID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        name
+        description
+        applicationNumber
+        requestedPrincipalAmount
+        requestedTermMonths
+        requestedFrequency
+        applicationDate
+        status
+        applicationRecord
+        branchID
+        borrowerID
+        loanProductID
+        createdByEmployeeID
+        customFieldsData
+        customApplicationDetails
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const applicationsByBorrowerID = /* GraphQL */ `
+  query ApplicationsByBorrowerID(
+    $borrowerID: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelApplicationFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    applicationsByBorrowerID(
+      borrowerID: $borrowerID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        name
+        description
+        applicationNumber
+        requestedPrincipalAmount
+        requestedTermMonths
+        requestedFrequency
+        applicationDate
+        status
+        applicationRecord
+        branchID
+        borrowerID
+        loanProductID
+        createdByEmployeeID
+        customFieldsData
+        customApplicationDetails
+        createdAt
+        updatedAt
         __typename
       }
       nextToken
@@ -7937,13 +8872,14 @@ export const applicationsByLoanProductID = /* GraphQL */ `
         applicationDate
         status
         applicationRecord
+        branchID
+        borrowerID
         loanProductID
         createdByEmployeeID
         customFieldsData
         customApplicationDetails
         createdAt
         updatedAt
-        borrowerApplicationsId
         __typename
       }
       nextToken
@@ -7977,13 +8913,56 @@ export const applicationsByCreatedByEmployeeID = /* GraphQL */ `
         applicationDate
         status
         applicationRecord
+        branchID
+        borrowerID
         loanProductID
         createdByEmployeeID
         customFieldsData
         customApplicationDetails
         createdAt
         updatedAt
-        borrowerApplicationsId
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const collateralsByBranchID = /* GraphQL */ `
+  query CollateralsByBranchID(
+    $branchID: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelCollateralFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    collateralsByBranchID(
+      branchID: $branchID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        name
+        type
+        description
+        location
+        value
+        serialNumber
+        registrationNumber
+        insuranceDetails
+        insuranceExpiryDate
+        insuranceCompany
+        storedAt
+        customFieldsData
+        status
+        branchID
+        customCollateralDetails
+        createdAt
+        updatedAt
+        borrowerCollateralsId
         __typename
       }
       nextToken
@@ -8030,64 +9009,8 @@ export const loansByLoanNumber = /* GraphQL */ `
         paymentFrequency
         customFieldsData
         status
-        borrowerID
         branchID
-        loanProductID
-        createdByEmployeeID
-        groupID
-        customLoanDetails
-        createdAt
-        updatedAt
-        __typename
-      }
-      nextToken
-      __typename
-    }
-  }
-`;
-export const loansByBorrowerIDAndStartDate = /* GraphQL */ `
-  query LoansByBorrowerIDAndStartDate(
-    $borrowerID: ID!
-    $startDate: ModelStringKeyConditionInput
-    $sortDirection: ModelSortDirection
-    $filter: ModelLoanFilterInput
-    $limit: Int
-    $nextToken: String
-  ) {
-    loansByBorrowerIDAndStartDate(
-      borrowerID: $borrowerID
-      startDate: $startDate
-      sortDirection: $sortDirection
-      filter: $filter
-      limit: $limit
-      nextToken: $nextToken
-    ) {
-      items {
-        id
-        loanNumber
-        approvedDate
-        principal
-        fees
-        interestRate
-        startDate
-        maturityDate
-        stopDate
-        extensionPeriod
-        duration
-        durationInterval
-        loanType
-        rateInterval
-        loanCurrency
-        loanPurpose
-        loanComputationRecord
-        loanAttribute1
-        loanAttribute2
-        numberOfPayments
-        paymentFrequency
-        customFieldsData
-        status
         borrowerID
-        branchID
         loanProductID
         createdByEmployeeID
         groupID
@@ -8142,8 +9065,64 @@ export const loansByBranchIDAndStartDate = /* GraphQL */ `
         paymentFrequency
         customFieldsData
         status
-        borrowerID
         branchID
+        borrowerID
+        loanProductID
+        createdByEmployeeID
+        groupID
+        customLoanDetails
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const loansByBorrowerIDAndStartDate = /* GraphQL */ `
+  query LoansByBorrowerIDAndStartDate(
+    $borrowerID: ID!
+    $startDate: ModelStringKeyConditionInput
+    $sortDirection: ModelSortDirection
+    $filter: ModelLoanFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    loansByBorrowerIDAndStartDate(
+      borrowerID: $borrowerID
+      startDate: $startDate
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        loanNumber
+        approvedDate
+        principal
+        fees
+        interestRate
+        startDate
+        maturityDate
+        stopDate
+        extensionPeriod
+        duration
+        durationInterval
+        loanType
+        rateInterval
+        loanCurrency
+        loanPurpose
+        loanComputationRecord
+        loanAttribute1
+        loanAttribute2
+        numberOfPayments
+        paymentFrequency
+        customFieldsData
+        status
+        branchID
+        borrowerID
         loanProductID
         createdByEmployeeID
         groupID
@@ -8196,8 +9175,8 @@ export const loansByLoanProductID = /* GraphQL */ `
         paymentFrequency
         customFieldsData
         status
-        borrowerID
         branchID
+        borrowerID
         loanProductID
         createdByEmployeeID
         groupID
@@ -8250,8 +9229,8 @@ export const loansByCreatedByEmployeeID = /* GraphQL */ `
         paymentFrequency
         customFieldsData
         status
-        borrowerID
         branchID
+        borrowerID
         loanProductID
         createdByEmployeeID
         groupID
@@ -8304,12 +9283,45 @@ export const loansByGroupID = /* GraphQL */ `
         paymentFrequency
         customFieldsData
         status
-        borrowerID
         branchID
+        borrowerID
         loanProductID
         createdByEmployeeID
         groupID
         customLoanDetails
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const loanCommentsByBranchID = /* GraphQL */ `
+  query LoanCommentsByBranchID(
+    $branchID: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelLoanCommentFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    loanCommentsByBranchID(
+      branchID: $branchID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        branchID
+        loanID
+        commentAt
+        body
+        attachments
+        createdByEmployeeID
+        customLoanCommentDetails
         createdAt
         updatedAt
         __typename
@@ -8338,6 +9350,7 @@ export const loanCommentsByLoanIDAndCommentAt = /* GraphQL */ `
     ) {
       items {
         id
+        branchID
         loanID
         commentAt
         body
@@ -8370,12 +9383,48 @@ export const loanCommentsByCreatedByEmployeeID = /* GraphQL */ `
     ) {
       items {
         id
+        branchID
         loanID
         commentAt
         body
         attachments
         createdByEmployeeID
         customLoanCommentDetails
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const loanEventsByBranchID = /* GraphQL */ `
+  query LoanEventsByBranchID(
+    $branchID: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelLoanEventFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    loanEventsByBranchID(
+      branchID: $branchID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        branchID
+        loanID
+        eventAt
+        eventType
+        actorEmployeeID
+        summary
+        payload
+        paymentID
+        customLoanEventDetails
         createdAt
         updatedAt
         __typename
@@ -8404,6 +9453,7 @@ export const loanEventsByLoanIDAndEventAt = /* GraphQL */ `
     ) {
       items {
         id
+        branchID
         loanID
         eventAt
         eventType
@@ -8438,6 +9488,7 @@ export const loanEventsByPaymentID = /* GraphQL */ `
     ) {
       items {
         id
+        branchID
         loanID
         eventAt
         eventType
@@ -8448,6 +9499,95 @@ export const loanEventsByPaymentID = /* GraphQL */ `
         customLoanEventDetails
         createdAt
         updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const investmentsByBranchID = /* GraphQL */ `
+  query InvestmentsByBranchID(
+    $branchID: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelInvestmentFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    investmentsByBranchID(
+      branchID: $branchID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        principal
+        description
+        fees
+        interestRate
+        startDate
+        maturityDate
+        stopDate
+        extensionPeriod
+        duration
+        durationInterval
+        type
+        rateInterval
+        investmentStatus
+        investmentAttribute1
+        investmentAttribute2
+        numberOfPayments
+        paymentFrequency
+        status
+        branchID
+        customInvestmentDetails
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const loanFeesByBranchID = /* GraphQL */ `
+  query LoanFeesByBranchID(
+    $branchID: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelLoanFeesFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    loanFeesByBranchID(
+      branchID: $branchID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        amount
+        loanFeesName
+        loanFeesCategory
+        loanFeesCalculationMethod
+        loanFeesRate
+        loanFeesDate
+        loanFeesStatus
+        notes
+        loanFeesType
+        loanFeesDescription
+        loanFeesAttribute1
+        loanFeesAttribute2
+        status
+        branchID
+        accountID
+        customLoanFeesDetails
+        createdAt
+        updatedAt
+        loanLoanFeesId
         __typename
       }
       nextToken
@@ -8485,11 +9625,55 @@ export const loanFeesByAccountID = /* GraphQL */ `
         loanFeesAttribute1
         loanFeesAttribute2
         status
+        branchID
         accountID
         customLoanFeesDetails
         createdAt
         updatedAt
         loanLoanFeesId
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const penaltiesByBranchID = /* GraphQL */ `
+  query PenaltiesByBranchID(
+    $branchID: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelPenaltyFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    penaltiesByBranchID(
+      branchID: $branchID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        amount
+        penaltyName
+        penaltyCategory
+        penaltyCalculationMethod
+        penaltyRate
+        penaltyDate
+        penaltyStatus
+        notes
+        penaltyType
+        penaltyDescription
+        penaltyAttribute1
+        penaltyAttribute2
+        status
+        branchID
+        accountID
+        customPenaltyDetails
+        createdAt
+        updatedAt
+        loanPenaltiesId
         __typename
       }
       nextToken
@@ -8527,11 +9711,95 @@ export const penaltiesByAccountID = /* GraphQL */ `
         penaltyAttribute1
         penaltyAttribute2
         status
+        branchID
         accountID
         customPenaltyDetails
         createdAt
         updatedAt
         loanPenaltiesId
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const payrollsByBranchID = /* GraphQL */ `
+  query PayrollsByBranchID(
+    $branchID: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelPayrollFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    payrollsByBranchID(
+      branchID: $branchID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        periodStartDate
+        periodEndDate
+        payDate
+        status
+        processedByUserID
+        totalGrossPay
+        totalLoanDeductions
+        totalSavingsDeductions
+        totalShareDeductions
+        totalNetPay
+        details
+        branchID
+        customPayrollDetails
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const accountsByInstitutionID = /* GraphQL */ `
+  query AccountsByInstitutionID(
+    $institutionID: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelAccountFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    accountsByInstitutionID(
+      institutionID: $institutionID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        name
+        accountType
+        accountNumber
+        description
+        currency
+        currentBalance
+        openingBalance
+        interestRate
+        interestCalculationMethod
+        interestPostingFrequency
+        interestPostingDate
+        interestAccrued
+        interestAccruedDate
+        accountStatus
+        status
+        institutionID
+        createdByEmployeeID
+        customAccountDetails
+        createdAt
+        updatedAt
         __typename
       }
       nextToken
@@ -8571,11 +9839,56 @@ export const accountsByCreatedByEmployeeID = /* GraphQL */ `
         interestAccruedDate
         accountStatus
         status
+        institutionID
         createdByEmployeeID
         customAccountDetails
         createdAt
         updatedAt
-        institutionAccountsId
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const moneyTransactionsByBranchID = /* GraphQL */ `
+  query MoneyTransactionsByBranchID(
+    $branchID: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelMoneyTransactionFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    moneyTransactionsByBranchID(
+      branchID: $branchID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        transactionType
+        transactionDate
+        amount
+        description
+        referenceNumber
+        relatedEntityType
+        approvalStatus
+        approvedDate
+        category
+        notes
+        paymentMethod
+        deviceInfo
+        status
+        branchID
+        loanID
+        paymentID
+        createdByEmployeeID
+        customMoneyTransactionDetails
+        createdAt
+        updatedAt
+        accountMoneyTransactionsId
         __typename
       }
       nextToken
@@ -8615,6 +9928,7 @@ export const moneyTransactionsByLoanIDAndTransactionDate = /* GraphQL */ `
         paymentMethod
         deviceInfo
         status
+        branchID
         loanID
         paymentID
         createdByEmployeeID
@@ -8659,6 +9973,7 @@ export const moneyTransactionsByPaymentID = /* GraphQL */ `
         paymentMethod
         deviceInfo
         status
+        branchID
         loanID
         paymentID
         createdByEmployeeID
@@ -8703,6 +10018,7 @@ export const moneyTransactionsByCreatedByEmployeeID = /* GraphQL */ `
         paymentMethod
         deviceInfo
         status
+        branchID
         loanID
         paymentID
         createdByEmployeeID
@@ -8753,6 +10069,7 @@ export const paymentsByLoanIDAndPaymentDate = /* GraphQL */ `
         amountAllocatedToInterest
         amountAllocatedToFees
         amountAllocatedToPenalty
+        branchID
         customPaymentDetails
         createdAt
         updatedAt
@@ -8797,6 +10114,7 @@ export const paymentsByMoneyTransactionID = /* GraphQL */ `
         amountAllocatedToInterest
         amountAllocatedToFees
         amountAllocatedToPenalty
+        branchID
         customPaymentDetails
         createdAt
         updatedAt
@@ -8841,6 +10159,7 @@ export const paymentsByAccountID = /* GraphQL */ `
         amountAllocatedToInterest
         amountAllocatedToFees
         amountAllocatedToPenalty
+        branchID
         customPaymentDetails
         createdAt
         updatedAt
@@ -8885,9 +10204,98 @@ export const paymentsByReceivingEmployeeID = /* GraphQL */ `
         amountAllocatedToInterest
         amountAllocatedToFees
         amountAllocatedToPenalty
+        branchID
         customPaymentDetails
         createdAt
         updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const paymentsByBranchID = /* GraphQL */ `
+  query PaymentsByBranchID(
+    $branchID: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelPaymentFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    paymentsByBranchID(
+      branchID: $branchID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        paymentDate
+        paymentType
+        amount
+        description
+        referenceNumber
+        paymentMethod
+        status
+        paymentStatusEnum
+        notes
+        loanID
+        moneyTransactionID
+        accountID
+        receivingEmployeeID
+        amountAllocatedToPrincipal
+        amountAllocatedToInterest
+        amountAllocatedToFees
+        amountAllocatedToPenalty
+        branchID
+        customPaymentDetails
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const expensesByBranchID = /* GraphQL */ `
+  query ExpensesByBranchID(
+    $branchID: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelExpenseFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    expensesByBranchID(
+      branchID: $branchID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        transactionDate
+        amount
+        description
+        referenceNumber
+        receiptDocumentS3Key
+        status
+        notes
+        payee
+        paymentMethod
+        checkNumber
+        approvedDate
+        type
+        category
+        branchID
+        createdByEmployeeID
+        customExpenseDetails
+        createdAt
+        updatedAt
+        accountExpensesId
         __typename
       }
       nextToken
@@ -8925,11 +10333,258 @@ export const expensesByCreatedByEmployeeID = /* GraphQL */ `
         approvedDate
         type
         category
+        branchID
         createdByEmployeeID
         customExpenseDetails
         createdAt
         updatedAt
         accountExpensesId
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const otherIncomesByBranchID = /* GraphQL */ `
+  query OtherIncomesByBranchID(
+    $branchID: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelOtherIncomeFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    otherIncomesByBranchID(
+      branchID: $branchID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        name
+        description
+        amount
+        incomeDate
+        incomeType
+        status
+        branchID
+        customOtherIncomeDetails
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const financialReportsByBranchID = /* GraphQL */ `
+  query FinancialReportsByBranchID(
+    $branchID: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelFinancialReportFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    financialReportsByBranchID(
+      branchID: $branchID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        reportName
+        reportType
+        reportDate
+        startDate
+        endDate
+        reportData
+        status
+        branchID
+        customFinancialReportDetails
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const customFormFieldsByBranchID = /* GraphQL */ `
+  query CustomFormFieldsByBranchID(
+    $branchID: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelCustomFormFieldFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    customFormFieldsByBranchID(
+      branchID: $branchID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        formKey
+        label
+        fieldType
+        options
+        required
+        order
+        createdBy
+        status
+        branchID
+        institutionID
+        customCustomFormFieldDetails
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const customFormFieldsByInstitutionID = /* GraphQL */ `
+  query CustomFormFieldsByInstitutionID(
+    $institutionID: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelCustomFormFieldFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    customFormFieldsByInstitutionID(
+      institutionID: $institutionID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        formKey
+        label
+        fieldType
+        options
+        required
+        order
+        createdBy
+        status
+        branchID
+        institutionID
+        customCustomFormFieldDetails
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const loanFeesConfigsByInstitutionID = /* GraphQL */ `
+  query LoanFeesConfigsByInstitutionID(
+    $institutionID: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelLoanFeesConfigFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    loanFeesConfigsByInstitutionID(
+      institutionID: $institutionID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        name
+        category
+        calculationMethod
+        description
+        percentageBase
+        rate
+        status
+        institutionID
+        customLoanFeesConfigDetails
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const messagesByInstitutionID = /* GraphQL */ `
+  query MessagesByInstitutionID(
+    $institutionID: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelMessageFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    messagesByInstitutionID(
+      institutionID: $institutionID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        subject
+        body
+        status
+        createdAt
+        institutionID
+        branchID
+        senderUserId
+        recipientUserId
+        customMessageDetails
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const messagesByBranchID = /* GraphQL */ `
+  query MessagesByBranchID(
+    $branchID: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelMessageFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    messagesByBranchID(
+      branchID: $branchID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        subject
+        body
+        status
+        createdAt
+        institutionID
+        branchID
+        senderUserId
+        recipientUserId
+        customMessageDetails
+        updatedAt
         __typename
       }
       nextToken
@@ -8958,6 +10613,8 @@ export const messagesBySenderUserId = /* GraphQL */ `
         body
         status
         createdAt
+        institutionID
+        branchID
         senderUserId
         recipientUserId
         customMessageDetails
@@ -8990,6 +10647,8 @@ export const messagesByRecipientUserId = /* GraphQL */ `
         body
         status
         createdAt
+        institutionID
+        branchID
         senderUserId
         recipientUserId
         customMessageDetails
@@ -9027,7 +10686,8 @@ export const notificationsBySenderUserId = /* GraphQL */ `
         createdAt
         senderUserId
         recipientUserId
-        institutionMessagesId
+        institutionID
+        branchID
         customNotificationDetails
         updatedAt
         __typename
@@ -9063,7 +10723,8 @@ export const notificationsByRecipientUserId = /* GraphQL */ `
         createdAt
         senderUserId
         recipientUserId
-        institutionMessagesId
+        institutionID
+        branchID
         customNotificationDetails
         updatedAt
         __typename
@@ -9073,16 +10734,16 @@ export const notificationsByRecipientUserId = /* GraphQL */ `
     }
   }
 `;
-export const notificationsByInstitutionMessagesId = /* GraphQL */ `
-  query NotificationsByInstitutionMessagesId(
-    $institutionMessagesId: ID!
+export const notificationsByInstitutionID = /* GraphQL */ `
+  query NotificationsByInstitutionID(
+    $institutionID: ID!
     $sortDirection: ModelSortDirection
     $filter: ModelNotificationFilterInput
     $limit: Int
     $nextToken: String
   ) {
-    notificationsByInstitutionMessagesId(
-      institutionMessagesId: $institutionMessagesId
+    notificationsByInstitutionID(
+      institutionID: $institutionID
       sortDirection: $sortDirection
       filter: $filter
       limit: $limit
@@ -9099,9 +10760,391 @@ export const notificationsByInstitutionMessagesId = /* GraphQL */ `
         createdAt
         senderUserId
         recipientUserId
-        institutionMessagesId
+        institutionID
+        branchID
         customNotificationDetails
         updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const notificationsByBranchID = /* GraphQL */ `
+  query NotificationsByBranchID(
+    $branchID: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelNotificationFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    notificationsByBranchID(
+      branchID: $branchID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        subject
+        body
+        notificationType
+        approvalStatus
+        referenceId
+        status
+        createdAt
+        senderUserId
+        recipientUserId
+        institutionID
+        branchID
+        customNotificationDetails
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const groupsByBranchID = /* GraphQL */ `
+  query GroupsByBranchID(
+    $branchID: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelGroupFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    groupsByBranchID(
+      branchID: $branchID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        name
+        groupNumber
+        formationDate
+        meetingDay
+        meetingFrequency
+        chairpersonID
+        secretaryID
+        viceChairpersonID
+        treasurerID
+        status
+        branchID
+        customGroupDetails
+        createdAt
+        updatedAt
+        groupGroupSavingsAccountId
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const savingsProductsByInstitutionID = /* GraphQL */ `
+  query SavingsProductsByInstitutionID(
+    $institutionID: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelSavingsProductFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    savingsProductsByInstitutionID(
+      institutionID: $institutionID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        name
+        type
+        interestRate
+        interestPostingFrequency
+        minBalance
+        institutionID
+        customSavingsProductDetails
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const savingsAccountsByBranchID = /* GraphQL */ `
+  query SavingsAccountsByBranchID(
+    $branchID: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelSavingsAccountFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    savingsAccountsByBranchID(
+      branchID: $branchID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        accountNumber
+        balance
+        status
+        branchID
+        borrowerID
+        lockedAmount
+        lockedForLoanID
+        customSavingsAccountDetails
+        createdAt
+        updatedAt
+        savingsProductSavingsAccountsId
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const savingsAccountsByBorrowerID = /* GraphQL */ `
+  query SavingsAccountsByBorrowerID(
+    $borrowerID: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelSavingsAccountFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    savingsAccountsByBorrowerID(
+      borrowerID: $borrowerID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        accountNumber
+        balance
+        status
+        branchID
+        borrowerID
+        lockedAmount
+        lockedForLoanID
+        customSavingsAccountDetails
+        createdAt
+        updatedAt
+        savingsProductSavingsAccountsId
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const savingsTransactionsByBranchID = /* GraphQL */ `
+  query SavingsTransactionsByBranchID(
+    $branchID: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelSavingsTransactionFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    savingsTransactionsByBranchID(
+      branchID: $branchID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        amount
+        type
+        date
+        branchID
+        customSavingsTransactionDetails
+        createdAt
+        updatedAt
+        employeeInitiatedSavingsTransactionsId
+        savingsAccountTransactionsId
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const shareAccountsByBranchID = /* GraphQL */ `
+  query ShareAccountsByBranchID(
+    $branchID: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelShareAccountFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    shareAccountsByBranchID(
+      branchID: $branchID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        numberOfShares
+        shareValue
+        totalValue
+        branchID
+        customShareAccountDetails
+        createdAt
+        updatedAt
+        shareAccountBorrowerId
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const shareTransactionsByBranchID = /* GraphQL */ `
+  query ShareTransactionsByBranchID(
+    $branchID: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelShareTransactionFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    shareTransactionsByBranchID(
+      branchID: $branchID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        type
+        numberOfShares
+        amount
+        date
+        branchID
+        customShareTransactionDetails
+        createdAt
+        updatedAt
+        shareAccountTransactionsId
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const chartOfAccountsByInstitutionID = /* GraphQL */ `
+  query ChartOfAccountsByInstitutionID(
+    $institutionID: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelChartOfAccountsFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    chartOfAccountsByInstitutionID(
+      institutionID: $institutionID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        code
+        name
+        type
+        subtype
+        balance
+        institutionID
+        branchID
+        customChartOfAccountsDetails
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const chartOfAccountsByBranchID = /* GraphQL */ `
+  query ChartOfAccountsByBranchID(
+    $branchID: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelChartOfAccountsFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    chartOfAccountsByBranchID(
+      branchID: $branchID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        code
+        name
+        type
+        subtype
+        balance
+        institutionID
+        branchID
+        customChartOfAccountsDetails
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const journalEntriesByBranchID = /* GraphQL */ `
+  query JournalEntriesByBranchID(
+    $branchID: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelJournalEntryFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    journalEntriesByBranchID(
+      branchID: $branchID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        date
+        description
+        reference
+        branchID
+        status
+        relatedLoanID
+        relatedPaymentID
+        relatedExpenseID
+        customJournalEntryDetails
+        createdAt
+        updatedAt
+        employeePostedJournalEntriesId
         __typename
       }
       nextToken
@@ -9129,6 +11172,7 @@ export const journalEntriesByRelatedLoanID = /* GraphQL */ `
         date
         description
         reference
+        branchID
         status
         relatedLoanID
         relatedPaymentID
@@ -9164,6 +11208,7 @@ export const journalEntriesByRelatedPaymentID = /* GraphQL */ `
         date
         description
         reference
+        branchID
         status
         relatedLoanID
         relatedPaymentID
@@ -9199,6 +11244,7 @@ export const journalEntriesByRelatedExpenseID = /* GraphQL */ `
         date
         description
         reference
+        branchID
         status
         relatedLoanID
         relatedPaymentID
@@ -9207,6 +11253,141 @@ export const journalEntriesByRelatedExpenseID = /* GraphQL */ `
         createdAt
         updatedAt
         employeePostedJournalEntriesId
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const journalLinesByBranchID = /* GraphQL */ `
+  query JournalLinesByBranchID(
+    $branchID: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelJournalLineFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    journalLinesByBranchID(
+      branchID: $branchID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        branchID
+        debit
+        credit
+        description
+        customJournalLineDetails
+        createdAt
+        updatedAt
+        chartOfAccountsJournalLinesId
+        journalEntryLinesId
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const meetingsByBranchID = /* GraphQL */ `
+  query MeetingsByBranchID(
+    $branchID: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelMeetingFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    meetingsByBranchID(
+      branchID: $branchID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        title
+        date
+        type
+        status
+        minutes
+        attendanceRecord
+        resolutionsRecord
+        branchID
+        customMeetingDetails
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const dividendDeclarationsByInstitutionID = /* GraphQL */ `
+  query DividendDeclarationsByInstitutionID(
+    $institutionID: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelDividendDeclarationFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    dividendDeclarationsByInstitutionID(
+      institutionID: $institutionID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        fiscalYear
+        distributableSurplus
+        dividendRate
+        interestRebateRate
+        status
+        institutionID
+        customDividendDeclarationDetails
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const approvalsByBranchID = /* GraphQL */ `
+  query ApprovalsByBranchID(
+    $branchID: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelApprovalFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    approvalsByBranchID(
+      branchID: $branchID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        approvalType
+        recordID
+        approvalDate
+        status
+        notes
+        branchID
+        customApprovalDetails
+        createdAt
+        updatedAt
+        employeeApprovalsId
         __typename
       }
       nextToken

@@ -4,7 +4,6 @@ import {
   Toolbar,
   Box,
   Typography,
-  Button,
   IconButton,
   Avatar,
   useMediaQuery,
@@ -26,6 +25,7 @@ import {
   KeyboardArrowDown as KeyboardArrowDownIcon,
 } from "@mui/icons-material";
 import ColorModeToggle from "../../ModelAssets/ColorModeToggle";
+import ClickableText from "../../ModelAssets/ClickableText";
 import { useTheme } from "@mui/material/styles";
 import myLogo from "../../Resources/loantabs_logo.png";
 import MobileMenu from "./MobileMenu";
@@ -152,9 +152,10 @@ const TopBar = ({ onMenuClick }) => {
                 >
                   <Box
                     sx={{
-                      display: "flex",
-                      flexDirection: "column",
+                      display: "inline-flex",
                       alignItems: "center",
+                      justifyContent: "center",
+                      gap: 0.25,
                       minWidth: 0,
                     }}
                   >
@@ -164,39 +165,21 @@ const TopBar = ({ onMenuClick }) => {
                         overflow: "hidden",
                         textOverflow: "ellipsis",
                         whiteSpace: "nowrap",
-                        width: "100%",
                       }}
                     >
                       {institutionName}
                     </Box>
-                    <Button
-                      size="small"
+                    <IconButton
                       onClick={handleBranchMenuOpen}
-                      endIcon={<KeyboardArrowDownIcon sx={{ fontSize: 16 }} />}
                       sx={{
-                        mt: 0.25,
-                        minWidth: 0,
-                        px: 0.25,
+                        p: 0,
                         color: theme.palette.text.secondary,
-                        textTransform: "none",
-                        fontSize: "0.75rem",
-                        fontWeight: 500,
-                        maxWidth: "100%",
-                        "& .MuiButton-endIcon": { ml: 0.25 },
+                        flexShrink: 0,
+                        ml: 0.25,
                       }}
                     >
-                      <Box
-                        component="span"
-                        sx={{
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                          maxWidth: "100%",
-                        }}
-                      >
-                        {activeBranchName}
-                      </Box>
-                    </Button>
+                      <KeyboardArrowDownIcon sx={{ fontSize: 16 }} />
+                    </IconButton>
                   </Box>
                 </Typography>
                 <IconButton
@@ -225,22 +208,32 @@ const TopBar = ({ onMenuClick }) => {
                   {institutionName}
                 </Typography>
 
-                <Button
-                  size="small"
-                  onClick={handleBranchMenuOpen}
-                  endIcon={<KeyboardArrowDownIcon sx={{ fontSize: 16 }} />}
+                <Box
                   sx={{
-                    fontWeight: 500,
-                    color: theme.palette.text.secondary,
-                    fontStyle: "italic",
                     ml: 1,
-                    textTransform: "none",
-                    minWidth: 0,
-                    "& .MuiButton-endIcon": { ml: 0.25 },
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 0.25,
                   }}
                 >
-                  {activeBranchName}
-                </Button>
+                  <ClickableText
+                    onClick={handleBranchMenuOpen}
+                    sx={{
+                      // color: theme.palette.text.secondary,
+                      fontSize: "0.875rem",
+                      fontWeight: 500,
+                      fontStyle: "italic",
+                      textDecoration: "none",
+                      transformOrigin: "left center",
+                    }}
+                  >
+                    {activeBranchName}
+                  </ClickableText>
+                  <KeyboardArrowDownIcon
+                    sx={{ fontSize: 16, cursor: "pointer" }}
+                    onClick={handleBranchMenuOpen}
+                  />
+                </Box>
               </Box>
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <IconButton>
@@ -291,11 +284,47 @@ const TopBar = ({ onMenuClick }) => {
           },
         }}
       >
-        <MenuItem disabled>
-          <ListItemText primary={activeBranchName} secondary="Active Branch" />
+        <MenuItem
+          disabled
+          sx={{
+            opacity: 1,
+            "&.Mui-disabled": {
+              opacity: 1,
+            },
+          }}
+        >
+          <ListItemText
+            primary={activeBranchName}
+            secondary="Active Branch"
+            primaryTypographyProps={{
+              sx: {
+                color: theme.palette.sf?.sf_success,
+                fontWeight: 600,
+              },
+            }}
+            secondaryTypographyProps={{
+              sx: {
+                color: theme.palette.sf?.sf_success,
+                opacity: 0.9,
+                fontStyle: "italic",
+                fontSize: "0.75rem",
+              },
+            }}
+          />
         </MenuItem>
         <Divider />
-        <MenuItem onClick={handleChangeBranch}>
+        <MenuItem
+          onClick={handleChangeBranch}
+          sx={{
+            "&:hover": {
+              backgroundColor: theme.palette.primary.main,
+              color: "#fff",
+            },
+            "&:hover .MuiListItemText-primary": {
+              color: "#fff",
+            },
+          }}
+        >
           <ListItemText>Change Branch</ListItemText>
         </MenuItem>
       </Menu>

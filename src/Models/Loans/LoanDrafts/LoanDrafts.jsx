@@ -5,8 +5,6 @@ import EditIcon from "@mui/icons-material/Edit";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import { UserContext } from "../../../App";
-import { listBranches } from "../../../graphql/queries";
-import AdminBranchScopeSelector from "../../../ModelAssets/AdminBranchScopeSelector";
 import CollectionsTemplate from "../../../ModelAssets/CollectionsTemplate";
 import ClickableText from "../../../ModelAssets/ClickableText";
 import NotificationBar from "../../../ModelAssets/NotificationBar";
@@ -23,27 +21,20 @@ export default function LoanDrafts() {
   const [rows, setRows] = React.useState([]);
   const [notification, setNotification] = React.useState(null);
   const [selectedTab, setSelectedTab] = React.useState("all");
-  const [branches, setBranches] = React.useState([]);
-  const [selectedBranchId, setSelectedBranchId] = React.useState("");
 
-  const isAdmin = userDetails?.userType === "Admin";
-  const activeBranchId = userDetails?.branchID || null;
-  const institutionId =
-    userDetails?.institution?.id || userDetails?.institutionID || null;
-  const hasMultipleAdminBranches = isAdmin && branches.length > 1;
-  const shouldShowLoanDraftsView = !isAdmin || Boolean(selectedBranchId);
+  const activeBranchId =
+    userDetails?.branchID || userDetails?.branch?.id || null;
+  const shouldShowLoanDraftsView = Boolean(activeBranchId);
 
   const refresh = React.useCallback(async () => {
     setLoading(true);
     try {
-      const branchID = isAdmin ? selectedBranchId : activeBranchId;
-
-      if (!branchID) {
+      if (!activeBranchId) {
         setRows([]);
         return;
       }
 
-      const drafts = await listLoanDraftsByBranch({ branchID });
+      const drafts = await listLoanDraftsByBranch({ branchID: activeBranchId });
 
       console.log("Fetched loan drafts:", drafts);
       setRows(Array.isArray(drafts) ? drafts : []);
@@ -57,50 +48,17 @@ export default function LoanDrafts() {
     } finally {
       setLoading(false);
     }
-  }, [activeBranchId, isAdmin, selectedBranchId]);
+  }, [activeBranchId]);
 
   React.useEffect(() => {
-    const fetchBranchesForAdmin = async () => {
-      if (!isAdmin || !institutionId) {
-        setBranches([]);
-        setSelectedBranchId("");
-        return;
-      }
-
-      try {
-        const client = generateClient();
-        const branchData = await client.graphql({
-          query: listBranches,
-          variables: {
-            limit: 1000,
-            filter: { institutionID: { eq: institutionId } },
-          },
-        });
-        const items = branchData?.data?.listBranches?.items || [];
-        setBranches(items);
-        if (items.length === 1 && items[0]?.id) {
-          setSelectedBranchId(items[0].id);
-        } else {
-          setSelectedBranchId("");
-        }
-      } catch (error) {
-        console.error("Failed to load branches for loan drafts:", error);
-        setBranches([]);
-      }
-    };
-
-    fetchBranchesForAdmin();
-  }, [institutionId, isAdmin]);
-
-  React.useEffect(() => {
-    if (isAdmin && !selectedBranchId) {
+    if (!activeBranchId) {
       setRows([]);
       setLoading(false);
       return;
     }
 
     refresh();
-  }, [isAdmin, refresh, selectedBranchId]);
+  }, [activeBranchId, refresh]);
 
   const handleTabChange = (event, newValue) => {
     setSelectedTab(newValue);
@@ -426,14 +384,12 @@ export default function LoanDrafts() {
         />
       </Box>
 
-      {hasMultipleAdminBranches && (
-        <AdminBranchScopeSelector
-          branches={branches}
-          selectedBranchId={selectedBranchId}
-          onBranchChange={setSelectedBranchId}
-          helperText="Choose a branch before viewing loan drafts."
-          emptyMessage="Please select a branch above to view loan drafts."
-        />
+      {!shouldShowLoanDraftsView && (
+        <Box sx={{ p: 2, mb: 2, bgcolor: "info.light" }}>
+          <Typography variant="body2">
+            No active branch is loaded. Use Change Branch from the top bar.
+          </Typography>
+        </Box>
       )}
 
       {shouldShowLoanDraftsView && (

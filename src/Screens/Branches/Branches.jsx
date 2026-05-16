@@ -1,12 +1,18 @@
 import React, { useRef } from "react";
+import { Button } from "@mui/material";
 import { UserContext } from "../../App";
 import ClickableText from "../../ModelAssets/ClickableText";
 import CreateBranches from "./CreateBranches/CreateBranch";
-import { useTheme } from "@mui/material/styles";
 import CollectionsTemplate from "../../ModelAssets/CollectionsTemplate";
 import { useCrudOperations } from "../../hooks/useCrudOperations";
 import { generateClient } from "aws-amplify/api";
 import NotificationBar from "../../ModelAssets/NotificationBar";
+import { useNavigate } from "react-router-dom";
+import { updateInstitution } from "../../Models/Settings/helpers/updateInstitution";
+import {
+  parseCustomInstitutionDetails,
+  stringifyCustomInstitutionDetails,
+} from "../../utils/customInstitutionDetails";
 
 // Guard to ensure we only fetch branches once per page load (even under React StrictMode)
 let __branchesFetchedOnce = false;
@@ -24,6 +30,7 @@ const LIST_BRANCHES_QUERY = `
         branchCode
         address
         status
+        institutionID
         createdAt
         updatedAt
       }
@@ -40,6 +47,7 @@ const CREATE_BRANCH_MUTATION = `
       branchCode
       address
       status
+      institutionID
       createdAt
       updatedAt
     }
@@ -88,6 +96,7 @@ const UPDATE_BRANCH_MUTATION = `
       branchCode
       address
       status
+      institutionID
       createdAt
       updatedAt
     }
@@ -115,8 +124,8 @@ const DELETE_BRANCH_LOAN_PRODUCT_MUTATION = `
 export default function Branches() {
   const [editMode, setEditMode] = React.useState(false);
   const formRef = useRef();
-  const { userDetails } = React.useContext(UserContext);
-  const theme = useTheme();
+  const { userDetails, setUserDetails } = React.useContext(UserContext);
+  const navigate = useNavigate();
   const [processedBranches, setProcessedBranches] = React.useState([]);
   const [allBranches, setAllBranches] = React.useState([]);
   const [branchesLoading, setBranchesLoading] = React.useState(true);
@@ -125,6 +134,8 @@ export default function Branches() {
     color: "green",
   });
   const client = React.useMemo(() => generateClient(), []); // stabilize client so effect does not re-trigger infinitely
+  const isAdminUser =
+    String(userDetails?.userType || "").toLowerCase() === "admin";
 
   const buildDefaultBranchAccountName = React.useCallback((branchName) => {
     const normalizedBranchName = (branchName || "Branch")
@@ -381,6 +392,64 @@ export default function Branches() {
     originalHandleEditSuccess(updatedBranch);
   };
 
+  const handleLoadBranch = React.useCallback(
+    async (branch) => {
+      if (!isAdminUser || !branch?.id || !userDetails?.institutionID) {
+        return;
+      }
+
+      try {
+        const currentDetails = parseCustomInstitutionDetails(
+          userDetails?.institution?.customInstitutionDetails,
+        );
+        const nextDetails = {
+          ...currentDetails,
+          currentBranchID: branch.id,
+        };
+
+        const updatedInstitution = await updateInstitution({
+          id: userDetails.institutionID,
+          customInstitutionDetails:
+            stringifyCustomInstitutionDetails(nextDetails),
+        });
+
+        setUserDetails((prevDetails) => ({
+          ...prevDetails,
+          branchID: branch.id,
+          branch: {
+            ...prevDetails?.branch,
+            ...branch,
+            institutionID: branch.institutionID || prevDetails?.institutionID,
+          },
+          institution: {
+            ...prevDetails?.institution,
+            ...updatedInstitution,
+            customInstitutionDetails: nextDetails,
+          },
+        }));
+
+        setNotification({
+          message: `${branch.name} is now the active branch.`,
+          color: "green",
+        });
+        navigate("/");
+      } catch (error) {
+        console.error("Error loading branch:", error);
+        setNotification({
+          message: `Error loading ${branch.name}: ${error.message}`,
+          color: "red",
+        });
+      }
+    },
+    [
+      isAdminUser,
+      navigate,
+      setUserDetails,
+      userDetails?.institution?.customInstitutionDetails,
+      userDetails?.institutionID,
+    ],
+  );
+
   React.useEffect(() => {
     if (userDetails?.institutionID && !__branchesFetchedOnce) {
       __branchesFetchedOnce = true;
@@ -443,6 +512,28 @@ export default function Branches() {
         params.value
           ? params.value.charAt(0).toUpperCase() + params.value.slice(1)
           : "",
+    },
+    {
+      field: "loadBranch",
+      headerName: "Load Branch",
+      width: 150,
+      sortable: false,
+      filterable: false,
+      renderCell: (params) => {
+        const isActiveBranch =
+          params.row.id === (userDetails?.branchID || userDetails?.branch?.id);
+
+        return (
+          <Button
+            size="small"
+            variant={isActiveBranch ? "contained" : "outlined"}
+            disabled={!isAdminUser || isActiveBranch}
+            onClick={() => handleLoadBranch(params.row)}
+          >
+            {isActiveBranch ? "Loaded" : "Load Branch"}
+          </Button>
+        );
+      },
     },
   ];
 

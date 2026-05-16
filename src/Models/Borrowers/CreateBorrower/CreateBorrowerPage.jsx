@@ -5,9 +5,7 @@ import { generateClient } from "aws-amplify/api";
 import { UserContext } from "../../../App";
 import CreateBorrower from "./CreateBorrower";
 import NotificationBar from "../../../ModelAssets/NotificationBar";
-import DropDownSearchable from "../../../Resources/FormComponents/DropDownSearchable";
 import { CREATE_BORROWER_MUTATION } from "../borrowerQueries";
-import { listBranches } from "../../../graphql/queries";
 import {
   resolveEmployeeIdForUser,
   syncBorrowerEmployeeAssignment,
@@ -17,75 +15,11 @@ export default function CreateBorrowerPage() {
   const navigate = useNavigate();
   const { userDetails } = useContext(UserContext);
   const client = React.useMemo(() => generateClient(), []);
-  const isAdmin = String(userDetails?.userType || "").toLowerCase() === "admin";
   const [notification, setNotification] = React.useState({
     message: "",
     color: "green",
   });
-  const [branches, setBranches] = React.useState([]);
-  const [selectedBranchId, setSelectedBranchId] = React.useState("");
-
-  React.useEffect(() => {
-    if (!userDetails) return;
-
-    if (!isAdmin) {
-      setSelectedBranchId(
-        userDetails.branchID || userDetails.branch?.id || "",
-      );
-    }
-  }, [isAdmin, userDetails]);
-
-  React.useEffect(() => {
-    if (!isAdmin || !userDetails?.institution?.id) {
-      setBranches([]);
-      return;
-    }
-
-    let cancelled = false;
-
-    const fetchBranches = async () => {
-      try {
-        const branchData = await client.graphql({
-          query: listBranches,
-          variables: {
-            limit: 1000,
-            filter: {
-              institutionID: { eq: userDetails.institution.id },
-            },
-          },
-        });
-
-        if (cancelled) return;
-
-        const items = branchData?.data?.listBranches?.items || [];
-        const mappedBranches = items.map((branch) => ({
-          value: branch.id,
-          label: branch.name,
-        }));
-        setBranches(mappedBranches);
-
-        if (mappedBranches.length === 1 && mappedBranches[0]?.value) {
-          setSelectedBranchId(mappedBranches[0].value);
-        }
-      } catch (error) {
-        console.error("Error fetching branches", error);
-      }
-    };
-
-    fetchBranches();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [client, isAdmin, userDetails?.institution?.id]);
-
-  const branchOptions = React.useMemo(() => branches, [branches]);
-  const hasMultipleAdminBranches = isAdmin && branchOptions.length > 1;
-  const effectiveBranchId =
-    selectedBranchId ||
-    userDetails?.branchID ||
-    userDetails?.branch?.id ||
-    "";
+  const activeBranchId = userDetails?.branchID || userDetails?.branch?.id || "";
 
   // Valid borrower fields for GraphQL input
   const validBorrowerFields = [
@@ -119,6 +53,7 @@ export default function CreateBorrowerPage() {
     "additionalNote1",
     "additionalNote2",
     "borrowerDocuments",
+    "branchID",
     "branchBorrowersId",
   ];
 
@@ -160,10 +95,15 @@ export default function CreateBorrowerPage() {
         input.status = "active";
       }
 
-      // Ensure branchBorrowersId is set for non-Admin users
-      if (userDetails.userType !== "Admin" && !input.branchBorrowersId) {
-        input.branchBorrowersId = userDetails.branchID;
+      if (input.branchBorrowersId && !input.branchID) {
+        input.branchID = input.branchBorrowersId;
       }
+
+      if (!input.branchID) {
+        input.branchID = activeBranchId;
+      }
+
+      delete input.branchBorrowersId;
 
       console.log("API Call: Creating borrower");
 
@@ -176,7 +116,7 @@ export default function CreateBorrowerPage() {
       const resolvedEmployeeId = await resolveEmployeeIdForUser({
         userDetails,
         preferredEmployeeId: employeeId,
-        branchId: input.branchBorrowersId,
+        branchId: input.branchID,
       });
       await syncBorrowerEmployeeAssignment({
         borrowerId: newBorrower.id,
@@ -214,33 +154,18 @@ export default function CreateBorrowerPage() {
           Create New Borrower
         </Typography>
 
-        {hasMultipleAdminBranches && (
-          <Box sx={{ width: "100%", mb: 2 }}>
-            <DropDownSearchable
-              label="Select Branch"
-              name="branchBorrowersId"
-              placeholder="type to search branches..."
-              required={true}
-              options={branchOptions}
-              value={selectedBranchId}
-              onChange={(e) => setSelectedBranchId(e.target.value)}
-              helperText="Choose a branch before creating a borrower."
-            />
-          </Box>
-        )}
-
-        {effectiveBranchId ? (
+        {activeBranchId ? (
           <Paper
             elevation={2}
             sx={{ p: 3, backgroundColor: "background.paper" }}
           >
             <CreateBorrower
-              key={effectiveBranchId}
+              key={activeBranchId}
               onCreateBorrowerAPI={handleCreate}
               onClose={handleClose}
               isEditMode={false}
               forceEditMode={true}
-              selectedBranchId={effectiveBranchId}
+              selectedBranchId={activeBranchId}
               hideBranchField
             />
           </Paper>
@@ -255,7 +180,8 @@ export default function CreateBorrowerPage() {
             }}
           >
             <Typography variant="body2" sx={{ color: "#1565c0" }}>
-              Please select a branch above to proceed with creating a borrower.
+              No active branch is loaded. Use Change Branch from the top bar to
+              continue.
             </Typography>
           </Box>
         )}

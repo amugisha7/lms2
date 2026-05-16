@@ -186,6 +186,7 @@ const CreateBorrower = forwardRef(
     const [defaultEmployeeId, setDefaultEmployeeId] = useState("");
     const effectiveBranchId =
       selectedBranchId ||
+      propInitialValues?.branchID ||
       propInitialValues?.branchBorrowersId ||
       userDetails?.branchID ||
       userDetails?.branch?.id ||
@@ -250,7 +251,7 @@ const CreateBorrower = forwardRef(
       return {
         firstname: dbData.firstname || "",
         othername: dbData.othername || "",
-        branchBorrowersId: dbData.branchBorrowersId || "",
+        branchBorrowersId: dbData.branchID || dbData.branchBorrowersId || "",
         employeeId: dbData.employeeId || "",
         businessName: dbData.businessName || "",
         typeOfBusiness: dbData.typeOfBusiness || "",
@@ -398,11 +399,12 @@ const CreateBorrower = forwardRef(
 
       const submissionValues = { ...values };
       if (selectedBranchId) {
-        submissionValues.branchBorrowersId = selectedBranchId;
+        submissionValues.branchID = selectedBranchId;
       } else if (userDetails?.userType !== "Admin") {
-        submissionValues.branchBorrowersId =
+        submissionValues.branchID =
           userDetails?.branchID || userDetails?.branch?.id;
       }
+      delete submissionValues.branchBorrowersId;
       if (!submissionValues.employeeId) {
         submissionValues.employeeId = defaultEmployeeId || "";
       }

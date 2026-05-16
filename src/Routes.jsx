@@ -61,8 +61,13 @@ import ConcentrationsReport from "./Screens/Reports/ConcentrationsReport";
 import InterestAndPenaltyReport from "./Screens/Reports/InterestAndPenaltyReport";
 import WriteOffAndRecoveryReport from "./Screens/Reports/WriteOffAndRecoveryReport";
 import ProfitabilityReport from "./Screens/Reports/ProfitabilityReport";
+import AdminDefaultsRecovery from "./Screens/Auth/AdminDefaultsRecovery";
 
-export default function AppRoutes({ userExists, userStatus }) {
+export default function AppRoutes({
+  userExists,
+  userStatus,
+  adminDefaultsRecoveryRequired = false,
+}) {
   const normalizedStatus = (userStatus || "").toLowerCase();
   const hasActiveAccess = userExists && normalizedStatus === "active";
 
@@ -74,6 +79,8 @@ export default function AppRoutes({ userExists, userStatus }) {
           element={
             !userExists ? (
               <Onboarding />
+            ) : hasActiveAccess && adminDefaultsRecoveryRequired ? (
+              <AdminDefaultsRecovery />
             ) : hasActiveAccess ? (
               <Dashboard />
             ) : (

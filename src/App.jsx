@@ -1,7 +1,7 @@
 import "./App.css";
 import { withAuthenticator } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
-import { createContext, useEffect, useState, useRef } from "react";
+import { createContext, useEffect, useState, useRef, useCallback } from "react";
 import { NotificationProvider } from "./ModelAssets/NotificationContext";
 import { SnackbarProvider } from "./ModelAssets/SnackbarContext";
 import { generateClient } from "aws-amplify/api";
@@ -17,6 +17,232 @@ import {
   LIST_NOTIFICATIONS_QUERY,
   SUBSCRIBE_TO_NEW_NOTIFICATIONS,
 } from "./Screens/Notifications/notificationQueries";
+import { parseCustomInstitutionDetails } from "./utils/customInstitutionDetails";
+import {
+  getAdminDefaultsRecoveryState,
+  repairAdminDefaults as repairAdminDefaultsHelper,
+} from "./utils/adminDefaultsRecovery";
+
+const GET_BRANCH_QUERY = `
+  query GetBranch($id: ID!) {
+    getBranch(id: $id) {
+      id
+      name
+      branchCode
+      address
+      status
+      createdAt
+      updatedAt
+      institutionID
+    }
+  }
+`;
+
+const GET_USER_QUERY = `
+  query GetUser($id: ID!) {
+    getUser(id: $id) {
+      id
+      firstName
+      lastName
+      middleName
+      dateOfBirth
+      phoneNumber1
+      phoneNumber2
+      email
+      nationalID
+      status
+      userType
+      userPermissions
+      createdAt
+      updatedAt
+      institutionID
+      branchID
+      branch {
+        id
+        name
+        branchCode
+        address
+        status
+        createdAt
+        updatedAt
+        institutionID
+      }
+      institution {
+        id
+        name
+        currencyCode
+        subscriptionTier
+        subscriptionStatus
+        trialEndDate
+        nextBillingDate
+        stripeCustomerID
+        stripeSubscriptionID
+        defaultDateFormat
+        defaultCurrencyFormat
+        defaultLanguage
+        regulatoryRegion
+        maxUsers
+        maxBranches
+        maxStaffPerBranch
+        saccoFeaturesEnabled
+        staffManagementEnabled
+        payrollEnabled
+        collectionsModuleEnabled
+        customWorkflowsEnabled
+        advancedReportingEnabled
+        apiIntegrationSettings
+        customDocumentHeader
+        customInstitutionDetails
+        status
+        createdAt
+        updatedAt
+      }
+    }
+  }
+`;
+
+const SUBSCRIBE_TO_USER_UPDATES_QUERY = `
+  subscription OnUpdateUser($filter: ModelSubscriptionUserFilterInput) {
+    onUpdateUser(filter: $filter) {
+      id
+      firstName
+      lastName
+      middleName
+      dateOfBirth
+      phoneNumber1
+      phoneNumber2
+      email
+      addressLine1
+      addressLine2
+      city
+      stateProvince
+      postalCode
+      nationalID
+      passportNumber
+      status
+      userType
+      userPermissions
+      description
+      institution {
+        id
+        name
+        currencyCode
+        subscriptionTier
+        subscriptionStatus
+        trialEndDate
+        nextBillingDate
+        stripeCustomerID
+        stripeSubscriptionID
+        defaultDateFormat
+        defaultCurrencyFormat
+        defaultLanguage
+        regulatoryRegion
+        maxUsers
+        maxBranches
+        maxStaffPerBranch
+        saccoFeaturesEnabled
+        staffManagementEnabled
+        payrollEnabled
+        collectionsModuleEnabled
+        customWorkflowsEnabled
+        advancedReportingEnabled
+        apiIntegrationSettings
+        customDocumentHeader
+        customInstitutionDetails
+        status
+        createdAt
+        updatedAt
+        __typename
+      }
+      branch {
+        id
+        name
+        branchCode
+        address
+        status
+        createdAt
+        updatedAt
+        institutionID
+        __typename
+      }
+      userNotifications {
+        nextToken
+        __typename
+      }
+      sentMessages {
+        nextToken
+        __typename
+      }
+      receivedMessages {
+        nextToken
+        __typename
+      }
+      sentNotifications {
+        nextToken
+        __typename
+      }
+      receivedNotifications {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      institutionID
+      branchID
+      __typename
+    }
+  }
+`;
+
+const hydrateActiveBranch = async (userData, graphClient = resilientClient) => {
+  if (!userData) {
+    return null;
+  }
+
+  const institution = userData.institution
+    ? {
+        ...userData.institution,
+        customInstitutionDetails: parseCustomInstitutionDetails(
+          userData.institution.customInstitutionDetails,
+        ),
+      }
+    : null;
+
+  const fallbackBranchId = userData.branch?.id || userData.branchID || null;
+  const desiredBranchId =
+    institution?.customInstitutionDetails?.currentBranchID || fallbackBranchId;
+
+  let activeBranch = userData.branch || null;
+  let activeBranchId = fallbackBranchId;
+
+  if (desiredBranchId && activeBranch?.id !== desiredBranchId) {
+    try {
+      const branchResult = await graphClient.graphql({
+        query: GET_BRANCH_QUERY,
+        variables: { id: desiredBranchId },
+      });
+      const fetchedBranch = branchResult?.data?.getBranch;
+      if (
+        fetchedBranch?.id &&
+        (!institution?.id || fetchedBranch.institutionID === institution.id)
+      ) {
+        activeBranch = fetchedBranch;
+        activeBranchId = fetchedBranch.id;
+      }
+    } catch (error) {
+      console.error("Failed to hydrate active branch:", error);
+    }
+  } else if (desiredBranchId) {
+    activeBranchId = desiredBranchId;
+  }
+
+  return {
+    ...userData,
+    branchID: activeBranchId || null,
+    branch: activeBranch,
+    institution,
+  };
+};
 
 // Create UserContext once at the top level
 export const UserContext = createContext();
@@ -29,11 +255,153 @@ function App({ signOut, user }) {
   const [online, setOnline] = useState(window.navigator.onLine);
   const [allMessages, setAllMessages] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [adminDefaultsRecovery, setAdminDefaultsRecovery] = useState({
+    required: false,
+    missingDefaults: [],
+    canAutoRepair: false,
+    showRecoveryScreen: false,
+    validationFailed: false,
+    reason: "ready",
+    errorMessage: null,
+  });
 
   const [theme, colorMode] = useMode();
 
   const checkedUserIds = useRef(new Set());
   const processedUserIds = useRef(new Set());
+
+  const loadAndHydrateUser = useCallback(
+    async (userId, graphClient = resilientClient) => {
+      const res = await graphClient.graphql({
+        query: GET_USER_QUERY,
+        variables: { id: userId },
+      });
+
+      console.log("GetUser response:", res);
+      return hydrateActiveBranch(res.data.getUser, graphClient);
+    },
+    [],
+  );
+
+  const ensureAdminDefaultsReady = useCallback(
+    async (nextUserDetails, { attemptRepair = true } = {}) => {
+      const recoveryState = await getAdminDefaultsRecoveryState({
+        userDetails: nextUserDetails,
+        graphClient: resilientClient,
+      });
+
+      if (
+        !recoveryState.required ||
+        !attemptRepair ||
+        !nextUserDetails?.id ||
+        !recoveryState.canAutoRepair
+      ) {
+        setAdminDefaultsRecovery(recoveryState);
+        return {
+          userDetails: nextUserDetails,
+          recoveryState,
+        };
+      }
+
+      console.log(
+        "[admin-defaults-recovery] Auto repair triggered during app load",
+        {
+          userId: nextUserDetails.id,
+          missingDefaults: recoveryState.missingDefaults,
+        },
+      );
+
+      try {
+        const repairResult = await repairAdminDefaultsHelper({
+          userDetails: nextUserDetails,
+          graphClient: resilientClient,
+        });
+
+        console.log("[admin-defaults-recovery] Auto repair completed", {
+          userId: nextUserDetails.id,
+          actions: repairResult?.actions || [],
+        });
+
+        const refreshedUserDetails = await loadAndHydrateUser(
+          nextUserDetails.id,
+          resilientClient,
+        );
+        const refreshedRecoveryState = await getAdminDefaultsRecoveryState({
+          userDetails: refreshedUserDetails,
+          graphClient: resilientClient,
+        });
+
+        const nextRecoveryState = refreshedRecoveryState.required
+          ? {
+              ...refreshedRecoveryState,
+              showRecoveryScreen: true,
+              reason: "repair-incomplete",
+            }
+          : refreshedRecoveryState;
+
+        setAdminDefaultsRecovery(nextRecoveryState);
+
+        return {
+          userDetails: refreshedUserDetails,
+          recoveryState: nextRecoveryState,
+          repairResult,
+        };
+      } catch (repairError) {
+        console.error(
+          "[admin-defaults-recovery] Auto repair failed during app load",
+          {
+            message: repairError?.message,
+            error: repairError,
+            graphqlErrors: repairError?.errors,
+            data: repairError?.data,
+            userId: nextUserDetails.id,
+            missingDefaults: recoveryState.missingDefaults,
+          },
+        );
+        const failedRecoveryState = {
+          ...recoveryState,
+          showRecoveryScreen: true,
+          reason: "repair-failed",
+          errorMessage:
+            repairError?.message || "Automatic admin setup repair failed.",
+        };
+        setAdminDefaultsRecovery(failedRecoveryState);
+        return {
+          userDetails: nextUserDetails,
+          recoveryState: failedRecoveryState,
+          repairError,
+        };
+      }
+    },
+    [loadAndHydrateUser],
+  );
+
+  const reloadUserContext = useCallback(async () => {
+    if (!user?.userId) {
+      return null;
+    }
+
+    const nextUserDetails = await loadAndHydrateUser(user.userId);
+    const resolved = await ensureAdminDefaultsReady(nextUserDetails, {
+      attemptRepair: true,
+    });
+    setUserDetails(resolved.userDetails || null);
+    return resolved.userDetails;
+  }, [ensureAdminDefaultsReady, loadAndHydrateUser, user?.userId]);
+
+  const repairAdminDefaults = useCallback(async () => {
+    if (!userDetails?.id) {
+      throw new Error("No admin user is loaded for recovery.");
+    }
+
+    const result = await repairAdminDefaultsHelper({
+      userDetails,
+      graphClient: resilientClient,
+    });
+
+    await reloadUserContext();
+    return result;
+  }, [reloadUserContext, userDetails]);
 
   const fetchMessages = async (userId) => {
     try {
@@ -100,73 +468,13 @@ function App({ signOut, user }) {
     const checkUser = async () => {
       try {
         console.log("API Call: GetUser", { id: user.userId });
-        const res = await resilientClient.graphql({
-          query: `query GetUser($id: ID!) { 
-              getUser(id: $id) { 
-                id
-                firstName
-                lastName
-                middleName
-                dateOfBirth
-                phoneNumber1
-                phoneNumber2
-                email
-                nationalID
-                status
-                userType
-                userPermissions
-                createdAt
-                updatedAt
-                institutionID
-                branchID
-                branch {
-                  id
-                  name
-                  branchCode
-                  address
-                  status
-                  createdAt
-                  updatedAt
-                  institutionID
-                }
-                institution {
-                  id
-                  name
-                  currencyCode
-                  subscriptionTier
-                  subscriptionStatus
-                  trialEndDate
-                  nextBillingDate
-                  stripeCustomerID
-                  stripeSubscriptionID
-                  defaultDateFormat
-                  defaultCurrencyFormat
-                  defaultLanguage
-                  regulatoryRegion
-                  maxUsers
-                  maxBranches
-                  maxStaffPerBranch
-                  saccoFeaturesEnabled
-                  staffManagementEnabled
-                  payrollEnabled
-                  collectionsModuleEnabled
-                  customWorkflowsEnabled
-                  advancedReportingEnabled
-                  apiIntegrationSettings
-                  customDocumentHeader
-                  status
-                  createdAt
-                  updatedAt
-                }
-              } 
-            }`,
-          variables: { id: user.userId },
+        const userData = await loadAndHydrateUser(user.userId);
+        const resolved = await ensureAdminDefaultsReady(userData, {
+          attemptRepair: true,
         });
-        console.log("GetUser response:", res);
-        const userData = res.data.getUser;
-        setUserDetails(userData || null);
+        setUserDetails(resolved.userDetails || null);
         setError(false);
-        setUserExists(!!userData?.id);
+        setUserExists(!!resolved.userDetails?.id);
         setChecking(false);
         checkedUserIds.current.add(user.userId);
       } catch (err) {
@@ -177,7 +485,7 @@ function App({ signOut, user }) {
       }
     };
     checkUser();
-  }, [user?.userId]);
+  }, [ensureAdminDefaultsReady, loadAndHydrateUser, user?.userId]);
 
   useEffect(() => {
     if (!userDetails?.id) return;
@@ -213,105 +521,25 @@ function App({ signOut, user }) {
     });
     const userUpdateSubscription = client
       .graphql({
-        query: `
-  subscription OnUpdateUser($filter: ModelSubscriptionUserFilterInput) {
-    onUpdateUser(filter: $filter) {
-      id
-      firstName
-      lastName
-      middleName
-      dateOfBirth
-      phoneNumber1
-      phoneNumber2
-      email
-      addressLine1
-      addressLine2
-      city
-      stateProvince
-      postalCode
-      nationalID
-      passportNumber
-      status
-      userType
-      userPermissions
-      description
-      institution {
-        id
-        name
-        currencyCode
-        subscriptionTier
-        subscriptionStatus
-        trialEndDate
-        nextBillingDate
-        stripeCustomerID
-        stripeSubscriptionID
-        defaultDateFormat
-        defaultCurrencyFormat
-        defaultLanguage
-        regulatoryRegion
-        maxUsers
-        maxBranches
-        maxStaffPerBranch
-        saccoFeaturesEnabled
-        staffManagementEnabled
-        payrollEnabled
-        collectionsModuleEnabled
-        customWorkflowsEnabled
-        advancedReportingEnabled
-        apiIntegrationSettings
-        status
-        createdAt
-        updatedAt
-        __typename
-      }
-      branch {
-        id
-        name
-        branchCode
-        address
-        status
-        createdAt
-        updatedAt
-        institutionID
-        __typename
-      }
-      userNotifications {
-        nextToken
-        __typename
-      }
-      sentMessages {
-        nextToken
-        __typename
-      }
-      receivedMessages {
-        nextToken
-        __typename
-      }
-      sentNotifications {
-        nextToken
-        __typename
-      }
-      receivedNotifications {
-        nextToken
-        __typename
-      }
-      createdAt
-      updatedAt
-      institutionID
-      branchID
-      __typename
-    }
-  }
-`,
+        query: SUBSCRIBE_TO_USER_UPDATES_QUERY,
         variables: { filter: { id: { eq: userDetails.id } } },
       })
       .subscribe({
-        next: ({ data }) => {
+        next: async ({ data }) => {
           console.log("Subscription received user update:", data.onUpdateUser);
-          const updatedUser = data.onUpdateUser;
+          const updatedUser = await hydrateActiveBranch(
+            data.onUpdateUser,
+            client,
+          );
+          const resolved = await ensureAdminDefaultsReady(updatedUser, {
+            attemptRepair: true,
+          });
           setUserDetails((prevDetails) => ({
             ...prevDetails,
-            ...updatedUser,
+            ...resolved.userDetails,
+            institution:
+              resolved.userDetails?.institution || prevDetails?.institution,
+            branch: resolved.userDetails?.branch || prevDetails?.branch,
           }));
         },
         error: (error) => {
@@ -325,7 +553,7 @@ function App({ signOut, user }) {
       notificationSubscription.unsubscribe();
       userUpdateSubscription.unsubscribe();
     };
-  }, [userDetails?.id]);
+  }, [ensureAdminDefaultsReady, userDetails?.id]);
 
   return (
     <ColorModeContext.Provider value={colorMode}>
@@ -338,6 +566,9 @@ function App({ signOut, user }) {
             setUserDetails,
             allMessages,
             unreadCount,
+            adminDefaultsRecovery,
+            refreshAdminDefaultsRecovery: reloadUserContext,
+            repairAdminDefaults,
           }}
         >
           {checking && <LoadingScreen onSignOut={signOut} />}
@@ -354,6 +585,9 @@ function App({ signOut, user }) {
                         <AppRoutes
                           userExists={userExists}
                           userStatus={userDetails?.status}
+                          adminDefaultsRecoveryRequired={
+                            adminDefaultsRecovery.showRecoveryScreen
+                          }
                         />
                       </div>
                     </>

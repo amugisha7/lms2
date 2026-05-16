@@ -17,7 +17,6 @@ import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeft";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import { useLocation, useNavigate } from "react-router-dom";
 import { UserContext } from "../../../App";
-import AdminBranchScopeSelector from "../../../ModelAssets/AdminBranchScopeSelector";
 import WorkingOverlay from "../../../ModelAssets/WorkingOverlay";
 import CustomDataGrid from "../../../ModelAssets/CustomDataGrid";
 import SFClickableText from "../../../ModelAssets/SF_ClickableText";
@@ -461,7 +460,6 @@ export default function LoansDisplay() {
   const [selectedLoanOfficerKey, setSelectedLoanOfficerKey] =
     React.useState("");
   const [statusFilter, setStatusFilter] = React.useState("all");
-  const [selectedBranchId, setSelectedBranchId] = React.useState("");
   const [paymentPopupOpen, setPaymentPopupOpen] = React.useState(false);
   const [paymentLoanId, setPaymentLoanId] = React.useState(null);
   const [statementPopupOpen, setStatementPopupOpen] = React.useState(false);
@@ -472,8 +470,6 @@ export default function LoansDisplay() {
   const loadLoanDisplayPageRef = React.useRef(null);
   const { userDetails } = React.useContext(UserContext);
   const {
-    branches,
-    loadBranches,
     loanDisplayRows: loans,
     loanDisplayLoading: loading,
     loanDisplayLoadingMore: loadingMore,
@@ -494,10 +490,8 @@ export default function LoansDisplay() {
   const currencyCode =
     userDetails?.institution?.currencyCode || userDetails?.currencyCode;
   const currency = currencyCode || "$";
-  const normalizedUserType = (userDetails?.userType || "").toLowerCase();
-  const isAdminUser = normalizedUserType === "admin";
-  const hasMultipleAdminBranches = isAdminUser && branches.length > 1;
-  const shouldShowLoansView = !isAdminUser || Boolean(selectedBranchId);
+  const activeBranchId = userDetails?.branchID || userDetails?.branch?.id || "";
+  const shouldShowLoansView = Boolean(activeBranchId);
   const paymentLoanRow = paymentLoanId ? getLoanRecord(paymentLoanId) : null;
   const statementLoanRow = statementLoanId
     ? getLoanRecord(statementLoanId)
@@ -556,38 +550,6 @@ export default function LoansDisplay() {
       state: Object.keys(nextState).length > 0 ? nextState : null,
     });
   }, [location.pathname, location.state, navigate, showNotification]);
-
-  React.useEffect(() => {
-    if (!isAdminUser) {
-      return;
-    }
-
-    const routeBranchId =
-      location.state?.selectedBranchId || location.state?.branchId || "";
-
-    if (!routeBranchId) {
-      return;
-    }
-
-    if (routeBranchId !== selectedBranchId) {
-      setSelectedBranchId(routeBranchId);
-    }
-
-    const nextState = { ...(location.state || {}) };
-    delete nextState.selectedBranchId;
-    delete nextState.branchId;
-
-    navigate(location.pathname, {
-      replace: true,
-      state: Object.keys(nextState).length > 0 ? nextState : null,
-    });
-  }, [
-    isAdminUser,
-    location.pathname,
-    location.state,
-    navigate,
-    selectedBranchId,
-  ]);
 
   React.useEffect(() => {
     const el = gridDragContainerRef.current;
@@ -657,10 +619,8 @@ export default function LoansDisplay() {
     (loan, initialTab = 0) => ({
       from: "/loans",
       initialTab,
-      selectedBranchId:
-        selectedBranchId || loan?.branchID || loan?.branch?.id || "",
     }),
-    [selectedBranchId],
+    [],
   );
 
   const openLoanDetail = React.useCallback(
@@ -1410,51 +1370,12 @@ export default function LoansDisplay() {
   }, [baseFilteredLoans]);
 
   React.useEffect(() => {
-    if (!userDetails) return;
-
-    if (isAdminUser) {
-      if (selectedBranchId) {
-        loadLoanDisplayPageRef.current?.({
-          reset: true,
-          branchIdOverride: selectedBranchId,
-        });
-      }
+    if (!userDetails || !activeBranchId) {
       return;
     }
 
     loadLoanDisplayPageRef.current?.({ reset: true });
-  }, [isAdminUser, selectedBranchId, userDetails]);
-
-  React.useEffect(() => {
-    if (!userDetails || !isAdminUser) {
-      return;
-    }
-
-    loadBranches();
-  }, [isAdminUser, loadBranches, userDetails]);
-
-  React.useEffect(() => {
-    if (!isAdminUser) {
-      return;
-    }
-
-    if (branches.length === 1) {
-      const onlyBranchId = branches[0]?.id || "";
-      if (onlyBranchId && selectedBranchId !== onlyBranchId) {
-        setSelectedBranchId(onlyBranchId);
-      }
-      return;
-    }
-
-    if (branches.length > 1 && selectedBranchId) {
-      const selectedBranchExists = branches.some(
-        (branch) => branch?.id === selectedBranchId,
-      );
-      if (!selectedBranchExists) {
-        setSelectedBranchId("");
-      }
-    }
-  }, [branches, isAdminUser, selectedBranchId]);
+  }, [activeBranchId, userDetails]);
 
   React.useEffect(() => {
     if (!selectedLoanOfficerKey) {
@@ -1524,9 +1445,7 @@ export default function LoansDisplay() {
           <Tooltip title="Refresh data" placement="top">
             <IconButton
               onClick={() => {
-                refreshLoanDisplayPage({
-                  branchIdOverride: isAdminUser ? selectedBranchId : undefined,
-                });
+                refreshLoanDisplayPage();
               }}
               disabled={loading || loadingMore}
               sx={{
@@ -1543,15 +1462,12 @@ export default function LoansDisplay() {
         </Box>
       </Box>
 
-      {/* Branch Filter (Admin only) */}
-      {hasMultipleAdminBranches && (
-        <AdminBranchScopeSelector
-          branches={branches}
-          selectedBranchId={selectedBranchId}
-          onBranchChange={setSelectedBranchId}
-          helperText="Choose a branch before viewing loans."
-          emptyMessage="Please select a branch above to view loans."
-        />
+      {!shouldShowLoansView && (
+        <Box sx={{ p: 2, mb: 2, bgcolor: "info.light" }}>
+          <Typography variant="body2">
+            No active branch is loaded. Use Change Branch from the top bar.
+          </Typography>
+        </Box>
       )}
 
       {shouldShowLoansView && (
@@ -2077,13 +1993,7 @@ export default function LoansDisplay() {
             <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
               <Button
                 variant="outlined"
-                onClick={() =>
-                  loadLoanDisplayPage({
-                    branchIdOverride: isAdminUser
-                      ? selectedBranchId
-                      : undefined,
-                  })
-                }
+                onClick={() => loadLoanDisplayPage()}
                 disabled={loading || loadingMore}
                 sx={{ borderRadius: 0 }}
               >

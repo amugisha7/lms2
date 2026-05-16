@@ -27,7 +27,7 @@ export const GET_BRANCH_BORROWERS_QUERY = `
           creditScore
           customFieldsData
           status
-          branchBorrowersId
+          branchID
           branch {
             id
             name
@@ -72,7 +72,7 @@ export const LIST_BORROWERS_QUERY = `
         creditScore
         customFieldsData
         status
-        branchBorrowersId
+        branchID
         branch {
           id
           name
@@ -110,7 +110,7 @@ export const CREATE_BORROWER_MUTATION = `
       creditScore
       customFieldsData
       status
-      branchBorrowersId
+      branchID
       createdAt
       updatedAt
     }
@@ -142,7 +142,7 @@ export const UPDATE_BORROWER_MUTATION = `
       creditScore
       customFieldsData
       status
-      branchBorrowersId
+      branchID
       createdAt
       updatedAt
     }

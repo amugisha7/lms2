@@ -36,7 +36,7 @@ export const fetchBorrowerById = async (borrowerId) => {
         customFieldsData
         status
         borrowerDocuments
-        branchBorrowersId
+        branchID
         branch {
           id
           name
@@ -100,7 +100,7 @@ export const updateBorrowerById = async (values, initialValues) => {
         creditScore
         customFieldsData
         status
-        branchBorrowersId
+        branchID
         branch {
           id
           name
@@ -136,7 +136,7 @@ export const updateBorrowerById = async (values, initialValues) => {
     employerName: values.employerName?.trim() || null,
     creditScore: values.creditScore?.trim() || null,
     status: values.status || null,
-    branchBorrowersId: values.branchBorrowersId || null,
+    branchID: values.branchID || values.branchBorrowersId || null,
   };
 
   const customFieldsData = {};

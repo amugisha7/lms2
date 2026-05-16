@@ -1,13 +1,11 @@
 import React, { useState, useEffect, useContext } from "react";
 import { Box, Typography, Tabs, Tab } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { generateClient } from "aws-amplify/api";
 import { UserContext } from "../../App";
-import { listBranches } from "../../graphql/queries";
 
 // Reusable components
-import AdminBranchScopeSelector from "../../ModelAssets/AdminBranchScopeSelector";
 import CustomDataGrid from "../../ModelAssets/CustomDataGrid";
 import CustomSlider from "../../ModelAssets/CustomSlider";
 import DeleteDialog from "../../ModelAssets/DeleteDialog";
@@ -39,9 +37,9 @@ import { useHasPermission } from "../../ModelAssets/Permissions/permissions";
 export default function Borrowers() {
   const theme = useTheme();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const { userDetails } = useContext(UserContext);
   const client = React.useMemo(() => generateClient(), []);
+  const activeBranchId = userDetails?.branchID || userDetails?.branch?.id || "";
 
   // State management
   const [borrowers, setBorrowers] = useState([]);
@@ -70,21 +68,12 @@ export default function Borrowers() {
   // Selection for applicant approval
   const [selectedApprovalIds, setSelectedApprovalIds] = useState([]);
 
-  // Branch scope state (for Admin users)
-  const [branches, setBranches] = useState([]);
-  const [selectedBranchId, setSelectedBranchId] = useState("");
-
   // Ref to track fetched branch ID
   const hasFetchedRef = React.useRef();
 
   // Fetch borrowers
   const fetchBorrowers = async () => {
-    const isAdminUser = userDetails?.userType === "Admin";
-    const effectiveBranchId = isAdminUser
-      ? selectedBranchId
-      : userDetails?.branchID;
-
-    if (!effectiveBranchId) {
+    if (!activeBranchId) {
       setBorrowers([]);
       setLoading(false);
       return;
@@ -102,7 +91,7 @@ export default function Borrowers() {
         const result = await client.graphql({
           query: GET_BRANCH_BORROWERS_QUERY,
           variables: {
-            id: effectiveBranchId,
+            id: activeBranchId,
             limit: 100,
             ...(nextToken && { nextToken }),
           },
@@ -172,6 +161,7 @@ export default function Borrowers() {
     "additionalNote1",
     "additionalNote2",
     "borrowerDocuments",
+    "branchID",
     "branchBorrowersId",
   ];
 
@@ -198,17 +188,15 @@ export default function Borrowers() {
         ...filteredData,
       };
 
-      // Ensure branchBorrowersId is set for non-Admin users if not already in filteredData
-      // (though CreateBorrower form handles submissionValues, this handles direct API calls if any)
-      // Actually CreateBorrower calls handleCreate which calls this.
-      // CreateBorrower ALREADY puts branchBorrowersId into the values it passes to onCreateBorrowerAPI (which is this function)
-      // BUT, validBorrowerFields filter might strip it if it's not in the list.
-      // I added "branchBorrowersId" to validBorrowerFields. So it should be fine.
-
-      // However, for extra safety given the prompt:
-      if (userDetails.userType !== "Admin" && !input.branchBorrowersId) {
-        input.branchBorrowersId = userDetails.branchID;
+      if (input.branchBorrowersId && !input.branchID) {
+        input.branchID = input.branchBorrowersId;
       }
+
+      if (!input.branchID) {
+        input.branchID = activeBranchId;
+      }
+
+      delete input.branchBorrowersId;
 
       console.log("API Call: Creating borrower"); // <-- Added
 
@@ -225,7 +213,7 @@ export default function Borrowers() {
       const resolvedEmployeeId = await resolveEmployeeIdForUser({
         userDetails,
         preferredEmployeeId: employeeId,
-        branchId: input.branchBorrowersId,
+        branchId: input.branchID,
       });
       await syncBorrowerEmployeeAssignment({
         borrowerId: newBorrower.id,
@@ -268,17 +256,15 @@ export default function Borrowers() {
       };
 
       // Ensure specific fields are included if stripped by filter but present in formData
-      if (
-        borrowerFormData.branchBorrowersId &&
-        validBorrowerFields.includes("branchBorrowersId")
-      ) {
-        input.branchBorrowersId = borrowerFormData.branchBorrowersId;
+      if (borrowerFormData.branchBorrowersId && !input.branchID) {
+        input.branchID = borrowerFormData.branchBorrowersId;
       }
 
-      // If non-admin, ensure it stays in their branch (or set it if missing)
-      if (userDetails.userType !== "Admin" && !input.branchBorrowersId) {
-        input.branchBorrowersId = userDetails.branchID;
+      if (!input.branchID) {
+        input.branchID = activeBranchId;
       }
+
+      delete input.branchBorrowersId;
 
       console.log("API Call: Updating borrower"); // <-- Added
       const result = await client.graphql({
@@ -294,7 +280,7 @@ export default function Borrowers() {
       const resolvedEmployeeId = await resolveEmployeeIdForUser({
         userDetails,
         preferredEmployeeId: employeeId,
-        branchId: input.branchBorrowersId,
+        branchId: input.branchID,
       });
       await syncBorrowerEmployeeAssignment({
         borrowerId: updatedBorrower.id,
@@ -418,55 +404,23 @@ export default function Borrowers() {
     },
   ];
 
-  // Fetch branches for Admin users
-  useEffect(() => {
-    const fetchBranchesForAdmin = async () => {
-      if (userDetails?.userType === "Admin" && userDetails?.institution?.id) {
-        try {
-          const branchData = await client.graphql({
-            query: listBranches,
-            variables: {
-              limit: 1000,
-              filter: {
-                institutionID: { eq: userDetails.institution.id },
-              },
-            },
-          });
-          const items = branchData.data.listBranches.items || [];
-          setBranches(items);
-          setSelectedBranchId("");
-        } catch (e) {
-          console.error("Error fetching branches", e);
-        }
-      }
-    };
-    if (userDetails) {
-      fetchBranchesForAdmin();
-    }
-  }, [client, userDetails?.institution?.id, userDetails?.userType]);
-
   // Effects - fetch data once, filter client-side
   useEffect(() => {
-    if (!userDetails) return;
-
-    const fetchKey =
-      userDetails.userType === "Admin"
-        ? selectedBranchId
-        : userDetails.branchID;
-
-    if (fetchKey && fetchKey !== hasFetchedRef.current) {
-      fetchBorrowers();
-      hasFetchedRef.current = fetchKey;
-    } else if (userDetails.userType === "Admin" && !selectedBranchId) {
+    if (!activeBranchId) {
       setBorrowers([]);
       setLoading(false);
       hasFetchedRef.current = null;
+      return;
     }
-  }, [selectedBranchId, userDetails]);
+
+    if (activeBranchId !== hasFetchedRef.current) {
+      fetchBorrowers();
+      hasFetchedRef.current = activeBranchId;
+    }
+  }, [activeBranchId]);
 
   const canCreateBorrower = useHasPermission("create", "borrower");
-  const shouldShowBorrowersView =
-    userDetails?.userType !== "Admin" || Boolean(selectedBranchId);
+  const shouldShowBorrowersView = Boolean(activeBranchId);
 
   // Tab change handler
   const handleTabChange = (event, newValue) => {
@@ -589,15 +543,12 @@ export default function Borrowers() {
           custom fields.
         </Typography>
 
-        {/* Branch Filter - Admin Only */}
-        {userDetails?.userType === "Admin" && (
-          <AdminBranchScopeSelector
-            branches={branches}
-            selectedBranchId={selectedBranchId}
-            onBranchChange={setSelectedBranchId}
-            helperText="Choose a branch before viewing borrowers."
-            emptyMessage="Please select a branch above to view borrowers."
-          />
+        {!shouldShowBorrowersView && (
+          <Box sx={{ p: 2, mb: 2, bgcolor: "info.light" }}>
+            <Typography variant="body2">
+              No active branch is loaded. Use Change Branch from the top bar.
+            </Typography>
+          </Box>
         )}
 
         {shouldShowBorrowersView && (

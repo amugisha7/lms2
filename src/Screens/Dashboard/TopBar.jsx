@@ -4,6 +4,7 @@ import {
   Toolbar,
   Box,
   Typography,
+  Button,
   IconButton,
   Avatar,
   useMediaQuery,
@@ -22,6 +23,7 @@ import {
   Apps as AppsIcon,
   Menu as MenuIcon,
   Logout as LogoutIcon,
+  KeyboardArrowDown as KeyboardArrowDownIcon,
 } from "@mui/icons-material";
 import ColorModeToggle from "../../ModelAssets/ColorModeToggle";
 import { useTheme } from "@mui/material/styles";
@@ -34,12 +36,14 @@ const TopBar = ({ onMenuClick }) => {
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
+  const [branchAnchorEl, setBranchAnchorEl] = useState(null);
   const navigate = useNavigate();
 
   const { userDetails, unreadCount, signOut } = React.useContext(
     require("../../App").UserContext,
   );
   const institutionName = userDetails?.institution?.name || "";
+  const activeBranchName = userDetails?.branch?.name || "No Active Branch";
 
   const handleMobileMenuToggle = () => {
     setMobileMenuOpen(!mobileMenuOpen);
@@ -51,6 +55,19 @@ const TopBar = ({ onMenuClick }) => {
 
   const handleUserMenuClose = () => {
     setAnchorEl(null);
+  };
+
+  const handleBranchMenuOpen = (event) => {
+    setBranchAnchorEl(event.currentTarget);
+  };
+
+  const handleBranchMenuClose = () => {
+    setBranchAnchorEl(null);
+  };
+
+  const handleChangeBranch = () => {
+    handleBranchMenuClose();
+    navigate("/admin/branches");
   };
 
   const handleSignOut = () => {
@@ -127,16 +144,60 @@ const TopBar = ({ onMenuClick }) => {
                     fontWeight: 600,
                     textTransform: "uppercase",
                     fontSize: "0.9rem",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
                     minWidth: 0,
                     flex: 1,
                     textAlign: "center",
                     mx: 1,
                   }}
                 >
-                  {institutionName}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      minWidth: 0,
+                    }}
+                  >
+                    <Box
+                      component="span"
+                      sx={{
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                        width: "100%",
+                      }}
+                    >
+                      {institutionName}
+                    </Box>
+                    <Button
+                      size="small"
+                      onClick={handleBranchMenuOpen}
+                      endIcon={<KeyboardArrowDownIcon sx={{ fontSize: 16 }} />}
+                      sx={{
+                        mt: 0.25,
+                        minWidth: 0,
+                        px: 0.25,
+                        color: theme.palette.text.secondary,
+                        textTransform: "none",
+                        fontSize: "0.75rem",
+                        fontWeight: 500,
+                        maxWidth: "100%",
+                        "& .MuiButton-endIcon": { ml: 0.25 },
+                      }}
+                    >
+                      <Box
+                        component="span"
+                        sx={{
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                          maxWidth: "100%",
+                        }}
+                      >
+                        {activeBranchName}
+                      </Box>
+                    </Button>
+                  </Box>
                 </Typography>
                 <IconButton
                   onClick={handleMobileMenuToggle}
@@ -164,17 +225,22 @@ const TopBar = ({ onMenuClick }) => {
                   {institutionName}
                 </Typography>
 
-                <Typography
-                  variant="body2"
+                <Button
+                  size="small"
+                  onClick={handleBranchMenuOpen}
+                  endIcon={<KeyboardArrowDownIcon sx={{ fontSize: 16 }} />}
                   sx={{
-                    fontWeight: 400,
+                    fontWeight: 500,
                     color: theme.palette.text.secondary,
                     fontStyle: "italic",
                     ml: 1,
+                    textTransform: "none",
+                    minWidth: 0,
+                    "& .MuiButton-endIcon": { ml: 0.25 },
                   }}
                 >
-                  — {userDetails?.branch?.name || "Main Branch"}
-                </Typography>
+                  {activeBranchName}
+                </Button>
               </Box>
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <IconButton>
@@ -211,6 +277,28 @@ const TopBar = ({ onMenuClick }) => {
         open={mobileMenuOpen}
         onClose={() => setMobileMenuOpen(false)}
       />
+
+      <Menu
+        anchorEl={branchAnchorEl}
+        open={Boolean(branchAnchorEl)}
+        onClose={handleBranchMenuClose}
+        transformOrigin={{ horizontal: "left", vertical: "top" }}
+        anchorOrigin={{ horizontal: "left", vertical: "bottom" }}
+        PaperProps={{
+          sx: {
+            mt: 1,
+            minWidth: 220,
+          },
+        }}
+      >
+        <MenuItem disabled>
+          <ListItemText primary={activeBranchName} secondary="Active Branch" />
+        </MenuItem>
+        <Divider />
+        <MenuItem onClick={handleChangeBranch}>
+          <ListItemText>Change Branch</ListItemText>
+        </MenuItem>
+      </Menu>
 
       {/* User Menu Dropdown */}
       <Menu

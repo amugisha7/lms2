@@ -47,6 +47,8 @@ import {
 } from "./onboardingQueries";
 import { CREATE_NOTIFICATION_MUTATION } from "../Notifications/notificationQueries";
 import { ensureDefaultEmployeeForUser } from "../../Models/Employees/employeeHelpers";
+import { updateInstitution } from "../../Models/Settings/helpers/updateInstitution";
+import { stringifyCustomInstitutionDetails } from "../../utils/customInstitutionDetails";
 
 const client = loggedClient;
 
@@ -202,6 +204,9 @@ const AccountSettingsForm = () => {
         collectionsModuleEnabled: false,
         customWorkflowsEnabled: false,
         advancedReportingEnabled: false,
+        customInstitutionDetails: stringifyCustomInstitutionDetails({
+          currentBranchID: null,
+        }),
       };
 
       const institutionRes = await client.graphql({
@@ -224,6 +229,13 @@ const AccountSettingsForm = () => {
       });
 
       const branchId = branchRes.data.createBranch.id;
+
+      await updateInstitution({
+        id: institutionId,
+        customInstitutionDetails: stringifyCustomInstitutionDetails({
+          currentBranchID: branchId,
+        }),
+      });
 
       // 4. Create default Account for the Branch
       const accountInput = {
@@ -269,6 +281,7 @@ const AccountSettingsForm = () => {
       const defaultEmployeeResult = await ensureDefaultEmployeeForUser({
         userId: authenticatedUserId,
         branchId,
+        institutionId,
         email: authenticatedUserEmail,
       });
 

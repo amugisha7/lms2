@@ -53,12 +53,13 @@ const EMPLOYEE_FIELDS = `
   taxExemptStatus
   customFieldsData
   customEmployeeDetails
+  institutionID
+  branchID
   relatedUserID
   relatedBorrowerID
   supervisorID
   createdAt
   updatedAt
-  branchEmployeesId
   branch {
     id
     name
@@ -93,7 +94,8 @@ const CREATE_ONBOARDING_EMPLOYEE_MUTATION = `
   mutation MyMutation($input: CreateEmployeeInput!) {
     createEmployee(input: $input) {
       id
-      branchEmployeesId
+      institutionID
+      branchID
       email
       relatedUserID
     }
@@ -157,14 +159,21 @@ const sanitizeEmployeeInput = (input = {}) => {
     "taxIdentificationNumber",
     "taxExemptStatus",
     "customFieldsData",
+    "institutionID",
+    "branchID",
     "relatedUserID",
     "relatedBorrowerID",
     "supervisorID",
-    "branchEmployeesId",
   ];
 
+  const normalizedInput = {
+    ...input,
+    institutionID: input.institutionID ?? input.institutionEmployeesId,
+    branchID: input.branchID ?? input.branchEmployeesId,
+  };
+
   return allowedFields.reduce((acc, field) => {
-    const value = input[field];
+    const value = normalizedInput[field];
 
     if (value === undefined) {
       return acc;
@@ -188,6 +197,22 @@ const sortEmployees = (employees = []) => {
     return leftTime - rightTime;
   });
 };
+
+const normalizeEmployee = (employee) => {
+  if (!employee) {
+    return employee;
+  }
+
+  return {
+    ...employee,
+    branchID: employee.branchID ?? employee.branchEmployeesId ?? null,
+    branchEmployeesId: employee.branchID ?? employee.branchEmployeesId ?? null,
+    institutionID:
+      employee.institutionID ?? employee.branch?.institutionID ?? null,
+  };
+};
+
+const normalizeEmployees = (employees = []) => employees.map(normalizeEmployee);
 
 const wait = (milliseconds) =>
   new Promise((resolve) => setTimeout(resolve, milliseconds));
@@ -238,7 +263,7 @@ export const fetchEmployeeById = async (employeeId) => {
     variables: { id: employeeId },
   });
 
-  return response?.data?.getEmployee || null;
+  return normalizeEmployee(response?.data?.getEmployee || null);
 };
 
 export const listEmployeesByBranch = async (branchId) => {
@@ -248,14 +273,14 @@ export const listEmployeesByBranch = async (branchId) => {
     LIST_EMPLOYEES_WITH_BRANCH_QUERY,
     {
       filter: {
-        branchEmployeesId: { eq: branchId },
+        branchID: { eq: branchId },
       },
       limit: 100,
     },
     (response) => response?.data?.listEmployees,
   );
 
-  return sortEmployees(employees);
+  return sortEmployees(normalizeEmployees(employees));
 };
 
 export const listEmployeesForUserContext = async (userDetails) => {
@@ -290,7 +315,9 @@ export const listEmployeesForUserContext = async (userDetails) => {
   );
 
   return sortEmployees(
-    employees.filter((employee) => branchIds.has(employee.branchEmployeesId)),
+    normalizeEmployees(employees).filter((employee) =>
+      branchIds.has(employee.branchID),
+    ),
   );
 };
 
@@ -306,11 +333,12 @@ export const fetchEmployeeByRelatedUserId = async (relatedUserID, branchId) => {
   });
 
   const items = response?.data?.employeesByRelatedUserID?.items || [];
+  const normalizedItems = normalizeEmployees(items);
   const filtered = branchId
-    ? items.filter((employee) => employee.branchEmployeesId === branchId)
-    : items;
+    ? normalizedItems.filter((employee) => employee.branchID === branchId)
+    : normalizedItems;
 
-  return sortEmployees(filtered)[0] || sortEmployees(items)[0] || null;
+  return sortEmployees(filtered)[0] || sortEmployees(normalizedItems)[0] || null;
 };
 
 export const getDefaultEmployeeForUserContext = async (userDetails) => {
@@ -363,6 +391,7 @@ export const createEmployeeRecord = async (input) => {
 export const ensureDefaultEmployeeForUser = async ({
   userId,
   branchId,
+  institutionId,
   email,
 }) => {
   if (!userId) {
@@ -382,18 +411,28 @@ export const ensureDefaultEmployeeForUser = async ({
     };
   }
 
+  const createEmployeeInput = {
+    branchID: branchId,
+    email,
+    relatedUserID: userId,
+  };
+
+  if (institutionId) {
+    createEmployeeInput.institutionID = institutionId;
+  }
+
+  console.log("Employee helper API call: createEmployee", {
+    input: createEmployeeInput,
+  });
+
   const response = await client.graphql({
     query: CREATE_ONBOARDING_EMPLOYEE_MUTATION,
     variables: {
-      input: {
-        branchEmployeesId: branchId,
-        email,
-        relatedUserID: userId,
-      },
+      input: createEmployeeInput,
     },
   });
 
-  const createdEmployee = response?.data?.createEmployee || null;
+  const createdEmployee = normalizeEmployee(response?.data?.createEmployee || null);
 
   if (!createdEmployee?.id) {
     throw new Error("Default employee creation did not return an employee id.");
@@ -433,7 +472,7 @@ export const updateEmployeeRecord = async (input) => {
     },
   });
 
-  return response?.data?.updateEmployee || null;
+  return normalizeEmployee(response?.data?.updateEmployee || null);
 };
 
 export const deleteEmployeeRecord = async (id) => {

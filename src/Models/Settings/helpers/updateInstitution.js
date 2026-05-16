@@ -86,6 +86,10 @@ export const updateInstitution = async (institutionData) => {
   if (institutionData.customDocumentHeader !== undefined) {
     updateInput.customDocumentHeader = institutionData.customDocumentHeader;
   }
+  if (institutionData.customInstitutionDetails !== undefined) {
+    updateInput.customInstitutionDetails =
+      institutionData.customInstitutionDetails;
+  }
 
   console.log("Update institution input:", updateInput);
 

@@ -6,7 +6,7 @@ import React, {
   useContext,
   useRef,
 } from "react";
-import { Formik, Form } from "formik";
+import { Formik, Form, useFormikContext } from "formik";
 import * as Yup from "yup";
 import { Box, Grid, Typography, Alert } from "@mui/material";
 import { styled } from "@mui/material/styles";
@@ -292,10 +292,50 @@ const buildValidationSchema = () => {
 
 const baseValidationSchema = buildValidationSchema();
 
+const normalizeSelectedBranchIds = (branchValue) => {
+  if (Array.isArray(branchValue)) {
+    return branchValue.filter(Boolean);
+  }
+
+  return branchValue ? [branchValue] : [];
+};
+
+const isLoanFeeValidForBranches = (loanFee, selectedBranchIds) => {
+  if (!selectedBranchIds.length) {
+    return false;
+  }
+
+  const branchItems = loanFee?.branches?.items || [];
+  if (branchItems.length === 0) {
+    return true;
+  }
+
+  return selectedBranchIds.every((selectedBranchId) =>
+    branchItems.some(
+      (item) =>
+        item?.branch?.id === selectedBranchId ||
+        item?.branchId === selectedBranchId,
+    ),
+  );
+};
+
+const getLoanFeeHelperText = (selectedBranchIds) => {
+  if (!selectedBranchIds.length) {
+    return "Select at least one branch to enable Loan Fees.";
+  }
+
+  if (selectedBranchIds.length === 1) {
+    return "Only loan fees available to the selected branch are shown.";
+  }
+
+  return "Only loan fees available to all selected branches are shown.";
+};
+
 const renderFormField = (field, formikValues) => {
   // Check if field should be disabled based on dependencies
   const isDisabled =
-    field.dependsOn && formikValues[field.dependsOn] !== field.dependsOnValue;
+    Boolean(field.disabled) ||
+    (field.dependsOn && formikValues[field.dependsOn] !== field.dependsOnValue);
 
   // Handle dynamic labels
   let displayLabel = field.label;
@@ -341,10 +381,12 @@ const renderFormField = (field, formikValues) => {
         <>
           <MultipleDropDown {...fieldProps} disabled={isDisabled} />
           {field.name === "loanFees" &&
+            field.showManageFeesAlert &&
             field.options?.length === 0 &&
             field.editing && (
               <Alert severity="info" sx={{ mt: 1 }}>
-                No loan fees found.{" "}
+                No active loan fees are available for the selected
+                {field.selectedBranchCount > 1 ? " branches" : " branch"}.{" "}
                 <Link
                   to="/admin/loan-fees"
                   style={{ fontWeight: "bold", fontSize: "0.8rem" }}
@@ -379,6 +421,29 @@ const renderFormField = (field, formikValues) => {
   }
 };
 
+const LoanFeesSelectionSync = ({ availableLoanFeeIds }) => {
+  const { values, setFieldValue } = useFormikContext();
+
+  useEffect(() => {
+    const currentLoanFees = Array.isArray(values.loanFees)
+      ? values.loanFees
+      : [];
+    if (!currentLoanFees.length) {
+      return;
+    }
+
+    const nextLoanFees = currentLoanFees.filter((feeId) =>
+      availableLoanFeeIds.includes(feeId),
+    );
+
+    if (nextLoanFees.length !== currentLoanFees.length) {
+      setFieldValue("loanFees", nextLoanFees, false);
+    }
+  }, [availableLoanFeeIds, setFieldValue, values.loanFees]);
+
+  return null;
+};
+
 const LIST_BRANCHES_QUERY = `
   query ListBranches($institutionId: ID!, $nextToken: String) {
     listBranches(
@@ -409,6 +474,15 @@ const LIST_LOAN_FEES_QUERY = `
         id
         name
         status
+        branches {
+          items {
+            branchId
+            branch {
+              id
+              name
+            }
+          }
+        }
       }
       nextToken
     }
@@ -594,20 +668,9 @@ const CreateLoanProduct = forwardRef(
             })),
           };
         }
-        if (field.name === "loanFees") {
-          return {
-            ...field,
-            options: loanFees
-              .filter((fee) => (fee?.status || "").toLowerCase() === "active")
-              .map((fee) => ({
-                value: fee.id,
-                label: fee.name,
-              })),
-          };
-        }
         return field;
       });
-    }, [branches, loanFees]);
+    }, [branches]);
 
     const handleSubmit = async (values, { setSubmitting, resetForm }) => {
       setSubmitError("");
@@ -739,83 +802,124 @@ const CreateLoanProduct = forwardRef(
           onSubmit={handleSubmit}
           enableReinitialize={true}
         >
-          {(formik) => (
-            <Form>
-              <Box
-                sx={{
-                  display: "flex",
-                  flexDirection: "column",
-                  width: "100%",
-                  flex: 1,
-                }}
-              >
-                {isEditMode && editMode ? (
-                  <CustomEditFormButtons
-                    formik={formik}
-                    setEditMode={setEditMode}
-                    setSubmitError={setSubmitError}
-                    setSubmitSuccess={setSubmitSuccess}
-                    onCancel={onCancel}
-                  />
-                ) : null}
-                <Grid container spacing={1}>
-                  {updatedCreateLoanProductForm.map((field, index) => {
-                    let helperText = field.helperText;
-                    if (field.dynamicHelperText) {
-                      const currentValue = formik.values[field.name];
-                      if (
-                        currentValue &&
-                        field.dynamicHelperText[currentValue]
-                      ) {
-                        helperText = field.dynamicHelperText[currentValue];
-                      }
-                    }
+          {(formik) =>
+            (() => {
+              const selectedBranchIds = normalizeSelectedBranchIds(
+                formik.values.branch,
+              );
+              const availableLoanFees = loanFees
+                .filter((fee) => (fee?.status || "").toLowerCase() === "active")
+                .filter((fee) =>
+                  isLoanFeeValidForBranches(fee, selectedBranchIds),
+                );
+              const availableLoanFeeIds = availableLoanFees.map(
+                (fee) => fee.id,
+              );
+              const formFields = updatedCreateLoanProductForm.map((field) => {
+                if (field.name !== "loanFees") {
+                  return field;
+                }
 
-                    return (
-                      <FormGrid
-                        size={{ xs: 12, md: field.span }}
-                        key={`${field.name}-${index}`}
-                      >
-                        {renderFormField(
-                          { ...field, formik, editing: editMode, helperText },
-                          formik.values,
-                        )}
-                      </FormGrid>
-                    );
-                  })}
+                return {
+                  ...field,
+                  disabled: selectedBranchIds.length === 0,
+                  helperText: getLoanFeeHelperText(selectedBranchIds),
+                  selectedBranchCount: selectedBranchIds.length,
+                  showManageFeesAlert: selectedBranchIds.length > 0,
+                  options: availableLoanFees.map((fee) => ({
+                    value: fee.id,
+                    label: fee.name,
+                  })),
+                };
+              });
+
+              return (
+                <Form>
+                  <LoanFeesSelectionSync
+                    availableLoanFeeIds={availableLoanFeeIds}
+                  />
                   <Box
                     sx={{
                       display: "flex",
-                      pr: 2,
-                      justifyContent: { xs: "center", md: "flex-end" },
+                      flexDirection: "column",
                       width: "100%",
+                      flex: 1,
                     }}
                   >
-                    {!isEditMode ? (
-                      <CreateFormButtons
+                    {isEditMode && editMode ? (
+                      <CustomEditFormButtons
                         formik={formik}
                         setEditMode={setEditMode}
                         setSubmitError={setSubmitError}
                         setSubmitSuccess={setSubmitSuccess}
-                        onClose={onClose}
-                        hideCancel={hideCancel}
+                        onCancel={onCancel}
                       />
                     ) : null}
+                    <Grid container spacing={1}>
+                      {formFields.map((field, index) => {
+                        let helperText = field.helperText;
+                        if (field.dynamicHelperText) {
+                          const currentValue = formik.values[field.name];
+                          if (
+                            currentValue &&
+                            field.dynamicHelperText[currentValue]
+                          ) {
+                            helperText = field.dynamicHelperText[currentValue];
+                          }
+                        }
+
+                        return (
+                          <FormGrid
+                            size={{ xs: 12, md: field.span }}
+                            key={`${field.name}-${index}`}
+                          >
+                            {renderFormField(
+                              {
+                                ...field,
+                                formik,
+                                editing: editMode,
+                                helperText,
+                              },
+                              formik.values,
+                            )}
+                          </FormGrid>
+                        );
+                      })}
+                      <Box
+                        sx={{
+                          display: "flex",
+                          pr: 2,
+                          justifyContent: { xs: "center", md: "flex-end" },
+                          width: "100%",
+                        }}
+                      >
+                        {!isEditMode ? (
+                          <CreateFormButtons
+                            formik={formik}
+                            setEditMode={setEditMode}
+                            setSubmitError={setSubmitError}
+                            setSubmitSuccess={setSubmitSuccess}
+                            onClose={onClose}
+                            hideCancel={hideCancel}
+                          />
+                        ) : null}
+                      </Box>
+                      {submitError && (
+                        <Typography color="error" sx={{ mt: 2 }}>
+                          {submitError}
+                        </Typography>
+                      )}
+                      {submitSuccess && (
+                        <Typography color="primary" sx={{ mt: 2 }}>
+                          {submitSuccess}
+                        </Typography>
+                      )}
+                    </Grid>
                   </Box>
-                  {submitError && (
-                    <Typography color="error" sx={{ mt: 2 }}>
-                      {submitError}
-                    </Typography>
-                  )}
-                  {submitSuccess && (
-                    <Typography color="primary" sx={{ mt: 2 }}>
-                      {submitSuccess}
-                    </Typography>
-                  )}
-                </Grid>
-              </Box>
-            </Form>
-          )}
+                </Form>
+              );
+            })()
+          }
         </Formik>
       </>
     );

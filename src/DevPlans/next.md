@@ -1,5 +1,6 @@
 - Create loans form. Also create from loan product.
   - Resume:
+    - Fix the closing balance on loan schedules and statements.
     - Deploy reports.
       - Work on Profitability Report with Income Statement and Balance Sheet.
       - Work on the Transactions sheet to replace Shammy's excel.

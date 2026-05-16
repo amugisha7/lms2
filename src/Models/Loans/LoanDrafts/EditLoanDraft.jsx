@@ -376,39 +376,35 @@ export default function EditLoanDraft({
       }
 
       if (userDetails?.institutionID) {
-        fetchInstitutionAdmins(userDetails.institutionID).then(
-          (admins) => {
-            const draftValues = parseDraftRecord(nextDraft);
-            const borrowerName =
-              formatBorrowerName(scheduleBorrower) ||
-              draftValues.borrower ||
-              "Unknown";
+        fetchInstitutionAdmins(userDetails.institutionID).then((admins) => {
+          const draftValues = parseDraftRecord(nextDraft);
+          const borrowerName =
+            formatBorrowerName(scheduleBorrower) ||
+            draftValues.borrower ||
+            "Unknown";
 
-            const loanData = {
-              borrowerName,
-              loanAmount: draftValues.principalAmount || 0,
-              loanProduct: draftValues.loanProduct || "Standard Loan",
-              applicationDate: new Date().toISOString(),
-              loanOfficer:
-                `${userDetails.firstName || ""} ${userDetails.lastName || ""}`.trim(),
-              loanId: nextDraft.id,
-              borrowerId: nextDraft.borrowerID,
-            };
+          const loanData = {
+            borrowerName,
+            loanAmount: draftValues.principalAmount || 0,
+            loanProduct: draftValues.loanProduct || "Standard Loan",
+            applicationDate: new Date().toISOString(),
+            loanOfficer:
+              `${userDetails.firstName || ""} ${userDetails.lastName || ""}`.trim(),
+            loanId: nextDraft.id,
+            borrowerId: nextDraft.borrowerID,
+          };
 
-            admins.forEach((admin) => {
-              sendLoanApprovalRequest(
-                loanData,
-                admin.id,
-                userDetails.institutionID,
-              ).catch((err) =>
-                console.error(
-                  `Failed to notify admin ${admin.firstName}:`,
-                  err,
-                ),
-              );
-            });
-          },
-        );
+          admins.forEach((admin) => {
+            sendLoanApprovalRequest(
+              loanData,
+              admin.id,
+              userDetails.institutionID,
+              updated.branchID || userDetails.branchID || null,
+            ).catch((err) =>
+              console.error(`Failed to notify admin ${admin.firstName}:`, err),
+            );
+          });
+        });
       }
     } catch (err) {
       console.error(err);

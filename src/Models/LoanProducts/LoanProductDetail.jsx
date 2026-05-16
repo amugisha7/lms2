@@ -26,7 +26,7 @@ const GET_LOAN_PRODUCT_QUERY = `
       durationPeriod
       extendLoanAfterMaturity
       id
-      institutionLoanProductsId
+      institutionID
       interestCalculationMethod
       interestPeriod
       interestRateDefault

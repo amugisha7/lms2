@@ -1,5 +1,6 @@
 import React, { useRef } from "react";
 import { Button } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 import { UserContext } from "../../App";
 import ClickableText from "../../ModelAssets/ClickableText";
 import CreateBranches from "./CreateBranches/CreateBranch";
@@ -13,9 +14,6 @@ import {
   parseCustomInstitutionDetails,
   stringifyCustomInstitutionDetails,
 } from "../../utils/customInstitutionDetails";
-
-// Guard to ensure we only fetch branches once per page load (even under React StrictMode)
-let __branchesFetchedOnce = false;
 
 const LIST_BRANCHES_QUERY = `
   query ListBranches($institutionId: ID!, $nextToken: String) {
@@ -124,6 +122,8 @@ const DELETE_BRANCH_LOAN_PRODUCT_MUTATION = `
 export default function Branches() {
   const [editMode, setEditMode] = React.useState(false);
   const formRef = useRef();
+  const theme = useTheme();
+  const fetchedInstitutionIdRef = useRef(null);
   const { userDetails, setUserDetails } = React.useContext(UserContext);
   const navigate = useNavigate();
   const [processedBranches, setProcessedBranches] = React.useState([]);
@@ -451,8 +451,11 @@ export default function Branches() {
   );
 
   React.useEffect(() => {
-    if (userDetails?.institutionID && !__branchesFetchedOnce) {
-      __branchesFetchedOnce = true;
+    if (
+      userDetails?.institutionID &&
+      fetchedInstitutionIdRef.current !== userDetails.institutionID
+    ) {
+      fetchedInstitutionIdRef.current = userDetails.institutionID;
       fetchBranches({ institutionId: userDetails.institutionID });
     }
   }, [userDetails?.institutionID, fetchBranches]);
@@ -522,15 +525,56 @@ export default function Branches() {
       renderCell: (params) => {
         const isActiveBranch =
           params.row.id === (userDetails?.branchID || userDetails?.branch?.id);
+        const sf = theme.palette.sf || {};
+
+        const buttonSx = isActiveBranch
+          ? {
+              bgcolor: sf.sf_brandPrimary,
+              color: sf.sf_textOnBrand || "#fff",
+              borderColor: sf.sf_brandPrimary,
+              boxShadow: "none",
+              "&:hover": {
+                bgcolor: sf.sf_brandHover,
+                borderColor: sf.sf_brandHover,
+                boxShadow: "none",
+              },
+              "&.Mui-disabled": {
+                bgcolor: sf.sf_brandPrimary,
+                color: sf.sf_textOnBrand || "#fff",
+                borderColor: sf.sf_brandPrimary,
+              },
+            }
+          : {
+              bgcolor: sf.sf_cardBg,
+              color: sf.sf_brandPrimary,
+              borderColor: sf.sf_brandPrimary,
+              boxShadow: "none",
+              "&:hover": {
+                bgcolor: sf.sf_actionHoverBg,
+                borderColor: sf.sf_brandHover,
+                // color: sf.sf_brandHover,
+                boxShadow: "none",
+              },
+            };
 
         return (
           <Button
             size="small"
             variant={isActiveBranch ? "contained" : "outlined"}
             disabled={!isAdminUser || isActiveBranch}
+            sx={{
+              minWidth: 105,
+              px: 1,
+              py: 0.5,
+              // borderRadius: "999px",
+              textTransform: "none",
+              fontWeight: 600,
+              fontSize: "0.75rem",
+              ...buttonSx,
+            }}
             onClick={() => handleLoadBranch(params.row)}
           >
-            {isActiveBranch ? "Loaded" : "Load Branch"}
+            {isActiveBranch ? "LOADED" : "LOAD BRANCH"}
           </Button>
         );
       },

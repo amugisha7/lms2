@@ -251,7 +251,7 @@ const CreateBorrower = forwardRef(
       return {
         firstname: dbData.firstname || "",
         othername: dbData.othername || "",
-        branchBorrowersId: dbData.branchID || dbData.branchBorrowersId || "",
+        branchID: dbData.branchID || dbData.branchBorrowersId || "",
         employeeId: dbData.employeeId || "",
         businessName: dbData.businessName || "",
         typeOfBusiness: dbData.typeOfBusiness || "",
@@ -296,15 +296,14 @@ const CreateBorrower = forwardRef(
       ? {
           ...baseInitialValues,
           ...mapDbFieldsToFormFields(propInitialValues),
-          branchBorrowersId:
+          branchID:
             selectedBranchId ||
-            mapDbFieldsToFormFields(propInitialValues).branchBorrowersId ||
+            mapDbFieldsToFormFields(propInitialValues).branchID ||
             "",
         }
       : {
           ...initialValues,
-          branchBorrowersId:
-            selectedBranchId || initialValues.branchBorrowersId || "",
+          branchID: selectedBranchId || initialValues.branchID || "",
           // Pre-fill email in customer portal mode
           ...(isCustomerPortal && prefilledEmail
             ? { email: prefilledEmail }
@@ -501,7 +500,7 @@ const CreateBorrower = forwardRef(
 
                     // Branch Logic
                     if (
-                      field.name === "branchBorrowersId" &&
+                      field.name === "branchID" &&
                       (hideBranchField || userDetails?.userType !== "Admin")
                     ) {
                       return null;
@@ -520,7 +519,7 @@ const CreateBorrower = forwardRef(
                     // Disable email field if pre-filled in customer portal
                     const fieldProps = { ...field };
 
-                    if (field.name === "branchBorrowersId") {
+                    if (field.name === "branchID") {
                       fieldProps.options = branches;
                     }
 

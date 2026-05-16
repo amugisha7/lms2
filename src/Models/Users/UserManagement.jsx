@@ -359,8 +359,7 @@ export default function UserManagement() {
       userDetails?.branchID &&
       (fetchedCustomFieldsRef.current.institutionID !==
         userDetails.institutionID ||
-        fetchedCustomFieldsRef.current.branchID !==
-          userDetails.branchID)
+        fetchedCustomFieldsRef.current.branchID !== userDetails.branchID)
     ) {
       fetchCustomFields();
       fetchedCustomFieldsRef.current = {
@@ -489,7 +488,7 @@ export default function UserManagement() {
         passportNumber: user.passportNumber,
         nationality: user.nationality,
         relatedUserID: user.id,
-        branchEmployeesId: user.branchID,
+        branchID: user.branchID,
         status: "active",
       });
       setLinkedEmployee(newEmployee);

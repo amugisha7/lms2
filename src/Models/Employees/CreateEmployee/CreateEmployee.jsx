@@ -181,7 +181,8 @@ const CreateEmployee = forwardRef(
     const formInitialValues = {
       ...baseInitialValues,
       ...propInitialValues,
-      branchEmployeesId:
+      branchID:
+        propInitialValues?.branchID ||
         propInitialValues?.branchEmployeesId ||
         userDetails?.branchID ||
         userDetails?.branch?.id ||
@@ -204,7 +205,7 @@ const CreateEmployee = forwardRef(
         return true;
       })
       .map((field) => {
-        if (field.name === "branchEmployeesId") {
+        if (field.name === "branchID") {
           return {
             ...field,
             options: branches,
@@ -229,9 +230,9 @@ const CreateEmployee = forwardRef(
 
       const payload = {
         ...values,
-        branchEmployeesId:
+        branchID:
           normalizedUserType === "admin"
-            ? values.branchEmployeesId
+            ? values.branchID
             : userDetails?.branchID || userDetails?.branch?.id || null,
       };
 
@@ -296,7 +297,7 @@ const CreateEmployee = forwardRef(
                         ...field,
                         editing: editMode,
                         disabled:
-                          field.name === "branchEmployeesId" &&
+                          field.name === "branchID" &&
                           normalizedUserType !== "admin",
                       })}
                     </FormGrid>

@@ -54,7 +54,6 @@ export default function CreateBorrowerPage() {
     "additionalNote2",
     "borrowerDocuments",
     "branchID",
-    "branchBorrowersId",
   ];
 
   const getBorrowerDisplayName = (borrower) => {
@@ -95,15 +94,9 @@ export default function CreateBorrowerPage() {
         input.status = "active";
       }
 
-      if (input.branchBorrowersId && !input.branchID) {
-        input.branchID = input.branchBorrowersId;
-      }
-
       if (!input.branchID) {
         input.branchID = activeBranchId;
       }
-
-      delete input.branchBorrowersId;
 
       console.log("API Call: Creating borrower");
 

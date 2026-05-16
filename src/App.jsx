@@ -209,8 +209,11 @@ const hydrateActiveBranch = async (userData, graphClient = resilientClient) => {
     : null;
 
   const fallbackBranchId = userData.branch?.id || userData.branchID || null;
+  const isAdminUser = String(userData.userType || "").toLowerCase() === "admin";
   const desiredBranchId =
-    institution?.customInstitutionDetails?.currentBranchID || fallbackBranchId;
+    (isAdminUser
+      ? institution?.customInstitutionDetails?.currentBranchID
+      : null) || fallbackBranchId;
 
   let activeBranch = userData.branch || null;
   let activeBranchId = fallbackBranchId;
@@ -412,7 +415,10 @@ function App({ signOut, user }) {
       const sentResponse = await resilientClient.graphql({
         query: LIST_NOTIFICATIONS_QUERY,
         variables: {
-          filter: { senderUserId: { eq: userId } },
+          filter: {
+            senderUserId: { eq: userId },
+            institutionID: { eq: userDetails?.institutionID },
+          },
           limit: 100,
         },
       });
@@ -424,7 +430,10 @@ function App({ signOut, user }) {
       const receivedResponse = await resilientClient.graphql({
         query: LIST_NOTIFICATIONS_QUERY,
         variables: {
-          filter: { recipientUserId: { eq: userId } },
+          filter: {
+            recipientUserId: { eq: userId },
+            institutionID: { eq: userDetails?.institutionID },
+          },
           limit: 100,
         },
       });
@@ -500,7 +509,12 @@ function App({ signOut, user }) {
     const notificationSubscription = client
       .graphql({
         query: SUBSCRIBE_TO_NEW_NOTIFICATIONS,
-        variables: { filter: { recipientUserId: { eq: userDetails.id } } },
+        variables: {
+          filter: {
+            recipientUserId: { eq: userDetails.id },
+            institutionID: { eq: userDetails.institutionID },
+          },
+        },
       })
       .subscribe({
         next: ({ data }) => {

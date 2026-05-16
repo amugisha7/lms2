@@ -345,8 +345,11 @@ const renderFormField = (field, formikValues) => {
             field.editing && (
               <Alert severity="info" sx={{ mt: 1 }}>
                 No loan fees found.{" "}
-                <Link to="/admin/add-loan-fee" style={{ fontWeight: "bold" }}>
-                  Click here to create loan fees
+                <Link
+                  to="/admin/loan-fees"
+                  style={{ fontWeight: "bold", fontSize: "0.8rem" }}
+                >
+                  Manage Loan Fees
                 </Link>
               </Alert>
             )}
@@ -396,7 +399,7 @@ const LIST_LOAN_FEES_QUERY = `
   query ListLoanFeesConfigs($institutionId: ID!, $nextToken: String) {
     listLoanFeesConfigs(
       filter: {
-        institutionLoanFeesConfigsId: { eq: $institutionId }
+        institutionID: { eq: $institutionId }
         status: { eq: "active" }
       }
       limit: 100

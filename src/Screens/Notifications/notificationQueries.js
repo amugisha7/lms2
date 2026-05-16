@@ -14,6 +14,8 @@ export const LIST_NOTIFICATIONS_QUERY = `
         createdAt
         senderUserId
         recipientUserId
+        institutionID
+        branchID
         sender {
           id
           firstName
@@ -45,6 +47,8 @@ export const GET_NOTIFICATION_QUERY = `
       createdAt
       senderUserId
       recipientUserId
+      institutionID
+      branchID
       sender {
         id
         firstName
@@ -76,6 +80,8 @@ export const CREATE_NOTIFICATION_MUTATION = `
       createdAt
       senderUserId
       recipientUserId
+      institutionID
+      branchID
     }
   }
 `;
@@ -86,6 +92,8 @@ export const UPDATE_NOTIFICATION_MUTATION = `
       id
       status
       approvalStatus
+      institutionID
+      branchID
     }
   }
 `;
@@ -157,6 +165,8 @@ export const SUBSCRIBE_TO_NEW_NOTIFICATIONS = `
       createdAt
       senderUserId
       recipientUserId
+      institutionID
+      branchID
       sender {
         id
         firstName

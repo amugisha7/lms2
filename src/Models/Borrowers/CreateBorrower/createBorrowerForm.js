@@ -8,7 +8,7 @@ const createBorrowerForm = [
   },
   {
     label: "Branch:",
-    name: "branchBorrowersId",
+    name: "branchID",
     type: "select",
     required: false, // validated in component based on role
     span: 12,

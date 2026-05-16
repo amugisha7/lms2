@@ -88,12 +88,13 @@ export default function LoanFees() {
         query: `
             query ListLoanFeesConfigs($institutionId: ID!) {
               listLoanFeesConfigs(
-                filter: { institutionLoanFeesConfigsId: { eq: $institutionId } }
+                filter: { institutionID: { eq: $institutionId } }
                 limit: 100
               ) {
                 items {
                   id
                   name
+                  institutionID
                   calculationMethod
                   category
                   status

@@ -18,7 +18,8 @@
   - Ensure that disabling a customer locks them out of the portal.
 
 - Finish the loan module then return to the begining via the Loan Progress gdoc
+- Implement security using branchId so that copying a URL of a loan or User doesn't allow someone logged into a different branch to view the details.
+  - You can do this by returning the branch id in api calls and comparing it with the local branch id. This means the admin has to have a branch loaded to use the URL route.
 - Upon login, redirect to tutorials with option of go to platform.
 - Identify which functionality is core for admin to view all branches.
-- Move branch gating to the top level of the app.
 - redo the side menu similar to Khoros with slide out arrow pointer in the center.

@@ -38,11 +38,12 @@ const MessageComposer = ({ recipient, onClose, onMessageSent }) => {
           input: {
             subject: subject.trim() || null,
             body: body.trim(),
-            messageType: "user_message",
+            notificationType: "user_message",
             status: "unread",
             senderUserId: userDetails.id,
             recipientUserId: recipient.id,
-            institutionMessagesId: userDetails.institutionID,
+            institutionID: userDetails.institutionID,
+            branchID: userDetails.branchID || userDetails.branch?.id || null,
           },
         },
       });

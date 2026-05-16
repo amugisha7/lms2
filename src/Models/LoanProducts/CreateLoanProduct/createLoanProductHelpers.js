@@ -7,6 +7,7 @@ export const createLoanProduct = async (input) => {
       mutation CreateLoanProduct($input: CreateLoanProductInput!) {
         createLoanProduct(input: $input) {
           id
+          institutionID
           name
           calculateInterestOn
           durationPeriod
@@ -85,7 +86,7 @@ export const buildLoanProductInput = (values, userDetails) => {
   };
 
   return {
-    institutionLoanProductsId: userDetails.institutionID,
+    institutionID: userDetails.institutionID,
     name: values.name,
     status: values.status || "Active",
     description: "",

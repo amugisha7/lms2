@@ -6,7 +6,7 @@ const employeeForm = [
   },
   {
     label: "Branch",
-    name: "branchEmployeesId",
+    name: "branchID",
     type: "select",
     required: false,
     span: 12,

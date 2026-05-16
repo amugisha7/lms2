@@ -136,7 +136,7 @@ export const updateBorrowerById = async (values, initialValues) => {
     employerName: values.employerName?.trim() || null,
     creditScore: values.creditScore?.trim() || null,
     status: values.status || null,
-    branchID: values.branchID || values.branchBorrowersId || null,
+    branchID: values.branchID || null,
   };
 
   const customFieldsData = {};

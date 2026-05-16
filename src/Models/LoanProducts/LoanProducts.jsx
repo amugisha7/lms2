@@ -27,8 +27,8 @@ export default function LoanProducts() {
       setLoading(true);
       try {
         const client = generateClient();
-        if (!userDetails?.branchID) {
-          console.log("No branchID, returning early");
+        if (!userDetails?.institutionID) {
+          console.log("No institutionID, returning early");
           setLoanProducts([]);
           setLoading(false);
           return;
@@ -42,7 +42,7 @@ export default function LoanProducts() {
             query: `
               query ListLoanProducts($institutionId: ID!, $nextToken: String) {
                 listLoanProducts(
-                  filter: { institutionLoanProductsId: { eq: $institutionId } }
+                  filter: { institutionID: { eq: $institutionId } }
                   limit: 100
                   nextToken: $nextToken
                 ) {
@@ -53,7 +53,7 @@ export default function LoanProducts() {
                     durationPeriod
                     extendLoanAfterMaturity
                     id
-                    institutionLoanProductsId
+                    institutionID
                     interestCalculationMethod
                     interestPeriod
                     interestRateDefault
@@ -122,19 +122,19 @@ export default function LoanProducts() {
       }
     };
     if (
-      userDetails?.branchID &&
-      userDetails.branchID !== lastBranchIdRef.current
+      userDetails?.institutionID &&
+      userDetails.institutionID !== lastBranchIdRef.current
     ) {
       console.log("Condition met - calling fetchLoanProducts");
-      lastBranchIdRef.current = userDetails.branchID;
+      lastBranchIdRef.current = userDetails.institutionID;
       fetchLoanProducts();
-    } else if (!userDetails?.branchID) {
-      console.log("No branchID - setting loading to false");
+    } else if (!userDetails?.institutionID) {
+      console.log("No institutionID - setting loading to false");
       setLoading(false);
     } else {
-      console.log("branchID same as last time, skipping fetch");
+      console.log("institutionID same as last time, skipping fetch");
     }
-  }, [userDetails?.branchID]);
+  }, [userDetails?.institutionID]);
 
   const handleViewLoanProduct = (row) => {
     navigate(`/admin/loan-products/id/${row.id}/view`);

@@ -24,7 +24,7 @@ const LIST_ACCOUNTS_MINIMAL_QUERY = `
 const LIST_BORROWERS_QUERY = `
   query ListBorrowers($branchId: ID!, $nextToken: String) {
     listBorrowers(
-      filter: { branchBorrowersId: { eq: $branchId } }
+      filter: { branchID: { eq: $branchId } }
       limit: 100
       nextToken: $nextToken
     ) {
@@ -34,7 +34,7 @@ const LIST_BORROWERS_QUERY = `
         othername
         businessName
         uniqueIdNumber
-        branchBorrowersId
+        branchID
       }
       nextToken
     }
@@ -152,7 +152,7 @@ export const fetchLoanProducts = async (institutionId, branchId, isAdmin = false
         query: `
           query ListLoanProducts($institutionId: ID!, $nextToken: String) {
             listLoanProducts(
-              filter: { institutionLoanProductsId: { eq: $institutionId } }
+              filter: { institutionID: { eq: $institutionId } }
               limit: 100
               nextToken: $nextToken
             ) {
@@ -326,7 +326,7 @@ export const fetchLoanFeesConfig = async (institutionId, branchId = null) => {
         query: `
           query ListLoanFeesConfigs($institutionId: ID!, $nextToken: String) {
             listLoanFeesConfigs(
-              filter: { institutionLoanFeesConfigsId: { eq: $institutionId } }
+              filter: { institutionID: { eq: $institutionId } }
               limit: 100
               nextToken: $nextToken
             ) {
@@ -450,7 +450,10 @@ export const createLoanWithSchedule = async (values, userDetails) => {
   const interestMethod = mapInterestMethod(values?.interestMethod);
   const borrowerId = values?.borrower;
   const borrowerBranchId =
-    values?.borrowerBranchID || values?.borrowerObj?.branchBorrowersId || null;
+    values?.borrowerBranchID ||
+    values?.borrowerObj?.branchID ||
+    values?.borrowerObj?.branchBorrowersId ||
+    null;
   const actorEmployeeId = await resolveEmployeeIdForUser({
     userDetails,
     branchId: borrowerBranchId || userDetails?.branchID || null,
@@ -578,6 +581,7 @@ export const buildLoanInput = (values, userDetails) => ({
   borrowerID: values.borrower || null,
   branchID:
     values.borrowerBranchID ||
+    values.borrowerObj?.branchID ||
     values.borrowerObj?.branchBorrowersId ||
     userDetails?.branchID ||
     null,

@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Typography, IconButton } from "@mui/material";
+import { Box, Typography, IconButton, Paper } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useNavigate } from "react-router-dom";
 import CreateLoanProduct from "./CreateLoanProduct";
@@ -21,20 +21,7 @@ export default function CreateLoanProductPage() {
   };
 
   return (
-    <Box
-      sx={{
-        mx: { xs: 0, sm: "auto" },
-        mt: { xs: 0, sm: 0 },
-        p: { xs: 2, sm: 2 },
-        borderRadius: 1,
-        display: "flex",
-        flexDirection: "column",
-        maxWidth: { xs: "100%", md: 1000 },
-        width: "100%",
-        flex: 1,
-        mb: 6,
-      }}
-    >
+    <Box sx={{ maxWidth: 1200, mx: "auto", p: { xs: 0, sm: 3 } }}>
       <Box
         sx={{
           display: "flex",
@@ -50,12 +37,13 @@ export default function CreateLoanProductPage() {
           Create Loan Product
         </Typography>
       </Box>
-
-      <CreateLoanProduct
-        onClose={handleClose}
-        onCreateSuccess={handleCreateSuccess}
-        hideCancel={false}
-      />
+      <Paper elevation={2} sx={{ p: 3, backgroundColor: "background.paper" }}>
+        <CreateLoanProduct
+          onClose={handleClose}
+          onCreateSuccess={handleCreateSuccess}
+          hideCancel={false}
+        />
+      </Paper>
     </Box>
   );
 }

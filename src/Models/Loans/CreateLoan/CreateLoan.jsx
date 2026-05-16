@@ -333,6 +333,7 @@ const CreateLoan = forwardRef(
     useEffect(() => {
       const currentInstitutionId = userDetails?.institutionID;
       const effectiveBranchId =
+        propBorrower?.branchID ||
         propBorrower?.branchBorrowersId ||
         loanDraft?.branchID ||
         userDetails?.branchID ||
@@ -357,6 +358,7 @@ const CreateLoan = forwardRef(
         });
     }, [
       loanDraft?.branchID,
+      propBorrower?.branchID,
       propBorrower?.branchBorrowersId,
       userDetails?.branchID,
       userDetails?.institutionID,
@@ -367,6 +369,7 @@ const CreateLoan = forwardRef(
 
       const loadEmployees = async () => {
         const effectiveBranchId =
+          propBorrower?.branchID ||
           propBorrower?.branchBorrowersId ||
           loanDraft?.branchID ||
           userDetails?.branchID ||
@@ -397,7 +400,12 @@ const CreateLoan = forwardRef(
       return () => {
         cancelled = true;
       };
-    }, [loanDraft?.branchID, propBorrower?.branchBorrowersId, userDetails]);
+    }, [
+      loanDraft?.branchID,
+      propBorrower?.branchID,
+      propBorrower?.branchBorrowersId,
+      userDetails,
+    ]);
 
     const formInitialValues = React.useMemo(() => {
       const base = propInitialValues
@@ -452,6 +460,7 @@ const CreateLoan = forwardRef(
       }
 
       draftValues.borrowerBranchID =
+        borrowerToPass?.branchID ||
         borrowerToPass?.branchBorrowersId ||
         draftValues.borrowerBranchID ||
         loanDraft?.branchID ||
@@ -539,51 +548,50 @@ const CreateLoan = forwardRef(
 
         // Notify Admins
         if (userDetails?.institutionID) {
-          fetchInstitutionAdmins(userDetails.institutionID).then(
-            (admins) => {
-              // Parse draft values if needed
-              let draftValues = {};
-              try {
-                draftValues =
-                  typeof updated.draftRecord === "string"
-                    ? JSON.parse(updated.draftRecord)
-                    : updated.draftRecord || {};
-              } catch (e) {
-                console.error("Error parsing draft record for notification", e);
-              }
+          fetchInstitutionAdmins(userDetails.institutionID).then((admins) => {
+            // Parse draft values if needed
+            let draftValues = {};
+            try {
+              draftValues =
+                typeof updated.draftRecord === "string"
+                  ? JSON.parse(updated.draftRecord)
+                  : updated.draftRecord || {};
+            } catch (e) {
+              console.error("Error parsing draft record for notification", e);
+            }
 
-              const bName = propBorrower
-                ? `${propBorrower.firstname || ""} ${
-                    propBorrower.othername || ""
-                  } ${propBorrower.businessName || ""}`.trim()
-                : draftValues.borrower || "Unknown";
+            const bName = propBorrower
+              ? `${propBorrower.firstname || ""} ${
+                  propBorrower.othername || ""
+                } ${propBorrower.businessName || ""}`.trim()
+              : draftValues.borrower || "Unknown";
 
-              const loanData = {
-                borrowerName: bName,
-                loanAmount: draftValues.principalAmount || 0,
-                loanProduct: draftValues.loanProduct || "Standard Loan",
-                applicationDate: new Date().toISOString(),
-                loanOfficer: `${userDetails.firstName || ""} ${
-                  userDetails.lastName || ""
-                }`.trim(),
-                loanId: updated.id,
-                borrowerId: updated.borrowerID,
-              };
+            const loanData = {
+              borrowerName: bName,
+              loanAmount: draftValues.principalAmount || 0,
+              loanProduct: draftValues.loanProduct || "Standard Loan",
+              applicationDate: new Date().toISOString(),
+              loanOfficer: `${userDetails.firstName || ""} ${
+                userDetails.lastName || ""
+              }`.trim(),
+              loanId: updated.id,
+              borrowerId: updated.borrowerID,
+            };
 
-              admins.forEach((admin) => {
-                sendLoanApprovalRequest(
-                  loanData,
-                  admin.id,
-                  userDetails.institutionID,
-                ).catch((err) =>
-                  console.error(
-                    `Failed to notify admin ${admin.firstName}:`,
-                    err,
-                  ),
-                );
-              });
-            },
-          );
+            admins.forEach((admin) => {
+              sendLoanApprovalRequest(
+                loanData,
+                admin.id,
+                userDetails.institutionID,
+                updated.branchID || userDetails.branchID || null,
+              ).catch((err) =>
+                console.error(
+                  `Failed to notify admin ${admin.firstName}:`,
+                  err,
+                ),
+              );
+            });
+          });
         }
 
         if (onDraftUpdated) onDraftUpdated(updated);

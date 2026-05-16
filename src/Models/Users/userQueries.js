@@ -28,6 +28,8 @@ export const LIST_USERS_QUERY = `
         userPermissions
         description
         customFieldsData
+        institutionID
+        branchID
         branch {
           id
           name
@@ -64,6 +66,8 @@ export const CREATE_USER_MUTATION = `
       userPermissions
       description
       customFieldsData
+      institutionID
+      branchID
       branch {
         id
         name
@@ -98,6 +102,8 @@ export const UPDATE_USER_MUTATION = `
       userPermissions
       description
       customFieldsData
+      institutionID
+      branchID
       branch {
         id
         name

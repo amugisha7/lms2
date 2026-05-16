@@ -551,8 +551,8 @@ export const fetchCustomFieldsForEmployee = async (institutionId, branchId) => {
             { formKey: { eq: "CreateEmployeeForm" } },
             {
               or: [
-                { institutionCustomFormFieldsId: { eq: institutionId } },
-                { branchCustomFormFieldsId: { eq: branchId } },
+                { institutionID: { eq: institutionId } },
+                { branchID: { eq: branchId } },
               ],
             },
           ],

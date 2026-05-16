@@ -37,8 +37,8 @@ export const fetchCustomFieldsForUser = async (institutionId, branchId) => {
             { formKey: { eq: "CreateUserForm" } },
             {
               or: [
-                { institutionCustomFormFieldsId: { eq: institutionId } },
-                { branchCustomFormFieldsId: { eq: branchId } },
+                { institutionID: { eq: institutionId } },
+                { branchID: { eq: branchId } },
               ],
             },
           ],

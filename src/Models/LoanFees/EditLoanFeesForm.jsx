@@ -76,9 +76,7 @@ const EditLoanFeesForm = forwardRef(function EditLoanFeesForm(
       if (!userDetails?.institutionID) return;
 
       try {
-        const items = await fetchInstitutionBranches(
-          userDetails.institutionID,
-        );
+        const items = await fetchInstitutionBranches(userDetails.institutionID);
         if (!cancelled) {
           setBranches(items);
         }
@@ -172,7 +170,7 @@ const EditLoanFeesForm = forwardRef(function EditLoanFeesForm(
               ? values.percentageBase
               : null,
           status: values.status,
-          institutionLoanFeesConfigsId: userDetails.institutionID,
+          institutionID: userDetails.institutionID,
           rate: values.feeValue,
         };
 
@@ -187,7 +185,7 @@ const EditLoanFeesForm = forwardRef(function EditLoanFeesForm(
                 description
                 percentageBase
                 status
-                institutionLoanFeesConfigsId
+                institutionID
                 rate
               }
             }

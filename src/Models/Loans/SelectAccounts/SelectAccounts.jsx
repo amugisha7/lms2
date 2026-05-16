@@ -132,7 +132,7 @@ export function BranchLinkedAccountSelection({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [principalAccountId, setPrincipalAccountId] = useState("");
   const [feesAccountId, setFeesAccountId] = useState("");
-  const branchId = borrower?.branchBorrowersId || null;
+  const branchId = borrower?.branchID || borrower?.branchBorrowersId || null;
   const { accounts, accountsLoading } = useBranchLinkedAccounts(branchId);
 
   const accountOptions = useMemo(() => {
@@ -279,7 +279,7 @@ export default function SelectAccounts({
   const [notification, setNotification] = useState(null);
 
   const hasLoanFees = totalLoanFee > 0;
-  const branchId = borrower?.branchBorrowersId || null;
+  const branchId = borrower?.branchID || borrower?.branchBorrowersId || null;
   const { accounts, accountsLoading } = useBranchLinkedAccounts(branchId);
 
   // Build borrower display name
@@ -519,7 +519,7 @@ export default function SelectAccounts({
 
         {!accountsLoading &&
           accounts.length === 0 &&
-          borrower?.branchBorrowersId && (
+          (borrower?.branchID || borrower?.branchBorrowersId) && (
             <Box
               sx={{
                 p: 2,

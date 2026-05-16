@@ -7,6 +7,7 @@ export const updateLoanProduct = async (input) => {
       mutation UpdateLoanProduct($input: UpdateLoanProductInput!) {
         updateLoanProduct(input: $input) {
           id
+          institutionID
           name
           status
           principalAmountMin
@@ -118,7 +119,7 @@ export const buildLoanProductUpdateInput = (values, userDetails, id) => {
 
   return {
     id: id,
-    institutionLoanProductsId: userDetails.institutionID,
+    institutionID: userDetails.institutionID,
     name: values.name,
     status: values.status || "Active",
     principalAmountMin: values.minPrincipal ? Number(values.minPrincipal) : null,
@@ -177,7 +178,7 @@ export const LIST_LOAN_FEES_QUERY = `
   query ListLoanFeesConfigs($institutionId: ID!, $nextToken: String) {
     listLoanFeesConfigs(
       filter: {
-        institutionLoanFeesConfigsId: { eq: $institutionId }
+        institutionID: { eq: $institutionId }
         status: { eq: "active" }
       }
       limit: 100

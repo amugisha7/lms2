@@ -8,7 +8,7 @@ import Onboarding from "./Screens/Onboarding/Onboarding";
 import MainGrid from "./muiTemplates/dashboard/components/MainGrid";
 import CustomFieldsManager from "./Screens/AdminScreens/CustomFields/CustomFieldsManager";
 import Dashboard from "./Screens/Dashboard/Dashboard";
-import CreateLoanFeesForm from "./Models/LoanFees/CreateLoanFeesForm"; // Add this import
+import CreateLoanFeesPage from "./Models/LoanFees/CreateLoanFeesPage";
 import CreateLoanProductPage from "./Models/LoanProducts/CreateLoanProduct/CreateLoanProductPage"; // Updated import for standalone page
 import LoanProductDetail from "./Models/LoanProducts/LoanProductDetail"; // Add this import for loan product detail
 import AdminPage from "./Screens/AdminScreens/AdminPage";
@@ -208,7 +208,7 @@ export default function AppRoutes({
               {/* Loan Fees route */}
               <Route
                 path="admin/add-loan-fee"
-                element={<CreateLoanFeesForm />}
+                element={<CreateLoanFeesPage />}
               />
               <Route path="admin/loan-fees" element={<LoanFees />} />
 

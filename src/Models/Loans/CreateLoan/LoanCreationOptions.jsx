@@ -12,11 +12,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import CreateLoan from "./CreateLoan";
 import UseLoanProduct from "./UseLoanProduct";
 import { UserContext } from "../../../App";
-import {
-  fetchBorrowers,
-  fetchBorrowersByInstitution,
-  fetchLoanProducts,
-} from "./createLoanHelpers";
+import { fetchBorrowers, fetchLoanProducts } from "./createLoanHelpers";
 import DropDownSearchable from "../../../Resources/FormComponents/DropDownSearchable";
 import { getLoanDraftById } from "../LoanDrafts/loanDraftHelpers";
 
@@ -33,40 +29,32 @@ export default function LoanCreationOptions(props) {
   const [loanProductsLoading, setLoanProductsLoading] = useState(true);
   const [selectedBorrower, setSelectedBorrower] = useState(null);
   const [loadingDraft, setLoadingDraft] = useState(!!draftId);
-  const borrowersFetchedRef = useRef(false);
+  const borrowersFetchedRef = useRef(null);
   const loanProductsFetchedRef = useRef(null); // store last fetched branch id
 
   useEffect(() => {
     const loadBorrowers = async () => {
-      const isAdmin = userDetails?.userType?.toLowerCase() === "admin";
+      const branchId = userDetails?.branchID;
+      const fetchKey = `branch:${branchId || ""}`;
 
-      if (!isAdmin && !userDetails?.branchID) {
+      if (!branchId) {
         setBorrowersLoading(false);
         return;
       }
 
-      if (isAdmin && !userDetails?.institutionID) {
-        setBorrowersLoading(false);
-        return;
-      }
-
-      if (borrowersFetchedRef.current) {
+      if (borrowersFetchedRef.current === fetchKey) {
+        if (props.borrower) {
+          setSelectedBorrower(props.borrower);
+        }
         setBorrowersLoading(false);
         return;
       }
 
       try {
-        let borrowersList;
-        if (isAdmin) {
-          borrowersList = await fetchBorrowersByInstitution(
-            userDetails.institutionID,
-          );
-        } else {
-          borrowersList = await fetchBorrowers(userDetails.branchID);
-        }
+        const borrowersList = await fetchBorrowers(branchId);
 
         setBorrowers(borrowersList);
-        borrowersFetchedRef.current = true;
+        borrowersFetchedRef.current = fetchKey;
         // If a borrower was passed as prop, set it as selected
         if (props.borrower) {
           setSelectedBorrower(props.borrower);

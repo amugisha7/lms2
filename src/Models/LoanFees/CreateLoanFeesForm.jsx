@@ -59,9 +59,7 @@ export default function CreateLoanFeesForm({ onSuccess, onClose }) {
       if (!userDetails?.institutionID) return;
 
       try {
-        const items = await fetchInstitutionBranches(
-          userDetails.institutionID,
-        );
+        const items = await fetchInstitutionBranches(userDetails.institutionID);
         if (!cancelled) {
           setBranches(items);
         }
@@ -134,7 +132,7 @@ export default function CreateLoanFeesForm({ onSuccess, onClose }) {
               ? values.percentageBase
               : null,
           status: "active",
-          institutionLoanFeesConfigsId: userDetails.institutionID,
+          institutionID: userDetails.institutionID,
           rate: values.feeValue,
         };
 
@@ -149,7 +147,7 @@ export default function CreateLoanFeesForm({ onSuccess, onClose }) {
                 description
                 percentageBase
                 status
-                institutionLoanFeesConfigsId
+                  institutionID
                 rate
               }
             }

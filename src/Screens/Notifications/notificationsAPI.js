@@ -20,10 +20,11 @@ export const sendUserMessage = async (
   recipientUserId,
   body,
   subject = null,
-  institutionId
+  institutionId,
+  branchId = null,
 ) => {
   try {
-    console.log('API Call: sendUserMessage', { senderUserId, recipientUserId, body, subject, institutionId });
+    console.log('API Call: sendUserMessage', { senderUserId, recipientUserId, body, subject, institutionId, branchId });
     const response = await client.graphql({
       query: CREATE_NOTIFICATION_MUTATION,
       variables: {
@@ -34,12 +35,13 @@ export const sendUserMessage = async (
           status: "unread",
           senderUserId: senderUserId,
           recipientUserId: recipientUserId,
-          institutionMessagesId: institutionId,
+          institutionID: institutionId,
+          branchID: branchId,
         },
       },
     });
 
-    return response.data.createMessage;
+    return response.data.createNotification;
   } catch (error) {
     console.error("Error sending user message:", error);
     throw error;
@@ -50,7 +52,6 @@ export const sendUserMessage = async (
  * Send a system message
  * @param {string} messageType - Type of system message (e.g., "LOAN_APPROVAL_REQUEST")
  * @param {object} data - Data for the message template
- * @param {string} recipientUserId - ID of the recipient
  * @param {string} institutionId - Institution ID
  * @param {string} senderUserId - ID of the sender (defaults to "system")
  * @returns {Promise} - Created message
@@ -60,6 +61,7 @@ export const sendSystemMessage = async (
   data,
   recipientUserId,
   institutionId,
+  branchId = null,
   senderUserId = "system"
 ) => {
   try {
@@ -69,7 +71,7 @@ export const sendSystemMessage = async (
       throw new Error(`Invalid message type: ${messageType}`);
     }
 
-    console.log('API Call: sendSystemMessage', { messageType, recipientUserId, institutionId, senderUserId });
+    console.log('API Call: sendSystemMessage', { messageType, recipientUserId, institutionId, branchId, senderUserId });
     const response = await client.graphql({
       query: CREATE_NOTIFICATION_MUTATION,
       variables: {
@@ -80,12 +82,13 @@ export const sendSystemMessage = async (
           status: "unread",
           senderUserId: senderUserId,
           recipientUserId: recipientUserId,
-          institutionMessagesId: institutionId,
+          institutionID: institutionId,
+          branchID: branchId,
         },
       },
     });
 
-    return response.data.createMessage;
+    return response.data.createNotification;
   } catch (error) {
     console.error("Error sending system message:", error);
     throw error;
@@ -102,7 +105,8 @@ export const sendSystemMessage = async (
 export const sendLoanApprovalRequest = async (
   loanData,
   adminUserId,
-  institutionId
+  institutionId,
+  branchId = null
 ) => {
   const messageData = {
     borrowerName: loanData.borrowerName,
@@ -118,7 +122,8 @@ export const sendLoanApprovalRequest = async (
     "LOAN_APPROVAL_REQUEST",
     messageData,
     adminUserId,
-    institutionId
+    institutionId,
+    branchId
   );
 };
 
@@ -132,7 +137,8 @@ export const sendLoanApprovalRequest = async (
 export const sendPaymentReceivedNotification = async (
   paymentData,
   recipientUserId,
-  institutionId
+  institutionId,
+  branchId = null
 ) => {
   const messageData = {
     borrowerName: paymentData.borrowerName,
@@ -149,7 +155,8 @@ export const sendPaymentReceivedNotification = async (
     "PAYMENT_RECEIVED",
     messageData,
     recipientUserId,
-    institutionId
+    institutionId,
+    branchId
   );
 };
 
@@ -163,7 +170,8 @@ export const sendPaymentReceivedNotification = async (
 export const sendPaymentDueReminder = async (
   reminderData,
   borrowerUserId,
-  institutionId
+  institutionId,
+  branchId = null
 ) => {
   const messageData = {
     loanNumber: reminderData.loanNumber,
@@ -178,7 +186,8 @@ export const sendPaymentDueReminder = async (
     "PAYMENT_DUE_REMINDER",
     messageData,
     borrowerUserId,
-    institutionId
+    institutionId,
+    branchId
   );
 };
 
@@ -192,7 +201,8 @@ export const sendPaymentDueReminder = async (
 export const sendLoanDisbursedNotification = async (
   loanData,
   borrowerUserId,
-  institutionId
+  institutionId,
+  branchId = null
 ) => {
   const messageData = {
     borrowerName: loanData.borrowerName,
@@ -208,7 +218,8 @@ export const sendLoanDisbursedNotification = async (
     "LOAN_DISBURSED",
     messageData,
     borrowerUserId,
-    institutionId
+    institutionId,
+    branchId
   );
 };
 
@@ -222,7 +233,8 @@ export const sendLoanDisbursedNotification = async (
 export const sendUserJoinRequest = async (
   userData,
   adminUserId,
-  institutionId
+  institutionId,
+  branchId = null
 ) => {
   const messageData = {
     userName: userData.userName,
@@ -236,7 +248,8 @@ export const sendUserJoinRequest = async (
     "USER_JOIN_REQUEST",
     messageData,
     adminUserId,
-    institutionId
+    institutionId,
+    branchId
   );
 };
 
@@ -254,11 +267,12 @@ export const broadcastMessage = async (
   recipientUserIds,
   body,
   subject = null,
-  institutionId
+  institutionId,
+  branchId = null
 ) => {
   try {
     const promises = recipientUserIds.map((recipientId) =>
-      sendUserMessage(senderUserId, recipientId, body, subject, institutionId)
+      sendUserMessage(senderUserId, recipientId, body, subject, institutionId, branchId)
     );
 
     return await Promise.all(promises);

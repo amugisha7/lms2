@@ -156,7 +156,8 @@ const NotificationThread = ({ notification, onBack, onNotificationAction }) => {
             status: "unread",
             senderUserId: user.userId, // The admin is the sender
             recipientUserId: senderUserId, // The original user is the recipient
-            institutionMessagesId: user.institutionID,
+            institutionID: user.institutionID,
+            branchID: user.branchID || user.branch?.id || null,
           },
         },
       });

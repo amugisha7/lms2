@@ -162,7 +162,6 @@ export default function Borrowers() {
     "additionalNote2",
     "borrowerDocuments",
     "branchID",
-    "branchBorrowersId",
   ];
 
   // CRUD operations
@@ -188,15 +187,9 @@ export default function Borrowers() {
         ...filteredData,
       };
 
-      if (input.branchBorrowersId && !input.branchID) {
-        input.branchID = input.branchBorrowersId;
-      }
-
       if (!input.branchID) {
         input.branchID = activeBranchId;
       }
-
-      delete input.branchBorrowersId;
 
       console.log("API Call: Creating borrower"); // <-- Added
 
@@ -256,15 +249,9 @@ export default function Borrowers() {
       };
 
       // Ensure specific fields are included if stripped by filter but present in formData
-      if (borrowerFormData.branchBorrowersId && !input.branchID) {
-        input.branchID = borrowerFormData.branchBorrowersId;
-      }
-
       if (!input.branchID) {
         input.branchID = activeBranchId;
       }
-
-      delete input.branchBorrowersId;
 
       console.log("API Call: Updating borrower"); // <-- Added
       const result = await client.graphql({

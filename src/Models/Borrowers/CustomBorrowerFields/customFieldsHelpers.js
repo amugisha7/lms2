@@ -37,8 +37,8 @@ export const fetchCustomFieldsForBorrower = async (institutionId, branchId) => {
             { formKey: { eq: "CreateBorrowerForm" } },
             {
               or: [
-                { institutionCustomFormFieldsId: { eq: institutionId } },
-                { branchCustomFormFieldsId: { eq: branchId } },
+                { institutionID: { eq: institutionId } },
+                { branchID: { eq: branchId } },
               ],
             },
           ],

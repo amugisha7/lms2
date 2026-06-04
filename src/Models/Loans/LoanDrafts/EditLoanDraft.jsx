@@ -207,6 +207,7 @@ export default function EditLoanDraft({
 
     const institutionId = userDetails?.institutionID;
     const branchId =
+      borrower?.branchID ||
       borrower?.branchBorrowersId ||
       draftData?.branchID ||
       userDetails?.branchID ||
@@ -251,6 +252,7 @@ export default function EditLoanDraft({
       cancelled = true;
     };
   }, [
+    borrower?.branchID,
     borrower?.branchBorrowersId,
     draftData?.branchID,
     isPrivileged,
@@ -263,6 +265,7 @@ export default function EditLoanDraft({
   useEffect(() => {
     const institutionId = userDetails?.institutionID;
     const branchId =
+      borrower?.branchID ||
       borrower?.branchBorrowersId ||
       draftData?.branchID ||
       userDetails?.branchID ||
@@ -275,6 +278,7 @@ export default function EditLoanDraft({
       .then((data) => setLoanFeesConfigs(Array.isArray(data) ? data : []))
       .catch((err) => console.error("Error fetching loan fees configs:", err));
   }, [
+    borrower?.branchID,
     borrower?.branchBorrowersId,
     draftData?.branchID,
     userDetails?.branchID,

@@ -624,7 +624,7 @@ const GET_LOAN_QUERY = `
         othername
         businessName
         uniqueIdNumber
-        branchBorrowersId
+        branchID
         branch {
           accounts(limit: 1000) {
             items {
@@ -1286,9 +1286,18 @@ export const convertDraftToLoan = async ({ loanDraft, userDetails }) => {
   computationRecord.convertedAt = nowIso();
   computationRecord.convertedToActive = true;
 
+  // Guarantee a startDate so the loan is visible in the byBranch+startDate GSI.
+  const resolvedStartDate =
+    loanDraft.startDate ||
+    draftRecord?.loanStartDate ||
+    draftRecord?.disbursementDate ||
+    schedulePreview?.startDate ||
+    nowIso().slice(0, 10);
+
   const updateInput = {
     id: loanDraft.id,
     status: "Current",
+    startDate: resolvedStartDate,
     loanComputationRecord: safeJsonStringify(computationRecord),
   };
 

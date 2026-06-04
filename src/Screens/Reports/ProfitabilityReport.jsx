@@ -1,1280 +1,782 @@
 /**
- * Profitability Report — /reports/profitability
+ * Profit / Loss Report — /reports/profitability
  *
- * Tracks realized income (interest + fees + penalties collected) and a
- * net-profit proxy derived by subtracting explicit, user-visible modeled costs.
+ * A classic Profit / Loss statement built from real repo data:
+ *   - Revenue from Loans: payment allocations to interest, fees, penalties
+ *   - Other Income: OtherIncome.amount in period
+ *   - Operating Expenses: Expense.amount in period (grouped by category)
+ *   - Taxes: Expense entries flagged as tax via category/type keyword
  *
- * Layers:
- *   1. Realized income  — actual payment allocations from repo transaction data
- *   2. Net profit proxy — realized income minus client-side modeled cost assumptions
- *
- * Data sources:
- *   - LoanSummary (via useReportData): scope, identity, balances, status, arrears, groupings
- *   - Raw loan read (GET_REPORT_LOAN_SOURCE_QUERY): payment records with allocation fields
- *   - Payment validity: isValidPayment() from statementHelpers
- *
- * Modeled cost assumptions are kept client-side only and are persisted in the
- * FinancialReport JSON payload (not schema). They are labeled as modeled inputs
- * throughout the UI.
+ * Visual language follows LoansDisplay (sf palette, square corners, 3px brand
+ * border, PlusButtonMain EXPORT, refresh IconButton, flat filter container).
  */
 
-import React, { useState, useMemo, useContext, useEffect } from "react";
-import { generateClient } from "aws-amplify/api";
+import React from "react";
 import {
-  Box,
-  Typography,
-  Grid,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  TableSortLabel,
-  TextField,
-  InputAdornment,
-  LinearProgress,
-  Chip,
   Alert,
-  Button,
-  Select,
-  MenuItem,
+  Box,
   FormControl,
-  InputLabel,
-  Divider,
+  FormControlLabel,
+  FormLabel,
+  IconButton,
+  LinearProgress,
+  MenuItem,
+  Radio,
+  RadioGroup,
+  Select,
   Tooltip,
-  Stack,
+  Typography,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import SearchIcon from "@mui/icons-material/Search";
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import { BarChart } from "@mui/x-charts/BarChart";
-import { UserContext } from "../../App";
-import { getPresetRange } from "../../ModelAssets/DateFilters";
-import { GET_LOAN_STATEMENT_READY_QUERY } from "../../Models/Loans/loanDataQueries";
-import ReportShell from "./ReportShell";
-import { useReportData } from "./useReportData";
-import {
-  fmtMoney,
-  fmtReportDate,
-  toCsv,
-  downloadFile,
-  safeNum,
-} from "./reportUtils";
-import { LOAN_DISPLAY_STATUS } from "../../Models/Loans/loanSummaryProjection";
-import {
-  DEFAULT_ASSUMPTIONS,
-  computeLoanRealizedIncome,
-  computeLoanModeledCost,
-  profitabilityBand,
-  buildMonthlyTrend,
-  buildRollup,
-} from "./profitabilityHelpers";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import { generateClient } from "aws-amplify/api";
 
-// ---------------------------------------------------------------------------
-// Column definitions for CSV export
-// ---------------------------------------------------------------------------
-const DETAIL_COLS = [
-  { key: "borrowerDisplayName", label: "Borrower" },
-  { key: "loanNumber", label: "Loan #" },
-  { key: "branchName", label: "Branch" },
-  { key: "loanOfficerDisplayName", label: "Loan Officer" },
-  { key: "loanProductName", label: "Product" },
-  { key: "displayStatusLabel", label: "Status" },
-  { key: "startDateFmt", label: "Date Taken" },
-  { key: "maturityDateFmt", label: "Maturity Date" },
-  { key: "loanBalanceAmount", label: "Outstanding Balance" },
-  { key: "arrearsAmount", label: "Arrears Amount" },
-  { key: "interestCollected", label: "Interest Collected" },
-  { key: "feesCollected", label: "Fees Collected" },
-  { key: "penaltiesCollected", label: "Penalties Collected" },
-  { key: "realizedIncome", label: "Total Realized Income" },
-  { key: "modeledCost", label: "Modeled Cost" },
-  { key: "netProfit", label: "Net Profit Proxy" },
-  { key: "band", label: "Profitability Band" },
+import { UserContext } from "../../App";
+import PlusButtonMain from "../../ModelAssets/PlusButtonMain";
+import DateFilters, { getPresetRange } from "../../ModelAssets/DateFilters";
+import AdminBranchScopeSelector from "../../ModelAssets/AdminBranchScopeSelector";
+import { useNotification } from "../../ModelAssets/NotificationContext";
+import {
+  expensesByBranchID,
+  otherIncomesByBranchID,
+} from "../../graphql/queries";
+
+import { useReportData } from "./useReportData";
+import { fmtMoney, downloadFile, toCsv } from "./reportUtils";
+import {
+  BASIS_MODES,
+  COMPARE_MODES,
+  buildPeriods,
+  computeProfitLoss,
+  fetchAllExpensesByBranch,
+  fetchAllOtherIncomesByBranch,
+} from "./profitLossHelpers";
+
+const COMPARE_OPTIONS = [
+  { value: COMPARE_MODES.NONE, label: "No Comparison" },
+  { value: COMPARE_MODES.MONTHLY, label: "Compare Monthly" },
+  { value: COMPARE_MODES.QUARTERLY, label: "Compare Quarterly" },
+  { value: COMPARE_MODES.YEARLY, label: "Compare Yearly" },
 ];
 
-// ---------------------------------------------------------------------------
-// Status label map
-// ---------------------------------------------------------------------------
-const STATUS_LABELS = Object.values(LOAN_DISPLAY_STATUS).reduce((acc, meta) => {
-  acc[meta.code] = String(meta.label || meta.code).replace(/\s+/g, " ");
-  return acc;
-}, {});
+const PERIOD_COUNT_OPTIONS = [1, 2, 3, 4, 5, 6];
 
-// ---------------------------------------------------------------------------
-// Sub-components
-// ---------------------------------------------------------------------------
+const SECTION_HEADER_FONT_SIZE = "0.92rem";
+const ROW_FONT_SIZE = "0.82rem";
+const HEADER_FONT_SIZE = "0.74rem";
 
-function KpiBlock({ label, value, sub, color, tooltip }) {
-  const theme = useTheme();
-  const sf = theme.palette.sf;
-  return (
-    <Box
-      sx={{
-        p: 1.5,
-        border: `1px solid ${sf.sf_borderLight}`,
-        bgcolor: sf.sf_cardBg,
-        height: "100%",
-      }}
-    >
-      <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mb: 0.5 }}>
-        <Typography
-          variant="caption"
-          sx={{
-            color: sf.sf_textTertiary,
-            textTransform: "uppercase",
-            letterSpacing: "0.05em",
-            fontSize: "0.68rem",
-          }}
-        >
-          {label}
-        </Typography>
-        {tooltip && (
-          <Tooltip title={tooltip} arrow>
-            <InfoOutlinedIcon
-              sx={{ fontSize: 12, color: sf.sf_textTertiary }}
-            />
-          </Tooltip>
-        )}
-      </Box>
-      <Typography
-        variant="h6"
-        fontWeight={700}
-        sx={{ color: color || sf.sf_textPrimary, lineHeight: 1.2 }}
-      >
-        {value}
-      </Typography>
-      {sub && (
-        <Typography variant="caption" sx={{ color: sf.sf_textTertiary }}>
-          {sub}
-        </Typography>
-      )}
-    </Box>
-  );
-}
+const formatMoneyOrEmpty = (value) => {
+  if (value == null) return "";
+  const num = Number(value);
+  if (!Number.isFinite(num) || num === 0) return "";
+  return fmtMoney(num);
+};
 
-function AssumptionField({ label, value, onChange, helpText }) {
-  const theme = useTheme();
-  const sf = theme.palette.sf;
-  return (
-    <Box>
-      <Typography
-        variant="caption"
-        sx={{
-          color: sf.sf_textTertiary,
-          textTransform: "uppercase",
-          letterSpacing: "0.05em",
-          fontSize: "0.68rem",
-          display: "block",
-          mb: 0.5,
-        }}
-      >
-        {label}
-        {helpText && (
-          <Tooltip title={helpText} arrow>
-            <InfoOutlinedIcon
-              sx={{ fontSize: 12, ml: 0.5, verticalAlign: "middle" }}
-            />
-          </Tooltip>
-        )}
-      </Typography>
-      <TextField
-        size="small"
-        type="number"
-        value={value}
-        onChange={(e) => onChange(safeNum(e.target.value))}
-        inputProps={{ min: 0, step: "any" }}
-        sx={{ width: 160 }}
-      />
-    </Box>
-  );
-}
+const buildRowConfig = ({ expenseCategories }) => {
+  const expenseLineRows = expenseCategories.map((category) => ({
+    type: "line",
+    label: category,
+    indent: 2,
+    valueOf: (period) =>
+      period.operatingExpensesByCategory?.[category] ?? 0,
+  }));
 
-function RollupTable({ rows, labelField, labelHeader }) {
-  const theme = useTheme();
-  const sf = theme.palette.sf;
-  return (
-    <TableContainer
-      component={Paper}
-      variant="outlined"
-      sx={{ borderColor: sf.sf_borderLight }}
-    >
-      <Table size="small">
-        <TableHead>
-          <TableRow sx={{ bgcolor: sf.sf_sectionBg }}>
-            <TableCell
-              sx={{
-                fontWeight: 700,
-                textTransform: "uppercase",
-                fontSize: "0.7rem",
-              }}
-            >
-              {labelHeader}
-            </TableCell>
-            <TableCell
-              align="right"
-              sx={{
-                fontWeight: 700,
-                textTransform: "uppercase",
-                fontSize: "0.7rem",
-              }}
-            >
-              Loans
-            </TableCell>
-            <TableCell
-              align="right"
-              sx={{
-                fontWeight: 700,
-                textTransform: "uppercase",
-                fontSize: "0.7rem",
-              }}
-            >
-              Realized Income
-            </TableCell>
-            <TableCell
-              align="right"
-              sx={{
-                fontWeight: 700,
-                textTransform: "uppercase",
-                fontSize: "0.7rem",
-              }}
-            >
-              Modeled Cost
-            </TableCell>
-            <TableCell
-              align="right"
-              sx={{
-                fontWeight: 700,
-                textTransform: "uppercase",
-                fontSize: "0.7rem",
-              }}
-            >
-              Net Profit Proxy
-            </TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {rows.length === 0 ? (
-            <TableRow>
-              <TableCell
-                colSpan={5}
-                align="center"
-                sx={{ color: "text.secondary" }}
-              >
-                No data
-              </TableCell>
-            </TableRow>
-          ) : (
-            rows.map((r, i) => (
-              <TableRow key={i} hover>
-                <TableCell>{r[labelField] || "—"}</TableCell>
-                <TableCell align="right">{r.loanCount}</TableCell>
-                <TableCell align="right">
-                  {fmtMoney(r.realizedIncome)}
-                </TableCell>
-                <TableCell align="right">{fmtMoney(r.modeledCost)}</TableCell>
-                <TableCell
-                  align="right"
-                  sx={{
-                    color: r.netProfit < 0 ? "error.main" : "success.main",
-                    fontWeight: 600,
-                  }}
-                >
-                  {fmtMoney(r.netProfit)}
-                </TableCell>
-              </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
-    </TableContainer>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Main report
-// ---------------------------------------------------------------------------
+  return [
+    {
+      type: "sectionHeader",
+      label: "Revenue",
+      color: "success",
+    },
+    {
+      type: "subHeader",
+      label: "Revenue from Loans",
+      indent: 1,
+    },
+    {
+      type: "line",
+      label: "Interest on Loans",
+      indent: 2,
+      valueOf: (p) => p.interestOnLoans,
+    },
+    {
+      type: "line",
+      label: "Fees Collected",
+      indent: 2,
+      valueOf: (p) => p.feesCollected,
+    },
+    {
+      type: "line",
+      label: "Penalties Collected",
+      indent: 2,
+      valueOf: (p) => p.penaltiesCollected,
+    },
+    {
+      type: "line",
+      label: "Other Income",
+      indent: 1,
+      valueOf: (p) => p.otherIncome,
+    },
+    {
+      type: "total",
+      label: "Total Revenue",
+      indent: 1,
+      valueOf: (p) => p.totalRevenue,
+    },
+    {
+      type: "sectionHeader",
+      label: "Expenses",
+      color: "error",
+    },
+    ...(expenseLineRows.length > 0
+      ? [
+          {
+            type: "subHeader",
+            label: "Operating Expenses",
+            indent: 1,
+          },
+          ...expenseLineRows,
+        ]
+      : []),
+    {
+      type: "total",
+      label: "Total Expenses",
+      indent: 1,
+      valueOf: (p) => p.totalExpenses,
+    },
+    {
+      type: "summary",
+      label: "Net Operating Income",
+      valueOf: (p) => p.netOperatingIncome,
+      borderTop: true,
+      borderBottom: true,
+    },
+    {
+      type: "summary",
+      label: "Net Income Before Taxes and Subsidy",
+      valueOf: (p) => p.netIncomeBeforeTaxes,
+      borderBottom: true,
+    },
+    {
+      type: "sectionHeader",
+      label: "Taxes",
+      color: "neutral",
+    },
+    {
+      type: "line",
+      label: "Income Tax Expense",
+      indent: 1,
+      valueOf: (p) => p.taxExpense,
+    },
+    {
+      type: "summary",
+      label: "Net Income After Taxes and Subsidy",
+      valueOf: (p) => p.netIncomeAfterTaxes,
+      highlight: true,
+    },
+  ];
+};
 
 export default function ProfitabilityReport() {
-  const { userDetails } = useContext(UserContext);
+  const { userDetails } = React.useContext(UserContext);
+  const { showNotification } = useNotification();
   const theme = useTheme();
   const sf = theme.palette.sf;
-  const defaultDateRange = getPresetRange("last_month");
 
-  // ── Page state ──────────────────────────────────────────────────────────
-  const [selectedBranchId, setSelectedBranchId] = useState(null);
-  const [startDate, setStartDate] = useState(defaultDateRange?.from || "");
-  const [endDate, setEndDate] = useState(defaultDateRange?.to || "");
-  const [paymentsByLoanId, setPaymentsByLoanId] = useState({});
-  const [paymentsLoading, setPaymentsLoading] = useState(false);
+  const [selectedBranchId, setSelectedBranchId] = React.useState(null);
+  const defaultRange = React.useMemo(
+    () => getPresetRange("this_year") || { from: "", to: "" },
+    [],
+  );
+  const [startDate, setStartDate] = React.useState(defaultRange.from);
+  const [endDate, setEndDate] = React.useState(defaultRange.to);
+  const [basis, setBasis] = React.useState(BASIS_MODES.CASH);
+  const [compareMode, setCompareMode] = React.useState(COMPARE_MODES.MONTHLY);
+  const [comparePeriods, setComparePeriods] = React.useState(2);
+  const [expenses, setExpenses] = React.useState([]);
+  const [otherIncomes, setOtherIncomes] = React.useState([]);
+  const [extrasLoading, setExtrasLoading] = React.useState(false);
+  const [extrasError, setExtrasError] = React.useState(null);
 
-  // Cost assumptions (modeled, client-side only)
-  const [assumptions, setAssumptions] = useState({ ...DEFAULT_ASSUMPTIONS });
+  const {
+    summaries,
+    branches,
+    loading: summariesLoading,
+    error: summariesError,
+    refresh: refreshSummaries,
+    scope,
+  } = useReportData({ selectedBranchId });
 
-  // Filters & sorting
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("ALL");
-  const [productFilter, setProductFilter] = useState("ALL");
-  const [officerFilter, setOfficerFilter] = useState("ALL");
-  const [rollupTab, setRollupTab] = useState("product"); // product | officer | status | branch
-  const [exceptionTab, setExceptionTab] = useState("all"); // all | top | bottom | negative | written_off
-  const [sortField, setSortField] = useState("netProfit");
-  const [sortDir, setSortDir] = useState("desc");
+  const effectiveBranchId = scope.isAdmin
+    ? selectedBranchId || (branches.length === 1 ? branches[0]?.id : null)
+    : scope.branchId;
 
-  const { summaries, branches, loading, error, refresh, scope } = useReportData(
-    { selectedBranchId },
+  const loadExtras = React.useCallback(
+    async (branchId) => {
+      if (!branchId) {
+        setExpenses([]);
+        setOtherIncomes([]);
+        return;
+      }
+      setExtrasLoading(true);
+      setExtrasError(null);
+      try {
+        const client = generateClient();
+        const [loadedExpenses, loadedOtherIncomes] = await Promise.all([
+          fetchAllExpensesByBranch({
+            client,
+            branchId,
+            query: expensesByBranchID,
+          }),
+          fetchAllOtherIncomesByBranch({
+            client,
+            branchId,
+            query: otherIncomesByBranchID,
+          }),
+        ]);
+        setExpenses(loadedExpenses);
+        setOtherIncomes(loadedOtherIncomes);
+      } catch (err) {
+        console.error("[ProfitLoss] failed to load extras:", err);
+        setExpenses([]);
+        setOtherIncomes([]);
+        setExtrasError("Failed to load expense / other income data.");
+      } finally {
+        setExtrasLoading(false);
+      }
+    },
+    [],
   );
 
-  // ── Branch map ───────────────────────────────────────────────────────────
-  const branchMap = useMemo(() => {
-    const m = {};
-    branches.forEach((b) => {
-      if (b?.id) m[b.id] = b.name || b.id;
-    });
-    return m;
-  }, [branches]);
+  React.useEffect(() => {
+    loadExtras(effectiveBranchId);
+  }, [effectiveBranchId, loadExtras]);
 
-  // ── Dropdown option lists ────────────────────────────────────────────────
-  const statuses = useMemo(() => {
-    const set = new Set(summaries.map((s) => s.displayStatus).filter(Boolean));
-    return ["ALL", ...Array.from(set).sort()];
-  }, [summaries]);
+  const periods = React.useMemo(
+    () =>
+      buildPeriods({
+        startDate,
+        endDate,
+        compareMode,
+        comparePeriods,
+      }),
+    [startDate, endDate, compareMode, comparePeriods],
+  );
 
-  const products = useMemo(() => {
-    const set = new Set(
-      summaries.map((s) => s.loanProductName).filter(Boolean),
-    );
-    return ["ALL", ...Array.from(set).sort()];
-  }, [summaries]);
+  const profitLoss = React.useMemo(
+    () =>
+      computeProfitLoss({
+        loanSummaries: summaries,
+        expenses,
+        otherIncomes,
+        periods,
+      }),
+    [summaries, expenses, otherIncomes, periods],
+  );
 
-  const officers = useMemo(() => {
-    const set = new Set(
-      summaries.map((s) => s.loanOfficerDisplayName).filter(Boolean),
-    );
-    return ["ALL", ...Array.from(set).sort()];
-  }, [summaries]);
+  const rowConfig = React.useMemo(
+    () => buildRowConfig({ expenseCategories: profitLoss.expenseCategories }),
+    [profitLoss.expenseCategories],
+  );
 
-  useEffect(() => {
-    let isCancelled = false;
+  const requiresBranchSelection =
+    scope.isAdmin && branches.length !== 1 && !selectedBranchId;
+  const loading = summariesLoading || extrasLoading;
+  const validPeriods = periods.length > 0;
+  const errorMessage = summariesError || extrasError;
 
-    const relevantSummaries = summaries.filter(
-      (summary) => summary.displayStatus !== LOAN_DISPLAY_STATUS.VOIDED.code,
-    );
+  const handleRefresh = React.useCallback(() => {
+    refreshSummaries();
+    loadExtras(effectiveBranchId);
+  }, [effectiveBranchId, loadExtras, refreshSummaries]);
 
-    if (!relevantSummaries.length) {
-      setPaymentsByLoanId({});
-      setPaymentsLoading(false);
-      return () => {
-        isCancelled = true;
-      };
+  const handleExportCsv = React.useCallback(() => {
+    if (!validPeriods) {
+      showNotification("Select a valid date range first.", "red");
+      return;
     }
+    const columns = [
+      { key: "label", label: "Line" },
+      ...periods.map((period, idx) => ({
+        key: `value_${idx}`,
+        label: period.label,
+      })),
+    ];
 
-    const loadPayments = async () => {
-      setPaymentsLoading(true);
-      const client = generateClient();
-
-      const entries = await Promise.all(
-        relevantSummaries.map(async (summary) => {
-          const loanId = summary.loanID || summary.id;
-          const fallbackPayments = Array.isArray(summary.reportSourcePayments)
-            ? summary.reportSourcePayments.filter(Boolean)
-            : [];
-
-          if (!loanId) {
-            return [summary.id || "unknown", fallbackPayments];
-          }
-
-          try {
-            const result = await client.graphql({
-              query: GET_LOAN_STATEMENT_READY_QUERY,
-              variables: { id: loanId },
-            });
-            const payments = Array.isArray(
-              result?.data?.getLoan?.payments?.items,
-            )
-              ? result.data.getLoan.payments.items.filter(Boolean)
-              : [];
-            return [loanId, payments];
-          } catch (loadError) {
-            console.error(
-              `[ProfitabilityReport] failed to refresh payments for loan ${loanId}:`,
-              loadError,
-            );
-            return [loanId, fallbackPayments];
-          }
-        }),
-      );
-
-      if (isCancelled) {
-        return;
-      }
-
-      setPaymentsByLoanId(Object.fromEntries(entries));
-      setPaymentsLoading(false);
-    };
-
-    loadPayments().catch((loadError) => {
-      if (isCancelled) {
-        return;
-      }
-      console.error("[ProfitabilityReport] payment refresh failed:", loadError);
-      setPaymentsLoading(false);
-    });
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [summaries]);
-
-  // ── Derived loan rows ──────────────────────────────────────────────────────
-  const loanRows = useMemo(() => {
-    return summaries
-      .filter(
-        (summary) => summary.displayStatus !== LOAN_DISPLAY_STATUS.VOIDED.code,
-      )
-      .map((summary) => {
-        const loanId = summary.loanID || summary.id;
-        const payments = Array.isArray(paymentsByLoanId[loanId])
-          ? paymentsByLoanId[loanId]
-          : Array.isArray(summary.reportSourcePayments)
-            ? summary.reportSourcePayments
-            : [];
-        const realized = computeLoanRealizedIncome(
-          payments,
-          startDate,
-          endDate,
-        );
-        const cost = computeLoanModeledCost(
-          summary,
-          assumptions,
-          startDate,
-          endDate,
-        );
-        const netProfit = realized.total - cost.total;
-
-        return {
-          id: summary.loanID || summary.id,
-          loanId: summary.loanID || summary.id,
-          loanNumber: summary.loanNumber || "—",
-          borrowerDisplayName: summary.borrowerDisplayName || "—",
-          branchID: summary.branchID,
-          branchName: branchMap[summary.branchID] || summary.branchID || "—",
-          loanOfficerDisplayName: summary.loanOfficerDisplayName || "—",
-          loanProductName: summary.loanProductName || "—",
-          displayStatus: summary.displayStatus || "—",
-          displayStatusLabel:
-            STATUS_LABELS[summary.displayStatus] ||
-            summary.displayStatus ||
-            "—",
-          startDate: summary.startDate,
-          startDateFmt: fmtReportDate(summary.startDate),
-          maturityDate: summary.maturityDateEffective,
-          maturityDateFmt: fmtReportDate(summary.maturityDateEffective),
-          loanBalanceAmount: safeNum(summary.loanBalanceAmount),
-          arrearsAmount: safeNum(summary.arrearsAmount),
-          interestCollected: realized.interest,
-          feesCollected: realized.fees,
-          penaltiesCollected: realized.penalties,
-          realizedIncome: realized.total,
-          modeledCost: cost.total,
-          modeledOrigination: cost.origination,
-          modeledServicing: cost.servicing,
-          modeledFunding: cost.funding,
-          modeledCredit: cost.credit,
-          netProfit,
-          band: profitabilityBand(netProfit, realized.total),
-          paymentRows: realized.paymentRows,
-        };
+    const rows = rowConfig
+      .filter((row) => row.type !== "sectionHeader" && row.type !== "subHeader")
+      .map((row) => {
+        const out = { label: row.label };
+        periods.forEach((period, idx) => {
+          const periodTotal = profitLoss.periodTotals[idx];
+          const value = periodTotal ? row.valueOf(periodTotal) : 0;
+          out[`value_${idx}`] = Number(value || 0).toFixed(2);
+        });
+        return out;
       });
-  }, [assumptions, branchMap, endDate, paymentsByLoanId, startDate, summaries]);
 
-  // ── KPIs ─────────────────────────────────────────────────────────────────
-  const kpis = useMemo(() => {
-    if (loading) return null;
-    const count = loanRows.length;
-    const outstandingBalance = loanRows.reduce(
-      (acc, r) => acc + r.loanBalanceAmount,
-      0,
-    );
-    const interestCollected = loanRows.reduce(
-      (acc, r) => acc + r.interestCollected,
-      0,
-    );
-    const feesCollected = loanRows.reduce((acc, r) => acc + r.feesCollected, 0);
-    const penaltiesCollected = loanRows.reduce(
-      (acc, r) => acc + r.penaltiesCollected,
-      0,
-    );
-    const realizedIncome = loanRows.reduce(
-      (acc, r) => acc + r.realizedIncome,
-      0,
-    );
-    const modeledCost = loanRows.reduce((acc, r) => acc + r.modeledCost, 0);
-    const netProfit = realizedIncome - modeledCost;
-    const avgNetProfit = count > 0 ? netProfit / count : 0;
-    return {
-      count,
-      outstandingBalance,
-      interestCollected,
-      feesCollected,
-      penaltiesCollected,
-      realizedIncome,
-      modeledCost,
-      netProfit,
-      avgNetProfit,
-    };
-  }, [loanRows, loading]);
-
-  // ── Monthly trend ─────────────────────────────────────────────────────────
-  const monthlyTrend = useMemo(
-    () => buildMonthlyTrend(loanRows, startDate, endDate),
-    [loanRows, startDate, endDate],
-  );
-
-  // ── Rollups ───────────────────────────────────────────────────────────────
-  const productRollup = useMemo(
-    () => buildRollup(loanRows, (r) => r.loanProductName, "product"),
-    [loanRows],
-  );
-  const officerRollup = useMemo(
-    () => buildRollup(loanRows, (r) => r.loanOfficerDisplayName, "officer"),
-    [loanRows],
-  );
-  const statusRollup = useMemo(
-    () => buildRollup(loanRows, (r) => r.displayStatusLabel, "status"),
-    [loanRows],
-  );
-  const branchRollup = useMemo(
-    () => buildRollup(loanRows, (r) => r.branchName, "branch"),
-    [loanRows],
-  );
-
-  // ── Filtered detail rows ──────────────────────────────────────────────────
-  const filteredRows = useMemo(() => {
-    let rows = loanRows;
-
-    if (exceptionTab === "top")
-      rows = [...rows].sort((a, b) => b.netProfit - a.netProfit).slice(0, 20);
-    else if (exceptionTab === "bottom")
-      rows = [...rows].sort((a, b) => a.netProfit - b.netProfit).slice(0, 20);
-    else if (exceptionTab === "negative")
-      rows = rows.filter((r) => r.netProfit < 0);
-    else if (exceptionTab === "written_off")
-      rows = rows.filter(
-        (r) =>
-          r.displayStatus === LOAN_DISPLAY_STATUS.WRITTEN_OFF.code &&
-          r.netProfit <= 0,
-      );
-
-    if (statusFilter !== "ALL")
-      rows = rows.filter((r) => r.displayStatus === statusFilter);
-    if (productFilter !== "ALL")
-      rows = rows.filter((r) => r.loanProductName === productFilter);
-    if (officerFilter !== "ALL")
-      rows = rows.filter((r) => r.loanOfficerDisplayName === officerFilter);
-
-    if (search) {
-      const q = search.toLowerCase();
-      rows = rows.filter(
-        (r) =>
-          (r.loanNumber || "").toLowerCase().includes(q) ||
-          (r.borrowerDisplayName || "").toLowerCase().includes(q),
-      );
-    }
-
-    return [...rows].sort((a, b) => {
-      const av = safeNum(a[sortField]);
-      const bv = safeNum(b[sortField]);
-      return sortDir === "asc" ? av - bv : bv - av;
-    });
+    const csv = toCsv(rows, columns);
+    const dateLabel = `${startDate}_to_${endDate}`;
+    downloadFile(csv, `profit_loss_${dateLabel}.csv`, "text/csv");
   }, [
-    loanRows,
-    exceptionTab,
-    statusFilter,
-    productFilter,
-    officerFilter,
-    search,
-    sortField,
-    sortDir,
+    endDate,
+    periods,
+    profitLoss.periodTotals,
+    rowConfig,
+    showNotification,
+    startDate,
+    validPeriods,
   ]);
 
-  // ── Sort handler ──────────────────────────────────────────────────────────
-  const handleSort = (field) => {
-    if (field === sortField) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-    else {
-      setSortField(field);
-      setSortDir("desc");
-    }
+  const panelBoxSx = {
+    border: `1px solid ${sf.sf_borderLight}`,
+    bgcolor: sf.sf_cardBg,
+    boxShadow: sf.sf_shadowSm,
+    p: 1.5,
   };
 
-  // ── CSV export ────────────────────────────────────────────────────────────
-  function handleExportCsv() {
-    const rows = filteredRows.map((r) => ({
-      ...r,
-      loanBalanceAmount: r.loanBalanceAmount.toFixed(2),
-      arrearsAmount: r.arrearsAmount.toFixed(2),
-      interestCollected: r.interestCollected.toFixed(2),
-      feesCollected: r.feesCollected.toFixed(2),
-      penaltiesCollected: r.penaltiesCollected.toFixed(2),
-      realizedIncome: r.realizedIncome.toFixed(2),
-      modeledCost: r.modeledCost.toFixed(2),
-      netProfit: r.netProfit.toFixed(2),
-    }));
-    const csv = toCsv(rows, DETAIL_COLS);
-    downloadFile(
-      csv,
-      `profitability_report_${startDate}_to_${endDate}.csv`,
-      "text/csv",
+  const filterRowSx = {
+    display: "flex",
+    alignItems: "center",
+    gap: 1.5,
+    flexWrap: "wrap",
+  };
+
+  const compactSelectSx = {
+    minWidth: 170,
+    height: 36,
+    borderRadius: 0,
+    bgcolor: sf.sf_searchBg,
+    "& fieldset": {
+      borderColor: sf.sf_searchBorder,
+      borderRadius: 0,
+    },
+    "&:hover fieldset": {
+      borderColor: sf.sf_searchFocusBorder,
+    },
+    "& .MuiSelect-select": {
+      fontSize: "0.82rem",
+      py: 0.6,
+    },
+  };
+
+  return (
+    <>
+      {/* Page Header — matches LoansDisplay */}
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "flex-end",
+          justifyContent: "space-between",
+          mb: "20px",
+          pb: "12px",
+          borderBottom: `3px solid ${sf.sf_brandPrimary}`,
+        }}
+      >
+        <Box>
+          <Typography
+            sx={{
+              fontSize: "1.35rem",
+              fontWeight: 700,
+              color: sf.sf_textPrimary,
+              letterSpacing: "-0.01em",
+            }}
+          >
+            Profit / Loss
+          </Typography>
+          <Typography
+            sx={{
+              fontSize: "0.75rem",
+              color: sf.sf_textTertiary,
+              mt: 0.15,
+            }}
+          >
+            {loading
+              ? "Loading..."
+              : `${summaries.length} ${
+                  summaries.length === 1 ? "loan" : "loans"
+                } · ${expenses.length} ${
+                  expenses.length === 1 ? "expense" : "expenses"
+                } · ${otherIncomes.length} other income`}
+          </Typography>
+        </Box>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <PlusButtonMain buttonText="EXPORT" onClick={handleExportCsv} />
+          <Tooltip title="Refresh data" placement="top">
+            <span>
+              <IconButton
+                onClick={handleRefresh}
+                disabled={loading}
+                sx={{
+                  color: sf.sf_brandPrimary,
+                  border: `1px solid ${sf.sf_borderLight}`,
+                  borderRadius: 0,
+                  p: 0.7,
+                  "&:hover": { bgcolor: sf.sf_actionHoverBg },
+                }}
+              >
+                <RefreshIcon sx={{ fontSize: 18 }} />
+              </IconButton>
+            </span>
+          </Tooltip>
+        </Box>
+      </Box>
+
+      {scope.isAdmin && (
+        <Box sx={{ mb: 2 }}>
+          <AdminBranchScopeSelector
+            branches={branches}
+            selectedBranchId={selectedBranchId}
+            onBranchChange={setSelectedBranchId}
+            helperText="Select a branch before viewing the Profit / Loss statement."
+            emptyMessage="Please select a branch above to view the Profit / Loss statement."
+          />
+        </Box>
+      )}
+
+      {!requiresBranchSelection && errorMessage && (
+        <Alert severity="error" sx={{ mb: 2, borderRadius: 0 }}>
+          {errorMessage}
+        </Alert>
+      )}
+
+      {!requiresBranchSelection && (
+        <>
+          {/* Filter Container */}
+          <Box
+            sx={{
+              ...panelBoxSx,
+              mb: 2,
+              display: "flex",
+              flexDirection: "column",
+              gap: 1.5,
+            }}
+          >
+            <Box sx={filterRowSx}>
+              <FormControl>
+                <FormLabel
+                  sx={{
+                    fontSize: HEADER_FONT_SIZE,
+                    fontWeight: 600,
+                    color: sf.sf_textTertiary,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.04em",
+                    mb: 0,
+                  }}
+                >
+                  Basis
+                </FormLabel>
+                <RadioGroup
+                  row
+                  value={basis}
+                  onChange={(e) => setBasis(e.target.value)}
+                >
+                  <FormControlLabel
+                    value={BASIS_MODES.CASH}
+                    control={<Radio size="small" />}
+                    label={
+                      <Typography sx={{ fontSize: "0.82rem" }}>
+                        Cash Basis
+                      </Typography>
+                    }
+                  />
+                  <FormControlLabel
+                    value={BASIS_MODES.ACCRUAL}
+                    control={<Radio size="small" />}
+                    label={
+                      <Typography sx={{ fontSize: "0.82rem" }}>
+                        Accrual Basis
+                      </Typography>
+                    }
+                  />
+                </RadioGroup>
+              </FormControl>
+            </Box>
+
+            <DateFilters
+              dateFrom={startDate}
+              dateTo={endDate}
+              onDateFromChange={setStartDate}
+              onDateToChange={setEndDate}
+              alwaysVisible
+              allowClear={false}
+            />
+
+            <Box sx={filterRowSx}>
+              <Box>
+                <Typography
+                  sx={{
+                    fontSize: HEADER_FONT_SIZE,
+                    fontWeight: 600,
+                    color: sf.sf_textTertiary,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.04em",
+                    mb: 0.3,
+                  }}
+                >
+                  Compare
+                </Typography>
+                <Select
+                  value={compareMode}
+                  onChange={(e) => setCompareMode(e.target.value)}
+                  size="small"
+                  sx={compactSelectSx}
+                >
+                  {COMPARE_OPTIONS.map((option) => (
+                    <MenuItem key={option.value} value={option.value}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </Box>
+
+              <Box>
+                <Typography
+                  sx={{
+                    fontSize: HEADER_FONT_SIZE,
+                    fontWeight: 600,
+                    color: sf.sf_textTertiary,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.04em",
+                    mb: 0.3,
+                  }}
+                >
+                  Periods
+                </Typography>
+                <Select
+                  value={comparePeriods}
+                  onChange={(e) => setComparePeriods(Number(e.target.value))}
+                  size="small"
+                  disabled={compareMode === COMPARE_MODES.NONE}
+                  sx={{ ...compactSelectSx, minWidth: 110 }}
+                >
+                  {PERIOD_COUNT_OPTIONS.map((value) => (
+                    <MenuItem key={value} value={value}>
+                      {value} {value === 1 ? "period" : "periods"}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </Box>
+            </Box>
+          </Box>
+
+          {basis === BASIS_MODES.ACCRUAL && (
+            <Alert
+              severity="info"
+              sx={{ mb: 2, borderRadius: 0, fontSize: "0.8rem" }}
+            >
+              Accrual basis displays the same figures as Cash basis until
+              per-period schedule accrual is implemented.
+            </Alert>
+          )}
+
+          {loading && <LinearProgress sx={{ mb: 1.5 }} />}
+
+          {/* P&L Statement Panel */}
+          <Box sx={{ ...panelBoxSx, p: 0 }}>
+            <Box
+              sx={{
+                px: 2,
+                py: 1,
+                bgcolor: sf.sf_tableHeaderBg,
+                borderBottom: `1px solid ${sf.sf_borderLight}`,
+              }}
+            >
+              <Typography
+                sx={{
+                  fontSize: "0.95rem",
+                  fontWeight: 700,
+                  color: sf.sf_textPrimary,
+                }}
+              >
+                Profit / Loss Statement
+              </Typography>
+            </Box>
+
+            {!validPeriods ? (
+              <Box sx={{ p: 3, textAlign: "center" }}>
+                <Typography
+                  sx={{ fontSize: "0.85rem", color: sf.sf_textTertiary }}
+                >
+                  Select a valid date range to compute the Profit / Loss
+                  statement.
+                </Typography>
+              </Box>
+            ) : (
+              <Box sx={{ overflowX: "auto" }}>
+                <Box
+                  component="table"
+                  sx={{
+                    width: "100%",
+                    borderCollapse: "collapse",
+                    "& td, & th": {
+                      borderBottom: `1px solid ${sf.sf_borderLight}`,
+                      px: 1.5,
+                      py: 0.75,
+                      verticalAlign: "middle",
+                    },
+                  }}
+                >
+                  <thead>
+                    <tr>
+                      <th
+                        style={{
+                          textAlign: "left",
+                          fontSize: HEADER_FONT_SIZE,
+                          fontWeight: 700,
+                          color: sf.sf_textTertiary,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.04em",
+                          background: sf.sf_tableHeaderBg,
+                          minWidth: 280,
+                        }}
+                      >
+                        Line
+                      </th>
+                      {periods.map((period) => (
+                        <th
+                          key={period.key}
+                          style={{
+                            textAlign: "right",
+                            fontSize: HEADER_FONT_SIZE,
+                            fontWeight: 700,
+                            color: sf.sf_textPrimary,
+                            background: sf.sf_tableHeaderBg,
+                            minWidth: 160,
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {period.label}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rowConfig.map((row, rowIdx) => (
+                      <ProfitLossRow
+                        key={`${row.type}-${row.label}-${rowIdx}`}
+                        row={row}
+                        periods={periods}
+                        periodTotals={profitLoss.periodTotals}
+                        sf={sf}
+                      />
+                    ))}
+                  </tbody>
+                </Box>
+              </Box>
+            )}
+          </Box>
+
+          <Typography
+            sx={{
+              fontSize: "0.7rem",
+              color: sf.sf_textTertiary,
+              mt: 1,
+              display: "block",
+            }}
+          >
+            Revenue from Loans is sourced from payment allocations
+            (interest, fees, penalties) on valid payments. Other Income and
+            Expenses come from OtherIncome and Expense records in the
+            selected period.
+          </Typography>
+        </>
+      )}
+    </>
+  );
+}
+
+function ProfitLossRow({ row, periods, periodTotals, sf }) {
+  if (row.type === "sectionHeader") {
+    const color =
+      row.color === "success"
+        ? sf.sf_success
+        : row.color === "error"
+          ? sf.sf_error
+          : sf.sf_textPrimary;
+    return (
+      <tr>
+        <td
+          colSpan={periods.length + 1}
+          style={{
+            background: sf.sf_tableHeaderBg,
+            fontSize: SECTION_HEADER_FONT_SIZE,
+            fontWeight: 700,
+            color,
+            textTransform: "uppercase",
+            letterSpacing: "0.04em",
+          }}
+        >
+          {row.label}
+        </td>
+      </tr>
     );
   }
 
-  // ── Rollup tab label config ───────────────────────────────────────────────
-  const rollupConfig = {
-    product: {
-      rows: productRollup,
-      labelField: "product",
-      labelHeader: "Product",
-    },
-    officer: {
-      rows: officerRollup,
-      labelField: "officer",
-      labelHeader: "Loan Officer",
-    },
-    status: { rows: statusRollup, labelField: "status", labelHeader: "Status" },
-    branch: { rows: branchRollup, labelField: "branch", labelHeader: "Branch" },
-  };
+  if (row.type === "subHeader") {
+    return (
+      <tr>
+        <td
+          colSpan={periods.length + 1}
+          style={{
+            fontSize: ROW_FONT_SIZE,
+            fontWeight: 700,
+            color: sf.sf_textPrimary,
+            paddingLeft: `${(row.indent || 0) * 16 + 12}px`,
+          }}
+        >
+          {row.label}
+        </td>
+      </tr>
+    );
+  }
 
-  const pillSx = (active) => ({
-    borderRadius: 0,
-    textTransform: "none",
-    fontSize: "0.75rem",
-    px: 1.5,
-    py: 0.4,
-    minWidth: 0,
-    border: `1px solid`,
-    borderColor: active ? sf.sf_brandPrimary : sf.sf_borderLight,
-    bgcolor: active ? sf.sf_brandPrimary : sf.sf_cardBg,
-    color: active ? "#fff" : sf.sf_textPrimary,
-    "&:hover": {
-      bgcolor: active ? sf.sf_brandPrimary : sf.sf_actionHoverBg,
-      borderColor: sf.sf_brandPrimary,
-    },
-  });
+  const isTotal = row.type === "total";
+  const isSummary = row.type === "summary";
+  const isHighlight = isSummary && row.highlight;
 
   return (
-    <ReportShell
-      title="Profitability Report"
-      description="Realized income and net-profit proxy by loan, branch, product, and officer. Includes optional modeled cost assumptions."
-      isAdmin={scope?.isAdmin}
-      branches={branches}
-      selectedBranchId={selectedBranchId}
-      onBranchChange={(v) => {
-        setSelectedBranchId(v);
+    <tr
+      style={{
+        background: isHighlight ? sf.sf_tableHeaderBg : "transparent",
+        borderTop: row.borderTop
+          ? `2px solid ${sf.sf_borderLight}`
+          : undefined,
+        borderBottom: row.borderBottom
+          ? `2px solid ${sf.sf_borderLight}`
+          : undefined,
       }}
-      startDate={startDate}
-      endDate={endDate}
-      onStartDateChange={setStartDate}
-      onEndDateChange={setEndDate}
-      defaultDatePreset="last_month"
-      onRefresh={() => {
-        refresh();
-      }}
-      loading={loading}
-      loadError={error}
-      onExportCsv={loanRows.length ? handleExportCsv : undefined}
     >
-      {paymentsLoading && <LinearProgress sx={{ mb: 2 }} />}
-
-      {/* ── Assumptions panel ────────────────────────────────────────────── */}
-      <Box
-        sx={{
-          mb: 3,
-          p: 2,
-          border: `1px solid ${sf.sf_borderLight}`,
-          bgcolor: sf.sf_sectionBg,
+      <td
+        style={{
+          fontSize: ROW_FONT_SIZE,
+          fontWeight: isTotal || isSummary ? 700 : 500,
+          color: sf.sf_textPrimary,
+          paddingLeft: `${(row.indent || 0) * 16 + 12}px`,
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
-          <Typography
-            variant="caption"
-            sx={{
-              textTransform: "uppercase",
-              letterSpacing: "0.05em",
-              fontSize: "0.72rem",
-              fontWeight: 700,
-              color: sf.sf_textSecondary,
+        {row.label}
+      </td>
+      {periods.map((period, idx) => {
+        const periodTotal = periodTotals[idx];
+        const value = periodTotal ? row.valueOf(periodTotal) : 0;
+        return (
+          <td
+            key={period.key}
+            style={{
+              textAlign: "right",
+              fontSize: ROW_FONT_SIZE,
+              fontWeight: isTotal || isSummary ? 700 : 500,
+              color:
+                isSummary && Number(value) < 0
+                  ? sf.sf_error
+                  : sf.sf_textPrimary,
+              whiteSpace: "nowrap",
             }}
           >
-            Modeled Cost Assumptions
-          </Typography>
-          <Chip
-            label="MODELED — not sourced from repo data"
-            size="small"
-            sx={{
-              fontSize: "0.65rem",
-              height: 18,
-              bgcolor: "warning.light",
-              color: "warning.dark",
-              fontWeight: 600,
-            }}
-          />
-          <Button
-            size="small"
-            onClick={() => setAssumptions({ ...DEFAULT_ASSUMPTIONS })}
-            sx={{
-              ml: "auto",
-              fontSize: "0.7rem",
-              textTransform: "none",
-              color: sf.sf_textTertiary,
-            }}
-          >
-            Reset to defaults
-          </Button>
-        </Box>
-        <Stack direction="row" spacing={3} flexWrap="wrap" useFlexGap>
-          <AssumptionField
-            label="Origination cost / loan"
-            value={assumptions.originationCostPerLoan}
-            onChange={(v) =>
-              setAssumptions((a) => ({ ...a, originationCostPerLoan: v }))
-            }
-            helpText="One-time cost applied to every loan in scope, regardless of date range."
-          />
-          <AssumptionField
-            label="Servicing cost / loan / month"
-            value={assumptions.servicingCostPerLoanPerMonth}
-            onChange={(v) =>
-              setAssumptions((a) => ({ ...a, servicingCostPerLoanPerMonth: v }))
-            }
-            helpText="Recurring monthly administrative cost applied across the full date range."
-          />
-          <AssumptionField
-            label="Funding cost rate (%)"
-            value={assumptions.fundingCostRatePct}
-            onChange={(v) =>
-              setAssumptions((a) => ({ ...a, fundingCostRatePct: v }))
-            }
-            helpText="Annual rate (%) applied to the outstanding balance for the proportion of the year covered by the date range."
-          />
-          <AssumptionField
-            label="Credit cost factor (%)"
-            value={assumptions.creditCostFactorPct}
-            onChange={(v) =>
-              setAssumptions((a) => ({ ...a, creditCostFactorPct: v }))
-            }
-            helpText="Percentage of the arrears amount treated as an impairment / credit cost provision."
-          />
-        </Stack>
-      </Box>
-
-      {/* ── KPI blocks ──────────────────────────────────────────────────── */}
-      {kpis && (
-        <Grid container spacing={1.5} sx={{ mb: 3 }}>
-          {[
-            { label: "Loans in Scope", value: kpis.count.toLocaleString() },
-            {
-              label: "Outstanding Principal",
-              value: fmtMoney(kpis.outstandingBalance),
-              sub: "Active exposure",
-            },
-            {
-              label: "Interest Collected",
-              value: fmtMoney(kpis.interestCollected),
-              color: "success.main",
-              sub: "In range",
-            },
-            {
-              label: "Fees Collected",
-              value: fmtMoney(kpis.feesCollected),
-              sub: "In range",
-            },
-            {
-              label: "Penalties Collected",
-              value: fmtMoney(kpis.penaltiesCollected),
-              sub: "In range",
-            },
-            {
-              label: "Total Realized Income",
-              value: fmtMoney(kpis.realizedIncome),
-              color: "primary.main",
-              sub: "Interest + fees + penalties",
-              tooltip:
-                "Actual payment allocations from transaction data. This is sourced data.",
-            },
-            {
-              label: "Modeled Cost Total",
-              value: fmtMoney(kpis.modeledCost),
-              color: "warning.main",
-              sub: "From assumptions above",
-              tooltip:
-                "Derived from client-side assumption inputs — not sourced from repo fields.",
-            },
-            {
-              label: "Net Profit Proxy",
-              value: fmtMoney(kpis.netProfit),
-              color: kpis.netProfit < 0 ? "error.main" : "success.main",
-              sub: "Realized income − modeled cost",
-              tooltip:
-                "Modeled output — deduct assumptions from actual income. Not a ledger figure.",
-            },
-            {
-              label: "Avg Net Profit / Loan",
-              value: fmtMoney(kpis.avgNetProfit),
-              color: kpis.avgNetProfit < 0 ? "error.main" : "success.main",
-              tooltip: "Net profit proxy divided by number of loans in scope.",
-            },
-          ].map((k) => (
-            <Grid item xs={6} sm={4} md={3} lg={2} key={k.label}>
-              <KpiBlock {...k} />
-            </Grid>
-          ))}
-        </Grid>
-      )}
-
-      {loanRows.length > 0 && (
-        <>
-          <Divider sx={{ mb: 3, borderColor: sf.sf_borderLight }} />
-
-          {/* ── Monthly trend chart ────────────────────────────────────── */}
-          {monthlyTrend.length > 0 && (
-            <Box sx={{ mb: 3 }}>
-              <Typography
-                variant="caption"
-                sx={{
-                  textTransform: "uppercase",
-                  fontSize: "0.72rem",
-                  fontWeight: 700,
-                  letterSpacing: "0.05em",
-                  color: sf.sf_textSecondary,
-                  display: "block",
-                  mb: 1,
-                }}
-              >
-                Monthly Trend — Realized Income vs Modeled Costs vs Net Profit
-                Proxy
-              </Typography>
-              <Box
-                sx={{
-                  border: `1px solid ${sf.sf_borderLight}`,
-                  bgcolor: sf.sf_cardBg,
-                  p: 1,
-                }}
-              >
-                <BarChart
-                  dataset={monthlyTrend}
-                  xAxis={[{ scaleType: "band", dataKey: "label" }]}
-                  series={[
-                    {
-                      dataKey: "realizedIncome",
-                      label: "Realized Income",
-                      color: "#1976d2",
-                    },
-                    {
-                      dataKey: "modeledCost",
-                      label: "Modeled Cost",
-                      color: "#ed6c02",
-                    },
-                    {
-                      dataKey: "netProfit",
-                      label: "Net Profit Proxy",
-                      color: "#2e7d32",
-                    },
-                  ]}
-                  height={260}
-                  margin={{ top: 10, right: 20, bottom: 50, left: 70 }}
-                  slotProps={{ legend: { hidden: false } }}
-                />
-              </Box>
-            </Box>
-          )}
-
-          <Divider sx={{ mb: 3, borderColor: sf.sf_borderLight }} />
-
-          {/* ── Ranked rollups ────────────────────────────────────────── */}
-          <Box sx={{ mb: 3 }}>
-            <Typography
-              variant="caption"
-              sx={{
-                textTransform: "uppercase",
-                fontSize: "0.72rem",
-                fontWeight: 700,
-                letterSpacing: "0.05em",
-                color: sf.sf_textSecondary,
-                display: "block",
-                mb: 1,
-              }}
-            >
-              Ranked Rollups
-            </Typography>
-            <Stack
-              direction="row"
-              spacing={1}
-              sx={{ mb: 1.5 }}
-              flexWrap="wrap"
-              useFlexGap
-            >
-              {[
-                { key: "product", label: "By Product" },
-                { key: "officer", label: "By Officer" },
-                { key: "status", label: "By Status" },
-                ...(scope?.isAdmin
-                  ? [{ key: "branch", label: "By Branch" }]
-                  : []),
-              ].map((tab) => (
-                <Button
-                  key={tab.key}
-                  size="small"
-                  onClick={() => setRollupTab(tab.key)}
-                  sx={pillSx(rollupTab === tab.key)}
-                >
-                  {tab.label}
-                </Button>
-              ))}
-            </Stack>
-            <RollupTable
-              rows={rollupConfig[rollupTab]?.rows || []}
-              labelField={rollupConfig[rollupTab]?.labelField || "label"}
-              labelHeader={rollupConfig[rollupTab]?.labelHeader || ""}
-            />
-          </Box>
-
-          <Divider sx={{ mb: 3, borderColor: sf.sf_borderLight }} />
-
-          {/* ── Loan-level detail grid ─────────────────────────────────── */}
-          <Box>
-            <Typography
-              variant="caption"
-              sx={{
-                textTransform: "uppercase",
-                fontSize: "0.72rem",
-                fontWeight: 700,
-                letterSpacing: "0.05em",
-                color: sf.sf_textSecondary,
-                display: "block",
-                mb: 1,
-              }}
-            >
-              Loan Detail
-            </Typography>
-
-            {/* Exception view tabs */}
-            <Stack
-              direction="row"
-              spacing={1}
-              sx={{ mb: 1.5 }}
-              flexWrap="wrap"
-              useFlexGap
-            >
-              {[
-                { key: "all", label: `All (${loanRows.length})` },
-                { key: "top", label: "Top 20 Profit" },
-                { key: "bottom", label: "Bottom 20 Profit" },
-                { key: "negative", label: "Negative Profit" },
-                { key: "written_off", label: "Written-Off / Weak" },
-              ].map((tab) => (
-                <Button
-                  key={tab.key}
-                  size="small"
-                  onClick={() => setExceptionTab(tab.key)}
-                  sx={pillSx(exceptionTab === tab.key)}
-                >
-                  {tab.label}
-                </Button>
-              ))}
-            </Stack>
-
-            {/* Filters */}
-            <Stack
-              direction="row"
-              spacing={1.5}
-              sx={{ mb: 1.5 }}
-              flexWrap="wrap"
-              useFlexGap
-              alignItems="center"
-            >
-              <TextField
-                size="small"
-                placeholder="Search borrower or loan #"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon sx={{ fontSize: 16 }} />
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{ width: 240 }}
-              />
-              <FormControl size="small" sx={{ minWidth: 150 }}>
-                <InputLabel>Status</InputLabel>
-                <Select
-                  value={statusFilter}
-                  label="Status"
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                >
-                  {statuses.map((s) => (
-                    <MenuItem key={s} value={s}>
-                      {s === "ALL" ? "All Statuses" : STATUS_LABELS[s] || s}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <FormControl size="small" sx={{ minWidth: 150 }}>
-                <InputLabel>Product</InputLabel>
-                <Select
-                  value={productFilter}
-                  label="Product"
-                  onChange={(e) => setProductFilter(e.target.value)}
-                >
-                  {products.map((p) => (
-                    <MenuItem key={p} value={p}>
-                      {p === "ALL" ? "All Products" : p}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <FormControl size="small" sx={{ minWidth: 160 }}>
-                <InputLabel>Officer</InputLabel>
-                <Select
-                  value={officerFilter}
-                  label="Officer"
-                  onChange={(e) => setOfficerFilter(e.target.value)}
-                >
-                  {officers.map((o) => (
-                    <MenuItem key={o} value={o}>
-                      {o === "ALL" ? "All Officers" : o}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <Typography variant="caption" sx={{ color: sf.sf_textTertiary }}>
-                {filteredRows.length} rows
-              </Typography>
-            </Stack>
-
-            <TableContainer
-              component={Paper}
-              variant="outlined"
-              sx={{
-                borderColor: sf.sf_borderLight,
-                maxHeight: 480,
-                overflow: "auto",
-              }}
-            >
-              <Table size="small" stickyHeader>
-                <TableHead>
-                  <TableRow sx={{ bgcolor: sf.sf_sectionBg }}>
-                    {[
-                      {
-                        key: "borrowerDisplayName",
-                        label: "Borrower",
-                        numeric: false,
-                      },
-                      { key: "loanNumber", label: "Loan #", numeric: false },
-                      { key: "branchName", label: "Branch", numeric: false },
-                      {
-                        key: "loanOfficerDisplayName",
-                        label: "Officer",
-                        numeric: false,
-                      },
-                      {
-                        key: "loanProductName",
-                        label: "Product",
-                        numeric: false,
-                      },
-                      {
-                        key: "displayStatusLabel",
-                        label: "Status",
-                        numeric: false,
-                      },
-                      { key: "startDate", label: "Date Taken", numeric: false },
-                      {
-                        key: "maturityDate",
-                        label: "Maturity",
-                        numeric: false,
-                      },
-                      {
-                        key: "loanBalanceAmount",
-                        label: "Balance",
-                        numeric: true,
-                      },
-                      { key: "arrearsAmount", label: "Arrears", numeric: true },
-                      {
-                        key: "interestCollected",
-                        label: "Interest",
-                        numeric: true,
-                      },
-                      { key: "feesCollected", label: "Fees", numeric: true },
-                      {
-                        key: "penaltiesCollected",
-                        label: "Penalties",
-                        numeric: true,
-                      },
-                      {
-                        key: "realizedIncome",
-                        label: "Realized Income",
-                        numeric: true,
-                      },
-                      {
-                        key: "modeledCost",
-                        label: "Modeled Cost*",
-                        numeric: true,
-                      },
-                      { key: "netProfit", label: "Net Profit*", numeric: true },
-                      { key: "band", label: "Band", numeric: false },
-                    ].map((col) => (
-                      <TableCell
-                        key={col.key}
-                        align={col.numeric ? "right" : "left"}
-                        sortDirection={sortField === col.key ? sortDir : false}
-                        sx={{
-                          fontWeight: 700,
-                          textTransform: "uppercase",
-                          fontSize: "0.68rem",
-                          whiteSpace: "nowrap",
-                          bgcolor: sf.sf_sectionBg,
-                        }}
-                      >
-                        {col.numeric ? (
-                          <TableSortLabel
-                            active={sortField === col.key}
-                            direction={sortField === col.key ? sortDir : "desc"}
-                            onClick={() => handleSort(col.key)}
-                          >
-                            {col.label}
-                          </TableSortLabel>
-                        ) : (
-                          col.label
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {filteredRows.length === 0 ? (
-                    <TableRow>
-                      <TableCell
-                        colSpan={17}
-                        align="center"
-                        sx={{ color: "text.secondary", py: 3 }}
-                      >
-                        No loans match the current filters.
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filteredRows.map((r) => (
-                      <TableRow key={r.id} hover>
-                        <TableCell sx={{ whiteSpace: "nowrap" }}>
-                          {r.borrowerDisplayName}
-                        </TableCell>
-                        <TableCell sx={{ whiteSpace: "nowrap" }}>
-                          {r.loanNumber}
-                        </TableCell>
-                        <TableCell sx={{ whiteSpace: "nowrap" }}>
-                          {r.branchName}
-                        </TableCell>
-                        <TableCell sx={{ whiteSpace: "nowrap" }}>
-                          {r.loanOfficerDisplayName}
-                        </TableCell>
-                        <TableCell sx={{ whiteSpace: "nowrap" }}>
-                          {r.loanProductName}
-                        </TableCell>
-                        <TableCell sx={{ whiteSpace: "nowrap" }}>
-                          {r.displayStatusLabel}
-                        </TableCell>
-                        <TableCell sx={{ whiteSpace: "nowrap" }}>
-                          {r.startDateFmt}
-                        </TableCell>
-                        <TableCell sx={{ whiteSpace: "nowrap" }}>
-                          {r.maturityDateFmt}
-                        </TableCell>
-                        <TableCell align="right">
-                          {fmtMoney(r.loanBalanceAmount)}
-                        </TableCell>
-                        <TableCell
-                          align="right"
-                          sx={{
-                            color:
-                              r.arrearsAmount > 0 ? "warning.main" : undefined,
-                          }}
-                        >
-                          {fmtMoney(r.arrearsAmount)}
-                        </TableCell>
-                        <TableCell align="right">
-                          {fmtMoney(r.interestCollected)}
-                        </TableCell>
-                        <TableCell align="right">
-                          {fmtMoney(r.feesCollected)}
-                        </TableCell>
-                        <TableCell align="right">
-                          {fmtMoney(r.penaltiesCollected)}
-                        </TableCell>
-                        <TableCell align="right" sx={{ fontWeight: 600 }}>
-                          {fmtMoney(r.realizedIncome)}
-                        </TableCell>
-                        <TableCell align="right" sx={{ color: "warning.main" }}>
-                          {fmtMoney(r.modeledCost)}
-                        </TableCell>
-                        <TableCell
-                          align="right"
-                          sx={{
-                            fontWeight: 700,
-                            color:
-                              r.netProfit < 0 ? "error.main" : "success.main",
-                          }}
-                        >
-                          {fmtMoney(r.netProfit)}
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            label={r.band}
-                            size="small"
-                            sx={{
-                              fontSize: "0.65rem",
-                              height: 18,
-                              bgcolor:
-                                r.band === "High"
-                                  ? "success.light"
-                                  : r.band === "Medium"
-                                    ? "info.light"
-                                    : r.band === "Low"
-                                      ? "warning.light"
-                                      : r.band === "Negative"
-                                        ? "error.light"
-                                        : "action.hover",
-                              color:
-                                r.band === "High"
-                                  ? "success.dark"
-                                  : r.band === "Medium"
-                                    ? "info.dark"
-                                    : r.band === "Low"
-                                      ? "warning.dark"
-                                      : r.band === "Negative"
-                                        ? "error.dark"
-                                        : "text.secondary",
-                            }}
-                          />
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </TableContainer>
-            <Typography
-              variant="caption"
-              sx={{ color: sf.sf_textTertiary, mt: 0.5, display: "block" }}
-            >
-              * Modeled Cost and Net Profit Proxy are client-side estimates
-              derived from the assumption inputs above — they are not sourced
-              from repo ledger or cost-of-funds data.
-            </Typography>
-          </Box>
-        </>
-      )}
-    </ReportShell>
+            {formatMoneyOrEmpty(value) || (isSummary || isTotal ? "0" : "")}
+          </td>
+        );
+      })}
+    </tr>
   );
 }

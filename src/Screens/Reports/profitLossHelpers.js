@@ -1,0 +1,332 @@
+import { isValidPayment } from "../../Models/Loans/LoanStatements/statementHelpers";
+import { parseReportDate, safeNum } from "./reportUtils";
+
+export const COMPARE_MODES = Object.freeze({
+  NONE: "none",
+  MONTHLY: "monthly",
+  QUARTERLY: "quarterly",
+  YEARLY: "yearly",
+});
+
+export const BASIS_MODES = Object.freeze({
+  CASH: "cash",
+  ACCRUAL: "accrual",
+});
+
+const MONTH_ABBR = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
+
+const ordinalSuffix = (n) => {
+  const v = Math.abs(n) % 100;
+  if (v >= 11 && v <= 13) return "th";
+  switch (v % 10) {
+    case 1:
+      return "st";
+    case 2:
+      return "nd";
+    case 3:
+      return "rd";
+    default:
+      return "th";
+  }
+};
+
+const formatPeriodEdge = (date) => {
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) return "";
+  const d = date.getDate();
+  return `${d}${ordinalSuffix(d)} ${MONTH_ABBR[date.getMonth()]} ${String(
+    date.getFullYear(),
+  ).slice(-2)}`;
+};
+
+export const formatPeriodLabel = (from, to) =>
+  `${formatPeriodEdge(from)} - ${formatPeriodEdge(to)}`;
+
+const startOfDayLocal = (date) => {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
+
+const endOfDayLocal = (date) => {
+  const d = new Date(date);
+  d.setHours(23, 59, 59, 999);
+  return d;
+};
+
+const getPriorPeriod = (cursorStart, compareMode) => {
+  if (
+    !(cursorStart instanceof Date) ||
+    Number.isNaN(cursorStart.getTime()) ||
+    compareMode === COMPARE_MODES.NONE
+  ) {
+    return null;
+  }
+
+  const priorEnd = new Date(cursorStart);
+  priorEnd.setDate(priorEnd.getDate() - 1);
+  priorEnd.setHours(23, 59, 59, 999);
+
+  const priorStart = new Date(priorEnd);
+  priorStart.setHours(0, 0, 0, 0);
+
+  if (compareMode === COMPARE_MODES.MONTHLY) {
+    priorStart.setDate(1);
+  } else if (compareMode === COMPARE_MODES.QUARTERLY) {
+    priorStart.setMonth(priorStart.getMonth() - 2);
+    priorStart.setDate(1);
+  } else if (compareMode === COMPARE_MODES.YEARLY) {
+    priorStart.setMonth(0, 1);
+  } else {
+    return null;
+  }
+
+  return [priorStart, priorEnd];
+};
+
+export const buildPeriods = ({
+  startDate,
+  endDate,
+  compareMode = COMPARE_MODES.NONE,
+  comparePeriods = 0,
+} = {}) => {
+  const start = parseReportDate(startDate);
+  const end = parseReportDate(endDate, { endOfDay: true });
+  if (!start || !end) return [];
+
+  const primaryFrom = startOfDayLocal(start);
+  const primaryTo = endOfDayLocal(end);
+
+  const periods = [
+    {
+      key: "primary",
+      from: primaryFrom,
+      to: primaryTo,
+      label: formatPeriodLabel(primaryFrom, primaryTo),
+    },
+  ];
+
+  if (compareMode === COMPARE_MODES.NONE) return periods;
+
+  let cursor = new Date(primaryFrom);
+  const count = Math.max(0, Math.floor(Number(comparePeriods) || 0));
+
+  for (let i = 0; i < count; i += 1) {
+    const result = getPriorPeriod(cursor, compareMode);
+    if (!result) break;
+    const [pFrom, pTo] = result;
+    periods.push({
+      key: `compare_${i + 1}`,
+      from: pFrom,
+      to: pTo,
+      label: formatPeriodLabel(pFrom, pTo),
+    });
+    cursor = new Date(pFrom);
+  }
+
+  return periods;
+};
+
+const inPeriod = (date, period) => {
+  if (!date || !period) return false;
+  const t = date instanceof Date ? date.getTime() : new Date(date).getTime();
+  if (Number.isNaN(t)) return false;
+  return t >= period.from.getTime() && t <= period.to.getTime();
+};
+
+const TAX_KEYWORDS = ["tax", "vat", "withholding"];
+
+const isTaxExpense = (expense) => {
+  const fields = [expense?.category, expense?.type]
+    .filter(Boolean)
+    .map((v) => String(v).toLowerCase());
+  return fields.some((field) =>
+    TAX_KEYWORDS.some((kw) => field.includes(kw)),
+  );
+};
+
+const expenseLabel = (expense) => {
+  const raw = expense?.category || expense?.type || "Uncategorized";
+  const trimmed = String(raw).trim();
+  return trimmed || "Uncategorized";
+};
+
+const createEmptyBucket = () => ({
+  interestOnLoans: 0,
+  feesCollected: 0,
+  penaltiesCollected: 0,
+  otherIncome: 0,
+  operatingExpensesByCategory: {},
+  operatingExpensesTotal: 0,
+  taxExpense: 0,
+});
+
+export const computeProfitLoss = ({
+  loanSummaries = [],
+  expenses = [],
+  otherIncomes = [],
+  periods = [],
+} = {}) => {
+  if (!Array.isArray(periods) || periods.length === 0) {
+    return { periods: [], expenseCategories: [], periodTotals: [] };
+  }
+
+  const buckets = {};
+  periods.forEach((period) => {
+    buckets[period.key] = createEmptyBucket();
+  });
+
+  loanSummaries.forEach((summary) => {
+    const payments = Array.isArray(summary?.reportSourcePayments)
+      ? summary.reportSourcePayments
+      : [];
+    payments.filter(isValidPayment).forEach((payment) => {
+      const date = parseReportDate(payment?.paymentDate);
+      if (!date) return;
+      periods.forEach((period) => {
+        if (!inPeriod(date, period)) return;
+        const bucket = buckets[period.key];
+        bucket.interestOnLoans += safeNum(payment.amountAllocatedToInterest);
+        bucket.feesCollected += safeNum(payment.amountAllocatedToFees);
+        bucket.penaltiesCollected += safeNum(payment.amountAllocatedToPenalty);
+      });
+    });
+  });
+
+  otherIncomes.forEach((income) => {
+    const date = parseReportDate(income?.incomeDate);
+    if (!date) return;
+    periods.forEach((period) => {
+      if (!inPeriod(date, period)) return;
+      buckets[period.key].otherIncome += safeNum(income.amount);
+    });
+  });
+
+  expenses.forEach((expense) => {
+    const date = parseReportDate(expense?.transactionDate);
+    if (!date) return;
+    const tax = isTaxExpense(expense);
+    const label = expenseLabel(expense);
+    periods.forEach((period) => {
+      if (!inPeriod(date, period)) return;
+      const bucket = buckets[period.key];
+      const amount = safeNum(expense.amount);
+      if (tax) {
+        bucket.taxExpense += amount;
+      } else {
+        bucket.operatingExpensesByCategory[label] =
+          (bucket.operatingExpensesByCategory[label] || 0) + amount;
+        bucket.operatingExpensesTotal += amount;
+      }
+    });
+  });
+
+  const expenseCategories = new Set();
+  periods.forEach((period) => {
+    Object.keys(buckets[period.key].operatingExpensesByCategory).forEach(
+      (category) => expenseCategories.add(category),
+    );
+  });
+
+  const periodTotals = periods.map((period) => {
+    const bucket = buckets[period.key];
+    const revenueFromLoans =
+      bucket.interestOnLoans +
+      bucket.feesCollected +
+      bucket.penaltiesCollected;
+    const totalRevenue = revenueFromLoans + bucket.otherIncome;
+    const totalExpenses = bucket.operatingExpensesTotal;
+    const netOperatingIncome = totalRevenue - totalExpenses;
+    const netIncomeBeforeTaxes = netOperatingIncome;
+    const netIncomeAfterTaxes = netIncomeBeforeTaxes - bucket.taxExpense;
+    return {
+      periodKey: period.key,
+      interestOnLoans: bucket.interestOnLoans,
+      feesCollected: bucket.feesCollected,
+      penaltiesCollected: bucket.penaltiesCollected,
+      otherIncome: bucket.otherIncome,
+      operatingExpensesByCategory: { ...bucket.operatingExpensesByCategory },
+      operatingExpensesTotal: bucket.operatingExpensesTotal,
+      taxExpense: bucket.taxExpense,
+      revenueFromLoans,
+      totalRevenue,
+      totalExpenses,
+      netOperatingIncome,
+      netIncomeBeforeTaxes,
+      netIncomeAfterTaxes,
+    };
+  });
+
+  return {
+    periods,
+    expenseCategories: Array.from(expenseCategories).sort((a, b) =>
+      a.localeCompare(b),
+    ),
+    periodTotals,
+  };
+};
+
+const fetchAllByBranch = async ({
+  client,
+  query,
+  resultKey,
+  branchId,
+}) => {
+  const items = [];
+  let nextToken = null;
+  do {
+    const result = await client.graphql({
+      query,
+      variables: {
+        branchID: branchId,
+        limit: 1000,
+        nextToken,
+      },
+    });
+    const page = result?.data?.[resultKey] || {};
+    const batch = Array.isArray(page.items) ? page.items.filter(Boolean) : [];
+    items.push(...batch);
+    nextToken = page.nextToken || null;
+  } while (nextToken);
+  return items;
+};
+
+export const fetchAllExpensesByBranch = async ({
+  client,
+  branchId,
+  query,
+}) =>
+  branchId
+    ? fetchAllByBranch({
+        client,
+        query,
+        resultKey: "expensesByBranchID",
+        branchId,
+      })
+    : [];
+
+export const fetchAllOtherIncomesByBranch = async ({
+  client,
+  branchId,
+  query,
+}) =>
+  branchId
+    ? fetchAllByBranch({
+        client,
+        query,
+        resultKey: "otherIncomesByBranchID",
+        branchId,
+      })
+    : [];

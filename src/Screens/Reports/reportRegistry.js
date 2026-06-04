@@ -120,10 +120,10 @@ export const REPORT_REGISTRY = [
   {
     key: "profitability",
     reportType: REPORT_TYPES.PROFITABILITY,
-    label: "Profitability Report",
+    label: "Profit / Loss",
     route: "/reports/profitability",
     description:
-      "Realized income (interest, fees, penalties) and net-profit proxy by loan, branch, product, and officer. Includes optional modeled cost assumptions.",
+      "Profit / Loss statement: revenue from loan payments (interest, fees, penalties), other income, operating expenses, and taxes. Supports period comparison.",
     icon: "TrendingUp",
   },
 ];

@@ -1,32 +1,20 @@
-/**
- * ProfitabilityReport.test.jsx
- *
- * Component-level tests for the Profitability Report.
- */
-
 import React from "react";
-import {
-  render,
-  screen,
-  fireEvent,
-  waitFor,
-  act,
-} from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
-import { UserContext } from "../../App";
 import { themeSettings } from "../../theme";
+import { UserContext } from "../../App";
 import ProfitabilityReport from "./ProfitabilityReport";
+
+const mockGraphql = jest.fn();
 
 jest.mock("aws-amplify/api", () => ({
   generateClient: jest.fn(),
 }));
 
-// ---------------------------------------------------------------------------
-// Mocks
-// ---------------------------------------------------------------------------
-
 jest.mock("../../graphql/queries", () => ({
   listBranches: "LIST_BRANCHES",
+  expensesByBranchID: "EXPENSES_BY_BRANCH",
+  otherIncomesByBranchID: "OTHER_INCOMES_BY_BRANCH",
 }));
 
 jest.mock("./reportLoanData", () => ({
@@ -34,293 +22,116 @@ jest.mock("./reportLoanData", () => ({
 }));
 
 jest.mock("../../App", () => {
-  const React = require("react");
+  const ReactLib = require("react");
   return {
-    UserContext: React.createContext({ userDetails: null }),
+    UserContext: ReactLib.createContext({ userDetails: null }),
   };
 });
 
-jest.mock("../../ModelAssets/AdminBranchScopeSelector", () => {
-  const React = require("react");
-  return function MockAdminBranchScopeSelector() {
-    return <div>Branch Selector</div>;
-  };
-});
+jest.mock("../../ModelAssets/AdminBranchScopeSelector", () => () => (
+  <div>Branch Selector</div>
+));
 
-jest.mock("../../ModelAssets/DateFilters", () => {
-  const React = require("react");
-  const { getPresetRange } = jest.requireActual(
-    "../../ModelAssets/DateFilters",
-  );
-  function MockDateFilters({ dateFrom, dateTo }) {
-    return (
-      <div>
-        <span>DateFrom:{dateFrom}</span>
-        <span>DateTo:{dateTo}</span>
-      </div>
-    );
-  }
-  MockDateFilters.getPresetRange = getPresetRange;
-  return MockDateFilters;
-});
+jest.mock("../../ModelAssets/WorkingOverlay", () => () => null);
 
-jest.mock("@mui/x-charts/BarChart", () => ({
-  BarChart: function MockBarChart() {
-    return <div data-testid="bar-chart">Chart</div>;
-  },
+jest.mock("../../ModelAssets/NotificationContext", () => ({
+  useNotification: () => ({ showNotification: jest.fn() }),
 }));
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
+const { generateClient: mockGenerateClient } = require("aws-amplify/api");
 const {
-  fetchAllReportLoanSummariesForBranch: mockFetchSummaries,
+  fetchAllReportLoanSummariesForBranch:
+    mockFetchAllReportLoanSummariesForBranch,
 } = require("./reportLoanData");
-const { generateClient } = require("aws-amplify/api");
 
-const mockGraphql = jest.fn();
-
-beforeEach(() => {
-  generateClient.mockReturnValue({ graphql: mockGraphql });
-  mockGraphql.mockReset();
-  mockGraphql.mockResolvedValue({ data: { getLoan: null } });
-});
-
-function renderReport(userDetails) {
+const renderWithUser = (ui, userDetails) => {
   const theme = createTheme(themeSettings("light"));
   return render(
     <ThemeProvider theme={theme}>
-      <UserContext.Provider value={{ userDetails }}>
-        <ProfitabilityReport />
-      </UserContext.Provider>
+      <UserContext.Provider value={{ userDetails }}>{ui}</UserContext.Provider>
     </ThemeProvider>,
   );
-}
-
-const BRANCH_USER = {
-  userType: "LoanOfficer",
-  branchID: "branch-1",
 };
 
-const SAMPLE_SUMMARIES = [
-  {
-    id: "loan-1",
-    loanID: "loan-1",
-    loanNumber: "LN-001",
-    borrowerDisplayName: "Alice Smith",
-    branchID: "branch-1",
-    loanOfficerDisplayName: "Bob Jones",
-    loanProductName: "Micro Loan",
-    displayStatus: "CURRENT",
-    startDate: "2025-01-01",
-    maturityDateEffective: "2026-01-01",
-    loanBalanceAmount: 5000,
-    arrearsAmount: 0,
-    reportSourcePayments: [
-      {
-        id: "pay-1",
-        paymentDate: "2026-04-15",
-        status: "COMPLETED",
-        paymentStatusEnum: "COMPLETED",
-        amount: 500,
-        amountAllocatedToInterest: 80,
-        amountAllocatedToFees: 20,
-        amountAllocatedToPenalty: 0,
-        amountAllocatedToPrincipal: 400,
-      },
-    ],
-  },
-];
+const PAYMENT_IN_RANGE_DATE = (() => {
+  // Today is always inside the default "this_year" range (start of year → today).
+  const today = new Date();
+  const y = today.getFullYear();
+  const m = String(today.getMonth() + 1).padStart(2, "0");
+  const d = String(today.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+})();
 
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
-
-describe("ProfitabilityReport — main rendered state", () => {
+describe("ProfitabilityReport (Profit / Loss)", () => {
   beforeEach(() => {
-    mockFetchSummaries.mockReset();
+    mockGraphql.mockReset();
+    mockGenerateClient.mockReset();
+    mockGenerateClient.mockReturnValue({ graphql: mockGraphql });
+    mockFetchAllReportLoanSummariesForBranch.mockReset();
   });
 
-  afterEach(() => {
-    jest.useRealTimers();
-  });
-
-  it("renders the report title", async () => {
-    mockFetchSummaries.mockResolvedValue([]);
-
-    renderReport(BRANCH_USER);
-
-    await waitFor(() =>
-      expect(screen.getByText("Profitability Report")).toBeInTheDocument(),
-    );
-  });
-
-  it("renders the assumptions panel", async () => {
-    mockFetchSummaries.mockResolvedValue([]);
-
-    renderReport(BRANCH_USER);
-
-    await waitFor(() =>
-      expect(
-        screen.getAllByText(/Modeled Cost Assumptions/i).length,
-      ).toBeGreaterThan(0),
-    );
-    expect(
-      screen.getByText(/MODELED — not sourced from repo data/i),
-    ).toBeInTheDocument();
-  });
-
-  it("loads profitability data with the report and does not require a second payment fetch", async () => {
-    mockFetchSummaries.mockResolvedValue(SAMPLE_SUMMARIES);
+  it("renders the Profit / Loss header and statement panel for a branch user", async () => {
+    mockFetchAllReportLoanSummariesForBranch.mockResolvedValue([]);
     mockGraphql.mockResolvedValue({
       data: {
-        getLoan: {
-          id: "loan-1",
-          payments: {
-            items: SAMPLE_SUMMARIES[0].reportSourcePayments,
-          },
-        },
+        expensesByBranchID: { items: [], nextToken: null },
+        otherIncomesByBranchID: { items: [], nextToken: null },
       },
     });
 
-    renderReport(BRANCH_USER);
-
-    await waitFor(() =>
-      expect(screen.getAllByText(/Loans in Scope/i).length).toBeGreaterThan(0),
-    );
-
-    expect(screen.queryByText(/Load Payment Data/i)).not.toBeInTheDocument();
-  });
-
-  it("opens with the previous month selected by default", async () => {
-    jest.useFakeTimers().setSystemTime(new Date("2026-05-14T12:00:00"));
-    mockFetchSummaries.mockResolvedValue([]);
-
-    renderReport(BRANCH_USER);
-
-    await waitFor(() => {
-      expect(screen.getByText("DateFrom:2026-04-01")).toBeInTheDocument();
-    });
-    expect(screen.getByText("DateTo:2026-04-30")).toBeInTheDocument();
-  });
-
-  it("shows KPI blocks and detail grid after the initial report load", async () => {
-    mockFetchSummaries.mockResolvedValue(SAMPLE_SUMMARIES);
-    mockGraphql.mockResolvedValue({
-      data: {
-        getLoan: {
-          id: "loan-1",
-          payments: {
-            items: SAMPLE_SUMMARIES[0].reportSourcePayments,
-          },
-        },
-      },
+    renderWithUser(<ProfitabilityReport />, {
+      userType: "LoanOfficer",
+      branchID: "branch-1",
     });
 
-    renderReport(BRANCH_USER);
-
+    // Both the page header and the statement panel title contain "Profit / Loss".
     await waitFor(() =>
-      expect(screen.getAllByText(/Loans in Scope/i).length).toBeGreaterThan(0),
+      expect(screen.getByText(/Profit \/ Loss Statement/i)).toBeInTheDocument(),
     );
-    expect(
-      screen.getAllByText(/Total Realized Income/i).length,
-    ).toBeGreaterThan(0);
-    expect(screen.getAllByText(/Net Profit Proxy/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/Modeled Cost Total/i).length).toBeGreaterThan(
-      0,
-    );
+
+    const headings = screen.getAllByText(/Profit \/ Loss/i);
+    expect(headings.length).toBeGreaterThanOrEqual(2);
+
+    expect(screen.getByText(/Cash Basis/i)).toBeInTheDocument();
+    expect(screen.getByText(/Accrual Basis/i)).toBeInTheDocument();
+    expect(screen.getByText(/^Compare$/i)).toBeInTheDocument();
   });
 
-  it("uses fresh statement-ready loan payments instead of stale summary payment copies", async () => {
-    mockFetchSummaries.mockResolvedValue([
+  it("populates the Interest on Loans line from valid payment allocations", async () => {
+    mockFetchAllReportLoanSummariesForBranch.mockResolvedValue([
       {
-        ...SAMPLE_SUMMARIES[0],
+        id: "loan-1",
         reportSourcePayments: [
           {
-            ...SAMPLE_SUMMARIES[0].reportSourcePayments[0],
-            amountAllocatedToInterest: 5,
+            paymentDate: PAYMENT_IN_RANGE_DATE,
+            paymentStatusEnum: "COMPLETED",
+            amountAllocatedToInterest: 1234.56,
             amountAllocatedToFees: 0,
+            amountAllocatedToPenalty: 0,
           },
         ],
       },
     ]);
     mockGraphql.mockResolvedValue({
       data: {
-        getLoan: {
-          id: "loan-1",
-          payments: {
-            items: [
-              {
-                id: "pay-1",
-                paymentDate: "2026-04-15",
-                status: "COMPLETED",
-                paymentStatusEnum: "COMPLETED",
-                amount: 500,
-                amountAllocatedToInterest: 80,
-                amountAllocatedToFees: 20,
-                amountAllocatedToPenalty: 0,
-                amountAllocatedToPrincipal: 400,
-              },
-            ],
-          },
-        },
+        expensesByBranchID: { items: [], nextToken: null },
+        otherIncomesByBranchID: { items: [], nextToken: null },
       },
     });
 
-    renderReport(BRANCH_USER);
+    renderWithUser(<ProfitabilityReport />, {
+      userType: "LoanOfficer",
+      branchID: "branch-1",
+    });
 
     await waitFor(() => {
-      expect(screen.getAllByText("80.00").length).toBeGreaterThan(0);
-    });
-    expect(screen.getAllByText("100.00").length).toBeGreaterThan(0);
-    expect(mockGraphql).toHaveBeenCalledWith(
-      expect.objectContaining({
-        variables: { id: "loan-1" },
-      }),
-    );
-  });
-});
-
-describe("ProfitabilityReport — assumption-driven recalculation", () => {
-  beforeEach(() => {
-    mockFetchSummaries.mockReset();
-  });
-
-  it("recalculates net profit when servicing cost assumption is changed", async () => {
-    mockFetchSummaries.mockResolvedValue(SAMPLE_SUMMARIES);
-    mockGraphql.mockResolvedValue({
-      data: {
-        getLoan: {
-          id: "loan-1",
-          payments: {
-            items: SAMPLE_SUMMARIES[0].reportSourcePayments,
-          },
-        },
-      },
+      const row = screen.getByText("Interest on Loans").closest("tr");
+      expect(row).toBeTruthy();
+      expect(within(row).getByText(/1,234\.56/)).toBeInTheDocument();
     });
 
-    renderReport(BRANCH_USER);
-
-    await waitFor(() =>
-      expect(screen.getByText(/Loans in Scope/i)).toBeInTheDocument(),
-    );
-
-    // Find the servicing cost input (second number input in the assumptions panel)
-    const inputs = screen.getAllByRole("spinbutton");
-    // servicing cost is the second input
-    const servicingInput = inputs[1];
-
-    await act(async () => {
-      fireEvent.change(servicingInput, { target: { value: "100" } });
-    });
-
-    // Net profit should now reflect the cost — presence of Modeled Cost column value changes
-    // We verify the modeled cost disclaimer footnote is always present
-    expect(
-      screen.getByText(
-        /Modeled Cost and Net Profit Proxy are client-side estimates/i,
-      ),
-    ).toBeInTheDocument();
+    // Total Revenue should reflect the same number when there's only interest.
+    const totalRevenueRow = screen.getByText("Total Revenue").closest("tr");
+    expect(within(totalRevenueRow).getByText(/1,234\.56/)).toBeInTheDocument();
   });
 });

@@ -13,6 +13,9 @@ import {
   Work as WorkIcon,
   Notifications as NotificationsIcon,
   Settings as SettingsIcon,
+  ReceiptLong as ReceiptLongIcon,
+  Savings as SavingsIcon,
+  AccountBalanceWallet as AccountingIcon,
 } from "@mui/icons-material";
 import { REPORT_REGISTRY } from "../Reports/reportRegistry";
 
@@ -126,9 +129,31 @@ export const menuItems = [
     route: "/users",
   },
   {
-    name: "Accounts",
-    icon: <WalletIcon sx={{ color: "white" }} />,
-    route: "/admin/accounts",
+    name: "Accounting",
+    icon: <AccountingIcon sx={{ color: "white" }} />,
+    expandable: true,
+    children: [
+      {
+        name: "Cash Accounts",
+        icon: <WalletIcon sx={{ color: "white" }} />,
+        route: "/admin/accounts",
+      },
+      {
+        name: "Expenses",
+        icon: <ReceiptLongIcon sx={{ color: "white" }} />,
+        route: "/expenses",
+      },
+      {
+        name: "Other Income",
+        icon: <SavingsIcon sx={{ color: "white" }} />,
+        route: "/other-incomes",
+      },
+      {
+        name: "Profit / Loss",
+        icon: <ReportsIcon sx={{ color: "white" }} />,
+        route: "/reports/profitability",
+      },
+    ],
   },
   {
     name: "Reports",

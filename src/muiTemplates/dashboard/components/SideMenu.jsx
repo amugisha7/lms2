@@ -18,6 +18,9 @@ import SmartphoneRoundedIcon from "@mui/icons-material/SmartphoneRounded";
 import PersonAddAltRoundedIcon from "@mui/icons-material/PersonAddAltRounded";
 import PeopleAltRoundedIcon from "@mui/icons-material/PeopleAltRounded";
 import DashboardRoundedIcon from "@mui/icons-material/DashboardRounded";
+import ReceiptLongRoundedIcon from "@mui/icons-material/ReceiptLongRounded";
+import SavingsRoundedIcon from "@mui/icons-material/SavingsRounded";
+import AssessmentRoundedIcon from "@mui/icons-material/AssessmentRounded";
 import Button from "@mui/material/Button";
 import { useNavigate } from "react-router-dom";
 import SideMenuButton from "./SideMenuButton";
@@ -57,6 +60,30 @@ export default function SideMenu({ onHideMenu }) {
       secondary: "View/edit borrowers",
       icon: <PeopleAltRoundedIcon sx={{ fontSize: "1rem" }} />,
       avatarAlt: "Manage existing borrowers",
+    },
+  ];
+
+  const accountingItems = [
+    {
+      value: "/expenses",
+      label: "Expenses",
+      secondary: "Record and manage expenses",
+      icon: <ReceiptLongRoundedIcon sx={{ fontSize: "1rem" }} />,
+      avatarAlt: "Expenses",
+    },
+    {
+      value: "/other-incomes",
+      label: "Other Income",
+      secondary: "Record non-loan income",
+      icon: <SavingsRoundedIcon sx={{ fontSize: "1rem" }} />,
+      avatarAlt: "Other Income",
+    },
+    {
+      value: "/reports/profitability",
+      label: "Profit / Loss",
+      secondary: "P&L statement",
+      icon: <AssessmentRoundedIcon sx={{ fontSize: "1rem" }} />,
+      avatarAlt: "Profit and Loss",
     },
   ];
   const megaMenuItems = [
@@ -126,8 +153,7 @@ export default function SideMenu({ onHideMenu }) {
           Dashboard
         </SideMenuButton>
         <MegaMenu heading={"Borrowers"} items={borrowerItems} />
-        <MegaMenu heading={megaMenuHeading} items={megaMenuItems} />
-        <MegaMenu heading={megaMenuHeading} items={megaMenuItems} />
+        <MegaMenu heading={"Accounting"} items={accountingItems} />
         <MegaMenu heading={megaMenuHeading} items={megaMenuItems} />
       </Box>
       <Divider />

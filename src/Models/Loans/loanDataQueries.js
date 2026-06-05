@@ -16,6 +16,7 @@ export const LOAN_STATEMENT_READY_FIELDS = `
   loanCurrency
   loanPurpose
   loanComputationRecord
+  customLoanDetails
   numberOfPayments
   paymentFrequency
   status

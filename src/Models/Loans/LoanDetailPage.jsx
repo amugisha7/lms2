@@ -1,12 +1,19 @@
 import React from "react";
 import {
   Box,
-  CircularProgress,
-  Typography,
   Breadcrumbs,
-  Tabs,
-  Tab,
+  Button,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   IconButton,
+  Tab,
+  Tabs,
+  TextField,
+  Typography,
 } from "@mui/material";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useTheme } from "@mui/material/styles";
@@ -22,6 +29,12 @@ import ClickableText from "../../ModelAssets/ClickableText";
 import { UserContext } from "../../App";
 import { buildLoanDisplayName } from "./loanDisplayHelpers";
 import { LoanExplorerContext } from "./LoansDisplay/LoanExplorerContext";
+import {
+  getStopInterestState,
+  isInterestStopped,
+  resumeInterest,
+  stopInterest,
+} from "./stopInterestHelpers";
 
 const parseLoanRecord = (loan) => {
   const record = loan?.draftRecord ?? loan?.loanComputationRecord;
@@ -77,6 +90,31 @@ const formatOfficerName = (employee) => {
   );
 };
 
+const PAUSED_MONTH_ABBR = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
+
+const formatPausedDate = (value) => {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = PAUSED_MONTH_ABBR[date.getMonth()];
+  const year = date.getFullYear();
+  return `${day}-${month}-${year}`;
+};
+
 const getRequestedLoanTab = (state) => {
   const requestedTab = state?.initialTab;
 
@@ -106,6 +144,71 @@ export default function LoanDetailPage() {
   const [editSliderOpen, setEditSliderOpen] = React.useState(false);
   const [paymentsPopupOpen, setPaymentsPopupOpen] = React.useState(false);
   const [statementPopupOpen, setStatementPopupOpen] = React.useState(false);
+  const [stopInterestDialogOpen, setStopInterestDialogOpen] =
+    React.useState(false);
+  const [stopInterestReason, setStopInterestReason] = React.useState("");
+  const [stopInterestMutating, setStopInterestMutating] = React.useState(false);
+
+  const interestStopped = React.useMemo(() => isInterestStopped(loan), [loan]);
+  const stopInterestState = React.useMemo(
+    () => getStopInterestState(loan),
+    [loan],
+  );
+
+  const handleConfirmStopInterest = React.useCallback(async () => {
+    if (!loan?.id) return;
+    setStopInterestMutating(true);
+    try {
+      const { customLoanDetails } = await stopInterest({
+        loan,
+        reason: stopInterestReason,
+      });
+      mergeCachedLoanPatch(loanId, { customLoanDetails });
+      await ensureLoanRecord(loanId, { force: true });
+      setStopInterestDialogOpen(false);
+      setStopInterestReason("");
+      setNotification({
+        type: "success",
+        message: "Interest accrual paused on this loan.",
+      });
+    } catch (err) {
+      console.error("Failed to stop interest:", err);
+      setNotification({
+        type: "error",
+        message: err?.message || "Failed to stop interest",
+      });
+    } finally {
+      setStopInterestMutating(false);
+    }
+  }, [
+    ensureLoanRecord,
+    loan,
+    loanId,
+    mergeCachedLoanPatch,
+    stopInterestReason,
+  ]);
+
+  const handleResumeInterest = React.useCallback(async () => {
+    if (!loan?.id) return;
+    setStopInterestMutating(true);
+    try {
+      const { customLoanDetails } = await resumeInterest({ loan });
+      mergeCachedLoanPatch(loanId, { customLoanDetails });
+      await ensureLoanRecord(loanId, { force: true });
+      setNotification({
+        type: "success",
+        message: "Interest accrual resumed on this loan.",
+      });
+    } catch (err) {
+      console.error("Failed to resume interest:", err);
+      setNotification({
+        type: "error",
+        message: err?.message || "Failed to resume interest",
+      });
+    } finally {
+      setStopInterestMutating(false);
+    }
+  }, [ensureLoanRecord, loan, loanId, mergeCachedLoanPatch]);
 
   React.useEffect(() => {
     setTabValue(getRequestedLoanTab(location.state));
@@ -323,6 +426,50 @@ export default function LoanDetailPage() {
         loanId={loanId}
       />
 
+      <Dialog
+        open={stopInterestDialogOpen}
+        onClose={() => {
+          if (stopInterestMutating) return;
+          setStopInterestDialogOpen(false);
+        }}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>Stop Interest Accrual</DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ mb: 2, fontSize: "0.85rem" }}>
+            Interest will stop accruing from today. Existing accrued interest
+            and historical periods are not affected. You can resume accrual
+            later from this same page.
+          </DialogContentText>
+          <TextField
+            label="Reason (optional)"
+            value={stopInterestReason}
+            onChange={(e) => setStopInterestReason(e.target.value)}
+            fullWidth
+            multiline
+            minRows={2}
+            size="small"
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => setStopInterestDialogOpen(false)}
+            disabled={stopInterestMutating}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleConfirmStopInterest}
+            disabled={stopInterestMutating}
+            variant="contained"
+            color="warning"
+          >
+            {stopInterestMutating ? "Saving..." : "Stop Interest"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       <Box sx={{ width: "100%" }}>
         {/* Header */}
         <Box
@@ -482,6 +629,31 @@ export default function LoanDetailPage() {
                 sx={{ color: theme.palette.blueText.main, fontSize: "0.9rem" }}
               >
                 Manage Payments
+              </ClickableText>
+              <ClickableText
+                onClick={
+                  interestStopped
+                    ? handleResumeInterest
+                    : () => setStopInterestDialogOpen(true)
+                }
+                sx={{
+                  color: interestStopped
+                    ? theme.palette.success.main
+                    : theme.palette.warning.main,
+                  fontSize: "0.9rem",
+                  opacity: stopInterestMutating ? 0.5 : 1,
+                  pointerEvents: stopInterestMutating ? "none" : "auto",
+                }}
+              >
+                {interestStopped
+                  ? `Resume Interest${
+                      stopInterestState?.stoppedAt
+                        ? ` (paused ${formatPausedDate(
+                            stopInterestState.stoppedAt,
+                          )})`
+                        : ""
+                    }`
+                  : "Stop Interest"}
               </ClickableText>
             </Box>
 

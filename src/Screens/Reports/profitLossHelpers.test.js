@@ -2,8 +2,10 @@ import {
   BASIS_MODES,
   COMPARE_MODES,
   buildPeriods,
+  computeInterestAccrualCutoff,
   computeProfitLoss,
   formatPeriodLabel,
+  isAccrualSuspendedAt,
 } from "./profitLossHelpers";
 
 describe("buildPeriods", () => {
@@ -85,6 +87,49 @@ describe("computeProfitLoss", () => {
     expect(result.expenseCategories).toEqual([]);
   });
 
+  it("prefers derived payment rows (from the statement ledger) when present", () => {
+    const loanSummaries = [
+      {
+        reportSourcePaymentRows: [
+          {
+            date: "2026-01-15",
+            amount: 1100,
+            allocPrincipal: 25,
+            allocInterest: 1000,
+            allocFees: 50,
+            allocPenalty: 25,
+          },
+          {
+            date: "2025-12-20",
+            amount: 410,
+            allocPrincipal: 0,
+            allocInterest: 400,
+            allocFees: 10,
+            allocPenalty: 0,
+          },
+        ],
+        // Raw payments with persisted allocations should be IGNORED in favor of
+        // the derived rows above.
+        reportSourcePayments: [
+          {
+            paymentDate: "2026-01-15",
+            paymentStatusEnum: "COMPLETED",
+            amountAllocatedToInterest: 999999,
+          },
+        ],
+      },
+    ];
+
+    const result = computeProfitLoss({ loanSummaries, periods });
+    const [primary, prior] = result.periodTotals;
+
+    expect(primary.interestOnLoans).toBe(1000);
+    expect(primary.feesCollected).toBe(50);
+    expect(primary.penaltiesCollected).toBe(25);
+    expect(prior.interestOnLoans).toBe(400);
+    expect(prior.feesCollected).toBe(10);
+  });
+
   it("buckets valid payment allocations by paymentDate per period", () => {
     const loanSummaries = [
       {
@@ -124,6 +169,29 @@ describe("computeProfitLoss", () => {
 
     expect(prior.interestOnLoans).toBe(400);
     expect(prior.revenueFromLoans).toBe(410);
+  });
+
+  it("classifies controlled tax categories exactly (no keyword sniff needed)", () => {
+    const expenses = [
+      { transactionDate: "2026-01-10", category: "VAT", amount: 100 },
+      { transactionDate: "2026-01-12", category: "Withholding Tax", amount: 50 },
+      {
+        transactionDate: "2026-01-15",
+        category: "Other Tax",
+        amount: 25,
+      },
+      {
+        transactionDate: "2026-01-20",
+        category: "Salaries & Wages",
+        amount: 300,
+      },
+    ];
+    const result = computeProfitLoss({ expenses, periods });
+    const [primary] = result.periodTotals;
+    expect(primary.taxExpense).toBe(175);
+    expect(primary.operatingExpensesByCategory).toEqual({
+      "Salaries & Wages": 300,
+    });
   });
 
   it("splits taxes from operating expenses and exposes category breakdown", () => {
@@ -206,5 +274,175 @@ describe("BASIS_MODES sanity", () => {
   it("exposes cash and accrual constants", () => {
     expect(BASIS_MODES.CASH).toBe("cash");
     expect(BASIS_MODES.ACCRUAL).toBe("accrual");
+  });
+});
+
+describe("computeInterestAccrualCutoff", () => {
+  const [period] = buildPeriods({
+    startDate: "2026-01-01",
+    endDate: "2026-01-31",
+  });
+
+  it("returns period.to when no stop or write-off is set", () => {
+    const cutoff = computeInterestAccrualCutoff({}, period);
+    expect(cutoff?.getTime()).toBe(period.to.getTime());
+  });
+
+  it("uses write-off date when earlier than period.to", () => {
+    const cutoff = computeInterestAccrualCutoff(
+      { reportSourceWriteOffDate: "2026-01-15" },
+      period,
+    );
+    expect(cutoff?.getFullYear()).toBe(2026);
+    expect(cutoff?.getMonth()).toBe(0);
+    expect(cutoff?.getDate()).toBe(15);
+  });
+
+  it("uses stopInterestAt when earlier than write-off and period.to", () => {
+    const cutoff = computeInterestAccrualCutoff(
+      {
+        reportSourceWriteOffDate: "2026-01-20",
+        reportSourceStopInterest: { stoppedAt: "2026-01-10" },
+      },
+      period,
+    );
+    expect(cutoff?.getDate()).toBe(10);
+  });
+
+  it("ignores stopInterestAt when resumedAt is set", () => {
+    const cutoff = computeInterestAccrualCutoff(
+      {
+        reportSourceStopInterest: {
+          stoppedAt: "2026-01-10",
+          resumedAt: "2026-01-12",
+        },
+      },
+      period,
+    );
+    expect(cutoff?.getTime()).toBe(period.to.getTime());
+  });
+
+  it("returns null when cutoff falls before period.from", () => {
+    const cutoff = computeInterestAccrualCutoff(
+      { reportSourceWriteOffDate: "2025-12-15" },
+      period,
+    );
+    expect(cutoff).toBeNull();
+  });
+});
+
+describe("isAccrualSuspendedAt", () => {
+  it("is true after stoppedAt and before any resume", () => {
+    const summary = {
+      reportSourceStopInterest: { stoppedAt: "2026-01-10" },
+    };
+    expect(isAccrualSuspendedAt(summary, "2026-01-15")).toBe(true);
+    expect(isAccrualSuspendedAt(summary, "2026-01-05")).toBe(false);
+  });
+
+  it("is false again after resumedAt", () => {
+    const summary = {
+      reportSourceStopInterest: {
+        stoppedAt: "2026-01-10",
+        resumedAt: "2026-01-20",
+      },
+    };
+    expect(isAccrualSuspendedAt(summary, "2026-01-15")).toBe(true);
+    expect(isAccrualSuspendedAt(summary, "2026-01-25")).toBe(false);
+  });
+});
+
+describe("computeProfitLoss — accrual basis", () => {
+  const periods = buildPeriods({
+    startDate: "2026-01-01",
+    endDate: "2026-01-31",
+  });
+
+  it("recognizes interest from schedule installments due in the period", () => {
+    const loanSummaries = [
+      {
+        reportSourceScheduleRows: [
+          { dueDate: "2026-01-15", interestDue: 200, feesDue: 0, penaltyDue: 0 },
+          { dueDate: "2026-02-15", interestDue: 200, feesDue: 0, penaltyDue: 0 },
+        ],
+      },
+    ];
+    const result = computeProfitLoss({
+      loanSummaries,
+      periods,
+      basis: BASIS_MODES.ACCRUAL,
+    });
+    expect(result.periodTotals[0].interestOnLoans).toBe(200);
+  });
+
+  it("stops accruing interest after the write-off event date", () => {
+    const loanSummaries = [
+      {
+        reportSourceWriteOffDate: "2026-01-20",
+        reportSourceScheduleRows: [
+          { dueDate: "2026-01-15", interestDue: 100 },
+          { dueDate: "2026-01-25", interestDue: 100 },
+        ],
+      },
+    ];
+    const result = computeProfitLoss({
+      loanSummaries,
+      periods,
+      basis: BASIS_MODES.ACCRUAL,
+    });
+    expect(result.periodTotals[0].interestOnLoans).toBe(100);
+  });
+
+  it("stops accruing interest after a manual Stop Interest date", () => {
+    const loanSummaries = [
+      {
+        reportSourceStopInterest: { stoppedAt: "2026-01-12" },
+        reportSourceScheduleRows: [
+          { dueDate: "2026-01-10", interestDue: 75 },
+          { dueDate: "2026-01-20", interestDue: 75 },
+        ],
+      },
+    ];
+    const result = computeProfitLoss({
+      loanSummaries,
+      periods,
+      basis: BASIS_MODES.ACCRUAL,
+    });
+    expect(result.periodTotals[0].interestOnLoans).toBe(75);
+  });
+
+  it("recognizes ad-hoc Penalty records by penaltyDate (excludes voided)", () => {
+    const loanSummaries = [
+      {
+        reportSourcePenalties: [
+          { penaltyDate: "2026-01-12", amount: 50, penaltyStatus: "ACTIVE" },
+          { penaltyDate: "2026-01-18", amount: 30, penaltyStatus: "VOIDED" },
+        ],
+      },
+    ];
+    const result = computeProfitLoss({
+      loanSummaries,
+      periods,
+      basis: BASIS_MODES.ACCRUAL,
+    });
+    expect(result.periodTotals[0].penaltiesCollected).toBe(50);
+  });
+
+  it("recognizes LoanFees by loanFeesDate", () => {
+    const loanSummaries = [
+      {
+        reportSourceLoanFees: [
+          { loanFeesDate: "2026-01-05", amount: 25 },
+          { loanFeesDate: "2026-01-25", amount: 75 },
+          { loanFeesDate: "2025-12-30", amount: 999 },
+        ],
+      },
+    ];
+    const result = computeProfitLoss({
+      loanSummaries,
+      periods,
+      basis: BASIS_MODES.ACCRUAL,
+    });
+    expect(result.periodTotals[0].feesCollected).toBe(100);
   });
 });

@@ -34,7 +34,6 @@ import { generateClient } from "aws-amplify/api";
 import { UserContext } from "../../App";
 import PlusButtonMain from "../../ModelAssets/PlusButtonMain";
 import DateFilters, { getPresetRange } from "../../ModelAssets/DateFilters";
-import AdminBranchScopeSelector from "../../ModelAssets/AdminBranchScopeSelector";
 import { useNotification } from "../../ModelAssets/NotificationContext";
 import {
   expensesByBranchID,
@@ -77,8 +76,7 @@ const buildRowConfig = ({ expenseCategories }) => {
     type: "line",
     label: category,
     indent: 2,
-    valueOf: (period) =>
-      period.operatingExpensesByCategory?.[category] ?? 0,
+    valueOf: (period) => period.operatingExpensesByCategory?.[category] ?? 0,
   }));
 
   return [
@@ -182,7 +180,12 @@ export default function ProfitabilityReport() {
   const theme = useTheme();
   const sf = theme.palette.sf;
 
-  const [selectedBranchId, setSelectedBranchId] = React.useState(null);
+  // Mirror LoansDisplay: use whatever branch is currently loaded in userDetails
+  // for both admin (set via the top-bar branch selector) and non-admin users.
+  const activeBranchId =
+    userDetails?.branchID || userDetails?.branch?.id || null;
+  const shouldShowReport = Boolean(activeBranchId);
+
   const defaultRange = React.useMemo(
     () => getPresetRange("this_year") || { from: "", to: "" },
     [],
@@ -197,55 +200,50 @@ export default function ProfitabilityReport() {
   const [extrasLoading, setExtrasLoading] = React.useState(false);
   const [extrasError, setExtrasError] = React.useState(null);
 
+  // Pass activeBranchId to useReportData so it loads loan summaries for the
+  // currently-loaded branch regardless of admin status.
   const {
     summaries,
-    branches,
     loading: summariesLoading,
     error: summariesError,
     refresh: refreshSummaries,
-    scope,
-  } = useReportData({ selectedBranchId });
+  } = useReportData({ selectedBranchId: activeBranchId });
 
-  const effectiveBranchId = scope.isAdmin
-    ? selectedBranchId || (branches.length === 1 ? branches[0]?.id : null)
-    : scope.branchId;
+  const effectiveBranchId = activeBranchId;
 
-  const loadExtras = React.useCallback(
-    async (branchId) => {
-      if (!branchId) {
-        setExpenses([]);
-        setOtherIncomes([]);
-        return;
-      }
-      setExtrasLoading(true);
-      setExtrasError(null);
-      try {
-        const client = generateClient();
-        const [loadedExpenses, loadedOtherIncomes] = await Promise.all([
-          fetchAllExpensesByBranch({
-            client,
-            branchId,
-            query: expensesByBranchID,
-          }),
-          fetchAllOtherIncomesByBranch({
-            client,
-            branchId,
-            query: otherIncomesByBranchID,
-          }),
-        ]);
-        setExpenses(loadedExpenses);
-        setOtherIncomes(loadedOtherIncomes);
-      } catch (err) {
-        console.error("[ProfitLoss] failed to load extras:", err);
-        setExpenses([]);
-        setOtherIncomes([]);
-        setExtrasError("Failed to load expense / other income data.");
-      } finally {
-        setExtrasLoading(false);
-      }
-    },
-    [],
-  );
+  const loadExtras = React.useCallback(async (branchId) => {
+    if (!branchId) {
+      setExpenses([]);
+      setOtherIncomes([]);
+      return;
+    }
+    setExtrasLoading(true);
+    setExtrasError(null);
+    try {
+      const client = generateClient();
+      const [loadedExpenses, loadedOtherIncomes] = await Promise.all([
+        fetchAllExpensesByBranch({
+          client,
+          branchId,
+          query: expensesByBranchID,
+        }),
+        fetchAllOtherIncomesByBranch({
+          client,
+          branchId,
+          query: otherIncomesByBranchID,
+        }),
+      ]);
+      setExpenses(loadedExpenses);
+      setOtherIncomes(loadedOtherIncomes);
+    } catch (err) {
+      console.error("[ProfitLoss] failed to load extras:", err);
+      setExpenses([]);
+      setOtherIncomes([]);
+      setExtrasError("Failed to load expense / other income data.");
+    } finally {
+      setExtrasLoading(false);
+    }
+  }, []);
 
   React.useEffect(() => {
     loadExtras(effectiveBranchId);
@@ -269,8 +267,9 @@ export default function ProfitabilityReport() {
         expenses,
         otherIncomes,
         periods,
+        basis,
       }),
-    [summaries, expenses, otherIncomes, periods],
+    [summaries, expenses, otherIncomes, periods, basis],
   );
 
   const rowConfig = React.useMemo(
@@ -278,8 +277,6 @@ export default function ProfitabilityReport() {
     [profitLoss.expenseCategories],
   );
 
-  const requiresBranchSelection =
-    scope.isAdmin && branches.length !== 1 && !selectedBranchId;
   const loading = summariesLoading || extrasLoading;
   const validPeriods = periods.length > 0;
   const errorMessage = summariesError || extrasError;
@@ -421,25 +418,21 @@ export default function ProfitabilityReport() {
         </Box>
       </Box>
 
-      {scope.isAdmin && (
-        <Box sx={{ mb: 2 }}>
-          <AdminBranchScopeSelector
-            branches={branches}
-            selectedBranchId={selectedBranchId}
-            onBranchChange={setSelectedBranchId}
-            helperText="Select a branch before viewing the Profit / Loss statement."
-            emptyMessage="Please select a branch above to view the Profit / Loss statement."
-          />
+      {!shouldShowReport && (
+        <Box sx={{ p: 2, mb: 2, bgcolor: "info.light" }}>
+          <Typography variant="body2">
+            No active branch is loaded. Use Change Branch from the top bar.
+          </Typography>
         </Box>
       )}
 
-      {!requiresBranchSelection && errorMessage && (
+      {shouldShowReport && errorMessage && (
         <Alert severity="error" sx={{ mb: 2, borderRadius: 0 }}>
           {errorMessage}
         </Alert>
       )}
 
-      {!requiresBranchSelection && (
+      {shouldShowReport && (
         <>
           {/* Filter Container */}
           <Box
@@ -457,7 +450,7 @@ export default function ProfitabilityReport() {
                   sx={{
                     fontSize: HEADER_FONT_SIZE,
                     fontWeight: 600,
-                    color: sf.sf_textTertiary,
+                    // color: sf.sf_textTertiary,
                     textTransform: "uppercase",
                     letterSpacing: "0.04em",
                     mb: 0,
@@ -507,7 +500,7 @@ export default function ProfitabilityReport() {
                   sx={{
                     fontSize: HEADER_FONT_SIZE,
                     fontWeight: 600,
-                    color: sf.sf_textTertiary,
+                    // color: sf.sf_textTertiary,
                     textTransform: "uppercase",
                     letterSpacing: "0.04em",
                     mb: 0.3,
@@ -534,7 +527,7 @@ export default function ProfitabilityReport() {
                   sx={{
                     fontSize: HEADER_FONT_SIZE,
                     fontWeight: 600,
-                    color: sf.sf_textTertiary,
+                    // color: sf.sf_textTertiary,
                     textTransform: "uppercase",
                     letterSpacing: "0.04em",
                     mb: 0.3,
@@ -558,16 +551,6 @@ export default function ProfitabilityReport() {
               </Box>
             </Box>
           </Box>
-
-          {basis === BASIS_MODES.ACCRUAL && (
-            <Alert
-              severity="info"
-              sx={{ mb: 2, borderRadius: 0, fontSize: "0.8rem" }}
-            >
-              Accrual basis displays the same figures as Cash basis until
-              per-period schedule accrual is implemented.
-            </Alert>
-          )}
 
           {loading && <LinearProgress sx={{ mb: 1.5 }} />}
 
@@ -674,10 +657,9 @@ export default function ProfitabilityReport() {
               display: "block",
             }}
           >
-            Revenue from Loans is sourced from payment allocations
-            (interest, fees, penalties) on valid payments. Other Income and
-            Expenses come from OtherIncome and Expense records in the
-            selected period.
+            {basis === BASIS_MODES.ACCRUAL
+              ? "Accrual basis: interest is recognized from scheduled installments due in the period; fees and penalties from LoanFees and Penalty records by their charge date. Interest accrual stops at the loan's write-off event or its Stop Interest date, whichever comes first."
+              : "Cash basis: revenue is recognized when received, derived from the statement ledger's payment allocations (interest, fees, penalties). Other Income and Expenses come from OtherIncome and Expense records in the selected period."}
           </Typography>
         </>
       )}
@@ -738,9 +720,7 @@ function ProfitLossRow({ row, periods, periodTotals, sf }) {
     <tr
       style={{
         background: isHighlight ? sf.sf_tableHeaderBg : "transparent",
-        borderTop: row.borderTop
-          ? `2px solid ${sf.sf_borderLight}`
-          : undefined,
+        borderTop: row.borderTop ? `2px solid ${sf.sf_borderLight}` : undefined,
         borderBottom: row.borderBottom
           ? `2px solid ${sf.sf_borderLight}`
           : undefined,

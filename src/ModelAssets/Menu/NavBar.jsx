@@ -74,6 +74,15 @@ const navItems = [
     path: "/calendar",
   },
   {
+    name: "Accounting",
+    type: "dropdown",
+    items: [
+      { name: "Expenses", path: "/expenses" },
+      { name: "Other Income", path: "/other-incomes" },
+      { name: "Profit / Loss", path: "/reports/profitability" },
+    ],
+  },
+  {
     name: "Reports",
     type: "dropdown",
     items: [

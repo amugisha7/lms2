@@ -7,7 +7,6 @@ import { useTheme } from "@mui/material/styles";
 import CollectionsTemplate from "../../ModelAssets/CollectionsTemplate";
 import { useCrudOperations } from "../../hooks/useCrudOperations";
 import { generateClient } from "aws-amplify/api";
-import { Formik, Form, useField } from "formik";
 import NotificationBar from "../../ModelAssets/NotificationBar";
 import PlusButtonSmall from "../../ModelAssets/PlusButtonSmall";
 import PlusButtonMain from "../../ModelAssets/PlusButtonMain";
@@ -16,8 +15,6 @@ import MoneyTransactions from "./MoneyTransactions/MoneyTransactions";
 import { Box, Typography } from "@mui/material";
 import Remove from "@mui/icons-material/Remove";
 import Add from "@mui/icons-material/Add";
-import { listBranches } from "../../graphql/queries";
-import MultipleDropDownSearchable from "../../Resources/FormComponents/MultipleDropDownSearchable";
 import {
   LIST_ACCOUNTS_QUERY,
   LIST_ACCOUNTS_BY_BRANCH_QUERY,
@@ -29,55 +26,10 @@ import {
   LIST_ACCOUNT_BRANCHES_QUERY,
 } from "./accountHelpers";
 
-// Guard to ensure we only fetch accounts once per page load (even under React StrictMode)
-let __accountsFetchedOnce = false;
-
-function FormikEffect({ onChange, fieldName }) {
-  const [field] = useField(fieldName);
-  const prevValueRef = React.useRef(field.value);
-
-  React.useEffect(() => {
-    if (JSON.stringify(field.value) !== JSON.stringify(prevValueRef.current)) {
-      prevValueRef.current = field.value;
-      onChange(field.value);
-    }
-  }, [field.value, onChange]);
-
-  return null;
-}
-
-function BranchFilterWrapper({ branches, onFilterChange, selectedCount }) {
-  return (
-    <Box sx={{ mb: 3, width: "100%" }}>
-      <Formik initialValues={{ branchFilter: [] }} enableReinitialize>
-        <Form>
-          <FormikEffect onChange={onFilterChange} fieldName="branchFilter" />
-          <MultipleDropDownSearchable
-            label="Filter by Branch"
-            name="branchFilter"
-            options={branches.map((branch) => ({
-              value: branch.id,
-              label: branch.name,
-            }))}
-            placeholder={selectedCount === 0 ? "All Branches" : ""}
-            editing={true}
-            helperText={
-              selectedCount === 0
-                ? "Showing all branches"
-                : `Showing ${selectedCount} branch(es)`
-            }
-          />
-        </Form>
-      </Formik>
-    </Box>
-  );
-}
-
 export default function Accounts() {
   const navigate = useNavigate();
   const [editMode, setEditMode] = React.useState(false);
   const formRef = useRef();
-  const hasFetchedRef = useRef(false);
   const { userDetails } = React.useContext(UserContext);
   const theme = useTheme();
   const [processedAccounts, setProcessedAccounts] = React.useState([]);
@@ -87,13 +39,16 @@ export default function Accounts() {
     message: "",
     color: "green",
   });
-  const client = React.useMemo(() => generateClient(), []); // stabilize client so effect does not re-trigger infinitely
+  const client = React.useMemo(() => generateClient(), []);
 
   const [transactionDialogOpen, setTransactionDialogOpen] = useState(false);
   const [transactionType, setTransactionType] = useState("deposit");
   const [selectedAccount, setSelectedAccount] = useState(null);
-  const [branches, setBranches] = React.useState([]);
-  const [selectedBranchFilter, setSelectedBranchFilter] = React.useState([]);
+
+  // Mirror ProfitabilityReport: use the branch currently loaded in the top-bar
+  // selector for both admin and non-admin users.
+  const activeBranchId =
+    userDetails?.branchID || userDetails?.branch?.id || null;
 
   const handleTransactionClick = (account, type) => {
     setSelectedAccount(account);
@@ -107,14 +62,8 @@ export default function Accounts() {
   };
 
   const handleTransactionSuccess = () => {
-    const isAdmin = userDetails?.userType === "Admin";
-    const institutionId =
-      userDetails?.institutionID || userDetails?.institution?.id;
-
-    if (isAdmin && institutionId) {
-      fetchAccounts({ institutionId });
-    } else if (!isAdmin && userDetails?.branchID) {
-      fetchAccounts({ branchId: userDetails.branchID });
+    if (activeBranchId) {
+      fetchAccounts({ branchId: activeBranchId });
     }
   };
 
@@ -148,107 +97,44 @@ export default function Accounts() {
     "listAccounts",
   );
 
-  // Custom fetch function with pagination support
+  // Fetch accounts linked to the active branch via the AccountBranch join table.
+  // Same for admin and non-admin — the active branch comes from the top-bar selector.
   const fetchAccounts = React.useCallback(
-    async (variables = {}) => {
-      console.log("Fetching accounts with pagination...");
+    async ({ branchId } = {}) => {
+      if (!branchId) return;
       setAccountsLoading(true);
       try {
         let allAccountsList = [];
         let nextToken = null;
         let iteration = 0;
 
-        // Determine query based on whether user is admin or fetching by branch
-        const isAdmin = userDetails?.userType === "Admin";
-        const useAccountBranchQuery = variables.branchId && !isAdmin;
-        const query = useAccountBranchQuery
-          ? LIST_ACCOUNTS_BY_BRANCH_QUERY
-          : LIST_ACCOUNTS_QUERY;
-        const queryName = useAccountBranchQuery
-          ? "listAccountBranches"
-          : "listAccounts";
-
-        console.log(
-          `User type: ${isAdmin ? "Admin" : "Non-Admin"}, Using query: ${queryName}`,
-        );
-
         while (true) {
-          const queryVariables = {
-            ...variables,
-            ...(nextToken && { nextToken }),
-          };
-          console.log(
-            `Fetching batch ${iteration + 1} with nextToken: ${
-              nextToken || "null"
-            }`,
-          );
-          console.log(`API Query: ${queryName}`, {
-            variables: queryVariables,
-          });
+          const prevToken = nextToken;
           const result = await client.graphql({
-            query: query,
-            variables: queryVariables,
+            query: LIST_ACCOUNTS_BY_BRANCH_QUERY,
+            variables: { branchId, ...(nextToken && { nextToken }) },
           });
-
-          // Defensive: handle unexpected shapes
-          let batchItems = [];
-          if (useAccountBranchQuery) {
-            // Extract accounts from AccountBranch join table
-            const listResult = result?.data?.listAccountBranches || {};
-            const items = Array.isArray(listResult.items)
-              ? listResult.items
-              : [];
-            // Extract accounts from the nested structure
-            batchItems = items
-              .map((item) => item.account)
-              .filter((account) => account != null);
-            nextToken = listResult.nextToken || null;
-          } else {
-            // Direct account query
-            const listResult = result?.data?.listAccounts || {};
-            batchItems = Array.isArray(listResult.items)
-              ? listResult.items
-              : [];
-            nextToken = listResult.nextToken || null;
-          }
-
-          allAccountsList.push(...batchItems);
-          console.log(
-            `Fetched ${batchItems.length} accounts in this batch. Total: ${allAccountsList.length}. NextToken: ${nextToken}`,
-          );
-
-          // Break conditions
-          if (!nextToken) {
-            console.log("No nextToken returned. Pagination complete.");
-            break;
-          }
-          if (nextToken === queryVariables.nextToken) {
-            console.warn(
-              "Next token did not advance. Stopping to prevent infinite loop.",
-            );
-            break;
-          }
-          if (++iteration > 50) {
-            console.warn(
-              "Safety cap (50 iterations) reached. Stopping pagination.",
-            );
-            break;
-          }
+          const listResult = result?.data?.listAccountBranches || {};
+          const items = Array.isArray(listResult.items) ? listResult.items : [];
+          const batch = items.map((item) => item.account).filter(Boolean);
+          allAccountsList.push(...batch);
+          nextToken = listResult.nextToken || null;
+          if (!nextToken) break;
+          if (nextToken === prevToken) break;
+          if (++iteration > 50) break;
         }
-        console.log(
-          `Finished fetching all accounts. Total count: ${allAccountsList.length}`,
-        );
+
         setAllAccounts(allAccountsList);
         return allAccountsList;
       } catch (err) {
-        console.error("Error fetching accounts with pagination:", err);
+        console.error("Error fetching accounts:", err);
         setAllAccounts([]);
         throw err;
       } finally {
         setAccountsLoading(false);
       }
     },
-    [client, userDetails?.userType],
+    [client],
   );
 
   // API handler for creating account
@@ -506,94 +392,24 @@ export default function Accounts() {
   };
 
   React.useEffect(() => {
-    const isAdmin = userDetails?.userType === "Admin";
-    const institutionId =
-      userDetails?.institutionID || userDetails?.institution?.id;
-
-    if (isAdmin && institutionId && !hasFetchedRef.current) {
-      // Admin: fetch all accounts in the institution
-      hasFetchedRef.current = true;
-      fetchAccounts({ institutionId });
-    } else if (
-      !isAdmin &&
-      userDetails?.branchID &&
-      !hasFetchedRef.current
-    ) {
-      // Non-admin: fetch accounts linked to their branch
-      hasFetchedRef.current = true;
-      fetchAccounts({ branchId: userDetails.branchID });
+    if (activeBranchId) {
+      fetchAccounts({ branchId: activeBranchId });
     }
-  }, [
-    userDetails?.institutionID,
-    userDetails?.institution?.id,
-    userDetails?.branchID,
-    userDetails?.userType,
-    fetchAccounts,
-  ]);
-
-  React.useEffect(() => {
-    const fetchBranchesForAdmin = async () => {
-      const isAdmin = userDetails?.userType === "Admin";
-      const institutionId =
-        userDetails?.institution?.id || userDetails?.institutionID;
-
-      if (!isAdmin || !institutionId) {
-        setBranches([]);
-        setSelectedBranchFilter([]);
-        return;
-      }
-
-      try {
-        const branchData = await client.graphql({
-          query: listBranches,
-          variables: {
-            limit: 1000,
-            filter: {
-              institutionID: { eq: institutionId },
-            },
-          },
-        });
-        const items = branchData?.data?.listBranches?.items || [];
-        setBranches(items);
-        setSelectedBranchFilter([]);
-      } catch (error) {
-        console.error("Error fetching branches:", error);
-        setBranches([]);
-      }
-    };
-
-    if (userDetails) {
-      fetchBranchesForAdmin();
-    }
-  }, [userDetails, client]);
+  }, [activeBranchId, fetchAccounts]);
 
   React.useEffect(() => {
     if (allAccounts && Array.isArray(allAccounts)) {
-      let processed = allAccounts.map((account) => ({
-        ...account,
-        currentBalance: calculateCurrentBalance(account),
-      }));
-
-      if (
-        userDetails?.userType === "Admin" &&
-        selectedBranchFilter.length > 0
-      ) {
-        processed = processed.filter((account) => {
-          const accountBranches = account?.branches?.items || [];
-          return accountBranches.some((item) =>
-            selectedBranchFilter.includes(item?.branchId),
-          );
-        });
-      }
-
-      processed.sort((a, b) =>
-        a.name.localeCompare(b.name, undefined, {
-          sensitivity: "base",
-        }),
-      );
+      const processed = allAccounts
+        .map((account) => ({
+          ...account,
+          currentBalance: calculateCurrentBalance(account),
+        }))
+        .sort((a, b) =>
+          a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
+        );
       setProcessedAccounts(processed);
     }
-  }, [allAccounts, selectedBranchFilter, userDetails?.userType]);
+  }, [allAccounts]);
 
   const handleEditClick = (form) => {
     if (form) {
@@ -700,13 +516,6 @@ export default function Accounts() {
         />
       </Box>
 
-      {userDetails?.userType === "Admin" && branches.length > 0 && (
-        <BranchFilterWrapper
-          branches={branches}
-          onFilterChange={setSelectedBranchFilter}
-          selectedCount={selectedBranchFilter.length}
-        />
-      )}
       <CollectionsTemplate
         title="Accounts"
         createButtonText="Create Account"

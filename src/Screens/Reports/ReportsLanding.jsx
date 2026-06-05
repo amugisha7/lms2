@@ -20,6 +20,7 @@ import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import TrendingDownIcon from "@mui/icons-material/TrendingDown";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import ShieldIcon from "@mui/icons-material/Shield";
+import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import { REPORT_REGISTRY } from "./reportRegistry";
 
 const ICON_MAP = {
@@ -31,6 +32,7 @@ const ICON_MAP = {
   TrendingDown: <TrendingDownIcon sx={{ fontSize: 36, color: "error.main" }} />,
   TrendingUp: <TrendingUpIcon sx={{ fontSize: 36, color: "success.main" }} />,
   Shield: <ShieldIcon sx={{ fontSize: 36, color: "success.main" }} />,
+  ReceiptLong: <ReceiptLongIcon sx={{ fontSize: 36, color: "info.main" }} />,
 };
 
 export default function ReportsLanding() {

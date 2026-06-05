@@ -1,6 +1,8 @@
 import {
   BASIS_MODES,
-  COMPARE_MODES,
+  COMPARE_TO,
+  GROUP_BY,
+  REPORT_MODES,
   buildPeriods,
   computeInterestAccrualCutoff,
   computeProfitLoss,
@@ -8,47 +10,47 @@ import {
   isAccrualSuspendedAt,
 } from "./profitLossHelpers";
 
-describe("buildPeriods", () => {
-  it("returns just the primary period when compareMode is NONE", () => {
-    const periods = buildPeriods({
-      startDate: "2025-07-01",
-      endDate: "2026-12-01",
-      compareMode: COMPARE_MODES.NONE,
-      comparePeriods: 2,
+// Shorthand: most tests below just want the periods array, not the truncated
+// flag, so we unwrap here.
+const periodsOf = (args) => buildPeriods(args).periods;
+
+describe("buildPeriods — Standard mode", () => {
+  it("returns just the primary period when compareTo is NONE", () => {
+    const periods = periodsOf({
+      mode: REPORT_MODES.STANDARD,
+      startDate: "2026-01-01",
+      endDate: "2026-12-31",
+      compareTo: COMPARE_TO.NONE,
     });
     expect(periods).toHaveLength(1);
     expect(periods[0].key).toBe("primary");
-    expect(periods[0].label).toMatch(/Jul/);
+    expect(periods[0].label).toMatch(/Jan/);
     expect(periods[0].label).toMatch(/Dec/);
   });
 
-  it("appends prior monthly periods immediately before the primary start", () => {
-    const periods = buildPeriods({
-      startDate: "2025-07-01",
-      endDate: "2026-12-01",
-      compareMode: COMPARE_MODES.MONTHLY,
-      comparePeriods: 2,
+  it("appends a Previous Period column of equal length immediately before the primary", () => {
+    const periods = periodsOf({
+      mode: REPORT_MODES.STANDARD,
+      startDate: "2026-02-01",
+      endDate: "2026-02-28",
+      compareTo: COMPARE_TO.PREVIOUS_PERIOD,
     });
-    expect(periods).toHaveLength(3);
-
-    const [, june, may] = periods;
-    expect(june.from.getMonth()).toBe(5); // June
-    expect(june.from.getDate()).toBe(1);
-    expect(june.to.getMonth()).toBe(5);
-    expect(june.to.getDate()).toBe(30);
-
-    expect(may.from.getMonth()).toBe(4); // May
-    expect(may.from.getDate()).toBe(1);
-    expect(may.to.getMonth()).toBe(4);
-    expect(may.to.getDate()).toBe(31);
+    expect(periods).toHaveLength(2);
+    const [, prior] = periods;
+    // 28-day prior window ending 31-Jan-2026 → 4 Jan - 31 Jan.
+    expect(prior.from.getFullYear()).toBe(2026);
+    expect(prior.from.getMonth()).toBe(0);
+    expect(prior.from.getDate()).toBe(4);
+    expect(prior.to.getMonth()).toBe(0);
+    expect(prior.to.getDate()).toBe(31);
   });
 
-  it("appends prior yearly periods when compareMode is YEARLY", () => {
-    const periods = buildPeriods({
+  it("appends a Previous Year column shifted -1 year", () => {
+    const periods = periodsOf({
+      mode: REPORT_MODES.STANDARD,
       startDate: "2026-01-01",
       endDate: "2026-12-31",
-      compareMode: COMPARE_MODES.YEARLY,
-      comparePeriods: 1,
+      compareTo: COMPARE_TO.PREVIOUS_YEAR,
     });
     expect(periods).toHaveLength(2);
     const prior = periods[1];
@@ -60,8 +62,90 @@ describe("buildPeriods", () => {
     expect(prior.to.getDate()).toBe(31);
   });
 
+  it("uses the user-picked range for a Custom comparison", () => {
+    const periods = periodsOf({
+      mode: REPORT_MODES.STANDARD,
+      startDate: "2026-01-01",
+      endDate: "2026-03-31",
+      compareTo: COMPARE_TO.CUSTOM,
+      compareStartDate: "2024-07-01",
+      compareEndDate: "2024-09-30",
+    });
+    expect(periods).toHaveLength(2);
+    const [, prior] = periods;
+    expect(prior.from.getFullYear()).toBe(2024);
+    expect(prior.from.getMonth()).toBe(6); // July
+    expect(prior.to.getMonth()).toBe(8); // September
+    expect(prior.to.getDate()).toBe(30);
+  });
+
+  it("silently drops the comparison column when Custom dates are missing", () => {
+    const periods = periodsOf({
+      mode: REPORT_MODES.STANDARD,
+      startDate: "2026-01-01",
+      endDate: "2026-01-31",
+      compareTo: COMPARE_TO.CUSTOM,
+    });
+    expect(periods).toHaveLength(1);
+  });
+
   it("returns an empty array when given invalid dates", () => {
-    expect(buildPeriods({ startDate: "", endDate: "" })).toEqual([]);
+    expect(periodsOf({ startDate: "", endDate: "" })).toEqual([]);
+  });
+});
+
+describe("buildPeriods — Trend mode", () => {
+  it("buckets a calendar year by month into 12 columns", () => {
+    const periods = periodsOf({
+      mode: REPORT_MODES.TREND,
+      startDate: "2026-01-01",
+      endDate: "2026-12-31",
+      groupBy: GROUP_BY.MONTH,
+    });
+    expect(periods).toHaveLength(12);
+    expect(periods[0].from.getMonth()).toBe(0);
+    expect(periods[0].to.getMonth()).toBe(0);
+    expect(periods[0].to.getDate()).toBe(31);
+    expect(periods[11].from.getMonth()).toBe(11);
+    expect(periods[11].to.getDate()).toBe(31);
+  });
+
+  it("clips first and last buckets to the date range edges", () => {
+    const periods = periodsOf({
+      mode: REPORT_MODES.TREND,
+      startDate: "2026-01-15",
+      endDate: "2026-03-10",
+      groupBy: GROUP_BY.MONTH,
+    });
+    expect(periods).toHaveLength(3);
+    expect(periods[0].from.getDate()).toBe(15);
+    expect(periods[0].to.getDate()).toBe(31);
+    expect(periods[2].to.getMonth()).toBe(2);
+    expect(periods[2].to.getDate()).toBe(10);
+  });
+
+  it("buckets by quarter using calendar quarters", () => {
+    const periods = periodsOf({
+      mode: REPORT_MODES.TREND,
+      startDate: "2026-01-01",
+      endDate: "2026-12-31",
+      groupBy: GROUP_BY.QUARTER,
+    });
+    expect(periods).toHaveLength(4);
+    expect(periods[0].label).toBe("Q1 26");
+    expect(periods[3].label).toBe("Q4 26");
+  });
+
+  it("flags truncated when the grouping exceeds the column cap", () => {
+    const { periods, truncated } = buildPeriods({
+      mode: REPORT_MODES.TREND,
+      startDate: "2026-01-01",
+      endDate: "2026-12-31",
+      groupBy: GROUP_BY.DAY,
+      maxColumns: 5,
+    });
+    expect(truncated).toBe(true);
+    expect(periods).toHaveLength(5);
   });
 });
 
@@ -74,11 +158,11 @@ describe("formatPeriodLabel", () => {
 });
 
 describe("computeProfitLoss", () => {
-  const periods = buildPeriods({
+  const periods = periodsOf({
+    mode: REPORT_MODES.STANDARD,
     startDate: "2026-01-01",
     endDate: "2026-01-31",
-    compareMode: COMPARE_MODES.MONTHLY,
-    comparePeriods: 1,
+    compareTo: COMPARE_TO.PREVIOUS_PERIOD,
   });
 
   it("returns empty totals when periods is empty", () => {
@@ -108,8 +192,6 @@ describe("computeProfitLoss", () => {
             allocPenalty: 0,
           },
         ],
-        // Raw payments with persisted allocations should be IGNORED in favor of
-        // the derived rows above.
         reportSourcePayments: [
           {
             paymentDate: "2026-01-15",
@@ -149,7 +231,6 @@ describe("computeProfitLoss", () => {
             amountAllocatedToPenalty: 0,
           },
           {
-            // Excluded: reversed
             paymentDate: "2026-01-10",
             paymentStatusEnum: "REVERSED",
             amountAllocatedToInterest: 9999,
@@ -278,7 +359,8 @@ describe("BASIS_MODES sanity", () => {
 });
 
 describe("computeInterestAccrualCutoff", () => {
-  const [period] = buildPeriods({
+  const [period] = periodsOf({
+    mode: REPORT_MODES.STANDARD,
     startDate: "2026-01-01",
     endDate: "2026-01-31",
   });
@@ -353,7 +435,8 @@ describe("isAccrualSuspendedAt", () => {
 });
 
 describe("computeProfitLoss — accrual basis", () => {
-  const periods = buildPeriods({
+  const periods = periodsOf({
+    mode: REPORT_MODES.STANDARD,
     startDate: "2026-01-01",
     endDate: "2026-01-31",
   });

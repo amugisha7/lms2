@@ -5,17 +5,41 @@ import {
   isTaxCategory,
 } from "../../Models/Expenses/expenseCategories";
 
-export const COMPARE_MODES = Object.freeze({
+// Two top-level report intents. Standard = one primary period with an optional
+// single comparison column. Trend = primary range split into N buckets by a
+// grouping unit.
+export const REPORT_MODES = Object.freeze({
+  STANDARD: "standard",
+  TREND: "trend",
+});
+
+// Comparison column for Standard mode. PREVIOUS_PERIOD is the immediately
+// preceding range of equal length; PREVIOUS_YEAR is the same calendar window
+// shifted -1 year; CUSTOM lets the user pick an arbitrary second range.
+export const COMPARE_TO = Object.freeze({
   NONE: "none",
-  MONTHLY: "monthly",
-  QUARTERLY: "quarterly",
-  YEARLY: "yearly",
+  PREVIOUS_PERIOD: "previous_period",
+  PREVIOUS_YEAR: "previous_year",
+  CUSTOM: "custom",
+});
+
+// Bucket unit for Trend mode.
+export const GROUP_BY = Object.freeze({
+  DAY: "day",
+  WEEK: "week",
+  MONTH: "month",
+  QUARTER: "quarter",
+  YEAR: "year",
 });
 
 export const BASIS_MODES = Object.freeze({
   CASH: "cash",
   ACCRUAL: "accrual",
 });
+
+// Soft cap on column count in Trend mode. Prevents pathological grids (e.g.
+// "Day" over a year). The UI surfaces a warning when this clips the result.
+export const TREND_MAX_COLUMNS = 36;
 
 const MONTH_ABBR = [
   "Jan",
@@ -70,49 +94,63 @@ const endOfDayLocal = (date) => {
   return d;
 };
 
-const getPriorPeriod = (cursorStart, compareMode) => {
-  if (
-    !(cursorStart instanceof Date) ||
-    Number.isNaN(cursorStart.getTime()) ||
-    compareMode === COMPARE_MODES.NONE
-  ) {
-    return null;
+const addDays = (date, n) => {
+  const d = new Date(date);
+  d.setDate(d.getDate() + n);
+  return d;
+};
+
+const yy = (date) => String(date.getFullYear()).slice(-2);
+
+// Trend column labels are deliberately compact — the columns are already
+// ordered, so the label only needs to identify the bucket, not the full range.
+const formatTrendLabel = (from, to, groupBy) => {
+  switch (groupBy) {
+    case GROUP_BY.DAY:
+      return formatPeriodEdge(from);
+    case GROUP_BY.WEEK:
+      // Range form, since "week of …" is ambiguous across calendar systems.
+      return `${from.getDate()} ${MONTH_ABBR[from.getMonth()]} - ${to.getDate()} ${MONTH_ABBR[to.getMonth()]} ${yy(to)}`;
+    case GROUP_BY.MONTH:
+      return `${MONTH_ABBR[from.getMonth()]} ${yy(from)}`;
+    case GROUP_BY.QUARTER: {
+      const q = Math.floor(from.getMonth() / 3) + 1;
+      return `Q${q} ${yy(from)}`;
+    }
+    case GROUP_BY.YEAR:
+      return String(from.getFullYear());
+    default:
+      return formatPeriodLabel(from, to);
   }
+};
 
-  const priorEnd = new Date(cursorStart);
-  priorEnd.setDate(priorEnd.getDate() - 1);
-  priorEnd.setHours(23, 59, 59, 999);
-
-  const priorStart = new Date(priorEnd);
-  priorStart.setHours(0, 0, 0, 0);
-
-  if (compareMode === COMPARE_MODES.MONTHLY) {
-    priorStart.setDate(1);
-  } else if (compareMode === COMPARE_MODES.QUARTERLY) {
-    priorStart.setMonth(priorStart.getMonth() - 2);
-    priorStart.setDate(1);
-  } else if (compareMode === COMPARE_MODES.YEARLY) {
-    priorStart.setMonth(0, 1);
-  } else {
-    return null;
-  }
-
+// Standard-mode comparison column resolvers. Each returns [from, to] or null.
+const getPreviousPeriodRange = (primaryFrom, primaryTo) => {
+  const priorEnd = endOfDayLocal(addDays(primaryFrom, -1));
+  // primaryFrom is midnight, primaryTo is end-of-day → the rounded ms diff is
+  // already the inclusive day count (e.g. Feb 1 → Feb 28 ≈ 27.9999 → 28).
+  const dayCount = Math.round(
+    (primaryTo - primaryFrom) / (24 * 60 * 60 * 1000),
+  );
+  const priorStart = startOfDayLocal(addDays(priorEnd, -(dayCount - 1)));
   return [priorStart, priorEnd];
 };
 
-export const buildPeriods = ({
-  startDate,
-  endDate,
-  compareMode = COMPARE_MODES.NONE,
-  comparePeriods = 0,
-} = {}) => {
-  const start = parseReportDate(startDate);
-  const end = parseReportDate(endDate, { endOfDay: true });
-  if (!start || !end) return [];
+const getPreviousYearRange = (primaryFrom, primaryTo) => {
+  const priorStart = startOfDayLocal(new Date(primaryFrom));
+  priorStart.setFullYear(priorStart.getFullYear() - 1);
+  const priorEnd = endOfDayLocal(new Date(primaryTo));
+  priorEnd.setFullYear(priorEnd.getFullYear() - 1);
+  return [priorStart, priorEnd];
+};
 
-  const primaryFrom = startOfDayLocal(start);
-  const primaryTo = endOfDayLocal(end);
-
+const buildStandardPeriods = ({
+  primaryFrom,
+  primaryTo,
+  compareTo,
+  compareStartDate,
+  compareEndDate,
+}) => {
   const periods = [
     {
       key: "primary",
@@ -122,25 +160,114 @@ export const buildPeriods = ({
     },
   ];
 
-  if (compareMode === COMPARE_MODES.NONE) return periods;
-
-  let cursor = new Date(primaryFrom);
-  const count = Math.max(0, Math.floor(Number(comparePeriods) || 0));
-
-  for (let i = 0; i < count; i += 1) {
-    const result = getPriorPeriod(cursor, compareMode);
-    if (!result) break;
-    const [pFrom, pTo] = result;
-    periods.push({
-      key: `compare_${i + 1}`,
-      from: pFrom,
-      to: pTo,
-      label: formatPeriodLabel(pFrom, pTo),
-    });
-    cursor = new Date(pFrom);
+  let comparison = null;
+  if (compareTo === COMPARE_TO.PREVIOUS_PERIOD) {
+    comparison = getPreviousPeriodRange(primaryFrom, primaryTo);
+  } else if (compareTo === COMPARE_TO.PREVIOUS_YEAR) {
+    comparison = getPreviousYearRange(primaryFrom, primaryTo);
+  } else if (compareTo === COMPARE_TO.CUSTOM) {
+    const cFrom = parseReportDate(compareStartDate);
+    const cTo = parseReportDate(compareEndDate, { endOfDay: true });
+    if (cFrom && cTo && cFrom <= cTo) {
+      comparison = [startOfDayLocal(cFrom), endOfDayLocal(cTo)];
+    }
   }
 
-  return periods;
+  if (comparison) {
+    const [from, to] = comparison;
+    periods.push({
+      key: "compare",
+      from,
+      to,
+      label: formatPeriodLabel(from, to),
+    });
+  }
+
+  return { periods, truncated: false };
+};
+
+// Returns the calendar-unit end date for the bucket containing `from`.
+const unitEnd = (from, groupBy) => {
+  if (groupBy === GROUP_BY.DAY) return new Date(from);
+  if (groupBy === GROUP_BY.WEEK) return addDays(from, 6);
+  if (groupBy === GROUP_BY.MONTH) {
+    return new Date(from.getFullYear(), from.getMonth() + 1, 0);
+  }
+  if (groupBy === GROUP_BY.QUARTER) {
+    const qStartMonth = Math.floor(from.getMonth() / 3) * 3;
+    return new Date(from.getFullYear(), qStartMonth + 3, 0);
+  }
+  if (groupBy === GROUP_BY.YEAR) {
+    return new Date(from.getFullYear(), 11, 31);
+  }
+  return new Date(from);
+};
+
+const buildTrendPeriods = ({
+  primaryFrom,
+  primaryTo,
+  groupBy,
+  maxColumns,
+}) => {
+  const periods = [];
+  let cursor = startOfDayLocal(primaryFrom);
+  let truncated = false;
+
+  while (cursor <= primaryTo) {
+    if (periods.length >= maxColumns) {
+      truncated = true;
+      break;
+    }
+    const rawEnd = unitEnd(cursor, groupBy);
+    const clippedEnd = endOfDayLocal(rawEnd > primaryTo ? primaryTo : rawEnd);
+    const from = new Date(cursor);
+    periods.push({
+      key: `bucket_${periods.length}`,
+      from,
+      to: clippedEnd,
+      label: formatTrendLabel(from, clippedEnd, groupBy),
+    });
+    cursor = startOfDayLocal(addDays(rawEnd, 1));
+  }
+
+  return { periods, truncated };
+};
+
+// Single entry point for both modes. Returns { periods, truncated } so the
+// caller can warn when Trend grouping clipped at TREND_MAX_COLUMNS.
+export const buildPeriods = ({
+  mode = REPORT_MODES.STANDARD,
+  startDate,
+  endDate,
+  compareTo = COMPARE_TO.NONE,
+  compareStartDate = null,
+  compareEndDate = null,
+  groupBy = GROUP_BY.MONTH,
+  maxColumns = TREND_MAX_COLUMNS,
+} = {}) => {
+  const start = parseReportDate(startDate);
+  const end = parseReportDate(endDate, { endOfDay: true });
+  if (!start || !end || start > end) {
+    return { periods: [], truncated: false };
+  }
+  const primaryFrom = startOfDayLocal(start);
+  const primaryTo = endOfDayLocal(end);
+
+  if (mode === REPORT_MODES.TREND) {
+    return buildTrendPeriods({
+      primaryFrom,
+      primaryTo,
+      groupBy,
+      maxColumns,
+    });
+  }
+  return buildStandardPeriods({
+    primaryFrom,
+    primaryTo,
+    compareTo,
+    compareStartDate,
+    compareEndDate,
+  });
 };
 
 const inPeriod = (date, period) => {
@@ -150,10 +277,10 @@ const inPeriod = (date, period) => {
   return t >= period.from.getTime() && t <= period.to.getTime();
 };
 
-// Tax detection now uses an exact-match against the controlled
-// TAX_EXPENSE_CATEGORIES list rather than keyword sniffing. The legacy keyword
-// fallback is kept so historical Expense rows entered as "tax" / "VAT" / etc.
-// (free text) still classify correctly.
+// Tax detection uses an exact-match against the controlled
+// TAX_EXPENSE_CATEGORIES list. The legacy keyword fallback is kept so
+// historical Expense rows entered as "tax" / "VAT" / etc. (free text) still
+// classify correctly.
 const LEGACY_TAX_KEYWORDS = ["tax", "vat", "withholding"];
 
 const isTaxExpense = (expense) => {
@@ -167,8 +294,6 @@ const isTaxExpense = (expense) => {
   );
 };
 
-// Re-export so callers (forms, reports) can reach the canonical category list
-// through one module.
 export { TAX_EXPENSE_CATEGORIES };
 
 const EXCLUDED_PENALTY_STATUSES = new Set([
@@ -197,15 +322,7 @@ const isActiveLoanFee = (fee) => {
   return !EXCLUDED_LOAN_FEE_STATUSES.has(status);
 };
 
-// Computes the effective last date a loan accrues interest, given the period
-// boundary. Returns a Date or null when interest cannot accrue at all in the
-// period.
-//
-//   cutoff = min(stopInterestAt, writeOffDate, period.to)
-//
-// resumedAt is honored: if the pause was resumed before `period.to`, only
-// installments BEFORE the original stop date are excluded (handled in the
-// caller via `isAccrualSuspendedAt`).
+// cutoff = min(stopInterestAt, writeOffDate, period.to)
 export const computeInterestAccrualCutoff = (loanSummary, period) => {
   if (!period) return null;
 
@@ -227,9 +344,6 @@ export const computeInterestAccrualCutoff = (loanSummary, period) => {
   return cutoff;
 };
 
-// True when interest accrual is paused for the loan at the given date — i.e.
-// the date falls inside an active stopInterest interval (between stoppedAt and
-// resumedAt, or after stoppedAt if not yet resumed).
 export const isAccrualSuspendedAt = (loanSummary, date) => {
   const stop = loanSummary?.reportSourceStopInterest;
   if (!stop?.stoppedAt) return false;
@@ -268,11 +382,6 @@ const createEmptyBucket = () => ({
 
 const aggregateCashRevenue = ({ loanSummaries, periods, buckets }) => {
   loanSummaries.forEach((summary) => {
-    // Prefer derived payment rows (allocations from the statement ledger). They
-    // already exclude reversed/voided/failed payments and contain reliable
-    // interest/fees/penalty splits even when those fields aren't persisted on
-    // the Payment record. Fall back to raw payments when rows aren't available
-    // (e.g. older summary shapes in tests).
     const derivedRows = Array.isArray(summary?.reportSourcePaymentRows)
       ? summary.reportSourcePaymentRows
       : null;
@@ -325,9 +434,6 @@ const aggregateAccrualRevenue = ({ loanSummaries, periods, buckets }) => {
       const bucket = buckets[period.key];
       const interestCutoff = computeInterestAccrualCutoff(summary, period);
 
-      // Interest accrued: schedule installments whose due date falls within
-      // the period AND is before the interest cutoff, AND not inside a paused
-      // interval.
       if (interestCutoff) {
         scheduleRows.forEach((row) => {
           const dueDate = parseReportDate(row?.dueDate);
@@ -336,15 +442,11 @@ const aggregateAccrualRevenue = ({ loanSummaries, periods, buckets }) => {
           if (dueDate > interestCutoff) return;
           if (isAccrualSuspendedAt(summary, dueDate)) return;
           bucket.interestOnLoans += safeNum(row.interestDue);
-          // Scheduled fees and penalties booked into the schedule are also
-          // recognized on the due date — distinct from ad-hoc fees/penalty
-          // records below, which carry their own dates.
           bucket.feesCollected += safeNum(row.feesDue);
           bucket.penaltiesCollected += safeNum(row.penaltyDue);
         });
       }
 
-      // Ad-hoc fees charged in the period (LoanFees records).
       loanFees.forEach((fee) => {
         const date = parseReportDate(fee?.loanFeesDate || fee?.createdAt);
         if (!date) return;
@@ -352,7 +454,6 @@ const aggregateAccrualRevenue = ({ loanSummaries, periods, buckets }) => {
         bucket.feesCollected += safeNum(fee.amount);
       });
 
-      // Ad-hoc penalties charged in the period (Penalty records).
       penalties.forEach((penalty) => {
         const date = parseReportDate(
           penalty?.penaltyDate || penalty?.createdAt,

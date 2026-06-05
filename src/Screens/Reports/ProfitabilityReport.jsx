@@ -1,11 +1,11 @@
 /**
  * Profit / Loss Report — /reports/profitability
  *
- * A classic Profit / Loss statement built from real repo data:
- *   - Revenue from Loans: payment allocations to interest, fees, penalties
- *   - Other Income: OtherIncome.amount in period
- *   - Operating Expenses: Expense.amount in period (grouped by category)
- *   - Taxes: Expense entries flagged as tax via category/type keyword
+ * Two modes:
+ *   - Standard P&L: one primary range + optional single comparison column
+ *     (None / Previous Period / Previous Year / Custom).
+ *   - Trend Analysis: primary range partitioned into N buckets by GROUP BY
+ *     (Day / Week / Month / Quarter / Year).
  *
  * Visual language follows LoansDisplay (sf palette, square corners, 3px brand
  * border, PlusButtonMain EXPORT, refresh IconButton, flat filter container).
@@ -24,6 +24,7 @@ import {
   Radio,
   RadioGroup,
   Select,
+  TextField,
   Tooltip,
   Typography,
 } from "@mui/material";
@@ -44,21 +45,30 @@ import { useReportData } from "./useReportData";
 import { fmtMoney, downloadFile, toCsv } from "./reportUtils";
 import {
   BASIS_MODES,
-  COMPARE_MODES,
+  COMPARE_TO,
+  GROUP_BY,
+  REPORT_MODES,
+  TREND_MAX_COLUMNS,
   buildPeriods,
   computeProfitLoss,
   fetchAllExpensesByBranch,
   fetchAllOtherIncomesByBranch,
 } from "./profitLossHelpers";
 
-const COMPARE_OPTIONS = [
-  { value: COMPARE_MODES.NONE, label: "No Comparison" },
-  { value: COMPARE_MODES.MONTHLY, label: "Compare Monthly" },
-  { value: COMPARE_MODES.QUARTERLY, label: "Compare Quarterly" },
-  { value: COMPARE_MODES.YEARLY, label: "Compare Yearly" },
+const COMPARE_TO_OPTIONS = [
+  { value: COMPARE_TO.NONE, label: "No Comparison" },
+  { value: COMPARE_TO.PREVIOUS_PERIOD, label: "Previous Period" },
+  { value: COMPARE_TO.PREVIOUS_YEAR, label: "Previous Year" },
+  { value: COMPARE_TO.CUSTOM, label: "Custom Range…" },
 ];
 
-const PERIOD_COUNT_OPTIONS = [1, 2, 3, 4, 5, 6];
+const GROUP_BY_OPTIONS = [
+  { value: GROUP_BY.DAY, label: "Day" },
+  { value: GROUP_BY.WEEK, label: "Week" },
+  { value: GROUP_BY.MONTH, label: "Month" },
+  { value: GROUP_BY.QUARTER, label: "Quarter" },
+  { value: GROUP_BY.YEAR, label: "Year" },
+];
 
 const SECTION_HEADER_FONT_SIZE = "0.92rem";
 const ROW_FONT_SIZE = "0.82rem";
@@ -80,16 +90,8 @@ const buildRowConfig = ({ expenseCategories }) => {
   }));
 
   return [
-    {
-      type: "sectionHeader",
-      label: "Revenue",
-      color: "success",
-    },
-    {
-      type: "subHeader",
-      label: "Revenue from Loans",
-      indent: 1,
-    },
+    { type: "sectionHeader", label: "Revenue", color: "success" },
+    { type: "subHeader", label: "Revenue from Loans", indent: 1 },
     {
       type: "line",
       label: "Interest on Loans",
@@ -120,18 +122,10 @@ const buildRowConfig = ({ expenseCategories }) => {
       indent: 1,
       valueOf: (p) => p.totalRevenue,
     },
-    {
-      type: "sectionHeader",
-      label: "Expenses",
-      color: "error",
-    },
+    { type: "sectionHeader", label: "Expenses", color: "error" },
     ...(expenseLineRows.length > 0
       ? [
-          {
-            type: "subHeader",
-            label: "Operating Expenses",
-            indent: 1,
-          },
+          { type: "subHeader", label: "Operating Expenses", indent: 1 },
           ...expenseLineRows,
         ]
       : []),
@@ -142,34 +136,29 @@ const buildRowConfig = ({ expenseCategories }) => {
       valueOf: (p) => p.totalExpenses,
     },
     {
+      type: "sectionHeader",
+      label: "NET PROFIT / LOSS (before taxes)",
+      color: "info",
+    },
+    {
       type: "summary",
       label: "Net Operating Income",
       valueOf: (p) => p.netOperatingIncome,
       borderTop: true,
       borderBottom: true,
     },
-    {
-      type: "summary",
-      label: "Net Income Before Taxes and Subsidy",
-      valueOf: (p) => p.netIncomeBeforeTaxes,
-      borderBottom: true,
-    },
-    {
-      type: "sectionHeader",
-      label: "Taxes",
-      color: "neutral",
-    },
+    { type: "sectionHeader", label: "Taxes", color: "error" },
     {
       type: "line",
       label: "Income Tax Expense",
       indent: 1,
       valueOf: (p) => p.taxExpense,
     },
+    { type: "sectionHeader", label: "NET INCOME AFTER TAXES", color: "info" },
     {
       type: "summary",
-      label: "Net Income After Taxes and Subsidy",
+      label: "Net Income ",
       valueOf: (p) => p.netIncomeAfterTaxes,
-      highlight: true,
     },
   ];
 };
@@ -180,8 +169,6 @@ export default function ProfitabilityReport() {
   const theme = useTheme();
   const sf = theme.palette.sf;
 
-  // Mirror LoansDisplay: use whatever branch is currently loaded in userDetails
-  // for both admin (set via the top-bar branch selector) and non-admin users.
   const activeBranchId =
     userDetails?.branchID || userDetails?.branch?.id || null;
   const shouldShowReport = Boolean(activeBranchId);
@@ -190,18 +177,25 @@ export default function ProfitabilityReport() {
     () => getPresetRange("this_year") || { from: "", to: "" },
     [],
   );
+
+  const [reportMode, setReportMode] = React.useState(REPORT_MODES.STANDARD);
+  const [basis, setBasis] = React.useState(BASIS_MODES.CASH);
   const [startDate, setStartDate] = React.useState(defaultRange.from);
   const [endDate, setEndDate] = React.useState(defaultRange.to);
-  const [basis, setBasis] = React.useState(BASIS_MODES.CASH);
-  const [compareMode, setCompareMode] = React.useState(COMPARE_MODES.MONTHLY);
-  const [comparePeriods, setComparePeriods] = React.useState(2);
+
+  // Standard-mode controls.
+  const [compareTo, setCompareTo] = React.useState(COMPARE_TO.NONE);
+  const [compareStartDate, setCompareStartDate] = React.useState("");
+  const [compareEndDate, setCompareEndDate] = React.useState("");
+
+  // Trend-mode controls.
+  const [groupBy, setGroupBy] = React.useState(GROUP_BY.MONTH);
+
   const [expenses, setExpenses] = React.useState([]);
   const [otherIncomes, setOtherIncomes] = React.useState([]);
   const [extrasLoading, setExtrasLoading] = React.useState(false);
   const [extrasError, setExtrasError] = React.useState(null);
 
-  // Pass activeBranchId to useReportData so it loads loan summaries for the
-  // currently-loaded branch regardless of admin status.
   const {
     summaries,
     loading: summariesLoading,
@@ -249,15 +243,26 @@ export default function ProfitabilityReport() {
     loadExtras(effectiveBranchId);
   }, [effectiveBranchId, loadExtras]);
 
-  const periods = React.useMemo(
+  const { periods, truncated } = React.useMemo(
     () =>
       buildPeriods({
+        mode: reportMode,
         startDate,
         endDate,
-        compareMode,
-        comparePeriods,
+        compareTo,
+        compareStartDate,
+        compareEndDate,
+        groupBy,
       }),
-    [startDate, endDate, compareMode, comparePeriods],
+    [
+      reportMode,
+      startDate,
+      endDate,
+      compareTo,
+      compareStartDate,
+      compareEndDate,
+      groupBy,
+    ],
   );
 
   const profitLoss = React.useMemo(
@@ -313,11 +318,19 @@ export default function ProfitabilityReport() {
 
     const csv = toCsv(rows, columns);
     const dateLabel = `${startDate}_to_${endDate}`;
-    downloadFile(csv, `profit_loss_${dateLabel}.csv`, "text/csv");
+    const modeSuffix =
+      reportMode === REPORT_MODES.TREND ? `_trend_${groupBy}` : "";
+    downloadFile(
+      csv,
+      `profit_loss_${dateLabel}${modeSuffix}.csv`,
+      "text/csv",
+    );
   }, [
     endDate,
+    groupBy,
     periods,
     profitLoss.periodTotals,
+    reportMode,
     rowConfig,
     showNotification,
     startDate,
@@ -356,9 +369,32 @@ export default function ProfitabilityReport() {
     },
   };
 
+  const compactDateSx = {
+    minWidth: 150,
+    "& .MuiInputBase-root": { borderRadius: 0, height: 36 },
+    "& .MuiInputLabel-root": { fontSize: "0.72rem" },
+    "& .MuiInputBase-input": { fontSize: "0.78rem", py: 0.7 },
+  };
+
+  const sectionLabelSx = {
+    fontSize: HEADER_FONT_SIZE,
+    fontWeight: 600,
+    textTransform: "uppercase",
+    letterSpacing: "0.04em",
+    mb: 0.3,
+  };
+
+  const summaryStatus = loading
+    ? "Loading..."
+    : `${summaries.length} ${
+        summaries.length === 1 ? "loan" : "loans"
+      } · ${expenses.length} ${
+        expenses.length === 1 ? "expense" : "expenses"
+      } · ${otherIncomes.length} other income`;
+
   return (
     <>
-      {/* Page Header — matches LoansDisplay */}
+      {/* Page Header */}
       <Box
         sx={{
           display: "flex",
@@ -387,13 +423,7 @@ export default function ProfitabilityReport() {
               mt: 0.15,
             }}
           >
-            {loading
-              ? "Loading..."
-              : `${summaries.length} ${
-                  summaries.length === 1 ? "loan" : "loans"
-                } · ${expenses.length} ${
-                  expenses.length === 1 ? "expense" : "expenses"
-                } · ${otherIncomes.length} other income`}
+            {summaryStatus}
           </Typography>
         </Box>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -444,19 +474,43 @@ export default function ProfitabilityReport() {
               gap: 1.5,
             }}
           >
+            {/* Row 1: Report mode + accounting basis */}
             <Box sx={filterRowSx}>
               <FormControl>
-                <FormLabel
-                  sx={{
-                    fontSize: HEADER_FONT_SIZE,
-                    fontWeight: 600,
-                    // color: sf.sf_textTertiary,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.04em",
-                    mb: 0,
-                  }}
+                <FormLabel sx={{ ...sectionLabelSx, mb: 0 }}>
+                  Report Mode
+                </FormLabel>
+                <RadioGroup
+                  row
+                  value={reportMode}
+                  onChange={(e) => setReportMode(e.target.value)}
                 >
-                  Basis
+                  <FormControlLabel
+                    value={REPORT_MODES.STANDARD}
+                    control={<Radio size="small" />}
+                    label={
+                      <Typography sx={{ fontSize: "0.82rem" }}>
+                        Standard P&amp;L
+                      </Typography>
+                    }
+                  />
+                  <FormControlLabel
+                    value={REPORT_MODES.TREND}
+                    control={<Radio size="small" />}
+                    label={
+                      <Typography sx={{ fontSize: "0.82rem" }}>
+                        Trend Analysis
+                      </Typography>
+                    }
+                  />
+                </RadioGroup>
+              </FormControl>
+
+              <Box sx={{ width: 1, height: 28, bgcolor: sf.sf_borderLight }} />
+
+              <FormControl>
+                <FormLabel sx={{ ...sectionLabelSx, mb: 0 }}>
+                  Accounting Basis
                 </FormLabel>
                 <RadioGroup
                   row
@@ -485,72 +539,98 @@ export default function ProfitabilityReport() {
               </FormControl>
             </Box>
 
-            <DateFilters
-              dateFrom={startDate}
-              dateTo={endDate}
-              onDateFromChange={setStartDate}
-              onDateToChange={setEndDate}
-              alwaysVisible
-              allowClear={false}
-            />
-
-            <Box sx={filterRowSx}>
-              <Box>
-                <Typography
-                  sx={{
-                    fontSize: HEADER_FONT_SIZE,
-                    fontWeight: 600,
-                    // color: sf.sf_textTertiary,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.04em",
-                    mb: 0.3,
-                  }}
-                >
-                  Compare
-                </Typography>
-                <Select
-                  value={compareMode}
-                  onChange={(e) => setCompareMode(e.target.value)}
-                  size="small"
-                  sx={compactSelectSx}
-                >
-                  {COMPARE_OPTIONS.map((option) => (
-                    <MenuItem key={option.value} value={option.value}>
-                      {option.label}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </Box>
-
-              <Box>
-                <Typography
-                  sx={{
-                    fontSize: HEADER_FONT_SIZE,
-                    fontWeight: 600,
-                    // color: sf.sf_textTertiary,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.04em",
-                    mb: 0.3,
-                  }}
-                >
-                  Periods
-                </Typography>
-                <Select
-                  value={comparePeriods}
-                  onChange={(e) => setComparePeriods(Number(e.target.value))}
-                  size="small"
-                  disabled={compareMode === COMPARE_MODES.NONE}
-                  sx={{ ...compactSelectSx, minWidth: 110 }}
-                >
-                  {PERIOD_COUNT_OPTIONS.map((value) => (
-                    <MenuItem key={value} value={value}>
-                      {value} {value === 1 ? "period" : "periods"}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </Box>
+            {/* Row 2: Date range (primary) */}
+            <Box>
+              <Typography sx={sectionLabelSx}>Date Range</Typography>
+              <DateFilters
+                dateFrom={startDate}
+                dateTo={endDate}
+                onDateFromChange={setStartDate}
+                onDateToChange={setEndDate}
+                alwaysVisible
+                allowClear={false}
+              />
             </Box>
+
+            {/* Row 3: Mode-specific controls */}
+            {reportMode === REPORT_MODES.STANDARD ? (
+              <Box sx={filterRowSx}>
+                <Box>
+                  <Typography sx={sectionLabelSx}>Compare To</Typography>
+                  <Select
+                    value={compareTo}
+                    onChange={(e) => setCompareTo(e.target.value)}
+                    size="small"
+                    sx={compactSelectSx}
+                  >
+                    {COMPARE_TO_OPTIONS.map((option) => (
+                      <MenuItem key={option.value} value={option.value}>
+                        {option.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </Box>
+
+                {compareTo === COMPARE_TO.CUSTOM && (
+                  <>
+                    <TextField
+                      type="date"
+                      size="small"
+                      label="Compare From"
+                      value={compareStartDate}
+                      onChange={(e) => setCompareStartDate(e.target.value)}
+                      InputLabelProps={{ shrink: true }}
+                      sx={compactDateSx}
+                    />
+                    <TextField
+                      type="date"
+                      size="small"
+                      label="Compare To"
+                      value={compareEndDate}
+                      onChange={(e) => setCompareEndDate(e.target.value)}
+                      InputLabelProps={{ shrink: true }}
+                      sx={compactDateSx}
+                    />
+                  </>
+                )}
+              </Box>
+            ) : (
+              <Box sx={filterRowSx}>
+                <Box>
+                  <Typography sx={sectionLabelSx}>Group By</Typography>
+                  <Select
+                    value={groupBy}
+                    onChange={(e) => setGroupBy(e.target.value)}
+                    size="small"
+                    sx={compactSelectSx}
+                  >
+                    {GROUP_BY_OPTIONS.map((option) => (
+                      <MenuItem key={option.value} value={option.value}>
+                        {option.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </Box>
+                <Typography
+                  sx={{ fontSize: "0.75rem", color: sf.sf_textTertiary }}
+                >
+                  {periods.length > 0
+                    ? `${periods.length} ${
+                        periods.length === 1 ? "column" : "columns"
+                      } in range`
+                    : ""}
+                </Typography>
+              </Box>
+            )}
           </Box>
+
+          {truncated && (
+            <Alert severity="warning" sx={{ mb: 2, borderRadius: 0 }}>
+              The current range produces more than {TREND_MAX_COLUMNS}{" "}
+              {groupBy} buckets. Showing the first {TREND_MAX_COLUMNS} only —
+              pick a coarser grouping to see the full range.
+            </Alert>
+          )}
 
           {loading && <LinearProgress sx={{ mb: 1.5 }} />}
 
@@ -624,7 +704,7 @@ export default function ProfitabilityReport() {
                             fontWeight: 700,
                             color: sf.sf_textPrimary,
                             background: sf.sf_tableHeaderBg,
-                            minWidth: 160,
+                            minWidth: 140,
                             whiteSpace: "nowrap",
                           }}
                         >
@@ -674,7 +754,9 @@ function ProfitLossRow({ row, periods, periodTotals, sf }) {
         ? sf.sf_success
         : row.color === "error"
           ? sf.sf_error
-          : sf.sf_textPrimary;
+          : row.color === "info"
+            ? sf.sf_info
+            : sf.sf_textPrimary;
     return (
       <tr>
         <td

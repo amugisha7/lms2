@@ -61,6 +61,7 @@ import ConcentrationsReport from "./Screens/Reports/ConcentrationsReport";
 import InterestAndPenaltyReport from "./Screens/Reports/InterestAndPenaltyReport";
 import WriteOffAndRecoveryReport from "./Screens/Reports/WriteOffAndRecoveryReport";
 import ProfitabilityReport from "./Screens/Reports/ProfitabilityReport";
+import CashLedger from "./Screens/Reports/CashLedger";
 import AdminDefaultsRecovery from "./Screens/Auth/AdminDefaultsRecovery";
 import Expenses from "./Models/Expenses/Expenses";
 import OtherIncomes from "./Models/OtherIncomes/OtherIncomes";
@@ -135,6 +136,10 @@ export default function AppRoutes({
               <Route
                 path="reports/profitability"
                 element={<ProfitabilityReport />}
+              />
+              <Route
+                path="reports/cash-ledger"
+                element={<CashLedger />}
               />
               <Route path="expenses" element={<Expenses />} />
               <Route path="other-incomes" element={<OtherIncomes />} />

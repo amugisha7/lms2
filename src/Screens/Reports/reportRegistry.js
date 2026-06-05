@@ -3,6 +3,7 @@
  * Each entry provides: route path, report type identifier, display label, and description.
  */
 export const REPORT_TYPES = Object.freeze({
+  CASH_LEDGER: "cash_ledger",
   PORTFOLIO_OVERVIEW: "loan_portfolio_overview",
   DELINQUENCY: "delinquency_report",
   AGING_ANALYSIS: "aging_analysis_report",
@@ -18,6 +19,15 @@ export const REPORT_TYPES = Object.freeze({
 });
 
 export const REPORT_REGISTRY = [
+  {
+    key: "cash_ledger",
+    reportType: REPORT_TYPES.CASH_LEDGER,
+    label: "Cash Ledger",
+    route: "/reports/cash-ledger",
+    description:
+      "Complete cash tracking ledger for all branch accounts: every deposit, withdrawal, expense, loan disbursement, repayment, fee, and income entry with a running overall balance.",
+    icon: "ReceiptLong",
+  },
   {
     key: "portfolio_overview",
     reportType: REPORT_TYPES.PORTFOLIO_OVERVIEW,

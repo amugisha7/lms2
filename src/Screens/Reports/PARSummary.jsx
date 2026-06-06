@@ -96,17 +96,15 @@ const DETAIL_COLUMNS = [
 
 export default function PARSummary() {
   const { userDetails } = useContext(UserContext);
-  const [selectedBranchId, setSelectedBranchId] = useState(null);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [search, setSearch] = useState("");
   const [orderBy, setOrderBy] = useState("daysPastDue");
   const [orderDir, setOrderDir] = useState("desc");
 
+  const activeBranchId = userDetails?.branchID || userDetails?.branch?.id || null;
   const { summaries, branches, loading, error, refresh, scope } = useReportData(
-    {
-      selectedBranchId,
-    },
+    { selectedBranchId: activeBranchId },
   );
   const currencyCode = userDetails?.institution?.currencyCode || "";
   const reportDate = useMemo(() => getReportAsOfDate(endDate), [endDate]);
@@ -204,10 +202,6 @@ export default function PARSummary() {
     <ReportShell
       title="Portfolio at Risk (PAR)"
       description="PAR 30 / 60 / 90 metrics. Denominator = total outstanding balance of active eligible loans."
-      isAdmin={scope.isAdmin}
-      branches={branches}
-      selectedBranchId={selectedBranchId}
-      onBranchChange={(v) => setSelectedBranchId(v || null)}
       startDate={startDate}
       endDate={endDate}
       onStartDateChange={setStartDate}

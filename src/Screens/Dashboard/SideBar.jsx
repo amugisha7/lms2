@@ -21,7 +21,7 @@ import { checkPermission } from "../../ModelAssets/Permissions/permissions";
 const SideBar = ({ open = true, onClose }) => {
   const [expandedItems, setExpandedItems] = useState({});
   const navigate = useNavigate();
-  const { user, userDetails } = React.useContext(UserContext);
+  const { userDetails } = React.useContext(UserContext);
   const unreadCount = useUnreadMessageCount();
 
   const handleToggleExpand = (itemName) => {
@@ -31,19 +31,24 @@ const SideBar = ({ open = true, onClose }) => {
     }));
   };
 
-  const visibleMenuItems = menuItems.map((item) => {
-    if (!item.children) return item;
-    const filteredChildren = item.children.filter(
-      (child) =>
-        !child.requiresPermission ||
-        checkPermission(
-          userDetails,
-          child.requiresPermission.action,
-          child.requiresPermission.resource,
-        ),
-    );
-    return { ...item, children: filteredChildren };
-  });
+  const isAdmin = String(userDetails?.userType || "").toLowerCase() === "admin";
+
+  const visibleMenuItems = menuItems
+    .filter((item) => !item.adminOnly || isAdmin)
+    .map((item) => {
+      if (!item.children) return item;
+      const filteredChildren = item.children.filter(
+        (child) =>
+          (!child.adminOnly || isAdmin) &&
+          (!child.requiresPermission ||
+            checkPermission(
+              userDetails,
+              child.requiresPermission.action,
+              child.requiresPermission.resource,
+            )),
+      );
+      return { ...item, children: filteredChildren };
+    });
 
   return (
     <Box
@@ -200,20 +205,6 @@ const SideBar = ({ open = true, onClose }) => {
             );
           })}
         </List>
-        <Box>
-          <Typography variant="body2" sx={{ color: "white" }}>
-            Email: {user?.signInDetails?.loginId || "N/A"}
-          </Typography>
-          <Typography variant="body2" sx={{ color: "white" }}>
-            User Type: {userDetails?.userType || "N/A"}
-          </Typography>
-          <Typography variant="body2" sx={{ color: "white" }}>
-            Institution ID: {userDetails?.institutionID || "N/A"}
-          </Typography>
-          <Typography variant="body2" sx={{ color: "white" }}>
-            Branch ID: {userDetails?.branchID || "N/A"}
-          </Typography>
-        </Box>
       </Box>
     </Box>
   );

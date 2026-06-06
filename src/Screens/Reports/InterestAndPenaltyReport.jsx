@@ -131,7 +131,6 @@ export default function InterestAndPenaltyReport() {
     .slice(0, 10);
   const todayStr = today.toISOString().slice(0, 10);
 
-  const [selectedBranchId, setSelectedBranchId] = useState(null);
   const [startDate, setStartDate] = useState(firstOfMonth);
   const [endDate, setEndDate] = useState(todayStr);
   const [enrichedData, setEnrichedData] = useState(null); // null = not loaded
@@ -141,8 +140,9 @@ export default function InterestAndPenaltyReport() {
   const [productFilter, setProductFilter] = useState("ALL");
   const [activeTab, setActiveTab] = useState("payments"); // 'payments' | 'penalties'
 
+  const activeBranchId = userDetails?.branchID || userDetails?.branch?.id || null;
   const { summaries, branches, loading, error, refresh, scope } = useReportData(
-    { selectedBranchId },
+    { selectedBranchId: activeBranchId },
   );
 
   const branchMap = useMemo(() => {
@@ -407,13 +407,6 @@ export default function InterestAndPenaltyReport() {
     <ReportShell
       title="Interest & Penalty Report"
       description="Interest income collected and penalty charges/collections over a selected period."
-      isAdmin={scope?.isAdmin}
-      branches={branches}
-      selectedBranchId={selectedBranchId}
-      onBranchChange={(v) => {
-        setSelectedBranchId(v);
-        setEnrichedData(null);
-      }}
       startDate={startDate}
       endDate={endDate}
       onStartDateChange={setStartDate}

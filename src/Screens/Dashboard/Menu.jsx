@@ -3,19 +3,21 @@ import {
   Dashboard as DashboardIcon,
   People as PeopleIcon,
   AccountBalance as AccountBalanceIcon,
-  Group as GroupIcon,
   AccountBalanceWallet as WalletIcon,
   Assessment as ReportsIcon,
   PersonAdd as PersonAddIcon,
   ListAlt as ListAltIcon,
   AdminPanelSettings as AdminPanelSettingsIcon,
   Badge as BadgeIcon,
-  Work as WorkIcon,
   Notifications as NotificationsIcon,
   Settings as SettingsIcon,
   ReceiptLong as ReceiptLongIcon,
   Savings as SavingsIcon,
   AccountBalanceWallet as AccountingIcon,
+  Business as BusinessIcon,
+  Shield as ShieldIcon,
+  Group as GroupIcon,
+  Tune as TuneIcon,
 } from "@mui/icons-material";
 import { REPORT_REGISTRY } from "../Reports/reportRegistry";
 
@@ -34,16 +36,14 @@ const reportMenuChildren = [
 
 export const menuItems = [
   {
-    name: "Notifications",
-    icon: <NotificationsIcon sx={{ color: "white" }} />,
-    route: "/messages",
-  },
-
-  {
     name: "Dashboard",
     icon: <DashboardIcon sx={{ color: "white" }} />,
-    active: true,
     route: "/",
+  },
+  {
+    name: "Messages",
+    icon: <NotificationsIcon sx={{ color: "white" }} />,
+    route: "/messages",
   },
   {
     name: "Borrowers",
@@ -51,15 +51,15 @@ export const menuItems = [
     expandable: true,
     children: [
       {
+        name: "View Borrowers",
+        icon: <ListAltIcon sx={{ color: "white" }} />,
+        route: "/borrowers",
+      },
+      {
         name: "Create Borrower",
         icon: <PersonAddIcon sx={{ color: "white" }} />,
         route: "/addBorrower",
         requiresPermission: { action: "create", resource: "borrower" },
-      },
-      {
-        name: "View Borrowers",
-        icon: <ListAltIcon sx={{ color: "white" }} />,
-        route: "/borrowers",
       },
     ],
   },
@@ -69,15 +69,15 @@ export const menuItems = [
     expandable: true,
     children: [
       {
+        name: "View Loans",
+        icon: <ListAltIcon sx={{ color: "white" }} />,
+        route: "/loans",
+      },
+      {
         name: "Create Loan",
         icon: <PersonAddIcon sx={{ color: "white" }} />,
         route: "/add-loan",
         requiresPermission: { action: "create", resource: "loan" },
-      },
-      {
-        name: "View Loans",
-        icon: <ListAltIcon sx={{ color: "white" }} />,
-        route: "/loans",
       },
       {
         name: "Loan Drafts",
@@ -89,17 +89,7 @@ export const menuItems = [
         icon: <ListAltIcon sx={{ color: "white" }} />,
         route: "/loan-calculator",
       },
-      {
-        name: "Loan Fees",
-        icon: <ListAltIcon sx={{ color: "white" }} />,
-        route: "/admin/loan-fees",
-      },
     ],
-  },
-  {
-    name: "Team",
-    icon: <GroupIcon sx={{ color: "white" }} />,
-    expandable: true,
   },
   {
     name: "Employees",
@@ -117,17 +107,7 @@ export const menuItems = [
         route: "/employees/create",
         requiresPermission: { action: "create", resource: "employee" },
       },
-      {
-        name: "Employee Management",
-        icon: <WorkIcon sx={{ color: "white" }} />,
-        route: "/employees",
-      },
     ],
-  },
-  {
-    name: "Users",
-    icon: <GroupIcon sx={{ color: "white" }} />,
-    route: "/users",
   },
   {
     name: "Accounting",
@@ -165,7 +145,46 @@ export const menuItems = [
   {
     name: "Admin",
     icon: <AdminPanelSettingsIcon sx={{ color: "white" }} />,
-    route: "/admin",
+    expandable: true,
+    adminOnly: true,
+    children: [
+      {
+        name: "Loan Products",
+        icon: <AccountBalanceIcon sx={{ color: "white" }} />,
+        route: "/admin/loan-products",
+        adminOnly: true,
+      },
+      {
+        name: "Loan Fees",
+        icon: <ReceiptLongIcon sx={{ color: "white" }} />,
+        route: "/admin/loan-fees",
+        adminOnly: true,
+      },
+      {
+        name: "Branches",
+        icon: <BusinessIcon sx={{ color: "white" }} />,
+        route: "/admin/branches",
+        adminOnly: true,
+      },
+      {
+        name: "Securities",
+        icon: <ShieldIcon sx={{ color: "white" }} />,
+        route: "/admin/securities",
+        adminOnly: true,
+      },
+      {
+        name: "Users",
+        icon: <GroupIcon sx={{ color: "white" }} />,
+        route: "/users",
+        adminOnly: true,
+      },
+      {
+        name: "Custom Fields",
+        icon: <TuneIcon sx={{ color: "white" }} />,
+        route: "/customFields",
+        adminOnly: true,
+      },
+    ],
   },
   {
     name: "Settings",

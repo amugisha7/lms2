@@ -169,7 +169,6 @@ const DETAIL_COLUMNS = [
 
 export default function ProvisionsReport() {
   const { userDetails } = useContext(UserContext);
-  const [selectedBranchId, setSelectedBranchId] = useState(null);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [search, setSearch] = useState("");
@@ -194,10 +193,9 @@ export default function ProvisionsReport() {
     [matrixPct],
   );
 
+  const activeBranchId = userDetails?.branchID || userDetails?.branch?.id || null;
   const { summaries, branches, loading, error, refresh, scope } = useReportData(
-    {
-      selectedBranchId,
-    },
+    { selectedBranchId: activeBranchId },
   );
   const currencyCode = userDetails?.institution?.currencyCode || "";
   const reportDate = useMemo(() => getReportAsOfDate(endDate), [endDate]);
@@ -271,10 +269,6 @@ export default function ProvisionsReport() {
     <ReportShell
       title="Provisions Report"
       description="Estimates loan loss reserves using a configurable provisioning matrix applied to aging buckets."
-      isAdmin={scope.isAdmin}
-      branches={branches}
-      selectedBranchId={selectedBranchId}
-      onBranchChange={(v) => setSelectedBranchId(v || null)}
       startDate={startDate}
       endDate={endDate}
       onStartDateChange={setStartDate}

@@ -172,7 +172,9 @@ function KpiCard({ label, value, sub, tone = "brand", sf, onClick }) {
         {value ?? "—"}
       </Typography>
       {sub && (
-        <Typography sx={{ fontSize: "0.7rem", color: sf.sf_textTertiary, mt: 0.35 }}>
+        <Typography
+          sx={{ fontSize: "0.7rem", color: sf.sf_textTertiary, mt: 0.35 }}
+        >
           {sub}
         </Typography>
       )}
@@ -201,7 +203,11 @@ function QuickAction({ icon, label, description, onClick, sf }) {
       </Box>
       <Box sx={{ flexGrow: 1, minWidth: 0 }}>
         <Typography
-          sx={{ fontSize: "0.83rem", fontWeight: 600, color: sf.sf_textPrimary }}
+          sx={{
+            fontSize: "0.83rem",
+            fontWeight: 600,
+            color: sf.sf_textPrimary,
+          }}
         >
           {label}
         </Typography>
@@ -211,7 +217,9 @@ function QuickAction({ icon, label, description, onClick, sf }) {
           </Typography>
         )}
       </Box>
-      <ArrowForwardIosIcon sx={{ fontSize: 10, color: sf.sf_textTertiary, flexShrink: 0 }} />
+      <ArrowForwardIosIcon
+        sx={{ fontSize: 10, color: sf.sf_textTertiary, flexShrink: 0 }}
+      />
     </Box>
   );
 }
@@ -226,7 +234,9 @@ function SectionHeader({ children, sf, action }) {
         mb: 1.5,
       }}
     >
-      <Typography sx={{ fontSize: "0.9rem", fontWeight: 700, color: sf.sf_textPrimary }}>
+      <Typography
+        sx={{ fontSize: "0.9rem", fontWeight: 700, color: sf.sf_textPrimary }}
+      >
         {children}
       </Typography>
       {action}
@@ -428,12 +438,18 @@ export default function MainDashboard() {
       {/* ── Header ── */}
       <Box sx={{ mb: 3 }}>
         <Typography
-          sx={{ fontSize: "1.35rem", fontWeight: 700, color: sf.sf_textPrimary }}
+          sx={{
+            fontSize: "1.35rem",
+            fontWeight: 700,
+            color: sf.sf_textPrimary,
+          }}
         >
           {greeting}
           {firstName ? `, ${firstName}` : ""}
         </Typography>
-        <Typography sx={{ fontSize: "0.8rem", color: sf.sf_textSecondary, mt: 0.2 }}>
+        <Typography
+          sx={{ fontSize: "0.8rem", color: sf.sf_textSecondary, mt: 0.2 }}
+        >
           {dateStr}
           {branchName
             ? ` · ${branchName}`
@@ -443,111 +459,116 @@ export default function MainDashboard() {
         </Typography>
       </Box>
 
-      {/* ── KPI Row 1 ── */}
-      <Grid container spacing={1.5} sx={{ mb: 1.5 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <KpiCard
-            label="Active Loans"
-            value={loading ? "…" : metrics.activeCount}
-            sub={
+      {/* ── KPI Cards — CSS Grid: 4 equal columns at md and up, responsive wrap below ── */}
+      <Box
+        sx={{
+          display: "grid",
+          gap: 1.5,
+          mb: 3,
+          gridTemplateColumns: {
+            xs: "1fr",
+            sm: "repeat(2, 1fr)",
+            md: "repeat(4, 1fr)",
+          },
+          alignItems: "stretch",
+        }}
+      >
+        {[
+          {
+            label: "Active Loans",
+            value: loading ? "…" : metrics.activeCount,
+            sub:
               metrics.overdueCount + metrics.missedCount > 0
                 ? `${metrics.overdueCount + metrics.missedCount} with arrears`
-                : "all current"
-            }
-            tone="brand"
-            sf={sf}
-            onClick={() => navigate("/loans")}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <KpiCard
-            label="Outstanding Balance"
-            value={loading ? "…" : fmtMoney(metrics.outstanding, currencyCode)}
-            sub="active portfolio"
-            tone="brand"
-            sf={sf}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <KpiCard
-            label="Total Arrears"
-            value={loading ? "…" : fmtMoney(metrics.totalArrears, currencyCode)}
-            sub={
+                : "all current",
+            tone: "brand",
+            onClick: () => navigate("/loans"),
+          },
+          {
+            label: "Outstanding Balance",
+            value: loading ? "…" : fmtMoney(metrics.outstanding, currencyCode),
+            sub: "active portfolio",
+            tone: "brand",
+          },
+          {
+            label: "Total Arrears",
+            value: loading ? "…" : fmtMoney(metrics.totalArrears, currencyCode),
+            sub:
               metrics.totalArrears > 0 && metrics.outstanding > 0
                 ? `${((metrics.totalArrears / metrics.outstanding) * 100).toFixed(1)}% of portfolio`
-                : "no arrears"
-            }
-            tone={metrics.totalArrears > 0 ? "danger" : "success"}
-            sf={sf}
-            onClick={() => navigate("/reports/delinquency")}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <KpiCard
-            label="PAR 30"
-            value={loading ? "…" : `${metrics.par30Pct.toFixed(1)}%`}
-            sub="portfolio at risk ≥ 30 days"
-            tone={
+                : "no arrears",
+            tone: metrics.totalArrears > 0 ? "danger" : "success",
+            onClick: () => navigate("/reports/delinquency"),
+          },
+          {
+            label: "PAR 30",
+            value: loading ? "…" : `${metrics.par30Pct.toFixed(1)}%`,
+            sub: "portfolio at risk ≥ 30 days",
+            tone:
               metrics.par30Pct > 30
                 ? "danger"
                 : metrics.par30Pct > 10
                   ? "warning"
-                  : "success"
-            }
-            sf={sf}
-            onClick={() => navigate("/reports/par-summary")}
-          />
-        </Grid>
-      </Grid>
+                  : "success",
+            onClick: () => navigate("/reports/par-summary"),
+          },
+          {
+            label: `New Disbursements — ${monthLabel}`,
+            value: loading
+              ? "…"
+              : fmtMoney(metrics.thisMonthPrincipal, currencyCode),
+            sub: `${metrics.thisMonthCount} loan${metrics.thisMonthCount !== 1 ? "s" : ""} this month`,
+            tone: "success",
+            onClick: () => navigate("/reports/disbursement"),
+          },
+          {
+            label: "Overdue Loans",
+            value: loading ? "…" : metrics.overdueCount,
+            sub: "require immediate attention",
+            tone: metrics.overdueCount > 0 ? "danger" : "success",
+            onClick: () => navigate("/reports/delinquency"),
+          },
+          {
+            label: "Missed Payments",
+            value: loading ? "…" : metrics.missedCount,
+            sub: "current but behind schedule",
+            tone: metrics.missedCount > 0 ? "warning" : "success",
+            onClick: () => navigate("/reports/delinquency"),
+          },
+          {
+            label: "Total Loans Issued",
+            value: loading ? "…" : metrics.totalCount,
+            sub:
+              fmtMoney(metrics.totalPrincipal, currencyCode) +
+              " total principal",
+            tone: "brand",
+            onClick: () => navigate("/loans"),
+          },
+        ].map((c) => (
+          <Box key={c.label} sx={{ width: "100%" }}>
+            <KpiCard
+              label={c.label}
+              value={c.value}
+              sub={c.sub}
+              tone={c.tone}
+              sf={sf}
+              onClick={c.onClick}
+            />
+          </Box>
+        ))}
+      </Box>
 
-      {/* ── KPI Row 2 ── */}
-      <Grid container spacing={1.5} sx={{ mb: 3 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <KpiCard
-            label={`New Disbursements — ${monthLabel}`}
-            value={loading ? "…" : fmtMoney(metrics.thisMonthPrincipal, currencyCode)}
-            sub={`${metrics.thisMonthCount} loan${metrics.thisMonthCount !== 1 ? "s" : ""} this month`}
-            tone="success"
-            sf={sf}
-            onClick={() => navigate("/reports/disbursement")}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <KpiCard
-            label="Overdue Loans"
-            value={loading ? "…" : metrics.overdueCount}
-            sub="require immediate attention"
-            tone={metrics.overdueCount > 0 ? "danger" : "success"}
-            sf={sf}
-            onClick={() => navigate("/reports/delinquency")}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <KpiCard
-            label="Missed Payments"
-            value={loading ? "…" : metrics.missedCount}
-            sub="current but behind schedule"
-            tone={metrics.missedCount > 0 ? "warning" : "success"}
-            sf={sf}
-            onClick={() => navigate("/reports/delinquency")}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <KpiCard
-            label="Total Loans Issued"
-            value={loading ? "…" : metrics.totalCount}
-            sub={fmtMoney(metrics.totalPrincipal, currencyCode) + " total principal"}
-            tone="brand"
-            sf={sf}
-            onClick={() => navigate("/loans")}
-          />
-        </Grid>
-      </Grid>
-
-      {/* ── Charts Row ── */}
-      <Grid container spacing={2} sx={{ mb: 2 }}>
+      {/* ── Charts Row — force equal halves ── */}
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+          gap: 2,
+          mb: 2,
+        }}
+      >
         {/* Portfolio distribution — donut pie chart */}
-        <Grid item xs={12} md={5}>
+        <Box sx={{ width: "100%" }}>
           <Box
             sx={{
               p: 2,
@@ -559,7 +580,9 @@ export default function MainDashboard() {
           >
             <SectionHeader sf={sf}>Portfolio Distribution</SectionHeader>
             {pieData.length === 0 && !loading ? (
-              <Typography sx={{ fontSize: "0.82rem", color: sf.sf_textTertiary }}>
+              <Typography
+                sx={{ fontSize: "0.82rem", color: sf.sf_textTertiary }}
+              >
                 No data available.
               </Typography>
             ) : (
@@ -582,7 +605,14 @@ export default function MainDashboard() {
                   />
                 </Box>
                 {/* Custom legend */}
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 0.7, mt: 0.5 }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 0.7,
+                    mt: 0.5,
+                  }}
+                >
                   {pieData.map((item) => {
                     const pct =
                       metrics.totalCount > 0
@@ -640,10 +670,10 @@ export default function MainDashboard() {
               </>
             )}
           </Box>
-        </Grid>
+        </Box>
 
         {/* Aging analysis — bar chart */}
-        <Grid item xs={12} md={7}>
+        <Box sx={{ width: "100%" }}>
           <Box
             sx={{
               p: 2,
@@ -656,7 +686,9 @@ export default function MainDashboard() {
             <SectionHeader
               sf={sf}
               action={
-                <Typography sx={{ fontSize: "0.72rem", color: sf.sf_textTertiary }}>
+                <Typography
+                  sx={{ fontSize: "0.72rem", color: sf.sf_textTertiary }}
+                >
                   active loans by days past due
                 </Typography>
               }
@@ -664,7 +696,9 @@ export default function MainDashboard() {
               Aging Analysis
             </SectionHeader>
             {metrics.activeCount === 0 && !loading ? (
-              <Typography sx={{ fontSize: "0.82rem", color: sf.sf_textTertiary }}>
+              <Typography
+                sx={{ fontSize: "0.82rem", color: sf.sf_textTertiary }}
+              >
                 No active loans to display.
               </Typography>
             ) : (
@@ -754,13 +788,19 @@ export default function MainDashboard() {
               </>
             )}
           </Box>
-        </Grid>
-      </Grid>
+        </Box>
+      </Box>
 
-      {/* ── Recent Loans + Quick Actions + Alerts ── */}
-      <Grid container spacing={2}>
+      {/* ── Recent Loans + Quick Actions + Alerts — full-width grid ── */}
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: { xs: "1fr", md: "3fr 1fr" },
+          gap: 2,
+        }}
+      >
         {/* Recent loans table */}
-        <Grid item xs={12} md={8}>
+        <Box sx={{ width: "100%" }}>
           <Box
             sx={{
               border: `1px solid ${sf.sf_borderLight}`,
@@ -790,7 +830,9 @@ export default function MainDashboard() {
             </Box>
             {!loading && metrics.recentLoans.length === 0 ? (
               <Box sx={{ px: 2, pb: 2 }}>
-                <Typography sx={{ fontSize: "0.82rem", color: sf.sf_textTertiary }}>
+                <Typography
+                  sx={{ fontSize: "0.82rem", color: sf.sf_textTertiary }}
+                >
                   No loans found.
                 </Typography>
               </Box>
@@ -847,10 +889,15 @@ export default function MainDashboard() {
                           />
                         </TableCell>
                         <TableCell sx={{ ...cellSx, textAlign: "right" }}>
-                          {fmtMoney(safeNum(loan.loanBalanceAmount), currencyCode)}
+                          {fmtMoney(
+                            safeNum(loan.loanBalanceAmount),
+                            currencyCode,
+                          )}
                         </TableCell>
                         <TableCell sx={cellSx}>
-                          {loan.nextDueDate ? fmtReportDate(loan.nextDueDate) : "—"}
+                          {loan.nextDueDate
+                            ? fmtReportDate(loan.nextDueDate)
+                            : "—"}
                         </TableCell>
                       </TableRow>
                     );
@@ -859,10 +906,10 @@ export default function MainDashboard() {
               </Table>
             )}
           </Box>
-        </Grid>
+        </Box>
 
         {/* Right column: Quick Actions + Alerts */}
-        <Grid item xs={12} md={4}>
+        <Box sx={{ width: "100%" }}>
           {/* Quick Actions */}
           <Box
             sx={{
@@ -954,7 +1001,11 @@ export default function MainDashboard() {
                 }}
               >
                 <Typography
-                  sx={{ fontSize: "0.8rem", fontWeight: 700, color: sf.sf_error }}
+                  sx={{
+                    fontSize: "0.8rem",
+                    fontWeight: 700,
+                    color: sf.sf_error,
+                  }}
                 >
                   High Arrears Loans
                 </Typography>
@@ -1005,8 +1056,8 @@ export default function MainDashboard() {
               </Box>
             </Box>
           )}
-        </Grid>
-      </Grid>
+        </Box>
+      </Box>
     </Box>
   );
 }

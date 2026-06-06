@@ -640,15 +640,15 @@ export default function PortfolioOverview() {
   const { userDetails } = useContext(UserContext);
   const theme = useTheme();
   const sf = theme.palette.sf;
-  const [selectedBranchId, setSelectedBranchId] = useState(null);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [search, setSearch] = useState("");
   const [orderBy, setOrderBy] = useState("loanBalanceAmount");
   const [orderDir, setOrderDir] = useState("desc");
 
+  const activeBranchId = userDetails?.branchID || userDetails?.branch?.id || null;
   const { summaries, branches, loading, error, refresh, scope, lastFetchedAt } =
-    useReportData({ selectedBranchId });
+    useReportData({ selectedBranchId: activeBranchId });
 
   const currencyCode = userDetails?.institution?.currencyCode || "";
 
@@ -897,12 +897,7 @@ export default function PortfolioOverview() {
     downloadFile(csv, "portfolio_overview.csv", "text/csv");
   };
 
-  const selectedBranchName =
-    branches.find((branch) => branch.id === selectedBranchId)?.name || null;
-  const scopeLabel = scope.isAdmin
-    ? selectedBranchName ||
-      (branches.length === 1 ? branches[0]?.name : "All branches")
-    : selectedBranchName || "My branch";
+  const scopeLabel = userDetails?.branch?.name || "My branch";
   const topOfficer = officerConcentration[0];
   const topProduct = productConcentration[0];
 
@@ -910,10 +905,6 @@ export default function PortfolioOverview() {
     <ReportShell
       title="Portfolio Overview"
       description="Executive summary of portfolio health, concentration, aging pressure, and repayment momentum using the live loan summary projection."
-      isAdmin={scope.isAdmin}
-      branches={branches}
-      selectedBranchId={selectedBranchId}
-      onBranchChange={(v) => setSelectedBranchId(v || null)}
       startDate={startDate}
       endDate={endDate}
       onStartDateChange={setStartDate}

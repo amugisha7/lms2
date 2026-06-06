@@ -113,7 +113,6 @@ const STATUS_COLOR_MAP = {
 export default function ActiveLoansByOfficerReport() {
   const { userDetails } = useContext(UserContext);
 
-  const [selectedBranchId, setSelectedBranchId] = useState(null);
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [search, setSearch] = useState("");
@@ -126,8 +125,9 @@ export default function ActiveLoansByOfficerReport() {
   const [detailSortDir, setDetailSortDir] = useState("desc");
   const [selectedOfficer, setSelectedOfficer] = useState(null);
 
+  const activeBranchId = userDetails?.branchID || userDetails?.branch?.id || null;
   const { summaries, branches, loading, error, refresh, scope } = useReportData(
-    { selectedBranchId },
+    { selectedBranchId: activeBranchId },
   );
 
   const branchMap = useMemo(() => {
@@ -304,10 +304,6 @@ export default function ActiveLoansByOfficerReport() {
     <ReportShell
       title="Active Loans by Officer"
       description="Portfolio workload, quality, and accountability metrics per loan officer."
-      isAdmin={scope?.isAdmin}
-      branches={branches}
-      selectedBranchId={selectedBranchId}
-      onBranchChange={setSelectedBranchId}
       startDate={startDate}
       endDate={endDate}
       onStartDateChange={setStartDate}

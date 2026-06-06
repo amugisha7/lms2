@@ -185,15 +185,15 @@ const DRILL_DIMENSIONS = [
 export default function ConcentrationsReport() {
   const { userDetails } = useContext(UserContext);
 
-  const [selectedBranchId, setSelectedBranchId] = useState(null);
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [activeDimension, setActiveDimension] = useState("borrower");
   const [selectedGroupKey, setSelectedGroupKey] = useState(null);
   const [drillSearch, setDrillSearch] = useState("");
 
+  const activeBranchId = userDetails?.branchID || userDetails?.branch?.id || null;
   const { summaries, branches, loading, error, refresh, scope } = useReportData(
-    { selectedBranchId },
+    { selectedBranchId: activeBranchId },
   );
 
   const branchMap = useMemo(() => {
@@ -342,10 +342,6 @@ export default function ConcentrationsReport() {
     <ReportShell
       title="Concentrations Report"
       description="Identifies top-borrower exposure and portfolio segment concentration risk."
-      isAdmin={scope?.isAdmin}
-      branches={branches}
-      selectedBranchId={selectedBranchId}
-      onBranchChange={setSelectedBranchId}
       startDate={startDate}
       endDate={endDate}
       onStartDateChange={setStartDate}

@@ -191,7 +191,6 @@ export default function RepaymentSchedulesReport() {
   const todayStr = today.toISOString().slice(0, 10);
   const defaultEndDate = addDays(today, 30).toISOString().slice(0, 10);
 
-  const [selectedBranchId, setSelectedBranchId] = useState(null);
   const [startDate, setStartDate] = useState(todayStr);
   const [endDate, setEndDate] = useState(defaultEndDate);
   const [horizonDays, setHorizonDays] = useState(30);
@@ -202,10 +201,9 @@ export default function RepaymentSchedulesReport() {
   const [scheduleRows, setScheduleRows] = useState(null); // null = not loaded; [] = loaded
   const [scheduleLoading, setScheduleLoading] = useState(false);
 
+  const activeBranchId = userDetails?.branchID || userDetails?.branch?.id || null;
   const { summaries, branches, loading, error, refresh, scope } = useReportData(
-    {
-      selectedBranchId,
-    },
+    { selectedBranchId: activeBranchId },
   );
 
   const branchMap = useMemo(() => {
@@ -428,13 +426,6 @@ export default function RepaymentSchedulesReport() {
     <ReportShell
       title="Loan Repayment Schedules"
       description="Forward-looking installment schedule for payment forecasting and cash planning."
-      isAdmin={scope?.isAdmin}
-      branches={branches}
-      selectedBranchId={selectedBranchId}
-      onBranchChange={(v) => {
-        setSelectedBranchId(v);
-        setScheduleRows(null);
-      }}
       startDate={startDate}
       endDate={endDate}
       onStartDateChange={setStartDate}

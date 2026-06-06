@@ -121,7 +121,6 @@ export default function WriteOffAndRecoveryReport() {
     .slice(0, 10);
   const todayStr = today.toISOString().slice(0, 10);
 
-  const [selectedBranchId, setSelectedBranchId] = useState(null);
   const [startDate, setStartDate] = useState(firstOfMonth);
   const [endDate, setEndDate] = useState(todayStr);
   const [recoveries, setRecoveries] = useState(null); // null = not loaded
@@ -131,8 +130,9 @@ export default function WriteOffAndRecoveryReport() {
   const [officerFilter, setOfficerFilter] = useState("ALL");
   const [activeTab, setActiveTab] = useState("written-off"); // 'written-off' | 'recoveries'
 
+  const activeBranchId = userDetails?.branchID || userDetails?.branch?.id || null;
   const { summaries, branches, loading, error, refresh, scope } = useReportData(
-    { selectedBranchId },
+    { selectedBranchId: activeBranchId },
   );
 
   const branchMap = useMemo(() => {
@@ -352,13 +352,6 @@ export default function WriteOffAndRecoveryReport() {
     <ReportShell
       title="Write-Off & Recovery Report"
       description="Stock of written-off loans and recoveries made against them in the selected period."
-      isAdmin={scope?.isAdmin}
-      branches={branches}
-      selectedBranchId={selectedBranchId}
-      onBranchChange={(v) => {
-        setSelectedBranchId(v);
-        setRecoveries(null);
-      }}
       startDate={startDate}
       endDate={endDate}
       onStartDateChange={setStartDate}

@@ -127,7 +127,6 @@ export default function DisbursementReport() {
     .slice(0, 10);
   const todayStr = today.toISOString().slice(0, 10);
 
-  const [selectedBranchId, setSelectedBranchId] = useState(null);
   const [startDate, setStartDate] = useState(firstOfMonth);
   const [endDate, setEndDate] = useState(todayStr);
   const [search, setSearch] = useState("");
@@ -135,10 +134,9 @@ export default function DisbursementReport() {
   const [sortDir, setSortDir] = useState("desc");
   const [highValueThreshold, setHighValueThreshold] = useState(50000);
 
+  const activeBranchId = userDetails?.branchID || userDetails?.branch?.id || null;
   const { summaries, branches, loading, error, refresh, scope } = useReportData(
-    {
-      selectedBranchId,
-    },
+    { selectedBranchId: activeBranchId },
   );
 
   // Resolve branch names
@@ -305,10 +303,6 @@ export default function DisbursementReport() {
     <ReportShell
       title="Disbursement Report"
       description="Monitors loan funding outflows by period, branch, product, and officer."
-      isAdmin={scope?.isAdmin}
-      branches={branches}
-      selectedBranchId={selectedBranchId}
-      onBranchChange={setSelectedBranchId}
       startDate={startDate}
       endDate={endDate}
       onStartDateChange={setStartDate}

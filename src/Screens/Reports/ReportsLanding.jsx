@@ -15,6 +15,7 @@ import {
   Chip,
 } from "@mui/material";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
+import BalanceIcon from "@mui/icons-material/Balance";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import TrendingDownIcon from "@mui/icons-material/TrendingDown";
@@ -27,6 +28,7 @@ const ICON_MAP = {
   AccountBalance: (
     <AccountBalanceIcon sx={{ fontSize: 36, color: "primary.main" }} />
   ),
+  Balance: <BalanceIcon sx={{ fontSize: 36, color: "secondary.main" }} />,
   Warning: <WarningAmberIcon sx={{ fontSize: 36, color: "warning.main" }} />,
   AccessTime: <AccessTimeIcon sx={{ fontSize: 36, color: "info.main" }} />,
   TrendingDown: <TrendingDownIcon sx={{ fontSize: 36, color: "error.main" }} />,

@@ -4,6 +4,7 @@
  */
 export const REPORT_TYPES = Object.freeze({
   CASH_LEDGER: "cash_ledger",
+  BALANCE_SHEET: "balance_sheet",
   PORTFOLIO_OVERVIEW: "loan_portfolio_overview",
   DELINQUENCY: "delinquency_report",
   AGING_ANALYSIS: "aging_analysis_report",
@@ -27,6 +28,15 @@ export const REPORT_REGISTRY = [
     description:
       "Complete cash tracking ledger for all branch accounts: every deposit, withdrawal, expense, loan disbursement, repayment, fee, and income entry with a running overall balance.",
     icon: "ReceiptLong",
+  },
+  {
+    key: "balance_sheet",
+    reportType: REPORT_TYPES.BALANCE_SHEET,
+    label: "Balance Sheet",
+    route: "/reports/balance-sheet",
+    description:
+      "Point-in-time snapshot of assets: cash & bank balances, outstanding loan portfolio, provisions, and accrued receivables. Compare two dates side-by-side.",
+    icon: "Balance",
   },
   {
     key: "portfolio_overview",

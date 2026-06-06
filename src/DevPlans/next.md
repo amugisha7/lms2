@@ -16,6 +16,7 @@
   - review how draft creation and copying to new loan works.
   - Create loan from loan schedule. Ensure loan calculations are accurate.
   - Ensure that disabling a customer locks them out of the portal.
+  - Convert cashledger to datagrid similar to loansdisplay
 
 - Finish the loan module then return to the begining via the Loan Progress gdoc
 - Implement security using branchId so that copying a URL of a loan or User doesn't allow someone logged into a different branch to view the details.

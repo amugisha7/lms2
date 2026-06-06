@@ -43,6 +43,7 @@ export const menuItems = [
     name: "Dashboard",
     icon: <DashboardIcon sx={{ color: "white" }} />,
     active: true,
+    route: "/",
   },
   {
     name: "Borrowers",

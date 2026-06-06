@@ -5,7 +5,7 @@ import {
   Navigate,
 } from "react-router-dom";
 import Onboarding from "./Screens/Onboarding/Onboarding";
-import MainGrid from "./muiTemplates/dashboard/components/MainGrid";
+import MainDashboard from "./Screens/Dashboard/MainDashboard";
 import CustomFieldsManager from "./Screens/AdminScreens/CustomFields/CustomFieldsManager";
 import Dashboard from "./Screens/Dashboard/Dashboard";
 import CreateLoanFeesPage from "./Models/LoanFees/CreateLoanFeesPage";
@@ -94,7 +94,7 @@ export default function AppRoutes({
         >
           {hasActiveAccess && (
             <>
-              <Route index element={<MainGrid />} />
+              <Route index element={<MainDashboard />} />
               <Route path="reports" element={<ReportsLanding />} />
               <Route
                 path="reports/portfolio-overview"
@@ -138,10 +138,7 @@ export default function AppRoutes({
                 path="reports/profitability"
                 element={<ProfitabilityReport />}
               />
-              <Route
-                path="reports/cash-ledger"
-                element={<CashLedger />}
-              />
+              <Route path="reports/cash-ledger" element={<CashLedger />} />
               <Route
                 path="reports/balance-sheet"
                 element={<BalanceSheetReport />}

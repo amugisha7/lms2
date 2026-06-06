@@ -51,6 +51,7 @@ const Dashboard = () => {
           height: "100vh",
           minWidth: 0,
           overflow: "hidden",
+          pb: 4,
         }}
       >
         {/* Top Bar */}
@@ -74,7 +75,7 @@ const Dashboard = () => {
             }, // Center on sm and up
           }}
         >
-          <Box sx={{ width: "100%", maxWidth: 1200 }}>
+          <Box sx={{ width: "100%", maxWidth: 1200, pb: 4 }}>
             {userDetails?.status === "pending" && (
               <Box
                 sx={{
